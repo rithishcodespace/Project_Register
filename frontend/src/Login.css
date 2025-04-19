@@ -1,0 +1,150 @@
+* {
+    font-family: serif;
+    background-color: #e7ebfe;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  /* Login Container */
+  .login_div {
+    width: 90%;
+    max-width: 400px;
+    margin: 5% auto;
+    text-align: center;
+    padding: 30px 20px;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 4px 4px 15px rgba(127, 21, 233, 0.2);
+  }
+  
+  /* Login Heading */
+  .Login {
+    font-weight: bold;
+    font-size: 2.5rem;
+    color: rgb(127, 21, 233);
+    margin-bottom: 30px;
+    background-color: white;
+  }
+  
+  /* Input Wrappers */
+  .lnamediv,
+  .lpassdiv {
+    border-bottom: 1px solid #ccc;
+    width: 90%;
+    margin: 20px auto;
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    padding-bottom: 5px;
+  }
+  
+  /* Icon */
+  .symbol {
+    font-size: 1.4rem;
+    margin-right: 10px;
+    background: #ffffff;
+  }
+  
+  .lock-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  /* Input Fields */
+  .lname,
+  .lpass {
+    border: none;
+    width: 100%;
+    font-size: 1rem;
+    padding: 8px;
+    background: #ffffff;
+    outline: none;
+  }
+  
+  /* Submit Button */
+  .lbutton {
+    width: 85%;
+    font-size: 1rem;
+    padding: 12px;
+    margin: 20px 0;
+    color: #fff;
+    background-color: rgb(127, 21, 233);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  
+  .lbutton:hover {
+    background-color: rgb(100, 18, 190);
+  }
+  
+  /* OR Text */
+  .or-text {
+    margin: 10px 0;
+    background-color: #ffffff;
+  }
+  
+  /* Google Login Block */
+  .gdiv {
+    border: 1px solid #888;
+    width: 70%;
+    margin: 0 auto;
+    padding: 10px;
+    background: #ffffff;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+  
+  .google-logo {
+    width: 20px;
+    height: 20px;
+    background: #ffffff;
+  }
+  
+  .glogin {
+    border: none;
+    background-color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  
+  /* ------------------------ */
+  /* 📱 Responsive Breakpoints */
+  /* ------------------------ */
+  
+  /* Small screens (phones) */
+  @media screen and (max-width: 480px) {
+    .Login {
+      font-size: 2rem;
+    }
+  
+    .lname,
+    .lpass {
+      font-size: 0.95rem;
+    }
+  
+    .symbol {
+      font-size: 1.2rem;
+    }
+  
+    .google-logo {
+      width: 18px;
+      height: 18px;
+    }
+  
+    .gdiv {
+      width: 85%;
+    }
+  }
+  
+
+  .lock{
+    height:25px;
+    background-color: white;
+  }
