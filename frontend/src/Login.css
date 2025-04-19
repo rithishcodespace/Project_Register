@@ -1,33 +1,31 @@
 * {
-    font-family: serif;
+    font-family:  sans-serif;
     background-color: #e7ebfe;
     margin: 0;
-    padding: 0;
     box-sizing: border-box;
   }
   
-  /* Login Container */
   .login_div {
     width: 90%;
-    max-width: 400px;
+    max-width: 500px;
     margin: 5% auto;
     text-align: center;
     padding: 30px 20px;
+    padding-bottom:4%;
     border-radius: 10px;
+    margin-top: 6%;
     background: #ffffff;
-    box-shadow: 4px 4px 15px rgba(127, 21, 233, 0.2);
+    box-shadow: 5px 5px 15px rgba(153, 52, 255, 0.2);
   }
   
-  /* Login Heading */
   .Login {
     font-weight: bold;
-    font-size: 2.5rem;
+    font-size: 330%;
     color: rgb(127, 21, 233);
     margin-bottom: 30px;
     background-color: white;
   }
   
-  /* Input Wrappers */
   .lnamediv,
   .lpassdiv {
     border-bottom: 1px solid #ccc;
@@ -38,38 +36,46 @@
     background: #ffffff;
     padding-bottom: 5px;
   }
-  
-  /* Icon */
   .symbol {
-    font-size: 1.4rem;
+    font-size: 130%;
     margin-right: 10px;
     background: #ffffff;
+    padding-left: 1.5%;
+    padding-bottom: 1%;
   }
   
   .lock-icon {
     width: 20px;
     height: 20px;
+    padding-bottom: 10%;
   }
   
-  /* Input Fields */
-  .lname,
-  .lpass {
+  .lname{
     border: none;
     width: 100%;
-    font-size: 1rem;
+    font-size: 120%;
     padding: 8px;
     background: #ffffff;
     outline: none;
   }
+ 
+  .lpass {
+    border: none;
+    width: 100%;
+    font-size: 120%;
+    padding: 8px;
+    margin-left: 3%;
+    background: #ffffff;
+    outline: none;
+  }
   
-  /* Submit Button */
   .lbutton {
-    width: 85%;
-    font-size: 1rem;
-    padding: 12px;
+    width: 90%;
+    font-size: 130%;
+    padding: 10px;
     margin: 20px 0;
     color: #fff;
-    background-color: rgb(127, 21, 233);
+    background-color:  rgb(158, 67, 255);
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -77,19 +83,12 @@
   }
   
   .lbutton:hover {
-    background-color: rgb(100, 18, 190);
+    transform: scale(1.02);
   }
   
-  /* OR Text */
-  .or-text {
-    margin: 10px 0;
-    background-color: #ffffff;
-  }
-  
-  /* Google Login Block */
   .gdiv {
     border: 1px solid #888;
-    width: 70%;
+    width: 90%;
     margin: 0 auto;
     padding: 10px;
     background: #ffffff;
@@ -99,6 +98,11 @@
     justify-content: center;
     gap: 10px;
     cursor: pointer;
+  }
+
+  .gdiv:hover{ 
+    transform: scale(1.02);
+    transition: 0.3s;
   }
   
   .google-logo {
@@ -110,41 +114,25 @@
   .glogin {
     border: none;
     background-color: white;
-    font-size: 0.9rem;
+    font-size: 100%;
     cursor: pointer;
   }
-  
-  /* ------------------------ */
-  /* 📱 Responsive Breakpoints */
-  /* ------------------------ */
-  
-  /* Small screens (phones) */
-  @media screen and (max-width: 480px) {
-    .Login {
-      font-size: 2rem;
-    }
-  
-    .lname,
-    .lpass {
-      font-size: 0.95rem;
-    }
-  
-    .symbol {
-      font-size: 1.2rem;
-    }
-  
-    .google-logo {
-      width: 18px;
-      height: 18px;
-    }
-  
-    .gdiv {
-      width: 85%;
-    }
-  }
-  
 
   .lock{
     height:25px;
     background-color: white;
+  }
+
+  .box{
+    width: 50%;
+    background-color: rgb(158, 67, 255);
+    height: 100%;
+    position: absolute;
+    opacity: 0.14;
+    transform: rotate(45deg);
+    z-index: 1;
+    border-radius: 50px;
+    margin-top: -12%;
+    margin-left: -1%;
+     pointer-events: none;
   }
