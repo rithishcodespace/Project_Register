@@ -2,7 +2,7 @@ import { useState } from "react";
 import "./Login.css";
 import Google from "./assets/google_img.png";
 import Lock from "./assets/lock_img.png";
-import {BrowserRouter as Router,Routes,Route, BrowserRouter} from "react-router-dom"
+import {BrowserRouter as Router,Routes,Route, BrowserRouter, useNavigate} from "react-router-dom"
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import React from "react";
 
@@ -13,6 +13,7 @@ function Signup() {
     const [password2,setpassword2] = useState("");
     const [showpassword1,setshowpassword1] = useState(false);
     const [showpassword2,setshowpassword2] = useState(false);
+    const navigate = useNavigate()
 
   return (
     <>
@@ -104,7 +105,9 @@ function Signup() {
             <button className="glogin"  onClick={()=>{}}>Sign in with Google</button>
             
           </div>
-          
+          <div>
+          <p className="psignup">Already have an account? <a href="" onClick={()=>navigate('/')}  className="linksignup">Login </a></p>
+          </div>
         </div>
       </>
   )
