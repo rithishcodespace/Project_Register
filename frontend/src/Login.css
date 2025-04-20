@@ -79,11 +79,11 @@
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    transition: 0.3s;
   }
   
   .lbutton:hover {
     transform: scale(1.02);
+    transition: 0.3s;
   }
   
   .gdiv {
@@ -96,8 +96,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap:5px;
     cursor: pointer;
+    margin-bottom: 4%;
   }
 
   .gdiv:hover{ 
@@ -123,3 +124,18 @@
     background-color: white;
   }
 
+.psignup{
+  background-color: white;
+  opacity: 0.6;
+}
+
+.dsignup{
+  background-color: white;
+}
+
+.linksignup{
+  color:  rgb(158, 67, 255);
+  text-decoration: none;
+  background-color: white;
+  font-size: 111%;
+}

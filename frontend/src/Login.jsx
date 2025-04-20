@@ -2,15 +2,17 @@ import { useState } from "react";
 import "./Login.css";
 import Google from "./assets/google_img.png";
 import Lock from "./assets/lock_img.png";
-import {BrowserRouter as Router,Routes,Route, BrowserRouter} from "react-router-dom"
+import {BrowserRouter as Router,Routes,Route, BrowserRouter, useNavigate} from "react-router-dom"
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import React from "react";
+import Signup from "./Signup";
 
 function Login() {
     
   const [name,setname] = useState("");
   const [password,setpassword] = useState("");
-  const [showpassword,setshowpassword] = useState(false)
+  const [showpassword,setshowpassword] = useState(false);
+  const navigate = useNavigate()
 
   return (
     <>
@@ -61,7 +63,7 @@ function Login() {
   
       <button onClick={()=>{}} className="lbutton">Submit</button>
       
-      <p style={{ backgroundColor: "white", marginBottom: "5%" }}>or</p>
+      <p style={{ backgroundColor: "white", marginBottom: "5%" ,fontSize:"110%"}}>or</p>
   
       <div className="gdiv">
         <img 
@@ -69,8 +71,11 @@ function Login() {
           className="google-logo" 
           alt="Google logo" 
         />
-        <button className="glogin"  onClick={()=>{}}>Sign in with Google</button>
+        <button className="glogin"  onClick={()=>{}}>Continue with Google</button>
         
+      </div>
+      <div className="dsignup">
+        <p className="psignup">Don't have an account? <a href="" onClick={()=>navigate('/signup')}  className="linksignup">sign up</a></p>
       </div>
     </div>
   </>
