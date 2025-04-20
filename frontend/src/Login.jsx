@@ -56,11 +56,11 @@ function Login() {
       }}
     >
       {showpassword ? <FaEyeSlash style={{backgroundColor:'white',fontSize:"120%"}} /> : <FaEye style={{backgroundColor:'white',fontSize:"120%"}} />}
-    </span><></>
+    </span><><p style={{fontSize:"000"}}>.</p></>
       </div>
   
       <button onClick={()=>{}} className="lbutton">Submit</button>
-  
+      
       <p style={{ backgroundColor: "white", marginBottom: "5%" }}>or</p>
   
       <div className="gdiv">
