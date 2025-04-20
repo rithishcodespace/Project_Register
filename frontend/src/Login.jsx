@@ -25,7 +25,7 @@ function Login() {
           className="lname" 
           type="text" 
           name="username" 
-          placeholder="Username" 
+          placeholder="E-mail" 
         />
       </div>
   
@@ -74,7 +74,6 @@ function Login() {
       </div>
     </div>
   </>
-  
   )
 }
 

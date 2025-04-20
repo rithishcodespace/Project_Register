@@ -14,7 +14,7 @@
     border-radius: 10px;
     margin-top: 6%;
     background: #ffffff;
-    box-shadow: 5px 5px 15px rgba(153, 52, 255, 0.2);
+    box-shadow: 8px 8px 15px rgba(153, 52, 255, 0.2);
   }
   
   .Login {
@@ -39,7 +39,7 @@
     font-size: 130%;
     margin-right: 10px;
     background: #ffffff;
-    padding-left: 1.5%;
+    padding-left: .2%;
     padding-bottom: 1%;
   }
   
@@ -54,6 +54,7 @@
     width: 100%;
     font-size: 120%;
     padding: 8px;
+    padding-left: 3.2%;
     background: #ffffff;
     outline: none;
   }
