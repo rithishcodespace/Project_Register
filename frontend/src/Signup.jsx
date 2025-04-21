@@ -105,8 +105,8 @@ function Signup() {
             <button className="glogin"  onClick={()=>{}}>Sign in with Google</button>
             
           </div>
-          <div>
-          <p className="psignup">Already have an account? <a href="" onClick={()=>navigate('/')}  className="linksignup">Login </a></p>
+          <div style={{backgroundColor:"white"}}>
+          <p className="psignup">Already have an account? <a href="" onClick={()=>navigate('/login')}  className="linksignup">Login </a></p>
           </div>
         </div>
       </>
