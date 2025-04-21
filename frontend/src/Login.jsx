@@ -6,13 +6,32 @@ import {BrowserRouter as Router,Routes,Route, BrowserRouter, useNavigate} from "
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import React from "react";
 import Signup from "./Signup";
+import axios from "axios";
 
 function Login() {
     
-  const [name,setname] = useState("");
+  const [emailId,setemailId] = useState("");
   const [password,setpassword] = useState("");
   const [showpassword,setshowpassword] = useState(false);
   const navigate = useNavigate()
+
+  const handleLogin = async(e) => {
+    e.preventDefault();
+    console.log(emailId,password);
+    let response = await axios.post("http://localhost:1234/auth/login",{"emailId":emailId,"password":password},{
+      headers:{
+        "Content-Type":"application/json"
+      }
+    })
+    console.log(response);
+    if(response.status === 200)
+    {
+      // nav
+    }
+    else{
+      // invalid
+    }
+  }
 
   return (
     <>
@@ -23,9 +42,9 @@ function Login() {
       <div className="lnamediv">
         <p className="symbol">@</p>
         <input 
-          onChange={(e)=>{setname(e.target.value)}}
+          onChange={(e)=>{setemailId(e.target.value)}}
           className="lname" 
-          type="text" 
+          type="email" 
           name="username" 
           placeholder="E-mail" 
         />
@@ -61,7 +80,7 @@ function Login() {
     </span><><p style={{fontSize:"000"}}>.</p></>
       </div>
   
-      <button onClick={()=>{}} className="lbutton">Submit</button>
+      <button onClick={handleLogin} className="lbutton">Submit</button>
       
       <p style={{ backgroundColor: "white", marginBottom: "5%" ,fontSize:"110%"}}>or</p>
   
