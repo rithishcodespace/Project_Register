@@ -1,16 +1,74 @@
-import React from 'react'
+import React from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Home, UploadCloud, FileText, BarChart2, LogOut } from 'lucide-react';
 import college_img from "../../assets/college_img.png";
-import logout from "../../assets/logout.webp";
-
 
 function Student_navbar() {
-  return (
-    <div style={{width:"20%",height:"100vh",backgroundColor:"white",textAlign:"center"}}>
-      
-          
-      
-    </div>
-  )
+  const navigate = useNavigate();
+    const location = useLocation();
+
+    const handleLogout = () => {
+      navigate("/"); // Redirect to login
+    };
+
+    const isActive = (path) => {
+      const currentPath = location.pathname;
+      if (path === "") return currentPath === "/student"; // Match only the dashboard route exactly
+      return currentPath.endsWith(path) || currentPath === `/teacher/${path}`;
+    };
+
+    const navDiv = (path) =>
+      `ml-10 mb-6 flex items-center rounded-lg px-3 w-60 py-2 bg-white  ${
+        isActive(path) ? "bg-[rgb(158,67,255)]" : "hover:"
+      }`;
+
+    const navImg = (path) =>
+      `w-11 color-[rgb(158,67,255)] bg-white ${
+        isActive(path) ? "bg-[rgb(158,67,255)] text-white" : "bg-transparent text-gray-600 colour-white group-hover:text-blue-600"
+      }`;
+
+    const navText = (path) =>
+      `text-lg px-2 py-1 rounded-md bg-white  ${
+        isActive(path) ? "bg-[rgb(158,67,255)] text-white" : "text-gray-600 group-hover:text-blue-600"
+      }`;
+
+    return (
+      <div className="w-1/5 h-screen bg-white flex flex-col py-6 overflow-y-auto min-w-[200px] sm:w-1/4 md:w-1/5 shadow-md">
+        <img 
+          src={college_img} 
+          className="w-1/2 mx-auto bg-white mb-12" 
+          alt="College Logo" 
+        />
+
+        <Link to="." className={`${navDiv("")} group`}>
+          <Home size={24} className={`mr-3 ${navImg("")}`} />
+          <p className={`${navText("")}`}>Dashboard</p>
+        </Link>
+
+        <Link to="Project_Details" className={`${navDiv("Project_Details")} group`}>
+          <UploadCloud size={24} className={`mr-3 ${navImg("Project_Details")}`} />
+          <p className={`${navText("Project_Details")}`}>Project Details</p>
+        </Link>
+
+        <Link to="Students_team" className={`${navDiv("Students_team")} group`}>
+          <FileText size={24} className={`mr-3 ${navImg("Students_team")}`} />
+          <p className={`${navText("Students_team")}`}>Student_team</p>
+        </Link>
+
+        <Link to="Progress_update" className={`${navDiv("Progress_update")} group`}>
+          <BarChart2 size={24} className={`mr-3 ${navImg("Progress_update")}`} />
+          <p className={`${navText("Progress_update")}`}>Progress update</p>
+        </Link>
+
+        <button 
+          onClick={handleLogout} 
+          className="ml-24 mt-auto mb-5 flex bg-white items-center text-gray-600 hover:text-red-500"
+        >
+          <LogOut size={24} className="mr-5 bg-white rotate-180" />
+          <p className="text-lg bg-white">Logout</p>
+        </button>
+      </div>
+    );
 }
 
 export default Student_navbar
