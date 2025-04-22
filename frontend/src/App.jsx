@@ -12,6 +12,11 @@ import Student_Dashboard from "./components/Students/Student_Dashboard";
 import Progress_Update from "./components/Students/Progress_Update";
 import Project_Details from "./components/Students/Project_Details";
 import Student_Team from "./components/Students/Student_Team";
+import Admin from "./components/Admin/Admin";
+import Add_Users from "./components/Admin/Add_Users";
+import Students_Progress from "./components/Admin/Students_Progress";
+import Add_Project from "./components/Admin/Add_Project";
+import Posted_project from "./components/Admin/Posted_project";
 
 function App() {
 
@@ -21,7 +26,7 @@ function App() {
         <Route path="/" element={<Login />}></Route>
 
         <Route path="/student" element={<Student />}>
-        b <Route index element={<Student_Dashboard />} />
+          <Route index element={<Student_Dashboard />} />
           <Route path="Progress_update" element={<Progress_Update/>} />
           <Route path="Project_Details" element={<Project_Details/>} />
           <Route path="Students_team" element={<Student_Team/>} />
@@ -32,6 +37,14 @@ function App() {
           <Route path="add" element={<TeacherAdd />} />
           <Route path="posted_projects" element={<PostedProjects />} />
           <Route path="student_progress" element={<StudentProgress />} />
+        </Route>
+
+        <Route path="/admin" element={<Admin />}>
+          <Route index element={<TeacherDashBoard />} />
+          <Route path="Add_users" element={<Add_Users/>} />
+          <Route path="Add_Project" element={<Add_Project />} />
+          <Route path="posted_projects" element={<Posted_project/>} />
+          <Route path="students_progress" element={<Students_Progress/>} />
         </Route>
 
       </Routes>

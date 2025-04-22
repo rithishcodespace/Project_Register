@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, FileText,Users, BarChart2, LogOut } from 'lucide-react';
+import { Home, UserPlus,FilePlus, BarChart2,CheckCircle, LogOut } from 'lucide-react';
 import college_img from "../../assets/college_img.png";
 
-function Student_navbar() {
-  const navigate = useNavigate();
+
+function Admin_Navbar() {
+    const navigate = useNavigate();
     const location = useLocation();
 
     const handleLogout = () => {
@@ -13,8 +14,8 @@ function Student_navbar() {
 
     const isActive = (path) => {
       const currentPath = location.pathname;
-      if (path === "") return currentPath === "/student"; // Match only the dashboard route exactly
-      return currentPath.endsWith(path) || currentPath === `/student/${path}`;
+      if (path === "") return currentPath === "/admin"; // Match only the dashboard route exactly
+      return currentPath.endsWith(path) || currentPath === `/admin/${path}`;
     };
 
     const navDiv = (path) =>
@@ -45,24 +46,30 @@ function Student_navbar() {
           <p className={`${navText("")}`}>Dashboard</p>
         </Link>
 
-        <Link to="Project_Details" className={`${navDiv("Project_Details")} group`}>
-          <FileText size={24} className={`mr-3 ${navImg("Project_Details")}`} />
-          <p className={`${navText("Project_Details")}`}>Project Details</p>
+        <Link to="Add_users" className={`${navDiv("Add_users")} group`}>
+          <UserPlus size={24} className={`mr-3 ${navImg("Add_users")}`} />
+          <p className={`${navText("Add_users")}`}>Add users</p>
         </Link>
 
-        <Link to="Students_team" className={`${navDiv("Students_team")} group`}>
-          <Users size={24} className={`mr-3 ${navImg("Students_team")}`} />
-          <p className={`${navText("Students_team")}`}>Student_team</p>
+
+        <Link to="Add_project" className={`${navDiv("Add_project")} group`}>
+          <FilePlus size={24} className={`mr-3 ${navImg("Add_project")}`} />
+          <p className={`${navText("Add_project")}`}>Add Project</p>
         </Link>
 
-        <Link to="Progress_update" className={`${navDiv("Progress_update")} group`}>
-          <BarChart2 size={24} className={`mr-3 ${navImg("Progress_update")}`} />
-          <p className={`${navText("Progress_update")}`}>Progress update</p>
+        <Link to="Posted_projects" className={`${navDiv("Posted_projects")} group`}>
+          <CheckCircle size={24} className={`mr-3 ${navImg("Posted_projects")}`} />
+          <p className={`${navText("Posted_projects")}`}>Posted Projects</p>
+        </Link>
+
+        <Link to="students_progress" className={`${navDiv("students_progress")} group`}>
+          <BarChart2 size={24} className={`mr-3 ${navImg("students_progress")}`} />
+          <p className={`${navText("students_progress")}`}>Students progress</p>
         </Link>
 
         <button 
           onClick={handleLogout} 
-          className="ml-24 mt-auto mb-5 flex bg-white items-center text-gray-600 hover:text-red-500"
+          className="ml-24 mt-auto mb-2 flex bg-white items-center text-gray-600 hover:text-red-500"
         >
           <LogOut size={24} className="mr-5 bg-white rotate-180" />
           <p className="text-lg bg-white">Logout</p>
@@ -71,4 +78,4 @@ function Student_navbar() {
     );
 }
 
-export default Student_navbar
+export default Admin_Navbar
