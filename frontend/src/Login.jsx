@@ -6,7 +6,6 @@ import {BrowserRouter as Router,Routes,Route, BrowserRouter, useNavigate} from "
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import React from "react";
 import Signup from "./Signup";
-import college_img from "./assets/college_img.png"
 import axios from "axios";
 
 function Login() {
@@ -36,10 +35,16 @@ function Login() {
 
   return (
     <>
+<<<<<<< HEAD
    
     <div className="login_div"> 
       <img src={college_img} style={{width:"50%",marginTop:"-6%",marginLeft:"25%", backgroundColor:"white",zIndex:1}} alt="" />
       <p className="Login">Hi, Welcome back</p><br />
+=======
+    <div className="box"/>
+    <div className="login_div">
+      <p className="Login">Login</p><br />
+>>>>>>> af3b4790b7e566c93066b8b95c7c22bae938aa78
   
       <div className="lnamediv">
         <p className="symbol">@</p>
@@ -83,10 +88,8 @@ function Login() {
       </div>
   
       <button onClick={handleLogin} className="lbutton">Submit</button>
-      <div className="divider">
-      <hr />
-      <span>or</span>
-      </div>
+      
+      <p style={{ backgroundColor: "white", marginBottom: "5%" ,fontSize:"110%"}}>or</p>
   
       <div className="gdiv">
         <img 
@@ -96,6 +99,9 @@ function Login() {
         />
         <button className="glogin"  onClick={()=>{}}>Continue with Google</button>
         
+      </div>
+      <div className="dsignup">
+        <p className="psignup">Don't have an account? <a href="" onClick={()=>navigate('/signup')}  className="linksignup">sign up</a></p>
       </div>
     </div>
   </>
