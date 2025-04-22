@@ -69,7 +69,7 @@ function Admin_Navbar() {
 
         <button 
           onClick={handleLogout} 
-          className="ml-24 mt-auto mb-2 flex bg-white items-center text-gray-600 hover:text-red-500"
+          className="ml-24 mt-auto mb-5 flex bg-white items-center text-gray-600 hover:text-red-500"
         >
           <LogOut size={24} className="mr-5 bg-white rotate-180" />
           <p className="text-lg bg-white">Logout</p>

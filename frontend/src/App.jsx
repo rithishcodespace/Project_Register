@@ -17,6 +17,7 @@ import Add_Users from "./components/Admin/Add_Users";
 import Students_Progress from "./components/Admin/Students_Progress";
 import Add_Project from "./components/Admin/Add_Project";
 import Posted_project from "./components/Admin/Posted_project";
+import Admin_Dashboard from "./components/Admin/Admin_Dashboard";
 
 function App() {
 
@@ -40,7 +41,7 @@ function App() {
         </Route>
 
         <Route path="/admin" element={<Admin />}>
-          <Route index element={<TeacherDashBoard />} />
+          <Route index element={<Admin_Dashboard />} />
           <Route path="Add_users" element={<Add_Users/>} />
           <Route path="Add_Project" element={<Add_Project />} />
           <Route path="posted_projects" element={<Posted_project/>} />
