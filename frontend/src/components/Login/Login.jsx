@@ -1,12 +1,11 @@
 import { useState } from "react";
 import "./Login.css";
-import Google from "./assets/google_img.png";
-import Lock from "./assets/lock_img.png";
+import Google from "../../assets/google_img.png";
+import Lock from "../../assets/lock_img.png";
 import {BrowserRouter as Router,Routes,Route, BrowserRouter, useNavigate} from "react-router-dom"
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import React from "react";
-import Signup from "./Signup";
-import college_img from "./assets/college_img.png"
+import college_img from "../../assets/college_img.png"
 import axios from "axios";
 
 function Login() {
