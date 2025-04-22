@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, UploadCloud, FileText, BarChart2, LogOut } from 'lucide-react';
+import { Home, FileText,Users, BarChart2, LogOut } from 'lucide-react';
 import college_img from "../../assets/college_img.png";
 
 function Student_navbar() {
@@ -46,12 +46,12 @@ function Student_navbar() {
         </Link>
 
         <Link to="Project_Details" className={`${navDiv("Project_Details")} group`}>
-          <UploadCloud size={24} className={`mr-3 ${navImg("Project_Details")}`} />
+          <FileText size={24} className={`mr-3 ${navImg("Project_Details")}`} />
           <p className={`${navText("Project_Details")}`}>Project Details</p>
         </Link>
 
         <Link to="Students_team" className={`${navDiv("Students_team")} group`}>
-          <FileText size={24} className={`mr-3 ${navImg("Students_team")}`} />
+          <Users size={24} className={`mr-3 ${navImg("Students_team")}`} />
           <p className={`${navText("Students_team")}`}>Student_team</p>
         </Link>
 
