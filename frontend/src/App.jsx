@@ -1,8 +1,8 @@
 import {BrowserRouter as Router,Routes,Route, BrowserRouter} from "react-router-dom"
-import Login from "./Login";
-import Signup from "./Signup";
-import Student from "./Student";
-import Teacher from "./Teacher";
+import Login from "./components/Login";
+import Signup from "./components/Signup";
+import Student from "./components/Student";
+import Teacher from "./components/Teacher";
 import './index.css';
 
 function App() {
