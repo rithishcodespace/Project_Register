@@ -18,19 +18,25 @@ function Student_navbar() {
     };
 
     const navDiv = (path) =>
-      `ml-10 mb-6 flex items-center rou nded-lg px-3 w-60 py-2 bg-white  ${
-        isActive(path) ? "bg-[rgb(158,67,255)]" : "hover:"
+      `ml-10 mb-6 flex items-center rounded-lg px-3 w-60 py-2 ${
+        isActive(path) ? "bg-purple-400 text-white" : "bg-white text-gray-700"
       }`;
+    
 
-    const navImg = (path) =>
-      `w-11 color-[rgb(158,67,255)] bg-white ${
-        isActive(path) ? "bg-[rgb(158,67,255)] text-white" : "bg-transparent text-gray-600 colour-white group-hover:text-blue-600"
-      }`;
-
-    const navText = (path) =>
-      `text-lg px-2 py-1 rounded-md bg-white  ${
-        isActive(path) ? "bg-[rgb(158,67,255)] text-white" : "text-gray-600 group-hover:text-blue-600"
-      }`;
+      const navImg = (path) =>
+        `w-11 rounded-md ${
+          isActive(path)
+            ? "bg-purple-400 text-white"
+            : "bg-transparent text-gray-600 group-hover:text-blue-600"
+        }`;
+      
+      const navText = (path) =>
+        `text-lg px-2 py-1 rounded-md ${
+          isActive(path)
+            ? "bg-purple-400 text-white"
+            : "bg-white text-gray-600 group-hover:text-blue-600"
+        }`;
+      
 
     return (
       <div className="w-1/5 h-screen bg-white flex flex-col py-6 overflow-y-auto min-w-[200px] sm:w-1/4 md:w-1/5 shadow-md">
