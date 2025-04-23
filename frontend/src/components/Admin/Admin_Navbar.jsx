@@ -25,7 +25,7 @@ function Admin_Navbar() {
 
     const navImg = (path) =>
       `w-11 color-[rgb(158,67,255)] bg-white ${
-        isActive(path) ? "bg-[rgb(158,67,255)] text-white" : "bg-transparent text-gray-600 colour-white group-hover:text-blue-600"
+        isActive(path) ? "bg-[rgb(159,67,255)] text-white" : "bg-transparent text-gray-600 colour-white group-hover:text-blue-600"
       }`;
 
     const navText = (path) =>
