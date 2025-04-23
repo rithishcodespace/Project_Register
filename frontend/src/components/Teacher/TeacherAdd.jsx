@@ -2,16 +2,16 @@ import React from 'react';
 
 function TeacherAdd() {
   return (
-    <div className="flex justify-center mt-1 px-4">
-      <div className="rounded-xl  ">
-        <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">Post New Project</h2>
+    <div className="flex justify-center bg-white rounded-md mt-1 b px-4">
+      <div className="rounded-9xl bg-white ">
+        <h2 className="text-2xl bg-white font-semibold mb-6 text-center text-gray-800">Post New Project</h2>
         <form className="space-y-6">
           
           {/* Project and Cluster Name */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Project Name</label>
-              <input type="text" placeholder="Enter Project Name" className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <div className="grid grid-cols-1 bg-white md:grid-cols-2 gap-6">
+            <div className=' bg-white '>
+              <label className="block bg-white  text-sm font-medium text-gray-700">Project Name</label>
+              <input type="text" bg-white  placeholder="Enter Project Name" className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Cluster Name</label>
