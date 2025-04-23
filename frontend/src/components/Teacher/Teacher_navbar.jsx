@@ -21,18 +21,18 @@ function Teacher_navbar({ isOpen, toggleSidebar }) {
 
   const navDiv = (path) =>
     `ml-3 mb-10 flex items-center rounded-lg bg-white px-3 py-2  ${
-      isActive(path) ? "bg-purple-400 text-white" : "hover:"
+      isActive(path) ? "bg-purple-500 text-white" : "hover:"
     } ${isOpen ? "w-52" : "w-12 "}`;
 
   const navIcon = (path) =>
     `bg-white ${
-      isActive(path) ? "bg-purple-400 text-white" : "bg-transparent text-gray-600 colour-white group-hover:text-purple-600"
+      isActive(path) ? "bg-purple-500 text-white" : "bg-transparent text-gray-600 colour-white group-hover:text-purple-600"
     }`;
 
   const navText = (path) =>
     `ml-3 text-lg font-medium bg-white  ${
       isOpen ? "opacity-100" : "opacity-0 hidden"
-    } ${isActive(path) ?  "bg-purple-400 text-white" : "text-gray-600 group-hover:text-purple-600"}`;
+    } ${isActive(path) ?  "bg-purple-500 text-white" : "text-gray-600 group-hover:text-purple-600"}`;
 
   return (
     <div

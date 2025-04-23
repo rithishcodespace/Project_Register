@@ -27,14 +27,14 @@ function Student_navbar() {
         `w-11 rounded-md ${
           isActive(path)
             ? "bg-purple-400 text-white"
-            : "bg-transparent text-gray-600 group-hover:text-blue-600"
+            : "bg-transparent text-gray-600 group-hover:text-purple-400 "
         }`;
       
       const navText = (path) =>
         `text-lg px-2 py-1 rounded-md ${
           isActive(path)
             ? "bg-purple-400 text-white"
-            : "bg-white text-gray-600 group-hover:text-blue-600"
+            : "bg-white text-gray-600 group-hover:text-purple-400"
         }`;
       
 
