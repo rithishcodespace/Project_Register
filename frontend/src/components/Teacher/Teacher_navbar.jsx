@@ -2,6 +2,8 @@ import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Home, UploadCloud, FileText, BarChart2, LogOut } from 'lucide-react';
 import college_img from "../../assets/college_img.png";
+import menu from "../../assets/menu.png"
+import wrong from "../../assets/wrong.png"
 
 function Teacher_navbar({ isOpen, toggleSidebar }) {
   const navigate = useNavigate();
@@ -39,11 +41,15 @@ function Teacher_navbar({ isOpen, toggleSidebar }) {
     >
       {/* Toggle Button */}
       <button
-        onClick={toggleSidebar}
-        className={`relative top-3 left-5 w-12 h-10 p-2 bg-purple-500 text-black rounded-md shadow-md hover:bg-purple-300 transition-all `}
-      >
-        {isOpen ? "<<" : ">>"}
-      </button>
+      onClick={toggleSidebar}
+      className={`relative top-3 left-5 w-12 h-10 p-2 bg-white text-black rounded-md hover:bg-purple-500 transition-all ${isOpen ? "left-48" : "left-5"} `}
+>     
+     <img
+      src={isOpen ? wrong : menu}
+      alt="Toggle Sidebar"
+      className="w-full h-full object-contain bg-white border-none text-red-500 hover:bg-purple-500"
+     />
+     </button>
 
       {/* Logo */}
       <div className="h-32 bg-white mt-6">
@@ -80,7 +86,7 @@ function Teacher_navbar({ isOpen, toggleSidebar }) {
           onClick={handleLogout}
           className=" ml-3 flex items-center mt-auto mb-5 px-3 py-2 text-gray-600 hover:text-red-500"
         >
-          <LogOut size={24} className="mr-5 bg-white rotate-180" />
+          <LogOut size={24} className="mr-5 bg-white rotate-180"/>
           <p className={`ml-3 bg-white text-lg transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 hidden"}`}>
             Logout
           </p>
