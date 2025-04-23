@@ -1,9 +1,70 @@
 import React from 'react'
 
-const PostedProjects = () => {
-  return (
-    <div>PostedProjects</div>
-  )
-}
+
+  const PostedProjects = () => {
+    const projects = [
+      {
+        project_name: "AI Chatbot",
+        cluster_name: "Cluster A",
+        description: "Build a chatbot using natural language processing.",
+        phases: [
+          { requirement: "Research NLP", deadline_days: 5 },
+          { requirement: "Design UI", deadline_days: 3 },
+          { requirement: "Build backend", deadline_days: 7 },
+          { requirement: "Integrate AI", deadline_days: 4 },
+          { requirement: "Testing", deadline_days: 2 },
+        ],
+      },
+      {
+        project_name: "E-Commerce App",
+        cluster_name: "Cluster B",
+        description: "Create a full-stack e-commerce application.",
+        phases: [
+          { requirement: "Frontend Design", deadline_days: 4 },
+          { requirement: "Database Setup", deadline_days: 3 },
+          { requirement: "APIs Development", deadline_days: 6 },
+          { requirement: "Payment Gateway", deadline_days: 5 },
+          { requirement: "Deployment", deadline_days: 2 },
+        ],
+      },
+    ];
+  
+    return (
+      <div className="p-6 w-full max-w-7xl mx-auto">
+        <h2 className="text-2xl font-bold text-center text-purple-700 mb-6">Posted Projects</h2>
+  
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white border border-gray-300 rounded-md shadow-md">
+            <thead>
+              <tr className="bg-purple-100 text-purple-800 text-left text-sm">
+                <th className="py-2 px-4 border">Project Name</th>
+                <th className="py-2 px-4 border">Cluster</th>
+                <th className="py-2 px-4 border">Description</th>
+                <th className="py-2 px-4 border">Phases</th>
+              </tr>
+            </thead>
+            <tbody>
+              {projects.map((proj, i) => (
+                <tr key={i} className="hover:bg-gray-100 transition">
+                  <td className="py-2 px-4 border">{proj.project_name}</td>
+                  <td className="py-2 px-4 border">{proj.cluster_name}</td>
+                  <td className="py-2 px-4 border">{proj.description}</td>
+                  <td className="py-2 px-4 border">
+                    <ul className="list-disc ml-4 text-sm space-y-1">
+                      {proj.phases.map((p, index) => (
+                        <li key={index}>
+                          <span className="font-medium">Phase {index + 1}:</span> {p.requirement} — {p.deadline_days} days
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
 
 export default PostedProjects

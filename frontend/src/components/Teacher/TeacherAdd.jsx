@@ -34,7 +34,7 @@ function TeacherAdd() {
               </div>
               <div className="col-span-1">
                 <label className="block text-sm font-medium text-gray-700">Phase {phase} Deadline (days)</label>
-                <input type="number" placeholder="No. of days" className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="number" placeholder="No. of days" className="mt-1 w-full border text-red  border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
             </div>
           ))}
