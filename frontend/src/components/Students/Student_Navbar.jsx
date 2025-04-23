@@ -34,7 +34,7 @@ function Student_navbar() {
         `text-lg px-2 py-1 rounded-md ${
           isActive(path)
             ? "bg-purple-400 text-white"
-            : "bg-white text-gray-600 group-hover:text-purple-400"
+            : "bg-white text-gray-600 group-hover:text-purple-600"
         }`;
       
 
