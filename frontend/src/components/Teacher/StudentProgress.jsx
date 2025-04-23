@@ -1,6 +1,4 @@
 import React from 'react';
-import { DataGrid } from '@mui/x-data-grid';
-import { Box, Typography, Container } from '@mui/material';
 
 const StudentProgress = () => {
   const studentProjects = [
