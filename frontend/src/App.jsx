@@ -18,6 +18,7 @@ import Students_Progress from "./components/Admin/Students_Progress";
 import Add_Project from "./components/Admin/Add_Project";
 import Posted_project from "./components/Admin/Posted_project";
 import Admin_Dashboard from "./components/Admin/Admin_Dashboard";
+import Create_team from "./components/Teacher/Create_team";
 
 function App() {
 
@@ -27,7 +28,7 @@ function App() {
         <Route path="/" element={<Login />}></Route>
 
         <Route path="/student" element={<Student />}>
-          <Route index element={<Student_Dashboard />} />
+          <Route index element={<Student_Dashboard />}/>  
           <Route path="Progress_update" element={<Progress_Update/>} />
           <Route path="Project_Details" element={<Project_Details/>} />
           <Route path="Students_team" element={<Student_Team/>} />

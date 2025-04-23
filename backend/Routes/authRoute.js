@@ -8,6 +8,8 @@ const jwt = require("jsonwebtoken");
 const client = require("../utils/redis");
 const bcrypt = require("bcrypt");
 const verifyRefreshToken = require("../utils/verifyRefreshToken");
+const { OAuth2Client } = require("google-auth-library");
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 router.post("/auth/login",(req,res,next) => {
    const{emailId,password} = req.body;
@@ -90,5 +92,58 @@ router.delete("/auth/logout",async(req,res,next) => {
         next(error);
     }
 })
+
+router.post("/auth/google-login", async (req, res, next) => {
+  const { token } = req.body;
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID, // should match Firebase Web client ID
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name } = payload;
+
+    db.query("SELECT * FROM users WHERE emailId = ?", [email], async (err, result) => {
+      if (err) return next(err);
+
+      let user = result[0];
+
+      if (!user) {
+        const insertSql = "INSERT INTO users (emailId, fullName) VALUES (?, ?)";
+        db.query(insertSql, [email, name], async (err, insertResult) => {
+          if (err) return next(err);
+          user = { id: insertResult.insertId, emailId: email };
+          return generateTokens(user);
+        });
+      } else {
+        generateTokens(user);
+      }
+
+      async function generateTokens(user) {
+        const accessToken = jwt.sign({ id: user.id }, process.env.ACCESS_TOKEN_SECRET, {
+          expiresIn: "15m",
+        });
+
+        const refreshToken = jwt.sign({ id: user.id }, process.env.REFRESH_TOKEN_SECRET, {
+          expiresIn: "7d",
+        });
+
+        await client.set(user.id.toString(), refreshToken, { EX: 604800 });
+
+        res.status(200).json({
+          message: "Google login successful",
+          accessToken,
+          refreshToken,
+        });
+      }
+    });
+  } catch (err) {
+    console.error("Google token validation failed:", err);
+    next(createError.Unauthorized("Invalid Google token"));
+  }
+});
+
 
 module.exports = router;
