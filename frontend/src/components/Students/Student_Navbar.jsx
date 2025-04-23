@@ -18,7 +18,7 @@ function Student_navbar() {
     };
 
     const navDiv = (path) =>
-      `ml-10 mb-6 flex items-center rounded-lg px-3 w-60 py-2 bg-white  ${
+      `ml-10 mb-6 flex items-center rou nded-lg px-3 w-60 py-2 bg-white  ${
         isActive(path) ? "bg-[rgb(158,67,255)]" : "hover:"
       }`;
 
