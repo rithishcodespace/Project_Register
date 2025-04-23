@@ -43,7 +43,7 @@ function Teacher_navbar({ isOpen, toggleSidebar }) {
       {/* Toggle Button */}
       <button
       onClick={toggleSidebar}
-      className={`relative top-3 left-5 w-12 h-10 p-2 bg-white text-black rounded-md transition-all ${isOpen ? "left-48" : "left-5"} `}
+      className={`relative top-3 w-12 h-10 p-2 bg-white text-black rounded-md transition-all ${isOpen ? "left-48" : "left-5"} `}
 >     
      <img
       src={isOpen ? wrong : menu}
@@ -85,8 +85,8 @@ function Teacher_navbar({ isOpen, toggleSidebar }) {
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className=" ml-3 flex items-center mt-auto mb-5 px-3 py-2 text-gray-600 hover:text-red-500"
-        >
+          className=" ml-3 flex items-center mt-auto mb-5 px-3 py-2 text-gray-600 hover:text-red-500">
+            
           <LogOut size={24} className="mr-5 bg-white rotate-180"/>
           <p className={`ml-3 bg-white text-lg transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 hidden"}`}>
             Logout
