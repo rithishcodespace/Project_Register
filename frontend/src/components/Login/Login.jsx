@@ -26,7 +26,8 @@ function Login() {
     console.log(response);
     if(response.status === 200)
     {
-      // nav
+      localStorage.setItem("accessToken",response.data.accessToken);
+      localStorage.setItem("refreshToken",response.data.refreshToken);
     }
     else{
       // invalid

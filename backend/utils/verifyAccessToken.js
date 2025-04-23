@@ -20,7 +20,7 @@ const verifyAccessToken = (req,res,next) => {
             return next(error.message);
         }
     }
-    req.payload = payload;
+    req.payload = payload; //it attaches the userId to the next middleware
     next();
   })
 }
