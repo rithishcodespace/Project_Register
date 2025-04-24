@@ -6,7 +6,6 @@ export default function Student_Dashboard() {
     name: '',
     email: '',
     registerNumber: '',
-    projectName: '',
     cluster: '',
     totalMembers: 1,
   });
@@ -166,7 +165,6 @@ export default function Student_Dashboard() {
                 { field: 'name', label: 'Your Name', type: 'text' },
                 { field: 'email', label: 'Your Email', type: 'email' },
                 { field: 'registerNumber', label: 'Register Number', type: 'text' },
-                { field: 'projectName', label: 'Project Name', type: 'text' },
                 { field: 'cluster', label: 'Cluster', type: 'text' },
                 {
                   field: 'totalMembers',
