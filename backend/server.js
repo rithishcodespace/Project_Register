@@ -8,17 +8,21 @@ const PORT = process.env.PORT;
 const authRoute = require("./Routes/authRoute");
 const profileRoute = require("./Routes/profile");
 const teacherRoute = require("./Routes/teacherRoute");
+const studentRoute = require("./Routes/studentRoute");
 
 app.use(express.json());
 app.use(morgan('dev')); //development build
 app.use(cors({
-    origin: 'http://localhost:5173', 
-    credentials: true
+    origin: "http://localhost:5173", // Vite's default port
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   }));
 
 app.use("/",authRoute);
 app.use("/",profileRoute);
 app.use("/",teacherRoute);
+app.use("/",studentRoute);
 
 app.use((req,res,next) => {
     next(createError.NotFound("api do not found"));
