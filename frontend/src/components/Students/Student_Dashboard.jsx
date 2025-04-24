@@ -72,7 +72,7 @@ export default function Student_Dashboard() {
   useLockBodyScroll(isCreateOpen || isInviteOpen);
 
   return (
-    <div className="h-screen flex flex-col items-center justify-center px-6">
+    <div className="h-[29rem] flex flex-col items-center justify-center px-6 pt-16">
       {!teamCreated && (
         <div className="w-full flex justify-end -mt-12 mb-6">
           <button
@@ -84,7 +84,7 @@ export default function Student_Dashboard() {
         </div>
       )}
 
-      <div className="w-[95%] max-w-[60rem] h-[32rem] rounded-xl bg-white flex flex-col items-center justify-center gap-4 p-6 overflow-y-auto">
+      <div className="w-[95%] max-w-[60rem] h-[30rem] rounded-xl bg-white flex flex-col items-center justify-center gap-4 p-9 overflow-y-auto">
         {!teamCreated ? (
           <>
             <h1 className="text-purple-500 text-2xl font-bold bg-white">CREATE YOUR OWN TEAM</h1>
