@@ -35,6 +35,7 @@ const PostedProjects = () => {
 
       <div className="overflow-x-auto">
         <table className="min-w-full rounded-2xl shadow-md border-separate border-spacing-y-2">
+
           <thead>
             <tr className="bg-purple-100 text-purple-800 text-left text-sm">
               <th className="py-2 px-4 w-44 text-xl">Project Name</th>

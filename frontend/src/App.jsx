@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, BrowserRouter } from "react-rou
 import Login from "./components/Login/Login";
 import TeacherDashBoard from "./components/Teacher/TeacherDashBoard";
 import TeacherAdd from "./components/Teacher/TeacherAdd";
-import Teacher_navbar from "./components/Teacher/Teacher_navbar";
 import StudentProgress from "./components/Teacher/StudentProgress";
 import PostedProjects from "./components/Teacher/PostedProjects";
 import Student from "./components/Students/Student";
@@ -20,6 +19,8 @@ import Posted_project from "./components/Admin/Posted_project";
 import Admin_Dashboard from "./components/Admin/Admin_Dashboard";
 import Create_team from "./components/Teacher/Create_team";
 import Cluster from "./components/Teacher/Cluster";
+// import ShowFullDetail from "./components/Teacher/ShowFullDetail";
+import ProjDetails from "./components/Teacher/ProjDetails";
 
 function App() {
 
@@ -40,7 +41,8 @@ function App() {
           <Route path="add" element={<TeacherAdd />} />
           <Route path="posted_projects" element={<PostedProjects />} />
           <Route path="student_progress" element={<StudentProgress />} />
-          <Route path="student_progress/:cluster" element={<Cluster/>}/>
+          <Route path="student_progress/:cluster" element={<Cluster />} />
+          <Route path="student_progress/project_details/:id" element={<Cluster />} />
         </Route>
 
         <Route path="/admin" element={<Admin />}>

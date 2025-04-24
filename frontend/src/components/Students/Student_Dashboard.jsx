@@ -1,26 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import CreateForm from './CreateForm';
+import InviteForm from './InviteForm';
+import TeamDetails from './TeamDetails';
+//import { useLockBodyScroll } from './hooks/useLockBodyScroll';
 
-// Scroll lock hook
-function useLockBodyScroll(lock) {
-  useEffect(() => {
-    if (lock) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [lock]);
-}
-
-export default function Student_Dashboard() {
+function StudentDashboard() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
     name: '',
     email: '',
     registerNumber: '',
-    cluster: '',
+    department: '',
   });
   const [teamCreated, setTeamCreated] = useState(false);
 
@@ -34,6 +24,9 @@ export default function Student_Dashboard() {
   const [members, setMembers] = useState([]);
 
   const totalMembers = 4;
+  const departments = [
+    'CSE', 'AIDS', 'IT', 'AIML', 'CT', 'AGRI', 'ECE', 'EIE', 'EEE', 'MECH', 'FT', 'FD'
+  ];
 
   const isValidEmail = (email) => email.endsWith('@bitsathy.ac.in');
 
@@ -68,16 +61,7 @@ export default function Student_Dashboard() {
     setIsInviteOpen(false);
   };
 
-  // Lock scroll when any modal is open
-  useLockBodyScroll(isCreateOpen || isInviteOpen);
-
-  function generateTeamId() {
-    const timestamp = Date.now(); // Get current timestamp
-    const randomPart = Math.floor(Math.random() * 1000); // Generate a random part for added uniqueness
-    setteamId(`team-${timestamp}-${randomPart}`);
-}
-
-  const[teamId,setteamId] = useState();
+ // useLockBodyScroll(isCreateOpen || isInviteOpen);
 
   return (
     <div className="h-[29rem] flex flex-col items-center justify-center px-6 pt-16">
@@ -106,163 +90,20 @@ export default function Student_Dashboard() {
         ) : (
           <>
             <h1 className="text-red-500 bg-white text-2xl font-semibold -mt-36 mb-4">Team code: cs12</h1>
-
-            <div className="w-full">
-              <div className="grid grid-cols-5 bg-gray-200 px-4 py-2 rounded-t">
-                <div className="font-semibold bg-gray-200">Name</div>
-                <div className="font-semibold bg-gray-200">Email</div>
-                <div className="font-semibold bg-gray-200 pl-3 ml-14">Register No</div>
-                <div className="font-semibold bg-gray-200 ml-20">Department</div>
-                <div className="font-semibold text-right bg-gray-200">Action</div>
-              </div>
-
-              <div className="space-y-1 bg-grey-500">
-                {Array.from({ length: totalMembers }).map((_, idx) => {
-                  const isCreator = idx === 0;
-                  const memberData = !isCreator ? members[idx - 1] : null;
-                  return (
-                    <div
-                      key={idx}
-                      className="grid grid-cols-5 items-center bg-white px-4 py-2 rounded shadow"
-                    >
-                      <div className="bg-white">
-                        {isCreator
-                          ? createForm.name
-                          : memberData
-                          ? memberData.name
-                          : '-'}
-                      </div>
-
-                      <div className="text-sm text-gray-600 bg-white w-[18rem]" style={{ wordBreak: 'break-word' }}>
-                        {isCreator
-                          ? createForm.email
-                          : memberData
-                          ? memberData.email
-                          : '-'}
-                      </div>
-
-                      <div className="bg-white pl-3 ml-14" style={{ wordBreak: 'break-word' }}>
-                        {isCreator
-                          ? createForm.registerNumber
-                          : memberData
-                          ? memberData.registerNumber
-                          : '-'}
-                      </div>
-
-                      <div className="bg-white ml-20">
-                        {isCreator
-                          ? createForm.cluster
-                          : memberData
-                          ? memberData.department
-                          : '-'}
-                      </div>
-
-                      <div className="text-right bg-white">
-                        {!isCreator && !memberData && (
-                          <button
-                            onClick={() => setIsInviteOpen(true)}
-                            className="px-3 py-1 border border-purple-500 text-purple-500 rounded hover:bg-purple-500 hover:text-white transition"
-                          >
-                            Invite
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <TeamDetails
+              members={members}
+              createForm={createForm}
+              totalMembers={totalMembers}
+              setIsInviteOpen={setIsInviteOpen}
+            />
           </>
         )}
       </div>
 
-      {isCreateOpen && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-3xl">
-            <h2 className="text-xl font-semibold mb-4 bg-white">New Project Invitation</h2>
-            <form onSubmit={handleCreateSubmit} className="space-y-4 bg-white">
-              {[ 
-                { field: 'name', label: 'Your Name', type: 'text' },
-                { field: 'email', label: 'Your Email', type: 'email' },
-                { field: 'registerNumber', label: 'Register Number', type: 'text' },
-                { field: 'cluster', label: 'Cluster', type: 'text' },
-              ].map(({ field, label, type }) => (
-                <div key={field} className="bg-white">
-                  <label className="block text-sm font-medium text-gray-700 bg-white">{label}</label>
-                  <input
-                    name={field}
-                    value={createForm[field]}
-                    onChange={handleCreateChange}
-                    type={type}
-                    required
-                    className="mt-1 bg-white block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-indigo-300"
-                  />
-                </div>
-              ))}
-              <div className="mt-6 flex justify-between bg-white space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateOpen(false)}
-                  className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  onClick={() => generateTeamId()}
-                  className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-700 transition"
-                >
-                  Create
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {isInviteOpen && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-xl">
-            <h2 className="text-xl font-semibold mb-4 bg-white">Invite a Member</h2>
-            <form onSubmit={handleInviteSubmit} className="space-y-4 bg-white">
-              {[ 
-                { field: 'name', label: 'Name', type: 'text' },
-                { field: 'email', label: 'Email', type: 'email' },
-                { field: 'registerNumber', label: 'Register Number', type: 'text' },
-                { field: 'department', label: 'Department', type: 'text' },
-              ].map(({ field, label, type }) => (
-                <div key={field} className="bg-white">
-                  <label className="block text-sm font-medium text-gray-700 bg-white">{label}</label>
-                  <input
-                    name={field}
-                    value={inviteForm[field]}
-                    onChange={handleInviteChange}
-                    type={type}
-                    required
-                    placeholder={`Enter ${label}`}
-                    className="mt-1 bg-white block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-indigo-300"
-                  />
-                </div>
-              ))}
-              <div className="mt-6 flex bg-white justify-between space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setIsInviteOpen(false)}
-                  className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-700 transition"
-                >
-                  Invite
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {isCreateOpen && <CreateForm {...{ createForm, handleCreateChange, handleCreateSubmit, departments, setIsCreateOpen }} />}
+      {isInviteOpen && <InviteForm {...{ inviteForm, handleInviteChange, handleInviteSubmit, departments, setIsInviteOpen }} />}
     </div>
   );
 }
+
+export default StudentDashboard;
