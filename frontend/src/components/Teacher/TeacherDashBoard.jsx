@@ -20,24 +20,24 @@ const TeacherDashboard = () => {
   ];
 
   return (
-    <div className="p-6 bg-white rounded-xl h-[90%]">
-      <h2 className="text-3xl font-bold bg-white mb-8">Teacher Dashboard</h2>
+    <div className="p-6 bg- rounded-xl h-[90%]">
+      <h2 className="text-3xl font-bold bg- mb-8">Teacher Dashboard</h2>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 bg-white sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div className="grid grid-cols-1 bg- sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         {stats.map((stat, index) => (
           <div
             key={index}
-            className="bg-purple-300 p-5 rounded-2xl shadow hover:scale-105 transition duration-200"
+            className="bg-white p-5 rounded-2xl shadow hover:scale-105 transition duration-200"
           >
-            <p className="text-sm bg-purple-300 text-white-500">{stat.title}</p>
-            <h3 className="text-2xl bg-purple-300 font-semibold text-blue-600">{stat.value}</h3>
+            <p className="text-sm bg-white text-white-500">{stat.title}</p>
+            <h3 className="text-2xl bg-white font-semibold text-purple-500">{stat.value}</h3>
           </div>
         ))}
       </div>
 
       {/* Upcoming Deadlines */}
-      <div className="bg-white p-6 rounded-2xl shadow mb-6">
+      <div className="bg-white p-6 rounded-2xl shadow mb-6 hover:scale-105 transition duration-200">
         <h3 className="text-xl bg-white font-semibold  mb-4 flex items-center">
            Upcoming Deadlines
         </h3>
@@ -51,7 +51,7 @@ const TeacherDashboard = () => {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white p-6 rounded-2xl shadow">
+      <div className="bg-white p-6 rounded-2xl shadow hover:scale-105 transition duration-200">
         <h3 className="text-xl bg-white font-semibold mb-4 flex items-center">
             Recent Activity
         </h3>
