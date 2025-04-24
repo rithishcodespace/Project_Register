@@ -11,8 +11,12 @@ import EEE from '../../assets/EEE.jpeg';
 import MECH from '../../assets/MECH.jpeg';
 import FT from '../../assets/FT.jpeg';
 import FD from '../../assets/FD.jpeg';
+import { useNavigate } from 'react-router-dom';
 
 export default function StudentProgress() {
+
+  const navigate = useNavigate();
+
   const departments = [
     { name: "CSE", image: CSE },
     { name: "AIDS", image: AIDS },
@@ -28,14 +32,20 @@ export default function StudentProgress() {
     { name: "FD", image: FD },
   ];
 
+  const handlenav = (cluster) => {
+    navigate(`/teacher/student_progress/${cluster}`);
+  };
+  
+
   return (
     <div className="p-6 bg- rounded-md min-h-screen">
       <h1 className="text-2xl bg- font-bold mb-6 text-center">Choose Department</h1>
-      <div className="grid grid-cols-1 bg- sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 bg- sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {departments.map((dept, index) => (
           <div
             key={index}
-            className="bg-white rounded-2xl shadow-md p-6 flex flex-col items-center justify-center hover:scale-105 transition-transform duration-300"
+            className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center justify-center hover:scale-105 transition-transform duration-300"
+            onClick={()=>handlenav(dept.name)}
           >
             <div className="bg-blue-100  rounded-full mb-4">
               <img src={dept.image} alt={dept.name} className="rounded-full w-24 h-24 object-cover" />
