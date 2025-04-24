@@ -75,7 +75,7 @@ router.get("/student/projects",(req,res,next) => {
 // make project status -> ongoing
 router.post("/student/:status/:projectId",(req,res,next) => {
     try{
-      let status = req.paramas.status; // ongoing || completed 
+      let status = req.params.status; // ongoing || completed 
       let projectId = req.params.projectId;
       let sql = "insert into projects(status) values(?) where project_id = ?";
       db.query(sql,[status,projectId],(error,result) => {
