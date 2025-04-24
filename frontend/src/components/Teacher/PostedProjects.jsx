@@ -1,7 +1,12 @@
-import React from 'react'
+import React from 'react';
+import { useEffect,useState } from 'react';
+import axios from 'axios';
 
 
   const PostedProjects = () => {
+
+    const[projectData,setprojectData] = useState([]);
+
     const projects = [
       {
         project_name: "AI Chatbot",
@@ -28,6 +33,36 @@ import React from 'react'
         ],
       },
     ];
+
+    async function getProjects() {
+      try{
+        const accessToken = localStorage.getItem("accessToken");
+        const response = await axios.get("http://localhost:1234/teacher/getprojects",{
+          headers:{
+            "Content-Type":"application/json",
+            Authorization: `Bearer ${accessToken.trim()}`
+          }
+        })
+        if(response.status === 200)
+        {
+          console.log("get req",response.data)
+          setprojectData(response.data);
+        }
+        else
+        {
+          alert("Sorry, no data");
+        }
+      }
+      catch(error)
+      {
+        console.log(error.message);
+      }
+     
+    }
+
+    useEffect(() => {
+      getProjects()
+    },[])
   
     return (
       <div className="p-6 w-full max-w-7xl mx-auto">

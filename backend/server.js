@@ -12,8 +12,10 @@ const teacherRoute = require("./Routes/teacherRoute");
 app.use(express.json());
 app.use(morgan('dev')); //development build
 app.use(cors({
-    origin: 'http://localhost:5173', 
-    credentials: true
+    origin: "http://localhost:5173", // Vite's default port
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   }));
 
 app.use("/",authRoute);

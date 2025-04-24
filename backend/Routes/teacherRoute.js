@@ -19,13 +19,19 @@ router.post("/teacher/addproject",(req,res,next) => {
     }
 })
 
-router.get("teacher/getprojects",verifyAccessToken,(req,res,next) => {
+router.get("/teacher/getprojects",(req,res,next) => {
   try{
-    let sql = "select * from projects"
+    let sql = "select * from projects";
+    db.query(sql,(error,result) => {
+      if(error)return next(error);
+      console.log(result);
+      res.send(result);
+
+    })
   }
   catch(error)
   {
-
+    next(error.message);
   }
 })
 
