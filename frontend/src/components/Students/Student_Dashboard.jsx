@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
 export default function Student_Dashboard() {
-  // Create Team modal state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
     name: '',
@@ -9,11 +8,9 @@ export default function Student_Dashboard() {
     projectName: '',
     cluster: '',
     totalMembers: 1,
-    deadline: '',
   });
   const [teamCreated, setTeamCreated] = useState(false);
 
-  // Invite Member modal state
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState({
     name: '',
@@ -22,28 +19,28 @@ export default function Student_Dashboard() {
   });
   const [members, setMembers] = useState([]);
 
-  // Handlers for Create Team form
   const handleCreateChange = (e) => {
     const { name, value } = e.target;
     setCreateForm((f) => ({
       ...f,
       [name]:
         name === 'totalMembers'
-          ? Math.max(1, Number(value))
+          ? Math.min(4, Math.max(1, Number(value)))
           : value,
     }));
   };
+
   const handleCreateSubmit = (e) => {
     e.preventDefault();
     setTeamCreated(true);
     setIsCreateOpen(false);
   };
 
-  // Handlers for Invite Member form
   const handleInviteChange = (e) => {
     const { name, value } = e.target;
     setInviteForm((f) => ({ ...f, [name]: value }));
   };
+
   const handleInviteSubmit = (e) => {
     e.preventDefault();
     setMembers((m) => [...m, inviteForm]);
@@ -53,25 +50,21 @@ export default function Student_Dashboard() {
 
   return (
     <div className="h-screen flex flex-col items-center justify-center bg-white px-6">
-      {/* Top Invitations button (hidden after team creation) */}
       {!teamCreated && (
         <div className="w-full flex justify-end -mt-12 mb-8">
           <button
             className="px-4 py-2 border border-purple-500 text-purple-500 rounded hover:bg-purple-500 hover:text-white transition"
-            onClick={() => {/* invitation logic */}}
+            onClick={() => {}}
           >
             Invitations
           </button>
         </div>
       )}
 
-      {/* Main Create-Team box */}
-      <div className="w-[60rem] h-[32rem] rounded-xl bg-red-500 flex flex-col items-center justify-center gap-4 p-6 overflow-y-auto">
+      <div className="w-[95%] max-w-[60rem] h-[32rem] rounded-xl bg-red-500 flex flex-col items-center justify-center gap-4 p-6 overflow-y-auto">
         {!teamCreated ? (
           <>
-            <h1 className="text-purple-500 text-2xl font-bold">
-              CREATE YOUR OWN TEAM
-            </h1>
+            <h1 className="text-purple-500 text-2xl font-bold">CREATE YOUR OWN TEAM</h1>
             <button
               onClick={() => setIsCreateOpen(true)}
               className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition"
@@ -81,13 +74,9 @@ export default function Student_Dashboard() {
           </>
         ) : (
           <>
-            <h2 className="text-white text-2xl font-semibold">
-              {createForm.projectName}
-            </h2>
+            <h2 className="text-white text-2xl font-semibold">{createForm.projectName}</h2>
             <p className="text-white">Cluster: {createForm.cluster}</p>
-            <p className="text-white">Deadline: {createForm.deadline}</p>
 
-            {/* Header Row */}
             <div className="w-full mt-4">
               <div className="grid grid-cols-4 bg-gray-200 px-4 py-2 rounded-t">
                 <div className="font-semibold">Name</div>
@@ -96,7 +85,6 @@ export default function Student_Dashboard() {
                 <div className="font-semibold text-right">Action</div>
               </div>
 
-              {/* Data Rows */}
               <div className="space-y-1">
                 {Array.from({ length: createForm.totalMembers }).map((_, idx) => {
                   const isCreator = idx === 0;
@@ -106,7 +94,6 @@ export default function Student_Dashboard() {
                       key={idx}
                       className="grid grid-cols-4 items-center bg-white px-4 py-2 rounded shadow"
                     >
-                      {/* Name */}
                       <div>
                         {isCreator
                           ? createForm.name
@@ -115,7 +102,6 @@ export default function Student_Dashboard() {
                           : '-'}
                       </div>
 
-                      {/* Email */}
                       <div className="text-sm text-gray-600">
                         {isCreator
                           ? createForm.email
@@ -124,7 +110,6 @@ export default function Student_Dashboard() {
                           : '-'}
                       </div>
 
-                      {/* Department */}
                       <div>
                         {isCreator
                           ? createForm.cluster
@@ -133,7 +118,6 @@ export default function Student_Dashboard() {
                           : '-'}
                       </div>
 
-                      {/* Action */}
                       <div className="text-right">
                         {!isCreator && !memberData && (
                           <button
@@ -153,13 +137,10 @@ export default function Student_Dashboard() {
         )}
       </div>
 
-      {/* Create Team Modal */}
       {isCreateOpen && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">
-              New Project Invitation
-            </h2>
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-3xl">
+            <h2 className="text-xl font-semibold mb-4">New Project Invitation</h2>
             <form onSubmit={handleCreateSubmit} className="space-y-4">
               {[
                 { field: 'name', label: 'Your Name', type: 'text' },
@@ -168,22 +149,22 @@ export default function Student_Dashboard() {
                 { field: 'cluster', label: 'Cluster', type: 'text' },
                 {
                   field: 'totalMembers',
-                  label: 'Total Members',
+                  label: 'Total Members (Max 4)',
                   type: 'number',
                   min: 1,
+                  max: 4,
                 },
-                { field: 'deadline', label: 'Deadline', type: 'date' },
-              ].map(({ field, label, type, min }) => (
+              ].map(({ field, label, type, min, max }) => (
                 <div key={field}>
-                  <label className="block text-sm font-medium text-gray-700">
-                    {label}
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">{label}</label>
                   <input
                     name={field}
                     value={createForm[field]}
                     onChange={handleCreateChange}
                     type={type}
+                    required
                     min={min}
+                    max={max}
                     className="mt-1 block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-indigo-300"
                   />
                 </div>
@@ -208,10 +189,9 @@ export default function Student_Dashboard() {
         </div>
       )}
 
-      {/* Invite Member Modal */}
       {isInviteOpen && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-xl">
             <h2 className="text-xl font-semibold mb-4">Invite a Member</h2>
             <form onSubmit={handleInviteSubmit} className="space-y-4">
               {[
@@ -220,14 +200,13 @@ export default function Student_Dashboard() {
                 { field: 'department', label: 'Department', type: 'text' },
               ].map(({ field, label, type }) => (
                 <div key={field}>
-                  <label className="block text-sm font-medium text-gray-700">
-                    {label}
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">{label}</label>
                   <input
                     name={field}
                     value={inviteForm[field]}
                     onChange={handleInviteChange}
                     type={type}
+                    required
                     placeholder={`Enter ${label}`}
                     className="mt-1 block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-indigo-300"
                   />
