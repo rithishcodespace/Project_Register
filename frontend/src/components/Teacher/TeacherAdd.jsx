@@ -88,28 +88,28 @@ function TeacherAdd() {
             <div className='bg-white'>
               <label className="block bg-white text-sm font-medium text-gray-700">Cluster Name</label>
               <select
-  required
-  value={clusterName}
-  onChange={(e) => setClusterName(e.target.value)}
-  className="mt-1 bg-white w-full border border-gray-300 rounded-md px-3 py-2"
->
-  <option value="" disabled>
-    Select Cluster Name
-  </option>
-  <option value="CSE">CSE</option>
-  <option value="AIDS">AIDS</option>
-  <option value="IT">IT</option>
-  <option value="AIML">AIML</option>
-  <option value="CT">CT</option>
-  <option value="AGRI">AGRI</option>
-  <option value="ECE">ECE</option>
-  <option value="EIE">EIE</option>
-  <option value="EEE">EEE</option>
-  <option value="MECH">MECH</option>
-  <option value="FT">FT</option>
-  <option value="FD">FD</option>
-  {/* Add more options as needed */}
-</select>
+                  required
+                  value={clusterName}
+                  onChange={(e) => setClusterName(e.target.value)}
+                  className="mt-1 bg-white w-full border border-gray-300 rounded-md px-3 py-2"
+>                 
+                  <option value="" disabled>
+                    Select Cluster Name
+                  </option>
+                  <option value="CSE">CSE</option>
+                  <option value="AIDS">AIDS</option>
+                  <option value="IT">IT</option>
+                  <option value="AIML">AIML</option>
+                  <option value="CT">CT</option>
+                  <option value="AGRI">AGRI</option>
+                  <option value="ECE">ECE</option>
+                  <option value="EIE">EIE</option>
+                  <option value="EEE">EEE</option>
+                  <option value="MECH">MECH</option>
+                  <option value="FT">FT</option>
+                  <option value="FD">FD</option>
+                  {/* Add more options as needed */}
+                </select>
             </div>
           </div>
 
