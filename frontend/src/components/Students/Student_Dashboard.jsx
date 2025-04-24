@@ -1,4 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+// Scroll lock hook
+function useLockBodyScroll(lock) {
+  useEffect(() => {
+    if (lock) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [lock]);
+}
 
 export default function Student_Dashboard() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -6,9 +20,7 @@ export default function Student_Dashboard() {
     name: '',
     email: '',
     registerNumber: '',
-    projectName: '',
     cluster: '',
-    totalMembers: 1,
   });
   const [teamCreated, setTeamCreated] = useState(false);
 
@@ -21,17 +33,13 @@ export default function Student_Dashboard() {
   });
   const [members, setMembers] = useState([]);
 
+  const totalMembers = 4;
+
   const isValidEmail = (email) => email.endsWith('@bitsathy.ac.in');
 
   const handleCreateChange = (e) => {
     const { name, value } = e.target;
-    setCreateForm((f) => ({
-      ...f,
-      [name]:
-        name === 'totalMembers'
-          ? Math.min(4, Math.max(1, Number(value)))
-          : value,
-    }));
+    setCreateForm((f) => ({ ...f, [name]: value }));
   };
 
   const handleCreateSubmit = (e) => {
@@ -60,6 +68,9 @@ export default function Student_Dashboard() {
     setIsInviteOpen(false);
   };
 
+  // Lock scroll when any modal is open
+  useLockBodyScroll(isCreateOpen || isInviteOpen);
+
   return (
     <div className="h-screen flex flex-col items-center justify-center px-6">
       {!teamCreated && (
@@ -86,19 +97,19 @@ export default function Student_Dashboard() {
           </>
         ) : (
           <>
-            <h1 className="text-red-500 bg-white text-2xl font-semibold -mt-52 mb-4">Team code: cs12</h1>
+            <h1 className="text-red-500 bg-white text-2xl font-semibold -mt-36 mb-4">Team code: cs12</h1>
 
             <div className="w-full">
               <div className="grid grid-cols-5 bg-gray-200 px-4 py-2 rounded-t">
                 <div className="font-semibold bg-gray-200">Name</div>
                 <div className="font-semibold bg-gray-200">Email</div>
-                <div className="font-semibold bg-gray-200 pl-3">Register No</div>
-                <div className="font-semibold bg-gray-200">Department</div>
+                <div className="font-semibold bg-gray-200 pl-3 ml-14">Register No</div>
+                <div className="font-semibold bg-gray-200 ml-20">Department</div>
                 <div className="font-semibold text-right bg-gray-200">Action</div>
               </div>
 
               <div className="space-y-1 bg-grey-500">
-                {Array.from({ length: createForm.totalMembers }).map((_, idx) => {
+                {Array.from({ length: totalMembers }).map((_, idx) => {
                   const isCreator = idx === 0;
                   const memberData = !isCreator ? members[idx - 1] : null;
                   return (
@@ -114,7 +125,7 @@ export default function Student_Dashboard() {
                           : '-'}
                       </div>
 
-                      <div className="text-sm text-gray-600 bg-white" style={{ wordBreak: 'break-word' }}>
+                      <div className="text-sm text-gray-600 bg-white w-[18rem]" style={{ wordBreak: 'break-word' }}>
                         {isCreator
                           ? createForm.email
                           : memberData
@@ -122,7 +133,7 @@ export default function Student_Dashboard() {
                           : '-'}
                       </div>
 
-                      <div className="bg-white pl-3" style={{ wordBreak: 'break-word' }}>
+                      <div className="bg-white pl-3 ml-14" style={{ wordBreak: 'break-word' }}>
                         {isCreator
                           ? createForm.registerNumber
                           : memberData
@@ -130,7 +141,7 @@ export default function Student_Dashboard() {
                           : '-'}
                       </div>
 
-                      <div className="bg-white">
+                      <div className="bg-white ml-20">
                         {isCreator
                           ? createForm.cluster
                           : memberData
@@ -166,16 +177,8 @@ export default function Student_Dashboard() {
                 { field: 'name', label: 'Your Name', type: 'text' },
                 { field: 'email', label: 'Your Email', type: 'email' },
                 { field: 'registerNumber', label: 'Register Number', type: 'text' },
-                { field: 'projectName', label: 'Project Name', type: 'text' },
                 { field: 'cluster', label: 'Cluster', type: 'text' },
-                {
-                  field: 'totalMembers',
-                  label: 'Total Members (Max 4)',
-                  type: 'number',
-                  min: 1,
-                  max: 4,
-                },
-              ].map(({ field, label, type, min, max }) => (
+              ].map(({ field, label, type }) => (
                 <div key={field} className="bg-white">
                   <label className="block text-sm font-medium text-gray-700 bg-white">{label}</label>
                   <input
@@ -184,8 +187,6 @@ export default function Student_Dashboard() {
                     onChange={handleCreateChange}
                     type={type}
                     required
-                    min={min}
-                    max={max}
                     className="mt-1 bg-white block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-indigo-300"
                   />
                 </div>
