@@ -19,4 +19,14 @@ router.post("/teacher/addproject",(req,res,next) => {
     }
 })
 
+router.get("teacher/getprojects",verifyAccessToken,(req,res,next) => {
+  try{
+    let sql = "select * from projects"
+  }
+  catch(error)
+  {
+
+  }
+})
+
 module.exports = router;
