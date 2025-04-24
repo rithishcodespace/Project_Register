@@ -1,130 +1,147 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
 function TeacherAdd() {
   const [projectName, setProjectName] = useState('');
   const [clusterName, setClusterName] = useState('');
   const [description, setDescription] = useState('');
-  const [phases, setPhases] = useState([
-    { requirements: '', deadline: '' },
-    { requirements: '', deadline: '' },
-    { requirements: '', deadline: '' },
-    { requirements: '', deadline: '' },
-    { requirements: '', deadline: '' },
-  ]);
+  const [phases, setPhases] = useState(
+    Array(5).fill({ requirements: '', days: '' })
+  );
 
   const handlePhaseChange = (index, field, value) => {
     const newPhases = [...phases];
-    newPhases[index][field] = value;
+    newPhases[index] = { ...newPhases[index], [field]: value };
     setPhases(newPhases);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const isProjectDataValid = () => {
+      if (!projectName || !clusterName || !description || phases.length !== 5) return false;
+      return phases.every(phase => phase.requirements && phase.days);
+    };
+
+    if (!isProjectDataValid()) {
+      alert("Please fill in all fields!");
+      return;
+    }
+
     const projectData = {
-      project_name: projectName,
+      project_id: "EXT-CS-P02", // Replace with dynamic ID logic if needed
+      project: projectName,
       cluster: clusterName,
       description,
-      phases: phases.map((phase, index) => ({
-        [`phase_${index + 1}_requirements`]: phase.requirements,
-        [`phase_${index + 1}_deadline`]: phase.deadline,
-      })),
+      phase_1_requirement: phases[0].requirements,
+      phase_1_days: parseInt(phases[0].days),
+      phase_2_requirement: phases[1].requirements,
+      phase_2_days: parseInt(phases[1].days),
+      phase_3_requirement: phases[2].requirements,
+      phase_3_days: parseInt(phases[2].days),
+      phase_4_requirement: phases[3].requirements,
+      phase_4_days: parseInt(phases[3].days),
+      phase_5_requirement: phases[4].requirements,
+      phase_5_days: parseInt(phases[4].days),
     };
 
     try {
-      const response = await fetch('/api/projects', {
-        method: 'POST',
+      const accessToken = localStorage.getItem("accessToken");
+      const response = await axios.post('http://localhost:1234/teacher/addproject', projectData, {
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify(projectData),
+        withCredentials: true,
       });
 
-      if (response.ok) {
-        alert('Project added successfully');
-        // Reset form or do something else on success
+      if (response.status === 200) {
+        alert('Project added successfully!');
+        // Optionally reset form here
       } else {
         alert('Failed to add project');
       }
     } catch (error) {
-      console.error('Error adding project:', error);
-      alert('An error occurred');
+      console.error('Error:', error);
+      alert('An error occurred while adding the project.');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white-50 p-6">
+    <div className="min-h-screen flex  items-center justify-center bg-white-50 p-6">
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-8">
-        <h2 className="text-2xl bg-white font-semibold mb-6 text-center text-gray-800">Post New Project</h2>
+        <h2 className="text-2xl font-semibold mb-6 text-center bg-white text-gray-800">Post New Project</h2>
         <form className="space-y-6 bg-white" onSubmit={handleSubmit}>
           {/* Project and Cluster Name */}
-          <div className="grid grid-cols-1  bg-white md:grid-cols-2 gap-6">
-            <div className=' bg-white '>
-              <label className="block  bg-white text-sm font-medium text-gray-700">Project Name</label>
+          <div className="grid grid-cols-1 bg-white md:grid-cols-2 gap-6">
+            <div className='bg-white'>
+              <label className="block bg-white text-sm font-medium text-gray-700">Project Name</label>
               <input
-                type="text" required 
-                placeholder="Enter Project Name"
+                type="text"
+                required
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
-                className="mt-1 w-full bg-white  border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter Project Name"
+                className="mt-1 bg-white w-full border border-gray-300 rounded-md px-3 py-2"
               />
             </div>
-            <div className=' bg-white '>
-              <label className="block text-sm bg-white  font-medium text-gray-700">Cluster Name</label>
+            <div className='bg-white'>
+              <label className="block bg-white text-sm font-medium text-gray-700">Cluster Name</label>
               <input
-                type="text" required 
-                placeholder="Enter Cluster Name"
+                type="text"
+                required
                 value={clusterName}
                 onChange={(e) => setClusterName(e.target.value)}
-                className="mt-1 w-full border border-gray-300  bg-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter Cluster Name"
+                className="mt-1 bg-white w-full border border-gray-300 rounded-md px-3 py-2"
               />
             </div>
           </div>
 
           {/* Description */}
-          <div className=' bg-white '>
-            <label className="block  bg-white text-sm font-medium text-gray-700">Description</label>
+          <div className='bg-white'>
+            <label className="block text-sm bg-white font-medium text-gray-700">Description</label>
             <input
-              type="text" required 
-              placeholder="Enter Description"
+              type="text"
+              required
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="mt-1 w-full border bg-white  border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter Description"
+              className="mt-1 w-full bg-white border border-gray-300 rounded-md px-3 py-2"
             />
           </div>
 
           {/* Phases */}
-          {[1, 2, 3, 4, 5].map((phase, index) => (
-            <div key={phase} className="grid grid-cols-1 bg-white  md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="col-span-2 bg-white ">
-                <label className="block text-sm bg-white  font-medium text-gray-700">
-                  Phase {phase} Requirements
-                </label>
+          {phases.map((phase, index) => (
+            <div key={index} className="grid bg-white grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="col-span-2 bg-white">
+                <label className="block text-sm font-medium bg-white text-gray-700">Phase {index + 1} Requirements</label>
                 <input
-                  type="text" required 
-                  placeholder="Requirements"
-                  value={phases[index].requirements}
+                  type="text"
+                  required
+                  value={phase.requirements}
                   onChange={(e) => handlePhaseChange(index, 'requirements', e.target.value)}
-                  className="mt-1 w-full border bg-white  border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Requirements"
+                  className="mt-1 bg-white w-full border border-gray-300 rounded-md px-3 py-2"
                 />
               </div>
-              <div className="col-span-2  bg-white ">
-                <label className="block bg-white  text-sm font-medium text-gray-700">
-                  Phase {phase} Deadline (days)
-                </label>
+              <div className="col-span-2 bg-white">
+                <label className="block text-sm font-medium bg-white text-gray-700">Phase {index + 1} Duration (Days)</label>
                 <input
                   type="number"
+                  required
+                  min="1"
+                  value={phase.days}
+                  onChange={(e) => handlePhaseChange(index, 'days', e.target.value)}
                   placeholder="No. of days"
-                  value={phases[index].deadline}
-                  onChange={(e) => handlePhaseChange(index, 'deadline', e.target.value)}
-                  className="mt-1 w-full  bg-white border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 w-full border bg-white border-gray-300 rounded-md px-3 py-2"
                 />
               </div>
             </div>
           ))}
 
-          {/* Submit */}
-          <div className="text-center bg-white ">
+          {/* Submit Button */}
+          <div className="text-center bg-white">
             <button
               type="submit"
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md shadow-md transition duration-200"
