@@ -34,26 +34,26 @@ import React from 'react'
         <h2 className="text-2xl font-bold text-center text-purple-700 mb-6">Posted Projects</h2>
   
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border border-gray-300 rounded-md shadow-md">
-            <thead>
-              <tr className="bg-purple-100 text-purple-800 text-left text-sm">
-                <th className="py-2 px-4 border">Project Name</th>
-                <th className="py-2 px-4 border">Cluster</th>
-                <th className="py-2 px-4 border">Description</th>
-                <th className="py-2 px-4 border">Phases</th>
+        <table className="min-w-full rounded-2xl shadow-md border-separate border-spacing-y-2">
+            <thead className='rounded-md'>
+              <tr className="bg-purple-100 rounded-md  text-purple-800 text-left text-sm">
+                <th className="py-2 bg-white mb text-xl px-4 ">Project Name</th>
+                <th className="py-2 bg-white mb text-xl px-4 ">Cluster</th>
+                <th className="py-2 bg-white mb text-xl px-4 ">Description</th>
+                <th className="py-2 bg-white mb text-xl px-4 ">Phases</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className='bg-white'>
               {projects.map((proj, i) => (
-                <tr key={i} className="hover:bg-gray-100 transition">
-                  <td className="py-2 px-4 border">{proj.project_name}</td>
-                  <td className="py-2 px-4 border">{proj.cluster_name}</td>
-                  <td className="py-2 px-4 border">{proj.description}</td>
-                  <td className="py-2 px-4 border">
-                    <ul className="list-disc ml-4 text-sm space-y-1">
+                <tr key={i} className=" bg-white  transition">
+                  <td className="py-2 px-4 bg-white ">{proj.project_name}</td>
+                  <td className="py-2 px-4 bg-white ">{proj.cluster_name}</td>
+                  <td className="py-2 px-4 bg-white ">{proj.description}</td>
+                  <td className="py-2 px-4 bg-white ">
+                    <ul className="list-disc ml-4 bg-white text-sm space-y-1">
                       {proj.phases.map((p, index) => (
-                        <li key={index}>
-                          <span className="font-medium">Phase {index + 1}:</span> {p.requirement} — {p.deadline_days} days
+                        <li className='bg-white' key={index}>
+                          <span className="font-medium bg-white">Phase {index + 1}:</span> {p.requirement} — {p.deadline_days} days
                         </li>
                       ))}
                     </ul>
