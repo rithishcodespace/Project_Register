@@ -119,13 +119,13 @@ function Login() {
       <span>or</span>
       </div>
   
-      <div className="gdiv">
+      <div className="gdiv"  onClick={()=>handleGoogleLogin()}>
         <img 
           src={Google} 
           className="google-logo" 
           alt="Google logo" 
         />
-        <button className="glogin"  onClick={()=>handleGoogleLogin()}>Continue with Google</button>
+        <button className="glogin" >Continue with Google</button>
         
       </div>
     </div>

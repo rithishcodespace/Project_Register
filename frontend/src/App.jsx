@@ -19,6 +19,7 @@ import Add_Project from "./components/Admin/Add_Project";
 import Posted_project from "./components/Admin/Posted_project";
 import Admin_Dashboard from "./components/Admin/Admin_Dashboard";
 import Create_team from "./components/Teacher/Create_team";
+import Cluster from "./components/Teacher/Cluster";
 
 function App() {
 
@@ -39,6 +40,7 @@ function App() {
           <Route path="add" element={<TeacherAdd />} />
           <Route path="posted_projects" element={<PostedProjects />} />
           <Route path="student_progress" element={<StudentProgress />} />
+          <Route path="student_progress/:cluster" element={<Cluster/>}/>
         </Route>
 
         <Route path="/admin" element={<Admin />}>

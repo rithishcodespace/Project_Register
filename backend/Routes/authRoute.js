@@ -27,7 +27,7 @@ router.post("/auth/login",(req,res,next) => {
         if(password != user.password)return next(createError.Unauthorized('Username/Password invalid'));
 
         // generating tokens
-        const accessToken = jwt.sign({id:user.id},process.env.ACCESS_TOKEN_SECRET,{expiresIn:"15m"});
+        const accessToken = jwt.sign({id:user.id},process.env.ACCESS_TOKEN_SECRET,{expiresIn:"1hr"});
         const refreshToken = jwt.sign({id:user.id},process.env.REFRESH_TOKEN_SECRET,{expiresIn:"7d"});
 
         try{ // storing in redis
