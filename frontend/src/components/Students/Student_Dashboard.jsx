@@ -71,6 +71,14 @@ export default function Student_Dashboard() {
   // Lock scroll when any modal is open
   useLockBodyScroll(isCreateOpen || isInviteOpen);
 
+  function generateTeamId() {
+    const timestamp = Date.now(); // Get current timestamp
+    const randomPart = Math.floor(Math.random() * 1000); // Generate a random part for added uniqueness
+    setteamId(`team-${timestamp}-${randomPart}`);
+}
+
+  const[teamId,setteamId] = useState();
+
   return (
     <div className="h-screen flex flex-col items-center justify-center px-6">
       {!teamCreated && (
@@ -115,7 +123,7 @@ export default function Student_Dashboard() {
                   return (
                     <div
                       key={idx}
-                      className="grid grid-cols-5 items-center bg-white px-4 py-2 rounded shadow bg-red-500"
+                      className="grid grid-cols-5 items-center bg-white px-4 py-2 rounded shadow"
                     >
                       <div className="bg-white">
                         {isCreator
@@ -201,6 +209,7 @@ export default function Student_Dashboard() {
                 </button>
                 <button
                   type="submit"
+                  onClick={() => generateTeamId()}
                   className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-700 transition"
                 >
                   Create
