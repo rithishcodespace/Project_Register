@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams,useNavigate } from 'react-router-dom';
 
 const sampleData = {
   CSE: [
@@ -28,8 +28,14 @@ const sampleData = {
 };
 
 const Cluster = () => {
+  const navigate = useNavigate();
   const { cluster } = useParams();
   const projects = sampleData[cluster] || [];
+
+  function handleDetails(id)
+  {
+    navigate(`/teacher/ student_progress/project_details/${id}`);
+  }
 
   return (
     <div className="p-6 min-h-screen bg-white-100">
@@ -38,9 +44,9 @@ const Cluster = () => {
       {projects.length === 0 ? (
         <p className="text-center text-gray-600">No projects found for {cluster}.</p>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ">
           {projects.map((project, index) => (
-            <div key={index} className="bg-white p-6 rounded-xl shadow-md">
+            <div onClick={()=>handleDetails(project.id)} key={index} className="bg-white p-6 rounded-xl shadow-md hover:scale-105 transition-transform duration-300">
               <h2 className="text-xl bg-white font-semibold text-purple-500 mb-2">{project.projectName}</h2>
               <p className="text-gray-700 bg-white mb-3">{project.description}</p>
               <p className='bg-white'><strong className='bg-white'>Team Lead:</strong> {project.teamLead}</p>

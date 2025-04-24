@@ -45,7 +45,7 @@ import React from 'react'
             </thead>
             <tbody className='bg-white'>
               {projects.map((proj, i) => (
-                <tr key={i} className=" bg-white  transition">
+                <tr key={i} className=" bg-white   hover:scale-95 transition-transform duration-300">
                   <td className="py-2 px-4 bg-white ">{proj.project_name}</td>
                   <td className="py-2 px-4 bg-white ">{proj.cluster_name}</td>
                   <td className="py-2 px-4 bg-white ">{proj.description}</td>
