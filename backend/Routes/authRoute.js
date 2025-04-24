@@ -95,24 +95,24 @@ router.delete("/auth/logout",async(req,res,next) => {
 
 router.post("/auth/google-login", async (req, res, next) => {
   const { token } = req.body;
+  console.log("Token received on backend:", req.body.token);
 
   try {
-    const ticket = await googleClient.verifyIdToken({
+    const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID, // should match Firebase Web client ID
+      audience: "1054001837515-sj8nrurh5djljlaghguetc7hl9did3oe.apps.googleusercontent.com",
     });
+    
 
     const payload = ticket.getPayload();
     const { email, name } = payload;
 
-    db.query("SELECT * FROM users WHERE emailId = ?", [email], async (err, result) => {
+    db.query("SELECT * FROM users WHERE emailId = ?", [email], (err, result) => {
       if (err) return next(err);
 
       let user = result[0];
-
       if (!user) {
-        const insertSql = "INSERT INTO users (emailId, fullName) VALUES (?, ?)";
-        db.query(insertSql, [email, name], async (err, insertResult) => {
+        db.query("INSERT INTO users (emailId, fullName) VALUES (?, ?)", [email, name], (err, insertResult) => {
           if (err) return next(err);
           user = { id: insertResult.insertId, emailId: email };
           return generateTokens(user);
@@ -121,29 +121,19 @@ router.post("/auth/google-login", async (req, res, next) => {
         generateTokens(user);
       }
 
-      async function generateTokens(user) {
-        const accessToken = jwt.sign({ id: user.id }, process.env.ACCESS_TOKEN_SECRET, {
-          expiresIn: "15m",
-        });
+      function generateTokens(user) {
+        const accessToken = jwt.sign({ id: user.id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+        const refreshToken = jwt.sign({ id: user.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
 
-        const refreshToken = jwt.sign({ id: user.id }, process.env.REFRESH_TOKEN_SECRET, {
-          expiresIn: "7d",
-        });
+        clientRedis.set(user.id.toString(), refreshToken, { EX: 604800 });
 
-        await client.set(user.id.toString(), refreshToken, { EX: 604800 });
-
-        res.status(200).json({
-          message: "Google login successful",
-          accessToken,
-          refreshToken,
-        });
+        res.status(200).json({ accessToken, refreshToken });
       }
     });
   } catch (err) {
-    console.error("Google token validation failed:", err);
+    console.error("Google login failed:", err);
     next(createError.Unauthorized("Invalid Google token"));
   }
 });
-
 
 module.exports = router;

@@ -7,7 +7,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import React from "react";
 import college_img from "../../assets/college_img.png"
 import axios from "axios";
-import { linkWithCredential, signInWithPopup } from "firebase/auth";
+import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../../utils/firebase";
 
 function Login() {
@@ -40,26 +40,26 @@ function Login() {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+      const idToken = await user.getIdToken(); // Firebase ID token
+
+      console.log("Firebase ID Token:", idToken);
   
-      // Get the ID token
-      const idToken = await user.getIdToken(true);
-  
-      // Send token to backend
-      const res = await axios.post('http://localhost:1234/auth/google-login', {
-        token: idToken
+      const res = await axios.post("http://localhost:1234/auth/google-login", {
+        token: idToken,
       }, {
-        withCredentials: true
+        headers: {
+          "Content-Type": "application/json"
+        }
       });
-  
-      console.log("Google login success:", res.data);
   
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("refreshToken", res.data.refreshToken);
   
-      // Optional: Navigate after login
-      // navigate("/dashboard");
+      console.log("Google login successful");
+      navigate("/dashboard");
     } catch (error) {
-      console.error("Google login failed:", error);
+      console.error("Google Sign-in error:", error);
+      alert("Google login failed. Try again.");
     }
   }
   
