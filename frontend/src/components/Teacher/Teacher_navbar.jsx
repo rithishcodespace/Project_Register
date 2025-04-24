@@ -16,8 +16,9 @@ function Teacher_navbar({ isOpen, toggleSidebar }) {
   const isActive = (path) => {
     const currentPath = location.pathname;
     if (path === "") return currentPath === "/teacher";
-    return currentPath.endsWith(path) || currentPath === `/teacher/${path}`;
+    return currentPath === `/teacher/${path}` || currentPath.startsWith(`/teacher/${path}/`);
   };
+  
 
   const navDiv = (path) =>
     `ml-3 mb-10 flex items-center rounded-lg  px-3 py-2  ${
