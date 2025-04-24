@@ -35,27 +35,7 @@ const PostedProjects = () => {
 
       <div className="overflow-x-auto">
         <table className="min-w-full rounded-2xl shadow-md border-separate border-spacing-y-2">
-<<<<<<< HEAD
-            <thead className='rounded-md'>
-              <tr className="bg-purple-100 rounded-md  text-purple-800 text-left text-sm">
-                <th className="py-2 bg-white mb text-xl px-4 ">Project Name</th>
-                <th className="py-2 bg-white mb text-xl px-4 ">Cluster</th>
-                <th className="py-2 bg-white mb text-xl px-4 ">Description</th>
-                <th className="py-2 bg-white mb text-xl px-4 ">Phases</th>
-              </tr>
-            </thead>
-            <tbody className='bg-white'>
-              {projects.map((proj, i) => (
-                <tr key={i} className=" bg-white   hover:scale-95 transition-transform duration-300">
-                  <td className="py-2 px-4 bg-white ">{proj.project_name}</td>
-                  <td className="py-2 px-4 bg-white ">{proj.cluster_name}</td>
-                  <td className="py-2 px-4 bg-white ">{proj.description}</td>
-                  <td className="py-2 px-4 bg-white ">
-                    <ul className="list-disc ml-4 bg-white text-sm space-y-1">
-                      {proj.phases.map((p, index) => (
-                        <li className='bg-white' key={index}>
-                          <span className="font-medium bg-white">Phase {index + 1}:</span> {p.requirement} — {p.deadline_days} days
-=======
+
           <thead>
             <tr className="bg-purple-100 text-purple-800 text-left text-sm">
               <th className="py-2 px-4 w-44 text-xl">Project Name</th>
@@ -78,7 +58,6 @@ const PostedProjects = () => {
                       return req ? (
                         <li key={num}>
                           <span className="font-medium">Phase {num}:</span> {req}
->>>>>>> e748cb5d5d59650028e9eeb758604d489cb5dd87
                         </li>
                       ) : null;
                     })}
