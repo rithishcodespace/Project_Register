@@ -20,8 +20,8 @@ const TeacherDashboard = () => {
   ];
 
   return (
-    <div className="p-6 bg- rounded-xl h-[90%]">
-      <h2 className="text-3xl font-bold bg- mb-8">Teacher Dashboard</h2>
+    <div className="p-6  rounded-xl h-[90%]">
+      <h2 className="text-3xl flex justify-center font-bold bg- mb-8">Teacher Dashboard</h2>
 
       {/* Stats */}
       <div className="grid grid-cols-1 bg- sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">

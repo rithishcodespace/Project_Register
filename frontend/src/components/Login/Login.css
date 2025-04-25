@@ -11,9 +11,10 @@
   }
   
   .login_div {
-    width: 90%;
-    max-width: 500px;
+    width: 99%;
+    max-width: 420px;
     margin: 5% auto;
+    height: 20%;
     text-align: center;
     padding: 30px 20px;
     border-radius: 10px;
