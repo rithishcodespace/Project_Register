@@ -38,10 +38,10 @@ function App() {
         <Route path="/teacher" element={<Teacher />}>
           <Route index element={<TeacherDashBoard />} />
           <Route path="add" element={<TeacherAdd />} />
-          <Route path="posted_projects" element={<PostedProjects />} />
-          <Route path="student_progress" element={<StudentProgress />} />
-          <Route path="student_progress/:cluster" element={<Cluster />} />
-          <Route path="student_progress/project_details/:id" element={<Cluster />} />
+          <Route path="posted_projects" element={<PostedProjects/>} />
+          <Route path="student_progress" element={<StudentProgress/>} />
+          <Route path="student_progress/:cluster" element={<Cluster/>} />
+          <Route path="student_progress/project_details/:id" element={<Cluster/>} />
         </Route>
 
         <Route path="/admin" element={<Admin />}>
