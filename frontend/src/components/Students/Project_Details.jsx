@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const PostedProjects = () => {
+const Project_Details = () => {
   const [projectData, setProjectData] = useState([]);
 
   async function getProjects() {
@@ -84,4 +84,4 @@ const PostedProjects = () => {
   );
 };
 
-export default PostedProjects;
+export default Project_Details;
