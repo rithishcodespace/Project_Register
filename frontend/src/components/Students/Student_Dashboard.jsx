@@ -10,7 +10,7 @@ function StudentDashboard() {
     name: '',
     email: '',
     registerNumber: '',
-    department: '',
+    department: ' ',
   });
   const [teamCreated, setTeamCreated] = useState(false);
 

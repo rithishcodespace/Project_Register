@@ -1,6 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 function CreateForm({ createForm, handleCreateChange, handleCreateSubmit, departments, setIsCreateOpen }) {
+
+  const [depart,setdepart]=useState()
+
+  function generateTeamId(clusterCode, teamNumber) {  // generates team id
+    const formattedCluster = clusterCode.toUpperCase();
+    const formattedNumber = teamNumber.toString().padStart(2, '0');
+    console.log(`${formattedCluster}-TEAM-${formattedNumber}`)
+    return `${formattedCluster}-TEAM-${formattedNumber}`;
+  }
+
   return (
     <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50 px-4">
       <div className="bg-white rounded-lg p-6 w-full max-w-3xl">
@@ -44,9 +54,12 @@ function CreateForm({ createForm, handleCreateChange, handleCreateSubmit, depart
             <select
               name="department"
               value={createForm.department}
-              onChange={handleCreateChange}
               required
               className="mt-1 bg-white block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-indigo-300"
+            onChange={(e) => {
+                 handleCreateChange(e);
+                 setdepart(e.target.value);
+                }}
             >
               <option value="">Select Department</option>
               {departments.map((dept) => (
@@ -65,6 +78,7 @@ function CreateForm({ createForm, handleCreateChange, handleCreateSubmit, depart
             <button
               type="submit"
               className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-700 transition"
+              onClick={() => generateTeamId(depart,Math.floor(1000 + Math.random() * 9000))}
             >
               Create
             </button>
