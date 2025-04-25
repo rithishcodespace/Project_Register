@@ -31,13 +31,13 @@ const PostedProjects = () => {
 
   return (
     <div className="p-6 w-full max-w-7xl mx-auto">
-      <h2 className="text-2xl font-bold text-center text-purple-700 mb-6">Posted Projects</h2>
+      <h2 className="text-2xl font-bold text-center text-black mb-6">Posted Projects</h2>
 
       <div className="overflow-x-auto">
         <table className="min-w-full rounded-2xl shadow-md border-separate border-spacing-y-2">
 
           <thead>
-            <tr className="bg-purple-100 text-purple-800 text-left text-sm">
+            <tr className="bg-purple-100 text-black text-left text-sm">
               <th className="py-2 px-4 w-44 text-xl">Project Name</th>
               <th className="py-2 px-4 w-32 text-xl">Cluster</th>
               <th className="py-2 px-4 w-80 text-xl">Description</th>
