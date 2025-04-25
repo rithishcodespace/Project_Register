@@ -78,30 +78,59 @@ router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",(req,res,
     }
 })
 
-// it where the he sent invitations and where his team is conformed
+// it checks whether he sent invitations and if sent it is conformed
 router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
   try {
     const { emailId } = req.body;
 
-    const sql1 = "SELECT team_conformed FROM team_requests WHERE emailId = ?";
-    const sql2 = "SELECT * FROM team_requests WHERE emailId = ? AND team_conformed = 0";
+    // Step 1: Check if user is in a confirmed team
+    const checkConfirmedSQL = "SELECT team_id FROM team_requests WHERE emailId = ? AND team_conformed = 1";
 
-    db.query(sql1, [emailId], (error1, result1) => {
-      if (error1) return next(error1);
+    db.query(checkConfirmedSQL, [emailId], (err1, result1) => {
+      if (err1) return next(err1);
 
-      db.query(sql2, [emailId], (error2, result2) => {
-        if (error2) return next(error2);
+      if (result1.length > 0 && result1[0].team_id) {
+        const teamId = result1[0].team_id;
 
-        res.send({
-          teamConformationStatus: result1[0]?.team_conformed ?? null,
-          pendingInvitations: result2
+        // Step 2: Fetch all team members with that team_id
+        const fetchTeamSQL = "SELECT * FROM team_requests WHERE team_id = ?";
+        db.query(fetchTeamSQL, [teamId], (err2, teamMembers) => {
+          if (err2) return next(err2);
+
+          res.send({
+            teamConformationStatus: 1,
+            teamMembers,
+            pendingInvitations: []
+          });
         });
-      });
+
+      } else {
+        // Step 3: Not confirmed, fetch invitations and check for accepted statuses
+        const fetchInvitesSQL = `
+          SELECT * FROM team_requests 
+          WHERE emailId = ? AND team_conformed = 0
+        `;
+
+        db.query(fetchInvitesSQL, [emailId], (err3, invites) => {
+          if (err3) return next(err3);
+
+          // Filter out accepted members from pending invitations
+          const pendingInvitations = invites.filter(invite => invite.status !== 'accepted');
+          const teamMembers = invites.filter(invite => invite.status === 'accepted');
+
+          res.send({
+            teamConformationStatus: 0,
+            teamMembers, // Accepted members are now in teamMembers
+            pendingInvitations // Pending ones are in pendingInvitations
+          });
+        });
+      }
     });
   } catch (error) {
     next(error);
   }
 });
+
 
 // it gets all the projects available -> it has to be filtered in the frontend 
 router.get("/student/projects",(req,res,next) => {

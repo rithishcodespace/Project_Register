@@ -2,6 +2,8 @@ import { useState } from 'react';
 import CreateForm from './CreateForm';
 import InviteForm from './InviteForm';
 import TeamDetails from './TeamDetails';
+import { useEffect } from 'react';
+import axios from 'axios';
 //import { useLockBodyScroll } from './hooks/useLockBodyScroll';
 
 function StudentDashboard() {
@@ -61,7 +63,14 @@ function StudentDashboard() {
     setIsInviteOpen(false);
   };
 
- // useLockBodyScroll(isCreateOpen || isInviteOpen);
+  async function checkUserStatus()
+  {
+    let response = await axios.get
+  }
+
+  useEffect(() => {
+    checkUserStatus()
+  },[])
 
   return (
     <div className="h-[29rem] flex flex-col items-center justify-center px-6 pt-16">
