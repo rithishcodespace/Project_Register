@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { addUser } from '../../utils/userSlice';
 
 function CreateForm({ createForm, handleCreateChange, handleCreateSubmit, departments, setIsCreateOpen }) {
 
   const [depart,setdepart]=useState()
+  const dispatch = useDispatch();
 
-  function generateTeamId(clusterCode, teamNumber) {  // generates team id
-    const formattedCluster = clusterCode.toUpperCase();
-    const formattedNumber = teamNumber.toString().padStart(2, '0');
-    console.log(`${formattedCluster}-TEAM-${formattedNumber}`)
-    return `${formattedCluster}-TEAM-${formattedNumber}`;
+  function handleDispatch()
+  {
+    dispatch(addUser({
+      
+    }))
   }
 
   return (
@@ -78,7 +81,7 @@ function CreateForm({ createForm, handleCreateChange, handleCreateSubmit, depart
             <button
               type="submit"
               className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-700 transition"
-              onClick={() => generateTeamId(depart,Math.floor(1000 + Math.random() * 9000))}
+              onClick={handleDispatch()}
             >
               Create
             </button>

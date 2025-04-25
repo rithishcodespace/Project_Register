@@ -19,41 +19,44 @@ import Posted_project from "./components/Admin/Posted_project";
 import Admin_Dashboard from "./components/Admin/Admin_Dashboard";
 import Create_team from "./components/Teacher/Create_team";
 import Cluster from "./components/Teacher/Cluster";
-// import ShowFullDetail from "./components/Teacher/ShowFullDetail";
+import {Provider} from "react-redux"
 import ProjDetails from "./components/Teacher/ProjDetails";
+import Store from "./utils/Store";
 
 function App() {
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />}></Route>
-        <Route path="/student" element={<Student />}>
-          <Route index element={<Student_Dashboard />}/>  
-          <Route path="Progress_update" element={<Progress_Update/>} />
-          <Route path="Project_Details" element={<Project_Details/>} />
-          <Route path="Students_team" element={<Student_Team/>} />
-        </Route>
+    <Provider store={Store}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Login />}></Route>
+          <Route path="/student" element={<Student />}>
+            <Route index element={<Student_Dashboard />}/>  
+            <Route path="Progress_update" element={<Progress_Update/>} />
+            <Route path="Project_Details" element={<Project_Details/>} />
+            <Route path="Students_team" element={<Student_Team/>} />
+          </Route>
 
-        <Route path="/teacher" element={<Teacher />}>
-          <Route index element={<TeacherDashBoard />} />
-          <Route path="add" element={<TeacherAdd />} />
-          <Route path="posted_projects" element={<PostedProjects/>} />
-          <Route path="student_progress" element={<StudentProgress/>} />
-          <Route path="student_progress/:cluster" element={<Cluster/>} />
-          <Route path="student_progress/project_details/:id" element={<Cluster/>} />
-        </Route>
+          <Route path="/teacher" element={<Teacher />}>
+            <Route index element={<TeacherDashBoard />} />
+            <Route path="add" element={<TeacherAdd />} />
+            <Route path="posted_projects" element={<PostedProjects/>} />
+            <Route path="student_progress" element={<StudentProgress/>} />
+            <Route path="student_progress/:cluster" element={<Cluster/>} />
+            <Route path="student_progress/project_details/:id" element={<Cluster/>} />
+          </Route>
 
-        <Route path="/admin" element={<Admin />}>
-          <Route index element={<Admin_Dashboard />} />
-          <Route path="Add_users" element={<Add_Users/>} />
-          <Route path="Add_Project" element={<Add_Project />} />
-          <Route path="posted_projects" element={<Posted_project/>} />
-          <Route path="students_progress" element={<Students_Progress/>} />
-        </Route>
+          <Route path="/admin" element={<Admin />}>
+            <Route index element={<Admin_Dashboard />} />
+            <Route path="Add_users" element={<Add_Users/>} />
+            <Route path="Add_Project" element={<Add_Project />} />
+            <Route path="posted_projects" element={<Posted_project/>} />
+            <Route path="students_progress" element={<Students_Progress/>} />
+          </Route>
 
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+      </Provider>
   );
 }
 

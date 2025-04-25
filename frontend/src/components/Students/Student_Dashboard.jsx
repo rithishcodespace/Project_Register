@@ -4,6 +4,8 @@ import InviteForm from './InviteForm';
 import TeamDetails from './TeamDetails';
 import { useEffect } from 'react';
 import axios from 'axios';
+import { useSelector,useDispatch } from 'react-redux';
+import { addUser } from '../../utils/userSlice';
 //import { useLockBodyScroll } from './hooks/useLockBodyScroll';
 
 function StudentDashboard() {
@@ -29,6 +31,9 @@ function StudentDashboard() {
   const departments = [
     'CSE', 'AIDS', 'IT', 'AIML', 'CT', 'AGRI', 'ECE', 'EIE', 'EEE', 'MECH', 'FT', 'FD'
   ];
+
+  const selector = useSelector((Store) => Store.userSlice);
+  const dispatch = useDispatch();
 
   const isValidEmail = (email) => email.endsWith('@bitsathy.ac.in');
 
@@ -63,14 +68,53 @@ function StudentDashboard() {
     setIsInviteOpen(false);
   };
 
-  async function checkUserStatus()
+  const getProfile = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+  
+      if (!token) {
+        console.error("Access token is missing");
+        return;
+      }
+  
+      const response = await axios.get('http://localhost:1234/profile/view', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log('Profile Data:', response.data[0]);
+      checkUserStatus(response.data[0].emailId);
+
+    } catch (error) {
+      console.error('Error fetching profile:', error.response ? error.response.data : error.message);
+    }
+  };
+
+  async function checkUserStatus(emailId)
   {
-    let response = await axios.get
+     console.log("emailId:",emailId);
+     const token = localStorage.getItem("accessToken");
+     if (!token) {
+      console.error("Access token is missing");
+      return;
+    }
+     let response = await axios.post("http://localhost:1234/student/fetch_team_status_and_invitations",{"emailId":emailId},{ //works with the userId from jwt
+      headers:{
+        Authorization: `Bearer ${token}`
+      }
+     })
+     if(response.status === 200)
+     {
+      console.log("user team status",response.data);
+     }
   }
 
   useEffect(() => {
-    checkUserStatus()
+    getProfile();
   },[])
+
+
 
   return (
     <div className="h-[29rem] flex flex-col items-center justify-center px-6 pt-16">
@@ -116,3 +160,5 @@ function StudentDashboard() {
 }
 
 export default StudentDashboard;
+
+
