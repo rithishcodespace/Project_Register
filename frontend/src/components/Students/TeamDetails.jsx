@@ -16,7 +16,7 @@ function TeamDetails({ members, createForm, totalMembers, setIsInviteOpen }) {
           const isCreator = idx === 0;
           const memberData = !isCreator ? members[idx - 1] : null;
           return (
-            <div key={idx} className="grid grid-cols-5 items-center bg-white px-4 py-2 rounded shadow bg-red-500">
+            <div key={idx} className="grid grid-cols-5 items-center bg-white px-4 py-2 rounded shadow ">
               <div className="bg-white">
                 {isCreator
                   ? createForm.name

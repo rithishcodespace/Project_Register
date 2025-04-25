@@ -68,7 +68,7 @@ function Login() {
   return (
     <>
    
-    <div className="login_div"> 
+    <div className="login_div" > 
       <img src={college_img} style={{width:"50%",marginTop:"-6%",marginLeft:"25%", backgroundColor:"white",zIndex:1}} alt="" />
       <p className="Login">Hi, Welcome back</p><br />
   
