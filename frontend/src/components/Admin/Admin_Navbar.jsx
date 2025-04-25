@@ -1,81 +1,101 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, UserPlus,FilePlus, BarChart2,CheckCircle, LogOut } from 'lucide-react';
+import { Home, UploadCloud, FileText, BarChart2, LogOut } from 'lucide-react';
 import college_img from "../../assets/college_img.png";
+import menu from "../../assets/menu.png"
+import wrong from "../../assets/wrong.png"
+
+function Admin_Navbar({ isOpen, toggleSidebar }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = () => {
+    navigate("/");
+  };
+
+  const isActive = (path) => {
+    const currentPath = location.pathname;
+    if (path === "") return currentPath === "/admin";
+    return currentPath === `/admin/${path}` || currentPath.startsWith(`/teacher/${path}/`);
+  };
+  
+
+  const navDiv = (path) =>
+    `ml-3 mb-10 flex items-center rounded-lg  px-3 py-2  ${
+      isActive(path) ? "bg-purple-400 text-white" : "bg-white"
+    } ${isOpen ? "w-52" : "w-12 "}`;
 
 
-function Admin_Navbar() {
-    const navigate = useNavigate();
-    const location = useLocation();
+  const navIcon = (path) =>
+    ` ${
+      isActive(path) ? "bg-purple-400 text-white" : "bg-transparent bg-white text-gray-600 colour-white group-hover:text-purple-600"
+    }`;
 
-    const handleLogout = () => {
-      navigate("/"); // Redirect to login
-    };
+  const navText = (path) =>
+    `ml-3 text-lg font-medium   ${
+      isOpen ? "opacity-100" : "opacity-0 hidden"
+    } ${isActive(path) ?  "bg-purple-400 text-white" : "text-gray-600 bg-white group-hover:text-purple-600"}`;
 
-    const isActive = (path) => {
-      const currentPath = location.pathname;
-      if (path === "") return currentPath === "/admin"; // Match only the dashboard route exactly
-      return currentPath.endsWith(path) || currentPath === `/admin/${path}`;
-    };
+  return (
+    <div
+      className= {`fixed top-0 pb-5 left-0 h-screen bg-white flex flex-col py-6 overflow-y-auto shadow-2xl z-50 transition-all duration-500 ease-in-out
+         ${isOpen ? "w-64" : "w-24"}`}
+    >
+      {/* Toggle Button */}
+      <button
+      onClick={toggleSidebar}
+      className={`relative top-3 w-12 h-10 p-2 bg-white text-black rounded-md transition-all ${isOpen ? "left-48" : "left-5"} `}
+>     
+     <img
+      src={isOpen ? wrong : menu}
+      alt="Toggle Sidebar"
+      className="w-full h-full object-contain bg-white border-none text-red-500"
+     />
+     </button>
 
-    const navDiv = (path) =>
-      `ml-10 mb-6 flex items-center rounded-lg px-3 w-60 py-2 bg-white  ${
-        isActive(path) ? "bg-[rgb(158,67,255)]" : "hover:"
-      }`;
-
-    const navImg = (path) =>
-      `w-11 color-[rgb(158,67,255)] bg-white ${
-        isActive(path) ? "bg-[rgb(159,67,255)] text-white" : "bg-transparent text-gray-600 colour-white group-hover:text-blue-600"
-      }`;
-
-    const navText = (path) =>
-      `text-lg px-2 py-1 rounded-md bg-white  ${
-        isActive(path) ? "bg-[rgb(158,67,255)] text-white" : "text-gray-600 group-hover:text-blue-600"
-      }`;
-
-    return (
-      <div className="w-1/5 h-screen bg-white flex flex-col py-6 overflow-y-auto min-w-[200px] sm:w-1/4 md:w-1/5 shadow-md">
-        <img 
-          src={college_img} 
-          className="w-1/2 mx-auto bg-white mb-12" 
-          alt="College Logo" 
+      {/* Logo */}
+      <div className="h-32 bg-white mt-6">
+        <img
+          src={college_img}
+          className={`w-1/2 mx-auto bg-white mb-12 transition-all duration-300 ${isOpen ? "w-1/2" : "w-2/3 mt-7"}`}
+          alt="College Logo"
         />
+      </div>
 
-        <Link to="." className={`${navDiv("")} group`}>
-          <Home size={24} className={`mr-3 ${navImg("")}`} />
-          <p className={`${navText("")}`}>Dashboard</p>
+      <div className="bg-white px-2">
+        <Link to="." className={` ${navDiv("")} group`}>
+          <Home size={24} className={navIcon("")} />
+          <p className={navText("")}>Dashboard</p>
         </Link>
 
-        <Link to="Add_users" className={`${navDiv("Add_users")} group`}>
-          <UserPlus size={24} className={`mr-3 ${navImg("Add_users")}`} />
-          <p className={`${navText("Add_users")}`}>Add users</p>
+        <Link to="Add_Users" className={`${navDiv("Add_Users")} group`}>
+          <UploadCloud size={24} className={navIcon("Add_Users")} />
+          <p className={navText("Add_Users")}>Add Users</p>
         </Link>
 
-
-        <Link to="Add_project" className={`${navDiv("Add_project")} group`}>
-          <FilePlus size={24} className={`mr-3 ${navImg("Add_project")}`} />
-          <p className={`${navText("Add_project")}`}>Add Project</p>
-        </Link>
-
-        <Link to="Posted_projects" className={`${navDiv("Posted_projects")} group`}>
-          <CheckCircle size={24} className={`mr-3 ${navImg("Posted_projects")}`} />
-          <p className={`${navText("Posted_projects")}`}>Posted Projects</p>
+        <Link to="posted_projects" className={`${navDiv("posted_projects")} group`}>
+          <FileText size={24} className={navIcon("posted_projects")} />
+          <p className={navText("posted_projects")}>Posted Projects</p>
         </Link>
 
         <Link to="students_progress" className={`${navDiv("students_progress")} group`}>
-          <BarChart2 size={24} className={`mr-3 ${navImg("students_progress")}`} />
-          <p className={`${navText("students_progress")}`}>Students progress</p>
+          <BarChart2 size={24} className={navIcon("students_progress")} />
+          <p className={navText("students_progress")}>Student Progress</p>
         </Link>
 
-        <button 
-          onClick={handleLogout} 
-          className="ml-24 mt-auto mb-5 flex bg-white items-center text-gray-600 hover:text-red-500"
-        >
-          <LogOut size={24} className="mr-5 bg-white rotate-180" />
-          <p className="text-lg bg-white">Logout</p>
+        {/* Logout */}
+        <button
+          onClick={handleLogout}
+          className=" ml-3 flex items-center mt-auto mb-5 px-3 py-2 text-gray-600 hover:text-red-500">
+            
+          <LogOut size={24} className="mr-5 bg-white rotate-180"/>
+          <p className={`ml-3 bg-white text-lg transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 hidden"}`}>
+            Logout
+          </p>
         </button>
       </div>
-    );
+    </div>
+  );
 }
 
-export default Admin_Navbar
+export default Admin_Navbar;
