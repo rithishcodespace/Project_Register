@@ -79,6 +79,21 @@ router.post("/auth/refresh-token",async(req,res,next) => {
    }
 })
 
+router.post("/auth/role",(req,res,next) => {
+  try{
+    let sql = "select role from users where emailId = ?";
+    const values = [req.body.emailId];
+    db.query(sql,values,(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 router.delete("/auth/logout",async(req,res,next) => {
     try {
         const { refreshToken } = req.body;
