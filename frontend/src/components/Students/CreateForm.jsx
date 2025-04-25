@@ -1,19 +1,6 @@
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { addUser } from '../../utils/userSlice';
+import React from 'react';
 
 function CreateForm({ createForm, handleCreateChange, handleCreateSubmit, departments, setIsCreateOpen }) {
-
-  const [depart,setdepart]=useState()
-  const dispatch = useDispatch();
-
-  function handleDispatch()
-  {
-    dispatch(addUser({
-      
-    }))
-  }
-
   return (
     <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50 px-4">
       <div className="bg-white rounded-lg p-6 w-full max-w-3xl">
@@ -59,10 +46,7 @@ function CreateForm({ createForm, handleCreateChange, handleCreateSubmit, depart
               value={createForm.department}
               required
               className="mt-1 bg-white block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-indigo-300"
-            onChange={(e) => {
-                 handleCreateChange(e);
-                 setdepart(e.target.value);
-                }}
+              onChange={handleCreateChange}
             >
               <option value="">Select Department</option>
               {departments.map((dept) => (
@@ -81,7 +65,6 @@ function CreateForm({ createForm, handleCreateChange, handleCreateSubmit, depart
             <button
               type="submit"
               className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-700 transition"
-              onClick={handleDispatch()}
             >
               Create
             </button>

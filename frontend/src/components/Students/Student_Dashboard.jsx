@@ -1,12 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CreateForm from './CreateForm';
 import InviteForm from './InviteForm';
 import TeamDetails from './TeamDetails';
-import { useEffect } from 'react';
 import axios from 'axios';
-import { useSelector,useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { addUser } from '../../utils/userSlice';
-//import { useLockBodyScroll } from './hooks/useLockBodyScroll';
 
 function StudentDashboard() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -17,7 +15,6 @@ function StudentDashboard() {
     department: ' ',
   });
   const [teamCreated, setTeamCreated] = useState(false);
-
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState({
     name: '',
@@ -48,6 +45,15 @@ function StudentDashboard() {
       alert('Email must be a valid @bitsathy.ac.in address.');
       return;
     }
+
+    // Dispatch here after successful validation
+    dispatch(addUser({
+      name: createForm.name,
+      email: createForm.email,
+      registerNumber: createForm.registerNumber,
+      department: createForm.department,
+    }));
+
     setTeamCreated(true);
     setIsCreateOpen(false);
   };
@@ -71,12 +77,11 @@ function StudentDashboard() {
   const getProfile = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-  
       if (!token) {
         console.error("Access token is missing");
         return;
       }
-  
+
       const response = await axios.get('http://localhost:1234/profile/view', {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -91,30 +96,26 @@ function StudentDashboard() {
     }
   };
 
-  async function checkUserStatus(emailId)
-  {
-     console.log("emailId:",emailId);
-     const token = localStorage.getItem("accessToken");
-     if (!token) {
+  async function checkUserStatus(emailId) {
+    console.log("emailId:", emailId);
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
       console.error("Access token is missing");
       return;
     }
-     let response = await axios.post("http://localhost:1234/student/fetch_team_status_and_invitations",{"emailId":emailId},{ //works with the userId from jwt
-      headers:{
+    let response = await axios.post("http://localhost:1234/student/fetch_team_status_and_invitations", { "emailId": emailId }, {
+      headers: {
         Authorization: `Bearer ${token}`
       }
-     })
-     if(response.status === 200)
-     {
-      console.log("user team status",response.data);
-     }
+    });
+    if (response.status === 200) {
+      console.log("user team status", response.data);
+    }
   }
 
   useEffect(() => {
     getProfile();
-  },[])
-
-
+  }, []);
 
   return (
     <div className="h-[29rem] flex flex-col items-center justify-center px-6 pt-16">
@@ -153,12 +154,18 @@ function StudentDashboard() {
         )}
       </div>
 
-      {isCreateOpen && <CreateForm {...{ createForm, handleCreateChange, handleCreateSubmit, departments, setIsCreateOpen }} />}
-      {isInviteOpen && <InviteForm {...{ inviteForm, handleInviteChange, handleInviteSubmit, departments, setIsInviteOpen }} />}
+      {isCreateOpen && (
+        <CreateForm
+          {...{ createForm, handleCreateChange, handleCreateSubmit, departments, setIsCreateOpen }}
+        />
+      )}
+      {isInviteOpen && (
+        <InviteForm
+          {...{ inviteForm, handleInviteChange, handleInviteSubmit, departments, setIsInviteOpen }}
+        />
+      )}
     </div>
   );
 }
 
 export default StudentDashboard;
-
-
