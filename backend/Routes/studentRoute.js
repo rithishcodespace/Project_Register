@@ -24,14 +24,23 @@ router.post("/student/join_request",(req,res,next) => {
     }
 })
 
-// sets the team_id to the connected team members
-db.query("/student/add_team_id",(req,res,next) => {
+// sets the team_id to the connected team members -> clicks conform button
+router.post("/student/add_team_id/:from_reg_num/:team_id",(req,res,next) => {
   try{
-
+    const team_id = req.params.team_id;
+    const sql = `
+    UPDATE team_requests 
+    SET team_id = ? 
+    WHERE from_reg_num = ? AND status = 'accepted'
+  `;
+    db.query(sql,[team_id],(error,result) => {
+      if(error) next(error);
+      res.send("teamId inserted successfully!");
+    })
   }
   catch(error)
   {
-    
+    next(error);
   }
 })
 
