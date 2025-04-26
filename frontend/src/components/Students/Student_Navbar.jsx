@@ -4,14 +4,31 @@ import { Home, Users, FileText, BarChart2, LogOut } from 'lucide-react';
 import college_img from "../../assets/college_img.png";
 import menu from "../../assets/menu.png"
 import wrong from "../../assets/wrong.png"
+import axios from 'axios';
 
 function Student_navbar({ isOpen, toggleSidebar }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      let token = localStorage.getItem("refreshToken");
+  
+      let response = await axios.delete("http://localhost:1234/auth/logout", {
+        data: {
+          refreshToken: token
+        },
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+  
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
+  
 
   const isActive = (path) => {
     const currentPath = location.pathname;

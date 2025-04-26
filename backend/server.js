@@ -16,7 +16,7 @@ app.use(morgan('dev')); //development build
 app.use(cors({
     origin: "http://localhost:5173", // Vite's default port
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"]
   }));
 

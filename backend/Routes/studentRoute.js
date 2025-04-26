@@ -81,7 +81,8 @@ router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",(req,res,
     try{
       const fromreg = req.params.from_reg_num;
       const toreg = req.params.to_reg_num;
-      const status = req.params.status;              // to will be logged in user
+      const status = req.params.status;            // to will be logged in user
+      console.log(fromreg,toreg,status);        
       let sql = `UPDATE team_requests SET status = ? WHERE to_reg_num = ? AND from_reg_num = ? AND status = 'interested'`;
       db.query(sql,[status, toreg, fromreg],(error,result) => {
         if(error) return next(error);
@@ -164,12 +165,12 @@ router.get("/student/projects",(req,res,next) => {
 })
 
 // make project status -> ongoing
-router.post("/student/:status/:projectId",(req,res,next) => {
+router.patch("/student/:status/:project_name",(req,res,next) => {
     try{
       let status = req.params.status; // ongoing || completed 
-      let projectId = req.params.projectId;
-      let sql = "insert into projects(status) values(?) where project_id = ?";
-      db.query(sql,[status,projectId],(error,result) => {
+      let project_name = req.params.project_name;
+      let sql = "UPDATE projects SET status = ? WHERE project_name = ?"
+      db.query(sql,[status,project_name],(error,result) => {
         if(error) return next(error);
         res.send("project status updated successfully!");
       })

@@ -39,7 +39,8 @@ router.post("/auth/login",(req,res,next) => {
           res.status(200).json({
             message:"user logged in successfull",
             "accessToken" : accessToken,
-            "refreshToken" : refreshToken 
+            "refreshToken" : refreshToken,
+            "role": user.role
           })
         }
         catch(redisError)

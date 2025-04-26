@@ -6,10 +6,35 @@ const Project_Details = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
 
+  async function handleTakeProject(name) {
+    try {
+      console.log("name:",name);
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.patch(`http://localhost:1234/student/ongoing/${name}`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.status === 200) {
+        alert("Project chosen successfully!");
+
+        // ✅ Update project list by filtering out the selected project
+        setProjectData(prev => prev.filter(proj => proj.project_name !== name));
+
+        // ✅ Close modal
+        setViewModalOpen(false);
+      }
+    } catch (error) {
+      console.error("Error choosing project:", error);
+      alert("Something went wrong while choosing project");
+    }
+  }
+
   async function fetchProjects() {
     try {
-      let token = localStorage.getItem("accessToken");
-      let response = await axios.get("http://localhost:1234/student/projects", {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get("http://localhost:1234/student/projects", {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -19,7 +44,7 @@ const Project_Details = () => {
         console.log(response.data);
         setProjectData(response.data);
       } else {
-        alert("Error fetching data");
+        alert("Error fetching projects");
       }
     } catch (error) {
       console.error("Fetch error:", error);
@@ -120,10 +145,15 @@ const Project_Details = () => {
               >
                 Close
               </button>
-              <button className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700">
+
+              <button
+                onClick={() => handleTakeProject(selectedProject.project_name)}
+                className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700"
+              >
                 Take Project
               </button>
             </div>
+
           </div>
         </div>
       )}
