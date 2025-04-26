@@ -5,6 +5,7 @@ import TeamDetails from './TeamDetails';
 import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { addUser } from '../../utils/userSlice';
+import { addTeamMembers } from '../../utils/teamSlice';
 
 function StudentDashboard() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -111,6 +112,10 @@ function StudentDashboard() {
     });
     if (response.status === 200) {
       console.log("user team status", response.data);
+      if(response.data.teamMembers.length > 0)
+      {
+        dispatch(addTeamMembers(response.data.teamMembers));
+      }
     }
   }
 

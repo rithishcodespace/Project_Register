@@ -113,12 +113,15 @@ const Project_Details = () => {
               </div>
             </div>
 
-            <div className="mt-6 text-right">
+            <div className="mt-6 text-right flex justify-between items-stretch">
               <button
                 className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700"
                 onClick={() => setViewModalOpen(false)}
               >
                 Close
+              </button>
+              <button className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700">
+                Take Project
               </button>
             </div>
           </div>

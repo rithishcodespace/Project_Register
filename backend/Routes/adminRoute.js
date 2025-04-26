@@ -5,8 +5,8 @@ const db = require("../db");
 
 router.post("/admin/adduser",(req,res,next) => {
    try{
-     let sql = "insert into users(emailId,password,role) values(?,?,?)";
-     const values = [req.body.emailId,req.body.password,req.body.role];
+     let sql = "insert into users(emailId,password,role,reg_num) values(?,?,?,?)";
+     const values = [req.body.emailId,req.body.password,req.body.role,req.body.reg_num];
      db.query(sql,values,(error,result) => {
         if(error) next(error);
         res.send("user added successfully by admin!");
