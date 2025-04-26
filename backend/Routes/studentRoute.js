@@ -181,6 +181,23 @@ router.patch("/student/:status/:project_name",(req,res,next) => {
     }
 })
 
+router.get("/student/getTeamDetails/:reg_num", (req, res, next) => {
+  try {
+    const reg_nums = req.params.reg_num;
+    let sql = "SELECT * FROM team_requests WHERE (from_reg_num = ? OR to_reg_num = ?) AND Team_conformed = 1";
+
+    db.query(sql, [reg_nums, reg_nums], (err, results) => {
+      if (err) {
+       next(err);
+      }
+      res.status(200).json({ teamDetails: results });
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
 
 
 module.exports = router;

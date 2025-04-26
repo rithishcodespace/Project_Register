@@ -117,6 +117,11 @@ function StudentDashboard() {
     });
     if (response.status === 200) {
       console.log("user team status", response.data);
+      if(localStorage.getItem("TeamStatus"))
+      {
+        localStorage.removeItem("TeamStatus");
+        localStorage.setItem("TeamStatus",response.data.teamConformationStatus);
+      }
       if(response.data.teamMembers.length > 0)
       {
         dispatch(addTeamMembers(response.data.teamMembers));
