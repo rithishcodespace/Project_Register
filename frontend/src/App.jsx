@@ -36,7 +36,6 @@ function App() {
             <Route path="Project_Details" element={<Project_Details/>} />
             <Route path="Students_team" element={<Student_Team/>} />
           </Route>
-
           <Route path="/teacher" element={<Teacher />}>
             <Route index element={<TeacherDashBoard />} />
             <Route path="add" element={<TeacherAdd />} />
