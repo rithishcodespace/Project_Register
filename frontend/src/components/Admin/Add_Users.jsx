@@ -1,20 +1,33 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import axios from 'axios';
 
 function Add_Users() {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('');
+  const [RegisterNumber,setRegisterNumber] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = () => {
-    if (!name || !password || !role) {
+  const handleSubmit = async() => {
+    if (!name || !password || !role || !RegisterNumber) {
       alert('Please fill in all fields');
       return;
     }
-    console.log('User added:', { name, password, role });
-    // Call your backend API here
+    let response = await axios.post("http://localhost:1234/admin/adduser",{
+      "emailId":name,
+      "password":password,
+      "reg_num":RegisterNumber,
+      "role":role
+    })
+    if(response.status === 200)
+    {
+      setName("");
+      setPassword("");
+      setRegisterNumber("");
+      setRole("");
+      alert("User Added Successfully")
+    }
   };
 
   return (
@@ -42,6 +55,17 @@ function Add_Users() {
             placeholder="Enter password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-2 pr-10 border bg-white  border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          
+        </div>
+        <div className="mb-5 relative bg-white ">
+          <label className="block text-sm font-semibold bg-white  text-gray-700 mb-2">Register Number</label>
+          <input
+            type='text'
+            placeholder="Enter register number"
+            value={RegisterNumber}
+            onChange={(e) => setRegisterNumber(e.target.value)}
             className="w-full px-4 py-2 pr-10 border bg-white  border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           

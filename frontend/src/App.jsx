@@ -23,21 +23,26 @@ import { Provider } from "react-redux";
 import ProjDetails from "./components/Teacher/ProjDetails";
 import Store from "./utils/Store";
 import InvitationPage from "./components/Students/InvitationPage";
-import ProtectedRoute from "./utils/ProtectedRoute"; // 🔐 import protected route
+import ProtectedRoute from "./utils/ProtectedRoute"; // ✅ Make sure you created this
 
 function App() {
   return (
     <Provider store={Store}>
       <BrowserRouter>
         <Routes>
+
+          {/* Login Page */}
           <Route path="/" element={<Login />} />
 
-          {/* Student Routes - Protected */}
-          <Route path="/student" element={
-            <ProtectedRoute allowedRole="student">
-              <Student />
-            </ProtectedRoute>
-          }>
+          {/* 🔐 Student Routes */}
+          <Route
+            path="/student"
+            element={
+              <ProtectedRoute allowedRole="student">
+                <Student />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<Student_Dashboard />} />
             <Route path="Progress_update" element={<Progress_Update />} />
             <Route path="Project_Details" element={<Project_Details />} />
@@ -45,12 +50,15 @@ function App() {
             <Route path="invitations" element={<InvitationPage />} />
           </Route>
 
-          {/* Teacher Routes - Protected */}
-          <Route path="/teacher" element={
-            <ProtectedRoute allowedRole="teacher">
-              <Teacher />
-            </ProtectedRoute>
-          }>
+          {/* 🔐 Teacher Routes */}
+          <Route
+            path="/teacher"
+            element={
+              <ProtectedRoute allowedRole="teacher">
+                <Teacher />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<TeacherDashBoard />} />
             <Route path="add" element={<TeacherAdd />} />
             <Route path="posted_projects" element={<PostedProjects />} />
@@ -59,18 +67,22 @@ function App() {
             <Route path="student_progress/project_details/:id" element={<Cluster />} />
           </Route>
 
-          {/* Admin Routes - Protected */}
-          <Route path="/admin" element={
-            <ProtectedRoute allowedRole="admin">
-              <Admin />
-            </ProtectedRoute>
-          }>
+          {/* 🔐 Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRole="admin">
+                <Admin />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<Admin_Dashboard />} />
             <Route path="Add_users" element={<Add_Users />} />
             <Route path="Add_Project" element={<Add_Project />} />
             <Route path="posted_projects" element={<Posted_project />} />
             <Route path="students_progress" element={<Students_Progress />} />
           </Route>
+          
         </Routes>
       </BrowserRouter>
     </Provider>
