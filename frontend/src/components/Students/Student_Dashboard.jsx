@@ -1,3 +1,5 @@
+// StudentDashboard.js (Frontend)
+
 import { useState, useEffect } from 'react';
 import CreateForm from './CreateForm';
 import InviteForm from './InviteForm';
@@ -5,6 +7,7 @@ import TeamDetails from './TeamDetails';
 import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { addUser } from '../../utils/userSlice';
+import { useNavigate } from 'react-router-dom'; // Use useNavigate instead of useHistory
 
 function StudentDashboard() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -31,6 +34,7 @@ function StudentDashboard() {
 
   const selector = useSelector((Store) => Store.userSlice);
   const dispatch = useDispatch();
+  const navigate = useNavigate(); // Use useNavigate hook for navigation
 
   const isValidEmail = (email) => email.endsWith('@bitsathy.ac.in');
 
@@ -89,7 +93,6 @@ function StudentDashboard() {
       });
 
       console.log('Profile Data:', response.data[0]);
-      dispatch(addUser(response.data[0]))
       checkUserStatus(response.data[0].emailId);
 
     } catch (error) {
@@ -114,27 +117,6 @@ function StudentDashboard() {
     }
   }
 
-  // it fetches the invitatioins
-  async function fetchPendingInvitations()
-  {
-    try{
-      let token = localStorage.getItem("accessToken")
-      let response = await axios.get(`http://localhost:1234/student/team_request/${selector.emailId}`,{
-        headers:{
-          Authorization:`Bearer ${token}`
-        }
-      })
-      if(response.status === 200)
-      {
-        console.log(response.data);
-      }
-    }
-    catch(error)
-    {
-      console.log(error);
-    }
-  }
-
   useEffect(() => {
     getProfile();
   }, []);
@@ -145,7 +127,7 @@ function StudentDashboard() {
         <div className="w-full flex justify-end -mt-12 mb-6">
           <button
             className="px-4 py-2 border border-purple-500 text-purple-500 rounded hover:bg-purple-500 hover:text-white transition"
-            onClick={() => fetchPendingInvitations()}
+            onClick={() => navigate('/student/invitations')} // Navigate to Invitation page using navigate
           >
             Invitations
           </button>
