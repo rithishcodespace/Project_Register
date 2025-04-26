@@ -60,12 +60,28 @@ router.get("/student/request_recived/:regnum",(req,res,next) => {
     }
 })
 
+// fetch all the invitations the loggedIn user received
+router.get("/student/team_request/:emailId",(req,res,next) => {
+  try{
+    const emailId = req.params.emailId;
+    let sql = "select * from team_requests where emailId = ? and status = 'interested'"
+    db.query(sql,[emailId],(error,result) => {
+      if(error) next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 // accept or reject request -> inside notification
 router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",(req,res,next) => {
     try{
       const fromreg = req.params.from_reg_num;
       const toreg = req.params.to_reg_num;
-      const status = req.params.status;
+      const status = req.params.status;              // to will be logged in user
       let sql = `UPDATE team_requests SET status = ? WHERE to_reg_num = ? AND from_reg_num = ? AND status = 'interested'`;
       db.query(sql,[status, toreg, fromreg],(error,result) => {
         if(error) return next(error);
