@@ -94,7 +94,9 @@ function StudentDashboard() {
       });
 
       console.log('Profile Data:', response.data[0]);
+      dispatch(addUser(response.data[0]));
       checkUserStatus(response.data[0].emailId);
+
 
     } catch (error) {
       console.error('Error fetching profile:', error.response ? error.response.data : error.message);

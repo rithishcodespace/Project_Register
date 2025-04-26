@@ -1,44 +1,75 @@
-// InvitationPage.js (Frontend)
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 
 const InvitationPage = () => {
   const [invitations, setInvitations] = useState([]);
+  const [loadingId, setLoadingId] = useState(null);
   const selector = useSelector((Store) => Store.userSlice);
 
+  // Load invitations from localStorage on mount
+  useEffect(() => {
+    const savedInvitations = localStorage.getItem('studentInvitations');
+    if (savedInvitations) {
+      setInvitations(JSON.parse(savedInvitations));
+    }
+  }, []);
+
+  // Fetch latest invitations from backend
   useEffect(() => {
     const fetchInvitations = async () => {
       try {
-        let token = localStorage.getItem("accessToken");
-        const response = await axios.get(`http://localhost:1234/student/team_request/${selector.emailId}`,{
-          headers:{
-            Authorization:`Bearer ${token}`
+        if (!selector.emailId) {
+          console.log('Email ID is not yet available.');
+          return;
+        }
+        let token = localStorage.getItem('accessToken');
+        const response = await axios.get(
+          `http://localhost:1234/student/team_request/${selector.emailId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
-        });
+        );
+
+        console.log("invitations", response.data);
         setInvitations(response.data);
-        console.log(response.data);
+        localStorage.setItem('studentInvitations', JSON.stringify(response.data));
       } catch (error) {
         console.error('Error fetching invitations:', error);
       }
     };
 
     fetchInvitations();
-  }, []);
+  }, [selector.emailId]);
 
-  // const handleAction = async (id, status) => {
-  //   try {
-  //     await axios.post(`http://localhost:1234/student/team_request/${status}/${selector.reg_num}/:from_reg_num`); // Replace with your endpoint
-  //     setInvitations((prevState) =>
-  //       prevState.map((invite) =>
-  //         invite.id === id ? { ...invite, status: action } : invite
-  //       )
-  //     );
-  //   } catch (error) {
-  //     console.error('Error handling action:', error);
-  //   }
-  // };
+  // Handle Accept or Reject
+  const handleAction = async (invite, status) => {
+    try {
+      setLoadingId(invite.reg_num);
+      let token = localStorage.getItem('accessToken');
+      await axios.patch(
+        `http://localhost:1234/student/team_request/${status}/${invite.to_reg_num}/${invite.from_reg_num}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const updated = invitations.map((i) =>
+        i.reg_num === invite.reg_num ? { ...i, status } : i
+      );
+      setInvitations(updated);
+      localStorage.setItem('studentInvitations', JSON.stringify(updated));
+    } catch (error) {
+      console.error('Error handling action:', error);
+    } finally {
+      setLoadingId(null);
+    }
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -55,24 +86,38 @@ const InvitationPage = () => {
         </thead>
         <tbody>
           {invitations.map((invite) => (
-            <tr key={invite.id}>
+            <tr key={invite.reg_num}>
               <td className="px-4 py-2 border border-gray-300">{invite.name}</td>
-              <td className="px-4 py-2 border border-gray-300">{invite.email}</td>
-              <td className="px-4 py-2 border border-gray-300">{invite.registerNumber}</td>
-              <td className="px-4 py-2 border border-gray-300">{invite.department}</td>
-              <td className="px-4 py-2 border border-gray-300">
-                <button
-                  onClick={() => handleAction(invite.id, 'accept')}
-                  className="bg-green-500 text-white px-4 py-2 rounded mr-2"
-                >
-                  Accept
-                </button>
-                <button
-                  onClick={() => handleAction(invite.id, 'reject')}
-                  className="bg-red-500 text-white px-4 py-2 rounded"
-                >
-                  Reject
-                </button>
+              <td className="px-4 py-2 border border-gray-300">{invite.emailId}</td>
+              <td className="px-4 py-2 border border-gray-300">{invite.reg_num}</td>
+              <td className="px-4 py-2 border border-gray-300">{invite.dept}</td>
+              <td className="px-4 py-2 border border-gray-300 text-center">
+                {invite.status === 'interested' ? (
+                  <div className="flex justify-center items-center space-x-2">
+                    <button
+                      onClick={() => handleAction(invite, 'accept')}
+                      className="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                      disabled={loadingId === invite.reg_num}
+                    >
+                      {loadingId === invite.reg_num ? 'Accepting...' : 'Accept'}
+                    </button>
+                    <button
+                      onClick={() => handleAction(invite, 'reject')}
+                      className="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                      disabled={loadingId === invite.reg_num}
+                    >
+                      {loadingId === invite.reg_num ? 'Rejecting...' : 'Reject'}
+                    </button>
+                  </div>
+                ) : (
+                  <span
+                    className={`px-3 py-1 rounded-full text-white ${
+                      invite.status === 'accept' ? 'bg-green-600' : 'bg-red-600'
+                    }`}
+                  >
+                    {invite.status === 'accept' ? 'Accepted' : 'Rejected'}
+                  </span>
+                )}
               </td>
             </tr>
           ))}
