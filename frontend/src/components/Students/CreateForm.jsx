@@ -1,6 +1,9 @@
 import React from 'react';
+import {useDispatch} from "react-redux";
+import { addUser } from '../../utils/userSlice';
 
 function CreateForm({ createForm, handleCreateChange, handleCreateSubmit, departments, setIsCreateOpen }) {
+
   return (
     <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50 px-4">
       <div className="bg-white rounded-lg p-6 w-full max-w-3xl">
