@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, BrowserRouter } from "react-router-dom"
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./components/Login/Login";
 import TeacherDashBoard from "./components/Teacher/TeacherDashBoard";
 import TeacherAdd from "./components/Teacher/TeacherAdd";
@@ -19,47 +19,62 @@ import Posted_project from "./components/Admin/Posted_project";
 import Admin_Dashboard from "./components/Admin/Admin_Dashboard";
 import Create_team from "./components/Teacher/Create_team";
 import Cluster from "./components/Teacher/Cluster";
-import {Provider} from "react-redux"
+import { Provider } from "react-redux";
 import ProjDetails from "./components/Teacher/ProjDetails";
 import Store from "./utils/Store";
 import InvitationPage from "./components/Students/InvitationPage";
+import ProtectedRoute from "./utils/ProtectedRoute"; // 🔐 import protected route
 
 function App() {
-
   return (
     <Provider store={Store}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Login />}></Route>
-          <Route path="/student" element={<Student />}>
-            <Route index element={<Student_Dashboard />}/>  
-            <Route path="Progress_update" element={<Progress_Update/>} />
-            <Route path="Project_Details" element={<Project_Details/>} />
-            <Route path="Students_team" element={<Student_Team/>} />
-            <Route path="invitations" element={<InvitationPage/>} />
+          <Route path="/" element={<Login />} />
+
+          {/* Student Routes - Protected */}
+          <Route path="/student" element={
+            <ProtectedRoute allowedRole="student">
+              <Student />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Student_Dashboard />} />
+            <Route path="Progress_update" element={<Progress_Update />} />
+            <Route path="Project_Details" element={<Project_Details />} />
+            <Route path="Students_team" element={<Student_Team />} />
+            <Route path="invitations" element={<InvitationPage />} />
           </Route>
 
-          <Route path="/teacher" element={<Teacher />}>
+          {/* Teacher Routes - Protected */}
+          <Route path="/teacher" element={
+            <ProtectedRoute allowedRole="teacher">
+              <Teacher />
+            </ProtectedRoute>
+          }>
             <Route index element={<TeacherDashBoard />} />
             <Route path="add" element={<TeacherAdd />} />
-            <Route path="posted_projects" element={<PostedProjects/>} />
-            <Route path="student_progress" element={<StudentProgress/>} />
-            <Route path="student_progress/:cluster" element={<Cluster/>} />
-            <Route path="student_progress/project_details/:id" element={<Cluster/>} />
+            <Route path="posted_projects" element={<PostedProjects />} />
+            <Route path="student_progress" element={<StudentProgress />} />
+            <Route path="student_progress/:cluster" element={<Cluster />} />
+            <Route path="student_progress/project_details/:id" element={<Cluster />} />
           </Route>
 
-          <Route path="/admin" element={<Admin />}>
+          {/* Admin Routes - Protected */}
+          <Route path="/admin" element={
+            <ProtectedRoute allowedRole="admin">
+              <Admin />
+            </ProtectedRoute>
+          }>
             <Route index element={<Admin_Dashboard />} />
-            <Route path="Add_users" element={<Add_Users/>} />
+            <Route path="Add_users" element={<Add_Users />} />
             <Route path="Add_Project" element={<Add_Project />} />
-            <Route path="posted_projects" element={<Posted_project/>} />
-            <Route path="students_progress" element={<Students_Progress/>} />
+            <Route path="posted_projects" element={<Posted_project />} />
+            <Route path="students_progress" element={<Students_Progress />} />
           </Route>
-
         </Routes>
       </BrowserRouter>
-      </Provider>
+    </Provider>
   );
 }
 
-export default App
+export default App;
