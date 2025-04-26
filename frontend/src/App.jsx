@@ -22,6 +22,7 @@ import Cluster from "./components/Teacher/Cluster";
 import {Provider} from "react-redux"
 import ProjDetails from "./components/Teacher/ProjDetails";
 import Store from "./utils/Store";
+import InvitationPage from "./components/Students/InvitationPage";
 
 function App() {
 
@@ -35,6 +36,7 @@ function App() {
             <Route path="Progress_update" element={<Progress_Update/>} />
             <Route path="Project_Details" element={<Project_Details/>} />
             <Route path="Students_team" element={<Student_Team/>} />
+            <Route path="invitations" element={<InvitationPage/>} />
           </Route>
           <Route path="/teacher" element={<Teacher />}>
             <Route index element={<TeacherDashBoard />} />
