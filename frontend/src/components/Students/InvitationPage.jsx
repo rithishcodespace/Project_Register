@@ -24,8 +24,9 @@ const InvitationPage = () => {
           return;
         }
         let token = localStorage.getItem('accessToken');
+        console.log(selector.reg_num);
         const response = await axios.get(
-          `http://localhost:1234/student/team_request/${selector.emailId}`,
+          `http://localhost:1234/student/request_recived/${selector.reg_num}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

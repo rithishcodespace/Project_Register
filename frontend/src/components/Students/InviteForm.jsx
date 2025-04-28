@@ -12,7 +12,7 @@ function InviteForm({ inviteForm, handleInviteChange, handleInviteSubmit, depart
     const accessToken = localStorage.getItem("accessToken");
   
     try {
-      const response = await axios.put(
+      const response = await axios.post(
         "http://localhost:1234/student/join_request",
         {
           name: inviteForm.name,
