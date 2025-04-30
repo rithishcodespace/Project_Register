@@ -98,12 +98,12 @@ router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",(req,res,
 // it checks whether he sent invitations and if sent it is conformed
 router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
   try {
-    const { emailId } = req.body;
+    const { from_reg_num } = req.body; // logged user's reg num
 
     // Step 1: Check if user is in a confirmed team
-    const checkConfirmedSQL = "SELECT team_id FROM team_requests WHERE emailId = ? AND team_conformed = 1";
+    const checkConfirmedSQL = "SELECT team_id FROM team_requests WHERE from_reg_num = ? AND team_conformed = 1";
 
-    db.query(checkConfirmedSQL, [emailId], (err1, result1) => {
+    db.query(checkConfirmedSQL, [from_reg_num], (err1, result1) => {
       if (err1) return next(err1);
 
       if (result1.length > 0 && result1[0].team_id) {
@@ -122,23 +122,23 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
         });
 
       } else {
-        // Step 3: Not confirmed, fetch invitations and check for accepted statuses
+        // Step 3: Not confirmed, fetch invitations sent by the user
         const fetchInvitesSQL = `
           SELECT * FROM team_requests 
-          WHERE emailId = ? AND team_conformed = 0
+          WHERE from_reg_num = ? AND team_conformed = 0
         `;
 
-        db.query(fetchInvitesSQL, [emailId], (err3, invites) => {
+        db.query(fetchInvitesSQL, [from_reg_num], (err3, invites) => {
           if (err3) return next(err3);
 
           // Filter out accepted members from pending invitations
-          const pendingInvitations = invites.filter(invite => invite.status !== 'accepted');
-          const teamMembers = invites.filter(invite => invite.status === 'accepted');
+          const pendingInvitations = invites.filter(invite => invite.status !== 'accept');
+          const teamMembers = invites.filter(invite => invite.status === 'accept');
 
           res.send({
             teamConformationStatus: 0,
-            teamMembers, // Accepted members are now in teamMembers
-            pendingInvitations // Pending ones are in pendingInvitations
+            teamMembers,
+            pendingInvitations
           });
         });
       }
@@ -147,7 +147,6 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
     next(error);
   }
 });
-
 
 // it gets all the projects available -> it has to be filtered in the frontend 
 router.get("/student/projects",(req,res,next) => {

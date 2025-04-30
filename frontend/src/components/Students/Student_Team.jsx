@@ -1,20 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import {useSelector} from "react-redux";
 
 function Student_Team() {
   const [team, setTeam] = useState([]);
-  const [loading, setLoading] = useState(true); // added for loading animation
+  const [loading, setLoading] = useState(true);
+  const selector = useSelector(Store => Store.userSlice)
 
   async function fetchTeam() {
     try {
       let token = localStorage.getItem("accessToken");
-      let reg_num = localStorage.getItem("studentInvitations[0].reg_num");
-      
-      let response = await axios.get(`http://localhost:1234/student/getTeamDetails/${reg_num}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      let reg_num = selector.reg_num;
+      let response;
+      if (reg_num) {
+         response = await axios.get(`http://localhost:1234/student/getTeamDetails/${reg_num}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        console.log(response.data);
+      } else {
+        console.error("No reg_num available!");
+      }
 
       if (response.status === 200) {
         setTeam(response.data.teamDetails || []); // assuming your API returns { teamDetails: [...] }
@@ -60,10 +67,10 @@ function Student_Team() {
               </div>
               <div className="text-sm text-gray-700 mt-2 sm:mt-0">
                 <p className="bg-white">
-                  Reg No: <span className="bg-white font-medium">{member.regNo}</span>
+                  Reg No: <span className="bg-white font-medium">{member.reg_num}</span>
                 </p>
                 <p className="bg-white">
-                  Cluster: <span className="bg-white font-medium">{member.cluster}</span>
+                  Cluster: <span className="bg-white font-medium">{member.dept}</span>
                 </p>
               </div>
             </div>

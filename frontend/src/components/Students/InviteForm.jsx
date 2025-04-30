@@ -2,25 +2,26 @@ import React from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 
-function InviteForm({ inviteForm, handleInviteChange, handleInviteSubmit, departments, setIsInviteOpen }) {
+function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen, departments }) {
 
-  const selector = useSelector((Store => Store.userSlice));
- 
+  const selector = useSelector((Store) => Store.userSlice);
+
   async function handleInviteSubmit(e) {
     e.preventDefault();
-  
+    console.log("Submitting invite...");
+
     const accessToken = localStorage.getItem("accessToken");
-  
+
     try {
       const response = await axios.post(
         "http://localhost:1234/student/join_request",
         {
-          name: inviteForm.name,
-          emailId: inviteForm.email, // or `email` if backend expects it
-          reg_num: inviteForm.registerNumber,
-          dept: inviteForm.department,
-          from_reg_num: selector.registerNumber,
-          to_reg_num: inviteForm.registerNumber
+          "name": inviteForm.name,
+          "emailId": inviteForm.email,
+          "reg_num": inviteForm.registerNumber,
+          "dept": inviteForm.department,
+          "from_reg_num": selector.reg_num,
+          "to_reg_num": inviteForm.registerNumber
         },
         {
           headers: {
@@ -28,14 +29,13 @@ function InviteForm({ inviteForm, handleInviteChange, handleInviteSubmit, depart
           }
         }
       );
-  
-      console.log("Invite sent!", response.data);
+
+      if(response.data == 200)alert("Invite sent successfully!");
       setIsInviteOpen(false); // close modal if success
     } catch (err) {
       console.error("Error sending invite", err);
     }
   }
-  
 
   return (
     <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50 px-4">
@@ -104,7 +104,6 @@ function InviteForm({ inviteForm, handleInviteChange, handleInviteSubmit, depart
             <button
               type="submit"
               className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-700 transition"
-              onClick={() => handleInviteSubmit()}
             >
               Invite
             </button>

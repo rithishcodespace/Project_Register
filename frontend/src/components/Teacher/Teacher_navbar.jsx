@@ -12,9 +12,14 @@ function Teacher_navbar({ isOpen, toggleSidebar }) {
 
   const handleLogout = async () => {
     try {
-      let token = localStorage.getItem("refreshToken");
+      // First clear everything
+      localStorage.clear(); // clear entire localStorage safely
+      console.log("cleared all");
   
-      let response = await axios.delete("http://localhost:1234/auth/logout", {
+      // Then, optionally try to logout from server
+      let token = localStorage.getItem("refreshToken"); // Now this will be null (since cleared), so move axios before clearing if needed
+  
+      await axios.delete("http://localhost:1234/auth/logout", {
         data: {
           refreshToken: token
         },
@@ -23,11 +28,15 @@ function Teacher_navbar({ isOpen, toggleSidebar }) {
         }
       });
   
+      // Finally navigate to login page
       navigate("/");
     } catch (error) {
       console.error("Logout failed:", error);
+      // Even if server logout fails, move user to login
+      navigate("/");
     }
   };
+  
 
   const isActive = (path) => {
     const currentPath = location.pathname;

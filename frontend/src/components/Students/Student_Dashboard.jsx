@@ -1,5 +1,3 @@
-// StudentDashboard.js (Frontend)
-
 import { useState, useEffect } from 'react';
 import CreateForm from './CreateForm';
 import InviteForm from './InviteForm';
@@ -12,30 +10,32 @@ import { useNavigate } from 'react-router-dom';
 
 function StudentDashboard() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
     name: '',
     email: '',
     registerNumber: '',
-    department: ' ',
+    department: '',
   });
-  const [teamCreated, setTeamCreated] = useState(false);
-  const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState({
     name: '',
     email: '',
     registerNumber: '',
     department: '',
   });
-  const [members, setMembers] = useState([]);
+  const [teamStatus, setTeamStatus] = useState(null); // 0 or 1
+  const [teamMembers, setTeamMembers] = useState([]); // Array of all members
+  const [pendingInvitations, setPendingInvitations] = useState([]);
 
-  const totalMembers = 4;
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const selector = useSelector((state) => state.userSlice);
+
   const departments = [
     'CSE', 'AIDS', 'IT', 'AIML', 'CT', 'AGRI', 'ECE', 'EIE', 'EEE', 'MECH', 'FT', 'FD'
   ];
 
-  const selector = useSelector((Store) => Store.userSlice);
-  const dispatch = useDispatch();
-  const navigate = useNavigate(); // Use useNavigate hook for navigation
+  const totalMembersAllowed = 4;
 
   const isValidEmail = (email) => email.endsWith('@bitsathy.ac.in');
 
@@ -51,7 +51,6 @@ function StudentDashboard() {
       return;
     }
 
-    // Dispatch here after successful validation
     dispatch(addUser({
       name: createForm.name,
       email: createForm.email,
@@ -59,7 +58,6 @@ function StudentDashboard() {
       department: createForm.department,
     }));
 
-    setTeamCreated(true);
     setIsCreateOpen(false);
   };
 
@@ -74,7 +72,9 @@ function StudentDashboard() {
       alert('Email must be a valid @bitsathy.ac.in address.');
       return;
     }
-    setMembers((m) => [...m, inviteForm]);
+
+    // Here you should POST to backend to send an invitation (you can add API logic)
+    setPendingInvitations(prev => [...prev, { ...inviteForm, status: 'Pending' }]);
     setInviteForm({ name: '', email: '', registerNumber: '', department: '' });
     setIsInviteOpen(false);
   };
@@ -86,95 +86,121 @@ function StudentDashboard() {
         console.error("Access token is missing");
         return;
       }
-
       const response = await axios.get('http://localhost:1234/profile/view', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      console.log('Profile Data:', response.data[0]);
       dispatch(addUser(response.data[0]));
-      checkUserStatus(response.data[0].emailId);
-
-
+      checkUserStatus(response.data[0].reg_num);
     } catch (error) {
       console.error('Error fetching profile:', error.response ? error.response.data : error.message);
     }
   };
 
-  async function checkUserStatus(emailId) {
-    console.log("emailId:", emailId);
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      console.error("Access token is missing");
-      return;
+  const checkUserStatus = async (reg_num) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.error("Access token is missing");
+        return;
+      }
+      const response = await axios.post('http://localhost:1234/student/fetch_team_status_and_invitations', 
+        { "from_reg_num":reg_num },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        const { teamConformationStatus, teamMembers, pendingInvitations } = response.data;
+        setTeamStatus(teamConformationStatus);
+        setTeamMembers(teamMembers || []);
+        setPendingInvitations(pendingInvitations || []);
+        if (teamMembers.length > 0) {
+          dispatch(addTeamMembers(teamMembers));
+        }
+        console.log(response.data);
+      }
+    } catch (error) {
+      console.error('Error checking team status:', error.response ? error.response.data : error.message);
     }
-    let response = await axios.post("http://localhost:1234/student/fetch_team_status_and_invitations", { "emailId": emailId }, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    if (response.status === 200) {
-      console.log("user team status", response.data);
-      if(localStorage.getItem("TeamStatus"))
-      {
-        localStorage.removeItem("TeamStatus");
-        localStorage.setItem("TeamStatus",response.data.teamConformationStatus);
-      }
-      if(response.data.teamMembers.length > 0)
-      {
-        dispatch(addTeamMembers(response.data.teamMembers));
-      }
-    }
-  }
+  };
 
   useEffect(() => {
     getProfile();
   }, []);
 
-  return (
-    <div className="h-[29rem] flex flex-col items-center justify-center px-6 pt-16">
-      {!teamCreated && (
-        <div className="w-full flex justify-end -mt-12 mb-6">
-          <button
-            className="px-4 py-2 border border-purple-500 text-purple-500 rounded hover:bg-purple-500 hover:text-white transition"
-            onClick={() => navigate('/student/invitations')} // Navigate to Invitation page using navigate
-          >
-            Invitations
-          </button>
-        </div>
-      )}
+  if (teamStatus === null) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
 
-      <div className="w-[95%] max-w-[60rem] h-[30rem] rounded-xl bg-white flex flex-col items-center justify-center gap-4 p-9 overflow-y-auto">
-        {!teamCreated ? (
-          <>
-            <h1 className="text-purple-500 text-2xl font-bold bg-white">CREATE YOUR OWN TEAM</h1>
-            <button
-              onClick={() => setIsCreateOpen(true)}
-              className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition"
-            >
-              CREATE
-            </button>
-          </>
-        ) : (
-          <>
-            <h1 className="text-red-500 bg-white text-2xl font-semibold -mt-36 mb-4">Team code: cs12</h1>
-            <TeamDetails
-              members={members}
-              createForm={createForm}
-              totalMembers={totalMembers}
-              setIsInviteOpen={setIsInviteOpen}
-            />
-          </>
+  if (teamStatus === 1) {
+    // If team confirmed, show another dashboard
+    return (
+      <div className="flex flex-col justify-center items-center h-screen">
+        <h1 className="text-3xl font-bold text-green-600">Welcome to your Team Dashboard!</h1>
+        {/* You can put a component for finalized team here */}
+      </div>
+    );
+  }
+
+  const remainingInvites = totalMembersAllowed - (1 + pendingInvitations.length);
+
+  return (
+    <div className="min-h-screen flex flex-col items-center px-6 pt-16">
+      <div className="w-full flex justify-end -mt-12 mb-6">
+        <button
+          className="px-4 py-2 border border-purple-500 text-purple-500 rounded hover:bg-purple-500 hover:text-white transition"
+          onClick={() => navigate('/student/invitations')}
+        >
+          Invitations
+        </button>
+      </div>
+
+      <div className="w-[95%] max-w-[60rem] rounded-xl bg-white flex flex-col items-center gap-4 p-9 overflow-y-auto">
+        <h1 className="text-purple-500 text-2xl font-bold">Your Team</h1>
+
+        {/* Logged-in leader */}
+        <div className="border w-full p-4 rounded bg-gray-100">
+          <p><strong>Leader:</strong>YOU</p>
+          <p><strong>Email:</strong> {selector.emailId}</p>
+          <p><strong>Register Number:</strong> {selector.reg_num}</p>
+          <p className="text-green-600 font-semibold">Status: Accepted</p>
+        </div>
+
+        {/* Pending/Accepted/Rejected Invitations */}
+        {pendingInvitations.map((invitation, idx) => (
+          <div key={idx} className="border w-full p-4 rounded bg-gray-50">
+            <p><strong>Name:</strong> {invitation.name}</p>
+            <p><strong>Email:</strong> {invitation.emailId}</p>
+            <p><strong>Register Number:</strong> {invitation.reg_num}</p>
+            <p><strong>Department:</strong> {invitation.dept}</p>
+            <p className={`font-semibold ${
+            invitation.status === 'Accepted' ? 'text-green-500' :
+            invitation.status === 'Rejected' ? 'text-red-500' :
+            'text-yellow-500'
+          }`}>
+            Status: {invitation.status === 'interested' ? 'Pending' : invitation.status}
+          </p>
+          </div>
+        ))}
+
+        {/* Button to Invite more if slots available */}
+        {remainingInvites > 0 && (
+          <button
+            onClick={() => setIsInviteOpen(true)}
+            className="mt-6 px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition"
+          >
+            Invite Member
+          </button>
         )}
       </div>
 
-      {isCreateOpen && (
-        <CreateForm
-          {...{ createForm, handleCreateChange, handleCreateSubmit, departments, setIsCreateOpen }}
-        />
-      )}
+      {/* Invite Form Modal */}
       {isInviteOpen && (
         <InviteForm
           {...{ inviteForm, handleInviteChange, handleInviteSubmit, departments, setIsInviteOpen }}
