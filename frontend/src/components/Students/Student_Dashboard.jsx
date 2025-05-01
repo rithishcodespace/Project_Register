@@ -24,7 +24,7 @@ function StudentDashboard() {
     department: '',
   });
   const [teamStatus, setTeamStatus] = useState(null); // 0 or 1
-  const [teamMembers, setTeamMembers] = useState([]); // Array of all members
+  const [teamMembers, setTeamMembers] = useState([]); // Accepted members
   const [pendingInvitations, setPendingInvitations] = useState([]);
 
   const dispatch = useDispatch();
@@ -73,7 +73,6 @@ function StudentDashboard() {
       return;
     }
 
-    // Here you should POST to backend to send an invitation (you can add API logic)
     setPendingInvitations(prev => [...prev, { ...inviteForm, status: 'Pending' }]);
     setInviteForm({ name: '', email: '', registerNumber: '', department: '' });
     setIsInviteOpen(false);
@@ -107,7 +106,7 @@ function StudentDashboard() {
         return;
       }
       const response = await axios.post('http://localhost:1234/student/fetch_team_status_and_invitations', 
-        { "from_reg_num":reg_num },
+        { "from_reg_num": reg_num },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -123,10 +122,35 @@ function StudentDashboard() {
         if (teamMembers.length > 0) {
           dispatch(addTeamMembers(teamMembers));
         }
+        localStorage.setItem("teamStatus", JSON.stringify(response.data));
         console.log(response.data);
       }
     } catch (error) {
       console.error('Error checking team status:', error.response ? error.response.data : error.message);
+    }
+  };
+
+  const handleConfirmTeam = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const regNum = selector.reg_num;
+
+      const response = await axios.patch(
+        'http://localhost:1234/student/team_request/conform_team',
+        { from_reg_num: regNum },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        setTeamStatus(1);
+        alert('Team confirmed successfully!');
+      }
+    } catch (error) {
+      console.error('Error confirming team:', error.response ? error.response.data : error.message);
     }
   };
 
@@ -139,16 +163,15 @@ function StudentDashboard() {
   }
 
   if (teamStatus === 1) {
-    // If team confirmed, show another dashboard
     return (
       <div className="flex flex-col justify-center items-center h-screen">
         <h1 className="text-3xl font-bold text-green-600">Welcome to your Team Dashboard!</h1>
-        {/* You can put a component for finalized team here */}
       </div>
     );
   }
 
-  const remainingInvites = totalMembersAllowed - (1 + pendingInvitations.length);
+  const acceptedMembers = teamMembers.filter(member => member.status === 'accept');
+  const remainingInvites = totalMembersAllowed - (1 + pendingInvitations.length + acceptedMembers.length);
 
   return (
     <div className="min-h-screen flex flex-col items-center px-6 pt-16">
@@ -164,15 +187,23 @@ function StudentDashboard() {
       <div className="w-[95%] max-w-[60rem] rounded-xl bg-white flex flex-col items-center gap-4 p-9 overflow-y-auto">
         <h1 className="text-purple-500 text-2xl font-bold">Your Team</h1>
 
-        {/* Logged-in leader */}
         <div className="border w-full p-4 rounded bg-gray-100">
-          <p><strong>Leader:</strong>YOU</p>
+          <p><strong>Leader:</strong> YOU</p>
           <p><strong>Email:</strong> {selector.emailId}</p>
           <p><strong>Register Number:</strong> {selector.reg_num}</p>
           <p className="text-green-600 font-semibold">Status: Accepted</p>
         </div>
 
-        {/* Pending/Accepted/Rejected Invitations */}
+        {acceptedMembers.map((member, idx) => (
+          <div key={idx} className="border w-full p-4 rounded bg-gray-50">
+            <p><strong>Name:</strong> {member.name}</p>
+            <p><strong>Email:</strong> {member.emailId}</p>
+            <p><strong>Register Number:</strong> {member.reg_num}</p>
+            <p><strong>Department:</strong> {member.dept}</p>
+            <p className="text-green-500 font-semibold">Status: Accepted</p>
+          </div>
+        ))}
+
         {pendingInvitations.map((invitation, idx) => (
           <div key={idx} className="border w-full p-4 rounded bg-gray-50">
             <p><strong>Name:</strong> {invitation.name}</p>
@@ -180,27 +211,37 @@ function StudentDashboard() {
             <p><strong>Register Number:</strong> {invitation.reg_num}</p>
             <p><strong>Department:</strong> {invitation.dept}</p>
             <p className={`font-semibold ${
-            invitation.status === 'Accepted' ? 'text-green-500' :
-            invitation.status === 'Rejected' ? 'text-red-500' :
-            'text-yellow-500'
-          }`}>
-            Status: {invitation.status === 'interested' ? 'Pending' : invitation.status}
-          </p>
+              invitation.status === 'accept' ? 'text-green-500' :
+              invitation.status === 'reject' ? 'text-red-500' :
+              'text-yellow-500'
+            }`}>
+              Status: {invitation.status === 'interested' ? 'Pending' : invitation.status}
+            </p>
           </div>
         ))}
 
-        {/* Button to Invite more if slots available */}
-        {remainingInvites > 0 && (
-          <button
-            onClick={() => setIsInviteOpen(true)}
-            className="mt-6 px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition"
-          >
-            Invite Member
-          </button>
+        {(remainingInvites > 0 || acceptedMembers.length + 1 >= 3) && (
+          <div className="mt-6 flex flex-col sm:flex-row gap-4">
+            {remainingInvites > 0 && (
+              <button
+                onClick={() => setIsInviteOpen(true)}
+                className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition"
+              >
+                Invite Member
+              </button>
+            )}
+            {acceptedMembers.length + 1 >= 2 && (
+              <button
+                onClick={handleConfirmTeam}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+              >
+                Confirm Team
+              </button>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Invite Form Modal */}
       {isInviteOpen && (
         <InviteForm
           {...{ inviteForm, handleInviteChange, handleInviteSubmit, departments, setIsInviteOpen }}

@@ -5,11 +5,12 @@ const Project_Details = () => {
   const [projectData, setProjectData] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [accessGranted, setAccessGranted] = useState(false);
 
   async function handleTakeProject(name) {
     try {
-      console.log("name:",name);
       const token = localStorage.getItem("accessToken");
+      const teamStatus = JSON.parse(localStorage.getItem(""))
       const response = await axios.patch(`http://localhost:1234/student/ongoing/${name}`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -18,11 +19,7 @@ const Project_Details = () => {
 
       if (response.status === 200) {
         alert("Project chosen successfully!");
-
-        // ✅ Update project list by filtering out the selected project
         setProjectData(prev => prev.filter(proj => proj.project_name !== name));
-
-        // ✅ Close modal
         setViewModalOpen(false);
       }
     } catch (error) {
@@ -30,6 +27,25 @@ const Project_Details = () => {
       alert("Something went wrong while choosing project");
     }
   }
+
+  function checkUserStatus() {
+    const raw = localStorage.getItem("teamStatus");
+    if (!raw) return;
+  
+    try {
+      const teamStatus = JSON.parse(raw);
+      console.log("hi da chellam:",teamStatus);
+      const hasConfirmedTeam = teamStatus?.teamConformationStatus === 1;
+      const hasNoProject = teamStatus?.teamMembers?.[0]?.project_id === null;
+  
+      if (hasConfirmedTeam && hasNoProject) {
+        setAccessGranted(true);
+      }
+    } catch (e) {
+      console.error("Invalid teamStatus in localStorage", e);
+    }
+  }
+  
 
   async function fetchProjects() {
     try {
@@ -41,7 +57,6 @@ const Project_Details = () => {
       });
 
       if (response.status === 200) {
-        console.log(response.data);
         setProjectData(response.data);
       } else {
         alert("Error fetching projects");
@@ -53,14 +68,28 @@ const Project_Details = () => {
   }
 
   useEffect(() => {
-    fetchProjects();
+    checkUserStatus();
   }, []);
+
+  useEffect(() => {
+    if (accessGranted) {
+      fetchProjects();
+    }
+  }, [accessGranted]);
 
   const handleRowClick = (projectId) => {
     const selected = projectData.find(proj => proj.project_id === projectId);
     setSelectedProject(selected);
     setViewModalOpen(true);
   };
+
+  if (!accessGranted) {
+    return (
+      <div className='flex justify-center items-center h-screen'>
+        <h1 className='text-2xl font-bold text-red-500'>Access Denied, Form a Team!</h1>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 w-full max-w-7xl mx-auto">
@@ -101,40 +130,17 @@ const Project_Details = () => {
             <p><strong>Cluster:</strong> {selectedProject.cluster}</p>
             <p><strong>Description:</strong> {selectedProject.description}</p>
 
-            {/* Showing all Phases */}
             <div className="mt-4">
               <h4 className="text-lg font-bold text-purple-600 mb-2">Project Phases</h4>
               <div className="space-y-2 text-sm">
-                {selectedProject.phase_1_requirements && (
-                  <div>
-                    <p><strong>Phase 1 Requirements:</strong> {selectedProject.phase_1_requirements}</p>
-                    <p><strong>Phase 1 Deadline:</strong> {selectedProject.phase_1_deadline}</p>
-                  </div>
-                )}
-                {selectedProject.phase_2_requirements && (
-                  <div>
-                    <p><strong>Phase 2 Requirements:</strong> {selectedProject.phase_2_requirements}</p>
-                    <p><strong>Phase 2 Deadline:</strong> {selectedProject.phase_2_deadline}</p>
-                  </div>
-                )}
-                {selectedProject.phase_3_requirements && (
-                  <div>
-                    <p><strong>Phase 3 Requirements:</strong> {selectedProject.phase_3_requirements}</p>
-                    <p><strong>Phase 3 Deadline:</strong> {selectedProject.phase_3_deadline}</p>
-                  </div>
-                )}
-                {selectedProject.phase_4_requirements && (
-                  <div>
-                    <p><strong>Phase 4 Requirements:</strong> {selectedProject.phase_4_requirements}</p>
-                    <p><strong>Phase 4 Deadline:</strong> {selectedProject.phase_4_deadline}</p>
-                  </div>
-                )}
-                {selectedProject.phase_5_requirements && (
-                  <div>
-                    <p><strong>Phase 5 Requirements:</strong> {selectedProject.phase_5_requirements}</p>
-                    <p><strong>Phase 5 Deadline:</strong> {selectedProject.phase_5_deadline}</p>
-                  </div>
-                )}
+                {[1, 2, 3, 4, 5].map(phase => (
+                  selectedProject[`phase_${phase}_requirements`] && (
+                    <div key={phase}>
+                      <p><strong>Phase {phase} Requirements:</strong> {selectedProject[`phase_${phase}_requirements`]}</p>
+                      <p><strong>Phase {phase} Deadline:</strong> {selectedProject[`phase_${phase}_deadline`]}</p>
+                    </div>
+                  )
+                ))}
               </div>
             </div>
 

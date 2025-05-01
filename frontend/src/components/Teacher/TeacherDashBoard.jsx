@@ -1,4 +1,6 @@
 import React from 'react';
+import { useEffect } from 'react';
+import axios from "axios";
 
 const TeacherDashboard = () => {
   const stats = [
@@ -18,6 +20,30 @@ const TeacherDashboard = () => {
     'Student K updated progress on "Portfolio Website"',
     'Team Delta selected "Face Recognition App"',
   ];
+
+  let fetchprojects = async () =>{
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get("http://localhost:1234/student/projects", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.status === 200) {
+        console.log(response.data);
+      } else {
+        alert("Error fetching projects");
+      }
+    } catch (error) {
+      console.error("Fetch error:", error);
+      alert("Something went wrong");
+    }
+  }
+
+  useEffect(() => {
+    fetchprojects();
+  },[])
 
   return (
     <div className="p-6  rounded-xl h-[90%]">

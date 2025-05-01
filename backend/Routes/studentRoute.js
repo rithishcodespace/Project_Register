@@ -114,7 +114,7 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
         db.query(fetchTeamSQL, [teamId], (err2, teamMembers) => {
           if (err2) return next(err2);
 
-          res.send({
+          res.json({
             teamConformationStatus: 1,
             teamMembers,
             pendingInvitations: []
@@ -135,7 +135,7 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
           const pendingInvitations = invites.filter(invite => invite.status !== 'accept');
           const teamMembers = invites.filter(invite => invite.status === 'accept');
 
-          res.send({
+          res.json({
             teamConformationStatus: 0,
             teamMembers,
             pendingInvitations
@@ -161,6 +161,41 @@ router.get("/student/projects",(req,res,next) => {
     {
       next(error);
     }
+})
+
+// sets the project to the respective team when they pick a project
+router.post("/student/set_projectId_to_team",(req,res,next) => {
+  try{
+    let {project_id,team_id} = req.body;
+    let sql = "insert into team_requests(project_id) values(?) where team_id = ?";
+    db.query(sql,[project_id,team_id],(error,result) => {
+      if(error) next(error);
+      else
+      {
+        res.send("Project_Id correctly inserted into the Given team_Id");
+      }
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+//make the team status -> 1 
+router.patch("/student/team_request/conform_team",(req,res,next) => {
+  try{
+    let {from_reg_num} = req.body;
+    let sql = "update team_requests set team_conformed = true where from_reg_num = ? and status = 'accept'";
+    db.query(sql,[from_reg_num],(error,result) => {
+      if(error)return next(error);
+      res.send("Team status changed from false to true");
+    })
+  }
+  catch(error)
+  {
+      next(error);
+  }
 })
 
 // make project status -> ongoing
