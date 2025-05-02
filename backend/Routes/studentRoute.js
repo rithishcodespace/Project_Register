@@ -285,18 +285,33 @@ router.get("/student/getTeamDetails/:reg_num", (req, res, next) => {
   });
 });
 
-router.post("/student/update_progress/:phase/:reg_num",(req,res,next) => {
-  try{
-    let {contribution} = req.body;
-    let sql = "insert into team_request"
+router.post("/student/update_progress/:phase/:reg_num", (req, res, next) => {
+  try {
+    const { phase, reg_num } = req.params;
+    const { contribution } = req.body;
+
+    // Validate phase name
+    const validPhases = [
+      "phase1_progress",
+      "phase2_progress",
+      "phase3_progress",
+      "phase4_progress",
+      "phase5_progress",
+    ];
+
+    if (!validPhases.includes(phase)) {
+      return res.status(400).json({ message: "Invalid phase name" });
+    }
+
+    const sql = `UPDATE team_requests SET ${phase} = ? WHERE reg_num = ?`;
+
+    db.query(sql, [contribution, reg_num, reg_num], (err, result) => {
+      if (err) return next(err);
+      res.send("Progress updated successfully!");
+    });
+  } catch (error) {
+    next(error);
   }
-  catch(error)
-  {
-
-  }
-})
-
-
-
+});
 
 module.exports = router;
