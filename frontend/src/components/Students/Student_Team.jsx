@@ -18,14 +18,13 @@ function Student_Team() {
             Authorization: `Bearer ${token}`
           }
         });
-        console.log(response.data);
       } else {
         console.error("No reg_num available!");
       }
 
       if (response.status === 200) {
-        setTeam(response.data.teamDetails || []); // assuming your API returns { teamDetails: [...] }
-        console.log(response.data);
+        setTeam(response.data || []); // assuming your API returns { teamDetails: [...] }
+        console.log("team members array:",response.data);
       }
     } catch (error) {
       console.error("Error fetching team details:", error);

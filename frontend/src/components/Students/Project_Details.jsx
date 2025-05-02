@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
 
 const Project_Details = () => {
   const [projectData, setProjectData] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [accessGranted, setAccessGranted] = useState(false);
+  const selector = useSelector((Store) => Store.userSlice);
 
-  async function handleTakeProject(name) {
+  async function handleTakeProject(name,id) {
     try {
       const token = localStorage.getItem("accessToken");
       const teamStatus = JSON.parse(localStorage.getItem(""))
@@ -21,6 +23,17 @@ const Project_Details = () => {
         alert("Project chosen successfully!");
         setProjectData(prev => prev.filter(proj => proj.project_name !== name));
         setViewModalOpen(false);
+      }
+
+      const newresponse = await axios.patch(`http://localhost:1234/student/assgin_project_id/${id}/${selector.reg_num}`,{},{
+        headers:{
+          Authorization:`bearers ${token}`
+        }
+      })
+
+      if(newresponse.status === 200)
+      {
+        console.log("project_id is successfully inserted into db!");
       }
     } catch (error) {
       console.error("Error choosing project:", error);
@@ -58,6 +71,7 @@ const Project_Details = () => {
 
       if (response.status === 200) {
         setProjectData(response.data);
+        console.log("projects:",response.data);
       } else {
         alert("Error fetching projects");
       }
@@ -153,7 +167,7 @@ const Project_Details = () => {
               </button>
 
               <button
-                onClick={() => handleTakeProject(selectedProject.project_name)}
+                onClick={() => handleTakeProject(selectedProject.project_name,selectedProject.project_id)}
                 className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700"
               >
                 Take Project
