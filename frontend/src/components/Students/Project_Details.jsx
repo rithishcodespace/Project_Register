@@ -12,7 +12,7 @@ const Project_Details = () => {
   async function handleTakeProject(name,id) {
     try {
       const token = localStorage.getItem("accessToken");
-      const teamStatus = JSON.parse(localStorage.getItem(""))
+      const teamStatus = JSON.parse(localStorage.getItem("teamStatus"))
       const response = await axios.patch(`http://localhost:1234/student/ongoing/${name}`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -27,7 +27,7 @@ const Project_Details = () => {
 
       const newresponse = await axios.patch(`http://localhost:1234/student/assgin_project_id/${id}/${selector.reg_num}`,{},{
         headers:{
-          Authorization:`bearers ${token}`
+         Authorization: `Bearer ${token}`
         }
       })
 
@@ -46,12 +46,16 @@ const Project_Details = () => {
     if (!raw) return;
   
     try {
-      const teamStatus = JSON.parse(raw);
+      const teamStatus = JSON.parse(localStorage.getItem("teamMembers"));
       console.log("hi da chellam:",teamStatus);
       // setprojectId(teamStatus.teamMembers[0].project_id)
       const hasConfirmedTeam = teamStatus?.teamConformationStatus === 1;
-      const hasNoProject = teamStatus?.teamMembers?.[0]?.project_id === null;
-  
+      let hasNoProject = false;
+      if (teamStatus?.teamMembers?.length > 0) {
+      hasNoProject = teamStatus.teamMembers[0].project_id === null;
+      }
+      console.log("para",hasConfirmedTeam,hasNoProject);
+
       if (hasConfirmedTeam && hasNoProject) {
         setAccessGranted(true);
       }
@@ -105,7 +109,7 @@ const Project_Details = () => {
   }, []);
 
   useEffect(() => {
-    if (accessGranted) {
+    if (!accessGranted) {
       fetchProjects();
     }
     else{
@@ -120,7 +124,7 @@ const Project_Details = () => {
     setViewModalOpen(true);
   };
 
-  if (!accessGranted) {
+  if (accessGranted) {
     return (
       <div className='flex justify-center items-center h-screen'>
         <h1 className='text-2xl font-bold text-red-500'>Mathan than paarthukolla vendum!</h1>
