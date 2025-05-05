@@ -123,6 +123,7 @@ function StudentDashboard() {
           dispatch(addTeamMembers(teamMembers));
         }
         localStorage.setItem("teamStatus", JSON.stringify(response.data));
+        localStorage.setItem("teamMembers",JSON.stringify(teamMembers));
         console.log(response.data);
       }
     } catch (error) {

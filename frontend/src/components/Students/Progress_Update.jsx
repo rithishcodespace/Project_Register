@@ -1,172 +1,132 @@
-import React, { useState } from 'react';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import React, { useState, useEffect } from 'react';
+import { PieChart, Pie, Cell, Legend, Tooltip } from 'recharts';
+import axios from 'axios';
 
-const loggedInUser = "Alice";
-const teamMembers = ['Alice', 'Nike', 'Mathan', 'Prakash', 'Rithish'];
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
-const initialProgressData = {
-  "Frontend": {
-    "Alice": 20,
-    "Nike": 20,
-    "Mathan": 0,
-    "Prakash": 0,
-    "Rithish": 0
-  },
-  "Login Page": {
-    "Alice": 0,
-    "Nike": 0,
-    "Mathan": 0,
-    "Prakash": 0,
-    "Rithish": 0
-  },
-  "Database": {
-    "Alice": 0,
-    "Nike": 0,
-    "Mathan": 0,
-    "Prakash": 0,
-    "Rithish": 0
-  },
-  "API Integration": {
-    "Alice": 0,
-    "Nike": 0,
-    "Mathan": 0,
-    "Prakash": 0,
-    "Rithish": 0
-  },
-  "Testing": {
-    "Alice": 0,
-    "Nike": 11,
-    "Mathan": 20,
-    "Prakash": 0,
-    "Rithish": 0
-  }
-};
+const ProjectProgress = () => {
+  const [phase, setPhase] = useState('phase1_progress');
+  const [regNum, setRegNum] = useState('');
+  const [contribution, setContribution] = useState('');
+  const [responseMessage, setResponseMessage] = useState('');
+  const [data, setData] = useState([]);
 
-const COLORS = ['#6366f1', '#10b981', '#facc15', '#f97316', '#ec4899'];
-const REMAINING_COLOR = '#e5e7eb'; // Light gray
-
-function Progress_Update() {
-  const [progressData, setProgressData] = useState(initialProgressData);
-
-  const handleChange = (phase, value) => {
-    // Ensure the value is a number and is capped at 100
-    const newValue = Math.min(Number(value), 100); // Cap the value at 100
-    
-    // If the value exceeds 100, show an alert
-    if (newValue !== Number(value)) {
-      alert("The contribution cannot exceed 100%. The value has been capped to 100.");
-    }
-  
-    setProgressData(prev => ({
-      ...prev,
-      [phase]: {
-        ...prev[phase],
-        [loggedInUser]: newValue
+  const handleUpdateProgress = async () => {
+    try {
+      let token = localStorage.getItem("accessToken");
+      const response = await axios.post(`http://localhost:1234/student/update_progress/${phase}/${regNum}`,{
+        "contribution":contribution
+      },
+      {
+        headers:{
+          Authorization : `Bearer ${token}`
+        }
       }
-    }));
+      );
+      setResponseMessage(response.data);
+
+      // Optionally refresh chart data
+      fetchTeamData();
+    } catch (error) {
+      console.error(error);
+      setResponseMessage('Error updating progress',error);
+    }
   };
-  
 
-  const renderPhase = (phaseName, index) => {
-    const membersData = progressData[phaseName];
-    const memberEntries = teamMembers.map((name) => ({
-      name,
-      value: membersData[name] || 0 // Include all members, even those with 0% contribution
-    }));
-
-    const total = memberEntries.reduce((acc, curr) => acc + curr.value, 0);
-    const remaining = total < 100 ? 100 - total : 0;
-
-    const pieData = [
-      ...memberEntries.filter((entry) => entry.value > 0),
-      { name: "Remaining", value: remaining }
-    ];
-
-    const myValue = membersData[loggedInUser];
-
-    return (
-      <div key={index} className="flex flex-col md:flex-row items-center bg-white shadow-xl rounded-2xl p-6 mb-8">
-        {/* Left: Input */}
-        <div className="md:w-1/2 mb-6 bg-white md:mb-0 px-4">
-          <h2 className="text-xl font-bold bg-white mb-3 text-indigo-600">{phaseName}</h2>
-          <label className="block text-gray-700 bg-white font-medium mb-2">
-            {loggedInUser}'s Contribution (%)
-          </label>
-          <input
-            type="number"
-            min="0"
-            max="100"
-            value={myValue}
-            onChange={(e) => handleChange(phaseName, e.target.value)}
-            className="w-full border border-gray-300 bg-white  rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-indigo-400"
-          />
-          <p className="text-sm text-gray-500 bg-white  mt-1">Update your progress for this phase</p>
-
-          <div className="mt-4 bg-white ">
-            {memberEntries.map((entry) => (
-              <p key={entry.name} className={entry.value === 0 ? 'text-gray-400 bg-white ' : ' bg-white '}>
-                {entry.name} contribution - {entry.value}%
-              </p>
-            ))}
-          </div>
-        </div>
-
-        <div className="md:w-1/2 flex bg-white flex-col items-center px-4">
-          <ResponsiveContainer width="100%" height={250} className="bg-white" >
-            <PieChart>
-              <Pie
-                data={pieData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={90}
-                label={({ percent, name }) =>
-                  name !== "Remaining" && percent > 0 ? `${(percent * 100).toFixed(0)}%` : ''
-                }
-              >
-                {pieData.map((entry, i) => (
-                  <Cell
-                  
-                    key={`cell-${i}`}
-                    fill={entry.name === "Remaining" ? REMAINING_COLOR : COLORS[i % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-
-          <div className="mt-4 grid grid-cols-2 bg-white gap-x-4 gap-y-2 text-sm font-medium text-gray-800">
-            {memberEntries.map((entry, i) => (
-              <div key={i} className="flex bg-white items-center gap-2">
-                <div
-                  className="w-4 h-4 bg-white rounded-full"
-                  style={{ backgroundColor: COLORS[i % COLORS.length] }}
-                />
-                <span className='bg-white'>{entry.name} - {entry.value}%</span>
-              </div>
-            ))}
-            {remaining > 0 && (
-              <div className="flex bg-white items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-gray-300" />
-                <span className='bg-white'>Remaining - {remaining}%</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
+  const fetchTeamData = async () => {
+    try {
+      const res = await axios.get('http://localhost:1234/student/team_progress');
+      setData(res.data); // Should return array like: [{ name: "Madhan", value: 40 }, ...]
+    } catch (error) {
+      console.error('Failed to load team data');
+    }
   };
+
+  useEffect(() => {
+    fetchTeamData(); // Load once on mount
+  }, []);
 
   return (
-    <div className="p-6 bg-gradient-to-br  to-blue-100 min-h-screen">
-      <h1 className="text-3xl font-bold text-center mb-10 text-black">
-        Hello <span className='text-purple-500'>{loggedInUser}</span>, Update Your Project Progress 
-      </h1>
-      {Object.keys(progressData).map((phase, index) => renderPhase(phase, index))}
+    <div className="max-w-3xl mx-auto p-6">
+      <h2 className="text-2xl font-semibold text-center mb-6">Update Project Progress</h2>
+
+      {/* Phase Selector */}
+      <div className="mb-4">
+        <label className="block text-lg font-medium">Select Phase:</label>
+        <select
+          value={phase}
+          onChange={(e) => setPhase(e.target.value)}
+          className="w-full p-2 mt-2 border border-gray-300 rounded-md"
+        >
+          <option value="phase1_progress">Phase 1</option>
+          <option value="phase2_progress">Phase 2</option>
+          <option value="phase3_progress">Phase 3</option>
+          <option value="phase4_progress">Phase 4</option>
+          <option value="phase5_progress">Phase 5</option>
+        </select>
+      </div>
+
+      {/* Registration Number */}
+      <div className="mb-4">
+        <label className="block text-lg font-medium">Registration Number:</label>
+        <input
+          type="text"
+          value={regNum}
+          onChange={(e) => setRegNum(e.target.value)}
+          className="w-full p-2 mt-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      {/* Contribution */}
+      <div className="mb-6">
+        <label className="block text-lg font-medium">Contribution (%):</label>
+        <input
+          type="number"
+          value={contribution}
+          onChange={(e) => setContribution(e.target.value)}
+          className="w-full p-2 mt-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      {/* Submit Button */}
+      <div className="text-center mb-4">
+        <button
+          onClick={handleUpdateProgress}
+          className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+        >
+          Update Progress
+        </button>
+      </div>
+
+      {/* Response Message */}
+      {responseMessage && (
+        <p className="text-center font-semibold text-red-600">{responseMessage}</p>
+      )}
+
+      {/* Chart */}
+      <h3 className="text-xl font-semibold text-center mt-8 mb-4">Team Contributions</h3>
+      <div className="flex justify-center">
+        <PieChart width={400} height={400}>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            outerRadius={100}
+            fill="#8884d8"
+            label
+          >
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip />
+          <Legend />
+        </PieChart>
+      </div>
     </div>
   );
-}
+};
 
-export default Progress_Update;
+export default ProjectProgress;

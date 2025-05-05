@@ -48,6 +48,7 @@ const Project_Details = () => {
     try {
       const teamStatus = JSON.parse(raw);
       console.log("hi da chellam:",teamStatus);
+      // setprojectId(teamStatus.teamMembers[0].project_id)
       const hasConfirmedTeam = teamStatus?.teamConformationStatus === 1;
       const hasNoProject = teamStatus?.teamMembers?.[0]?.project_id === null;
   
@@ -81,6 +82,24 @@ const Project_Details = () => {
     }
   }
 
+  async function fetchMyProject()
+  {
+    let token = localStorage.getItem("accessToken");
+    const teamStatus = JSON.parse(localStorage.getItem("teamStatus"));
+    let response = await axios(`http://localhost:1234/student/get_project_details/${teamStatus.teamMembers[0].project_id}`,{
+      headers:{
+        Authorization : `Bearer ${token}`
+      }
+    });
+    if(response.status === 200)
+    {
+      console.log("Your project details",response.data);
+    }
+    else{
+      alert("There is an error in fetching your project details!");
+    }
+  }
+
   useEffect(() => {
     checkUserStatus();
   }, []);
@@ -89,7 +108,11 @@ const Project_Details = () => {
     if (accessGranted) {
       fetchProjects();
     }
+    else{
+      fetchMyProject();
+    }
   }, [accessGranted]);
+
 
   const handleRowClick = (projectId) => {
     const selected = projectData.find(proj => proj.project_id === projectId);
@@ -100,7 +123,7 @@ const Project_Details = () => {
   if (!accessGranted) {
     return (
       <div className='flex justify-center items-center h-screen'>
-        <h1 className='text-2xl font-bold text-red-500'>Access Denied, Form a Team!</h1>
+        <h1 className='text-2xl font-bold text-red-500'>Mathan than paarthukolla vendum!</h1>
       </div>
     );
   }

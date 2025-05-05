@@ -305,7 +305,7 @@ router.post("/student/update_progress/:phase/:reg_num", (req, res, next) => {
 
     const sql = `UPDATE team_requests SET ${phase} = ? WHERE reg_num = ?`;
 
-    db.query(sql, [contribution, reg_num, reg_num], (err, result) => {
+    db.query(sql, [contribution, reg_num], (err, result) => {
       if (err) return next(err);
       res.send("Progress updated successfully!");
     });
@@ -313,5 +313,35 @@ router.post("/student/update_progress/:phase/:reg_num", (req, res, next) => {
     next(error);
   }
 });
+
+// brings the details of the project through project_id
+router.get("/student/get_project_details/:project_id",(req,res,next) => {
+  try{
+     const {project_id} = req.params;
+     let sql = "select * from projects where project_id = ?";
+     db.query(sql,[project_id],(error,result) => {
+      if(error)next(error);
+      res.send(result);
+     })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+// GET /student/team_progress
+router.get("/student/team_progress", (req, res) => {
+  const sql = `
+    SELECT name, phase1_progress as value 
+    FROM team_requests 
+    WHERE team_id = '001' AND phase1_progress IS NOT NULL
+  `;
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).send("DB error");
+    res.json(results); // Must return array with { name, value }
+  });
+});
+
 
 module.exports = router;
