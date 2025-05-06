@@ -65,6 +65,8 @@ function App() {
             <Route path="student_progress" element={<StudentProgress />} />
             <Route path="student_progress/:cluster" element={<Cluster />} />
             <Route path="student_progress/project_details/:id" element={<Cluster />} />
+            <Route path="student_progress/project_details/:cluster/:id" element={<ProjDetails />} />
+
           </Route>
 
           {/* 🔐 Admin Routes */}
