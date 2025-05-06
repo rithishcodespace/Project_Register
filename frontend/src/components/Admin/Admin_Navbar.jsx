@@ -12,9 +12,6 @@ function Admin_Navbar({ isOpen, toggleSidebar }) {
 
   const handleLogout = async () => {
     try {
-      // First clear everything
-      localStorage.clear(); // clear entire localStorage safely
-      console.log("cleared all");
   
       // Then, optionally try to logout from server
       let token = localStorage.getItem("refreshToken"); // Now this will be null (since cleared), so move axios before clearing if needed
@@ -27,13 +24,15 @@ function Admin_Navbar({ isOpen, toggleSidebar }) {
           Authorization: `Bearer ${token}`
         }
       });
-  
-      // Finally navigate to login page
+
+      localStorage.clear(); // clear entire localStorage safely
+
       navigate("/");
     } catch (error) {
+
       console.error("Logout failed:", error);
-      // Even if server logout fails, move user to login
       navigate("/");
+      
     }
   };
   

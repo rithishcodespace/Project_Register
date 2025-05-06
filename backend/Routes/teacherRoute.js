@@ -35,4 +35,34 @@ router.get("/teacher/getprojects",(req,res,next) => {
   }
 })
 
+router.get("/teacher/get_projects_by_cluster/:cluster",(req,res,next) => {
+  try{
+    let cluster = req.params.cluster;
+    let sql = "select * from projects where cluster = ?";
+    db.query(sql,[cluster],(error,result) => {
+      if(error)next(error);
+      else res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+router.get("/teacher/get_projects_by_id/:projectId",(req,res,next) => {
+  try{
+    let {projectId} = req.params;
+    let sql = "select * from projects where project_id = ?";
+    db.query(sql,[projectId],(error,result) => {
+      if(error)next(error);
+      else res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 module.exports = router;

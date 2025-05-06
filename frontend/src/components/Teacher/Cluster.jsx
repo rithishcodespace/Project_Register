@@ -1,5 +1,7 @@
 import React from 'react';
 import { useParams,useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import axios from "axios";
 
 const sampleData = {
   CSE: [
@@ -36,6 +38,24 @@ const Cluster = () => {
   {
     navigate(`/teacher/ student_progress/project_details/${id}`);
   }
+
+  async function getProjects()
+  {
+    let token = localStorage.getItem("accessToken");
+    let response = await axios.get(`http://localhost:1234/teacher/get_projects_by_cluster/${cluster}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    if(response.status === 200)
+    {
+      console.log("Projects in specific cluster:",response.data);
+    }
+  }
+
+  useEffect(() => {
+    getProjects();
+  },[])
 
   return (
     <div className="p-6 min-h-screen bg-white-100">
