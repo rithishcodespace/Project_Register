@@ -23,7 +23,7 @@ import { Provider } from "react-redux";
 import ProjDetails from "./components/Teacher/ProjDetails";
 import Store from "./utils/Store";
 import InvitationPage from "./components/Students/InvitationPage";
-import ProtectedRoute from "./utils/ProtectedRoute"; // ✅ Make sure you created this
+import ProtectedRoute from "./utils/ProtectedRoute"; 
 
 function App() {
   return (

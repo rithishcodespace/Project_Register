@@ -24,7 +24,6 @@ const InvitationPage = () => {
           return;
         }
         let token = localStorage.getItem('accessToken');
-        console.log(selector.reg_num);
         const response = await axios.get(
           `http://localhost:1234/student/request_recived/${selector.reg_num}`,
           {
@@ -34,9 +33,34 @@ const InvitationPage = () => {
           }
         );
 
-        console.log("invitations", response.data);
-        setInvitations(response.data);
-        localStorage.setItem('studentInvitations', JSON.stringify(response.data));
+        if (response.status === 200 && response.data.length > 0) {
+          let fromUserId = response.data[0].from_reg_num;
+
+          if (fromUserId) {
+            let res = await axios.get(
+              `http://localhost:1234/student/get_student_details_by_regnum/${fromUserId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            if (res.status === 200) {
+              const studentDetails = Array.isArray(res.data) ? res.data[0] : res.data;
+
+              const enrichedData = {
+                ...studentDetails,
+                status: response.data[0].status,
+                from_reg_num: response.data[0].from_reg_num,
+                to_reg_num: response.data[0].to_reg_num,
+              };
+
+              setInvitations([enrichedData]);
+              localStorage.setItem('studentInvitations', JSON.stringify([enrichedData]));
+            }
+          }
+        }
       } catch (error) {
         console.error('Error fetching invitations:', error);
       }

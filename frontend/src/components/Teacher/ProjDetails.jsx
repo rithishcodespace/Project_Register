@@ -1,5 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import axios from "axios";
 
 const sampleData = {
   CSE: [
@@ -28,7 +30,23 @@ const sampleData = {
 
 const ProjDetails = () => {
   const { cluster, id } = useParams();
-  const project = sampleData[cluster]?.[id];
+
+  async function fetchProjectsId()
+  {
+    let response = await axios.get(`http://localhost:1234/teacher/get_projects_by_id/{projectId}`,{
+      headers:{
+        Authorization:`Bearer ${token}`
+      }
+    })
+    if(response.data == 200)
+    {
+      console.log(response.data);
+    }
+  }
+
+  useEffect(() => {
+    fetchProjectsId()
+  },[]);
 
   if (!project) {
     return <h1 className="text-2xl text-center mt-10">Project not found</h1>;

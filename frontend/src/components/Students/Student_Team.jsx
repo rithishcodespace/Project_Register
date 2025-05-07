@@ -46,7 +46,7 @@ function Student_Team() {
         {loading ? (
           <p className="text-center text-gray-500">Loading...</p>
         ) : team.length === 0 ? (
-          <p className="text-center text-gray-500">Team not created yet</p>
+          <p className="text-center text-gray-500">Team not created/conformed yet</p>
         ) : (
           team.map((member, index) => (
             <div

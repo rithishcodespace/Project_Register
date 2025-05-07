@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 function StudentDashboard() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [teamConformationPending,setteamConformationPending] = useState(false);
   const [createForm, setCreateForm] = useState({
     name: '',
     email: '',
@@ -119,6 +120,21 @@ function StudentDashboard() {
         setTeamStatus(teamConformationStatus);
         setTeamMembers(teamMembers || []);
         setPendingInvitations(pendingInvitations || []);
+        // if(teamMembers.length == 0)
+        // { 
+        //   // checks whether he is a team member of another team without conformed
+        //   let res = await axios.get(`http://localhost:1234/student/check_accepted_status/${reg_num}`,{
+        //     headers:{
+        //       Authorization : `Bearer ${token}`
+        //     }
+        //   })
+        //   if(res.status === 200 && res.data)
+        //   {
+        //     console.log("second api: ",res.data);
+        //     setteamConformationPending(true);
+
+        //   }
+        // }
         if (teamMembers.length > 0) {
           dispatch(addTeamMembers(teamMembers));
         }
@@ -167,6 +183,15 @@ function StudentDashboard() {
     return (
       <div className="flex flex-col justify-center items-center h-screen">
         <h1 className="text-3xl font-bold text-green-600">Welcome to your Team Dashboard!</h1>
+      </div>
+    );
+  }
+  if (teamConformationPending) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen">
+        <h1 className="text-3xl font-bold text-yellow-600">
+          Team Confirmation Pending by Your Team Leader
+        </h1>
       </div>
     );
   }

@@ -34,15 +34,15 @@ function TeacherAdd() {
       cluster: clusterName,
       description,
       phase_1_requirement: phases[0].requirements,
-      phase_1_days: parseInt(phases[0].days),
+      phase_1_deadline: parseInt(phases[0].days),
       phase_2_requirement: phases[1].requirements,
-      phase_2_days: parseInt(phases[1].days),
+      phase_2_deadline: parseInt(phases[1].days),
       phase_3_requirement: phases[2].requirements,
-      phase_3_days: parseInt(phases[2].days),
+      phase_3_deadline: parseInt(phases[2].days),
       phase_4_requirement: phases[3].requirements,
-      phase_4_days: parseInt(phases[3].days),
+      phase_4_deadline: parseInt(phases[3].days),
       phase_5_requirement: phases[4].requirements,
-      phase_5_days: parseInt(phases[4].days),
+      phase_5_deadline: parseInt(phases[4].days),
     };
 
     try {
