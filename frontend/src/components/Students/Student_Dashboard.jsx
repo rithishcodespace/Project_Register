@@ -120,21 +120,21 @@ function StudentDashboard() {
         setTeamStatus(teamConformationStatus);
         setTeamMembers(teamMembers || []);
         setPendingInvitations(pendingInvitations || []);
-        // if(teamMembers.length == 0)
-        // { 
-        //   // checks whether he is a team member of another team without conformed
-        //   let res = await axios.get(`http://localhost:1234/student/check_accepted_status/${reg_num}`,{
-        //     headers:{
-        //       Authorization : `Bearer ${token}`
-        //     }
-        //   })
-        //   if(res.status === 200 && res.data)
-        //   {
-        //     console.log("second api: ",res.data);
-        //     setteamConformationPending(true);
+        if(teamMembers.length == 0)
+        { 
+          // checks whether he is a team member of another team without conformed
+          let res = await axios.get(`http://localhost:1234/student/check_accepted_status/${reg_num}`,{
+            headers:{
+              Authorization : `Bearer ${token}`
+            }
+          })
+          if(res.status === 200 && res.data)
+          {
+            console.log("second api: ",res.data);
+            setteamConformationPending(true);
 
-        //   }
-        // }
+          }
+        }
         if (teamMembers.length > 0) {
           dispatch(addTeamMembers(teamMembers));
         }
