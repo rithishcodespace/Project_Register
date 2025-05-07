@@ -49,14 +49,14 @@ const Project_Details = () => {
       const teamStatus = JSON.parse(localStorage.getItem("teamMembers"));
       console.log("hi da chellam:",teamStatus);
       // setprojectId(teamStatus.teamMembers[0].project_id)
-      const hasConfirmedTeam = teamStatus?.teamConformationStatus === 1;
+      const hasConfirmedTeam = teamStatus[0].team_conformed=== 1;
       let hasNoProject = false;
       if (teamStatus?.teamMembers?.length > 0) {
       hasNoProject = teamStatus.teamMembers[0].project_id === null;
       }
       console.log("para",hasConfirmedTeam,hasNoProject);
 
-      if (hasConfirmedTeam && hasNoProject) {
+      if (hasConfirmedTeam && hasNoProject || !hasConfirmedTeam) {
         setAccessGranted(true);
       }
     } catch (e) {
