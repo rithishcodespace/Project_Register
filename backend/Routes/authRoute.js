@@ -5,7 +5,7 @@ const db = require("../db");
 const createError = require("http-errors");
 const validate = require("../utils/validator");
 const jwt = require("jsonwebtoken");
-const client = require("../utils/redis");
+// const client = require("../utils/redis");
 const bcrypt = require("bcrypt");
 const verifyRefreshToken = require("../utils/verifyRefreshToken");
 const { OAuth2Client } = require("google-auth-library");
@@ -32,9 +32,9 @@ router.post("/auth/login",(req,res,next) => {
 
         try{ // storing in redis
 
-          await client.set(user.id.toString(), refreshToken,{
-            'EX': 604800 // 7 days
-          })
+          // await client.set(user.id.toString(), refreshToken,{
+          //   'EX': 604800 // 7 days
+          // })
 
           res.status(200).json({
             message:"user logged in successfull",
@@ -101,7 +101,7 @@ router.delete("/auth/logout",async(req,res,next) => {
         if (!refreshToken) throw createError.BadRequest("Refresh token is required");
           
         const userId = await verifyRefreshToken(refreshToken);
-        await client.del(userId); // deletes the refresh token in redis 
+        // await client.del(userId); // deletes the refresh token in redis 
         res.status(200).send("User logged out successfully");
     }
     catch (error) {
