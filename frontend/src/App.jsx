@@ -21,7 +21,7 @@ import Create_team from "./components/Teacher/Create_team";
 import Cluster from "./components/Teacher/Cluster";
 import { Provider } from "react-redux";
 import ProjDetails from "./components/Teacher/ProjDetails";
-import Store from "./utils/Store";
+import {Store} from "./utils/Store";
 import InvitationPage from "./components/Students/InvitationPage";
 import ProtectedRoute from "./utils/ProtectedRoute"; 
 
