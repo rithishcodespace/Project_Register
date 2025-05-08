@@ -375,5 +375,48 @@ router.get("/student/team_progress", (req, res) => {
   });
 });
 
+// updates the project type
+
+router.patch("/student/alter_project_status/:reg_num/:type",(req,res,next) => {
+  try{
+    const{type,reg_num} = req.params;
+    const validTypes = ["EXTERNAL","INTERNAL"];
+    if(!type || !validTypes.includes(type))
+    {
+      return next(createError.BadRequest("invalid type! or type is null!"))
+    }
+    let sql = "update users set project_type = ? where reg_num = ?";
+    db.query(sql,[type,reg_num],(error,result) => {
+      if(error) return next(error);
+      res.send(`Project Type updated successfully to ${type}`);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+// checks whether the user have given project_type
+router.get("/student/get_project_type/:reg_num",(req,res,next) => {
+  try{
+    const{reg_num} = req.params;
+    if(!reg_num)
+    {
+      next(createError.BadRequest("reg_num not found!"));
+    }
+    let sql = "select project_type from users where reg_num = ?";
+    db.query(sql,[reg_num],(error,result) => {
+      if(error)return next(error);
+      res.send(result[0]);
+    })
+    db.query(sql,[reg_num])
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 
 module.exports = router;
