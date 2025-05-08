@@ -24,6 +24,11 @@ import ProjDetails from "./components/Teacher/ProjDetails";
 import {Store} from "./utils/Store";
 import InvitationPage from "./components/Students/InvitationPage";
 import ProtectedRoute from "./utils/ProtectedRoute"; 
+import Student_expert_mark_attendence from "./components/Subject_expert/Student_expert_mark_attendence";
+import Student_expert_review from "./components/Subject_expert/Student_expert_review";
+import SubjectExpertDashboard from "./components/Subject_expert/Student_export_dashboard";
+import Subject_expert_remarks from "./components/Subject_expert/Subject_expert_remarks";
+import Subject_expert from "./components/Subject_expert/Subject_expert";
 
 function App() {
   return (
@@ -83,6 +88,13 @@ function App() {
             <Route path="Add_Project" element={<Add_Project />} />
             <Route path="posted_projects" element={<Posted_project />} />
             <Route path="students_progress" element={<Students_Progress />} />
+          </Route>
+
+          <Route path="/subject_expert" element={<Subject_expert />}>
+            <Route index element={<SubjectExpertDashboard />} />
+            <Route path="attendance" element={<Student_expert_mark_attendence />} />
+            <Route path="review" element={<Student_expert_review/>} />
+            <Route path="remarks" element={<Subject_expert_remarks/>} />
           </Route>
           
         </Routes>
