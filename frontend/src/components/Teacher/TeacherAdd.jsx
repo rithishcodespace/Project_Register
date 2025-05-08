@@ -29,7 +29,7 @@ function TeacherAdd() {
     }
 
     const projectData = {
-      project_id: "EXT-CS-P02", // Replace with dynamic ID logic if needed
+      project_id: "EXT-CS-P11", // mathan will make it dynamic
       project: projectName,
       cluster: clusterName,
       description,
