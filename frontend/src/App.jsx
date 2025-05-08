@@ -29,6 +29,10 @@ import Student_expert_review from "./components/Subject_expert/Student_expert_re
 import SubjectExpertDashboard from "./components/Subject_expert/Student_export_dashboard";
 import Subject_expert_remarks from "./components/Subject_expert/Subject_expert_remarks";
 import Subject_expert from "./components/Subject_expert/Subject_expert";
+import Guide from "./components/guide/guide";
+import Guide_dashboard from "./components/guide/Guide_dashboard";
+import Guide_queries from "./components/guide/Guide_queries";
+import Guide_team_progress from "./components/guide/Guide_team_progress";
 
 function App() {
   return (
@@ -95,6 +99,12 @@ function App() {
             <Route path="attendance" element={<Student_expert_mark_attendence />} />
             <Route path="review" element={<Student_expert_review/>} />
             <Route path="remarks" element={<Subject_expert_remarks/>} />
+          </Route>
+
+          <Route path="/guide" element={<Guide />}>
+            <Route index element={<Guide_dashboard />} />
+            <Route path="queries" element={<Guide_queries />} />
+            <Route path="team_progress" element={<Guide_team_progress/>} />
           </Route>
           
         </Routes>
