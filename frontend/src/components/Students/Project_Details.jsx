@@ -68,6 +68,9 @@ const Project_Details = () => {
   async function fetchProjects() {
     try {
       const token = localStorage.getItem("accessToken");
+      const teamMembers = useSelector((Store) => Store.teamSlice);
+      const departments = teamMembers.map(member => member.dept);~
+
       const response = await axios.get("http://localhost:1234/student/projects", {
         headers: {
           Authorization: `Bearer ${token}`

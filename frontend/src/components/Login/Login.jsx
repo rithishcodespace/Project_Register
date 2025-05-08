@@ -9,13 +9,16 @@ import college_img from "../../assets/college_img.png"
 import axios from "axios";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../../utils/firebase";
+import { useDispatch } from "react-redux";
+import { addUser } from "../../utils/userSlice";
 
 function Login() {
     
   const [emailId,setemailId] = useState("");
   const [password,setpassword] = useState("");
   const [showpassword,setshowpassword] = useState(false);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -34,7 +37,8 @@ function Login() {
   
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("refreshToken", refreshToken);
-        localStorage.setItem("role", role); // 👈 Save role here
+        console.log("user",response.data);
+        dispatch(addUser(response.data));
   
         // Role-based navigation
         if (role === "admin") {

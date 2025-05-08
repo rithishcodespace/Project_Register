@@ -5,7 +5,7 @@ import TeamDetails from './TeamDetails';
 import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { addUser } from '../../utils/userSlice';
-import { addTeamMembers } from '../../utils/teamSlice';
+import { addTeamMembers,removeTeamMembers } from '../../utils/teamSlice';
 import { useNavigate } from 'react-router-dom';
 
 function StudentDashboard() {
@@ -116,6 +116,7 @@ function StudentDashboard() {
       );
 
       if (response.status === 200) {
+       
         const { teamConformationStatus, teamMembers, pendingInvitations } = response.data;
         setTeamStatus(teamConformationStatus);
         setTeamMembers(teamMembers || []);
@@ -138,8 +139,6 @@ function StudentDashboard() {
         if (teamMembers.length > 0) {
           dispatch(addTeamMembers(teamMembers));
         }
-        localStorage.setItem("teamStatus", JSON.stringify(response.data));
-        localStorage.setItem("teamMembers",JSON.stringify(teamMembers));
         console.log(response.data);
       }
     } catch (error) {

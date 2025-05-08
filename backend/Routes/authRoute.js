@@ -40,7 +40,14 @@ router.post("/auth/login",(req,res,next) => {
             message:"user logged in successfull",
             "accessToken" : accessToken,
             "refreshToken" : refreshToken,
-            "role": user.role
+            "id": result[0].id,
+            "emailId" : result[0].emailId,
+            "password" : result[0].password,
+            "role" : result[0].role,
+            "project_id" : result[0].project_id,
+            "reg_num" : result[0].reg_num,
+            "name" : result[0].name,
+            "dept" : result[0].dept
           })
         }
         catch(redisError)
