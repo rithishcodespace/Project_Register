@@ -22,6 +22,20 @@ router.post("/teacher/addproject",(req,res,next) => {
     }
 })
 
+router.get("/teacher/fetch_all_projects",(req,res,next) => {
+  try{
+    let sql = "select * from projects";
+    db.query(sql,(error,result) => {
+      if(error) return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 router.get("/teacher/getprojects",(req,res,next) => {
   try{
     let sql = "select * from projects";

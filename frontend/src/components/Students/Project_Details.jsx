@@ -8,6 +8,7 @@ const Project_Details = () => {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [accessGranted, setAccessGranted] = useState(false);
   const selector = useSelector((Store) => Store.userSlice);
+  const teamMembers = useSelector((Store) => Store.teamSlice);
 
   async function handleTakeProject(name,id) {
     try {
@@ -68,10 +69,11 @@ const Project_Details = () => {
   async function fetchProjects() {
     try {
       const token = localStorage.getItem("accessToken");
-      const teamMembers = useSelector((Store) => Store.teamSlice);
-      const departments = teamMembers.map(member => member.dept);~
+      const departments = [
+        ...new Set(teamMembers.map(member => member.dept))
+      ];
 
-      const response = await axios.get("http://localhost:1234/student/projects", {
+      const response = await axios.post("http://localhost:1234/student/projects",{"departments":departments},{
         headers: {
           Authorization: `Bearer ${token}`
         }

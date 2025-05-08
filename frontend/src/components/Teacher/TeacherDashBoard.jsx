@@ -7,7 +7,7 @@ const TeacherDashboard = () => {
   const fetchprojects = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get("http://localhost:1234/student/projects", {
+      const response = await axios.get("http://localhost:1234/teacher/fetch_all_projects", {
         headers: {
           Authorization: `Bearer ${token}`
         }

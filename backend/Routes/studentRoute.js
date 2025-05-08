@@ -173,11 +173,22 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
   }
 });
 
-// it gets all the projects available -> it has to be filtered in the frontend 
-router.get("/student/projects",(req,res,next) => {
+// it gets all the projects available -> filters by the dept of team members
+router.post("/student/projects",(req,res,next) => {
     try{
-      let sql = "select * from projects where status = 'available'";
-      db.query(sql,(error,result) => {
+      const departments = req.body.departments;
+
+      if (!Array.isArray(departments)) {
+        return res.status(400).json({ error: 'departments must be an array' });
+      }
+
+      if (departments.length === 0) {
+        return res.status(400).json({ error: 'departments array cannot be empty' });
+      }
+
+      const placeholders = departments.map(() => "?").join(", ");
+      const sql = `SELECT * FROM projects WHERE status = 'available' AND cluster IN (${placeholders})`;
+      db.query(sql,departments,(error,result) => {
         if(error) return next(error);
         res.send(result);
       })
@@ -188,24 +199,24 @@ router.get("/student/projects",(req,res,next) => {
     }
 })
 
-// sets the project to the respective team when they pick a project
-router.post("/student/set_projectId_to_team",(req,res,next) => {
-  try{
-    let {project_id,team_id} = req.body;
-    let sql = "insert into team_requests(project_id) values(?) where team_id = ?";
-    db.query(sql,[project_id,team_id],(error,result) => {
-      if(error) next(error);
-      else
-      {
-        res.send("Project_Id correctly inserted into the Given team_Id");
-      }
-    })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
+// // sets the project to the respective team when they pick a project
+// router.patch("/student/set_projectId_to_team",(req,res,next) => {
+//   try{
+//     let {project_id,team_id} = req.body;
+//     let sql = "UPDATE team_requests SET project_id = ? WHERE team_id = ?";
+//     db.query(sql,[project_id,team_id],(error,result) => {
+//       if(error) next(error);
+//       else
+//       {
+//         res.send("Project_Id correctly inserted into the Given team_Id");
+//       }
+//     })
+//   }
+//   catch(error)
+//   {
+//     next(error);
+//   }
+// })
 
 //make the team status -> 1 
 router.patch("/student/team_request/conform_team",(req,res,next) => {
@@ -259,6 +270,7 @@ router.patch("/student/assgin_project_id/:project_id/:from_reg_num",(req,res,nex
 router.get("/student/getTeamDetails/:reg_num", (req, res, next) => {
   const reg_num = req.params.reg_num;
 
+  // First, fetch the initial request to find out if the student is in a confirmed team
   const getInitialRequestSql = `
     SELECT * FROM team_requests 
     WHERE (from_reg_num = ? OR to_reg_num = ?) AND Team_conformed = 1
@@ -280,10 +292,30 @@ router.get("/student/getTeamDetails/:reg_num", (req, res, next) => {
 
     db.query(getTeamSql, [teamLeaderRegNum], (err2, teamDetails) => {
       if (err2) return next(err2);
-      res.json(teamDetails);
+
+      // If no team members are found, return a 404 error
+      if (teamDetails.length === 0) {
+        return res.status(404).json({ message: "No team members found" });
+      }
+
+      // Fetch the team leader's details
+      let sql3 = "SELECT * FROM users WHERE reg_num = ?";
+      db.query(sql3, [teamLeaderRegNum], (error, tldetails) => {
+        if (error) return next(error);
+
+        if (tldetails.length === 0) {
+          return res.status(404).json({ message: "No team leader found" });
+        }
+
+        const finalResults = [...teamDetails, ...tldetails];
+
+        res.send(finalResults);
+      });
     });
   });
 });
+
+
 
 router.post("/student/update_progress/:phase/:reg_num", (req, res, next) => {
   try {

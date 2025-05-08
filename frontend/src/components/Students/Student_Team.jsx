@@ -23,7 +23,7 @@ function Student_Team() {
       }
 
       if (response.status === 200) {
-        setTeam(response.data || []); // assuming your API returns { teamDetails: [...] }
+        setTeam(response.data || []); 
         console.log("team members array:",response.data);
       }
     } catch (error) {
