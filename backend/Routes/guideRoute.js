@@ -12,6 +12,7 @@ router.get("/guide/getrequests/:id",(req,res,next) => {
         let sql = "select * from guide_requests where to_id = ? and status = 'interested'";
         db.query(sql,[id],(error,result) => {
             if(error)return next(error);
+            if(result.length == 0)res.send("No request` found!");
             else{
                 res.send(result);
             }
@@ -168,6 +169,7 @@ router.get("/guide/get_queries",(req,res,next) => {
       let sql = "select * from queries";
       db.query(sql,(error,result) => {
         if(error)return next(error);
+        if(result.length == 0)res.send("No queries found!");
         res.send(result);
       })
     }
@@ -176,5 +178,27 @@ router.get("/guide/get_queries",(req,res,next) => {
        next(error);
     }
 })
+
+// fetches team details mentored by me 
+router.get("/guide/fetch_mentoring teams/:guide_id",(req,res,next) => {
+    try{
+      const{guide_id} = req.params;
+      if(!guide_id)
+      {
+        return next(createError.BadRequest("guide id not found!"));
+    }
+    let sql = "select * from guide_requests where to_id = ? and status = 'accept'";
+    db.query(sql,[guide_id],(error,result) => {
+        if(error)return next(error);
+        if(result.length == 0)res.send("No Teams found!");
+        res.send(result);
+    })
+    }
+    catch(error)
+    {
+       next(error);
+    }
+})
+
 
 module.exports = router;

@@ -5,7 +5,7 @@ const sampleProjects = [
     id: 1,
     projectName: "Smart Attendance System",
     teamLead: "Keerthana M",
-    scheduledDate: "2025-05-08T14:51", // For testing: May 8, 2025, 2 PM
+    scheduledDate: "2025-05-09T11:13", // For testing: May 8, 2025, 2 PM
   },
   {
     id: 2,
@@ -142,7 +142,7 @@ function Student_expert_review() {
               )}
               {!isPresent && !isAbsent && showBeforeTime && (
                 <p className="text-yellow-600 font-semibold mt-2">
-                  ⏳ Review time has not started yet
+                  Review time has not started yet
                 </p>
               )}
             </div>
