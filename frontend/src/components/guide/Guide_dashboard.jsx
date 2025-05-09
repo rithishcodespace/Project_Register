@@ -43,12 +43,24 @@ function Guide_dashboard () {
         </div>
 
         <div className="bg-white p-5 rounded-2xl shadow-md flex items-center gap-4">
-          <Calendar className="text-red-500" size={32} />
-          <div>
-            <p className="text-gray-500 text-sm">Upcoming Meetings</p>
-            <h3 className="text-xl font-semibold">2</h3>
-          </div>
-        </div>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="text-green-500"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+    width={32}
+    height={32}
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+  </svg>
+  <div>
+    <p className="text-gray-500 text-sm">Completed Project Teams</p>
+    <h3 className="text-xl font-semibold text-green-700">2</h3>
+  </div>
+</div>
+
       </div>
 
       {/* Progress Pie Chart */}
