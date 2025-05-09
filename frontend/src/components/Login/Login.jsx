@@ -50,11 +50,14 @@ function Login() {
         } else if (role == "guide"){
           navigate("/guide")
         }
-        } else if (role == "subject_expert"){
+        else if (role == "subject_expert")
+        {
           navigate("/subject_expert")
         }
+        
         else alert("unknown role");
       }
+    }
       catch (err) {
         console.error("Login error", err);
         alert("Invalid login");

@@ -11,6 +11,7 @@ router.get("/expert/getrequests/:id",(req,res,next) => {
         let sql = "select * from sub_expert_requests where to_id = ? and status = 'interested'";
         db.query(sql,[id],(error,result) => {
             if(error)return next(error);
+            if(result.length == 0)res.send("No request found!");
             else{
                 res.send(result);
             }
@@ -116,6 +117,85 @@ router.post("/expert/sent_request_to_expert",(req,res,next) => {
         next(error);
     }
 })
+
+// fetches team details, i am acting as the subject expert 
+router.get("/sub_expert/fetch_teams/:expert_id",(req,res,next) => {
+    try{
+      const{expert_id} = req.params;
+      if(!expert_id)
+      {
+        return next(createError.BadRequest("expert id not found!"));
+    }
+    let sql = "select * from sub_expert_requests where to_id = ? and status = 'accept'";
+    db.query(sql,[expert_id],(error,result) => {
+        if(error)return next(error);
+        if(result.length == 0)res.send("No Teams found!");
+        res.send(result);
+    })
+    }
+    catch(error)
+    {
+       next(error);
+    }
+})
+
+// adding review details in scheduled reviews
+router.post("/sub_expert/add_review_details",(req,res,next) => {
+    try{
+      const{project_id,project_name,team_lead,review_date,start_time} = req.body;
+      if(!project_id || !project_name || !team_lead || !review_date || !start_time)
+      {
+        return next(createError.BadRequest("data is missing!"));
+      }
+      let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time) values(?,?,?,?,?)";
+      db.query(sql,[project_id,project_name,team_lead,review_date,start_time],(error,result) => {
+        if(error) return next(error);
+        res.send("review details added successfully!");
+      })
+    }
+    catch(error)
+    {
+      next(error);
+    }
+})
+
+// marks attendance
+router.patch("/sub_expert/mark_attendance/:team_id",(req,res,send) => {
+    try{
+      const{team_id} = req.params;
+      if(!team_id) return next(createError.BadRequest("team_id is missing!"));
+      let sql = "update scheduled_reviews set attendance = 'present' where team_id = ?";
+      db.query(sql,[team_id],(error,result) => {
+        if(error) return next(error);
+        res.send("attendance marked successfully!");
+      })
+    }
+    catch(error)
+    {
+      next(error);
+    }
+})
+
+// add marks and remarks
+router.post("sub_expert/add_marks_remarks",(req,res,send) => {
+  try{
+    const{mark,remark} = req.body;
+    if(!mark || !remark)
+    {
+      return next(createError.BadRequest("mark or remark missing!"));
+    }
+    let sql = "insert into scheduled_reviews(mark,remark) values(?,?)";
+    db.query(sql,[mark,remark],(error,result,next) => {
+      if(error)return next(error);
+      res.send("marks and remarks added successfully!");
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 
 
 module.exports = router;
