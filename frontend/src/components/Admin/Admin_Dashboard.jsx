@@ -1,24 +1,49 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react';
+import axios from "axios";
 
 function Admin_Dashboard() {
-  
-    const stats = [
-      { title: 'Total Projects', value: 12 },
-      { title: 'Projects Taken', value: 7 },
-      { title: 'Ongoing Projects', value: 5 },
-      { title: 'Completed Projects', value: 3 },
-    ];
-  
-    const upcoming = [
-      { name: 'AI Chatbot', deadline: 'Due in 3 days' },
-      { name: 'IoT Attendance System', deadline: 'Due in 5 days' },
-    ];
-  
-    const activity = [
-      'Team Alpha submitted "E-Commerce Site"',
-      'Student K updated progress on "Portfolio Website"',
-      'Team Delta selected "Face Recognition App"',
-    ];
+  const [projects, setProjects] = useState([]);
+
+  const fetchprojects = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get("http://localhost:1234/teacher/fetch_all_projects", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.status === 200) {
+        setProjects(response.data);
+      } else {
+        alert("Error fetching projects");
+      }
+    } catch (error) {
+      console.error("Fetch error:", error);
+      alert("Something went wrong");
+    }
+  };
+
+  useEffect(() => {
+    fetchprojects();
+  }, []);
+
+  const stats = [
+    { title: 'Total Projects', value: projects.length },
+    { title: 'Projects Taken', value: projects.filter(p => p.status === 'Ongoing' || p.status === 'Completed').length },
+    { title: 'Ongoing Projects', value: projects.filter(p => p.status === 'Ongoing').length },
+    { title: 'Completed Projects', value: projects.filter(p => p.status === 'Completed').length },
+  ];
+
+  const upcoming = projects
+    .filter(p => p.deadline) // you can customize this as per your data
+    .slice(0, 2)
+    .map(p => ({
+      name: p.project_name,
+      deadline: p.deadline
+    }));
+
+  const activity = projects.slice(0, 3).map(p => `Project "${p.project_name}" was updated or added.`);
   
     return (
       <div className="p-6 bg- rounded-xl h-[90%]">

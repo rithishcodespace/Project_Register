@@ -1,86 +1,114 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TablePagination from '@mui/material/TablePagination';
+import TableRow from '@mui/material/TableRow';
+import { Link } from 'react-router-dom';
+
+const columns = [
+  { id: 'project_id', label: 'Project ID', minWidth: 100 },
+  { id: 'project_name', label: 'Project Name', minWidth: 200 },
+  { id: 'cluster', label: 'Cluster', minWidth: 100 },
+  { id: 'description', label: 'Description', minWidth: 300 },
+];
 
 const Posted_project = () => {
   const [projectData, setProjectData] = useState([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  async function getProjects() {
+  const getProjects = async () => {
     try {
       const accessToken = localStorage.getItem("accessToken");
       const response = await axios.get("http://localhost:1234/teacher/getprojects", {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken?.trim()}`
-        }
+          Authorization: `Bearer ${accessToken?.trim()}`,
+        },
       });
 
       if (response.status === 200) {
-        console.log("Received projects:", response.data);
         setProjectData(response.data);
       } else {
-        alert("Sorry, no data");
+        alert("No project data found.");
       }
     } catch (error) {
-      console.log("Error fetching projects:", error.message);
+      console.error("Error fetching projects:", error.message);
     }
-  }
+  };
 
   useEffect(() => {
     getProjects();
   }, []);
 
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(+event.target.value);
+    setPage(0);
+  };
+
+  const handleRowClick = (project) => {
+    window.location.href = `/admin/posted_projects/${project.project_id}`;
+  };
+
   return (
-    <div className="p-6 w-full max-w-7xl mx-auto">
-      <h2 className="text-2xl font-bold text-center text-black mb-6">Posted Projects</h2>
-
-      <div className="overflow-x-auto">
-        <table className="min-w-full rounded-2xl shadow-md border-separate border-spacing-y-2">
-
-          <thead>
-            <tr className="bg-purple-100 text-black text-left text-sm">
-              <th className="py-2 px-4 w-44 text-xl">Project Name</th>
-              <th className="py-2 px-4 w-32 text-xl">Cluster</th>
-              <th className="py-2 px-4 w-80 text-xl">Description</th>
-              <th className="py-2 px-4 text-xl">Phase</th>
-              <th className="py-2 px-4 w-28 text-xl">Deadline</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white">
-            {projectData.map((proj, i) => (
-              <tr key={i} className="bg-white transition">
-                <td className="py-2 px-4">{proj.project_name || proj.project_id}</td>
-                <td className="py-2 px-4">{proj.cluster}</td>
-                <td className="py-2 px-4">{proj.description}</td>
-                <td className="py-2 px-4">
-                  <ul className="list-disc ml-4 text-sm space-y-1">
-                    {[1, 2, 3, 4, 5].map(num => {
-                      const req = proj[`phase_${num}_requirements`];
-                      return req ? (
-                        <li key={num}>
-                          <span className="font-medium">Phase {num}:</span> {req}
-                        </li>
-                      ) : null;
-                    })}
-                  </ul>
-                </td>
-                <td className="py-2 px-4">
-                  <ul className=" ml-4 text-sm space-y-1">
-                    {[1, 2, 3, 4, 5].map(num => {
-                      const days = proj[`phase_${num}_deadline`];
-                      return days ? (
-                        <li key={num}>
-                          <span className="font-medium"></span> {days} days
-                        </li>
-                      ) : null;
-                    })}
-                  </ul>
-                </td>
-              </tr>
+    <Paper sx={{ width: '100%', overflow: 'hidden', padding: 2 }}>
+      <h2 style={{ fontSize: '24px', textAlign: 'center', marginBottom: '16px' }}>
+        Posted Projects
+      </h2>
+      <TableContainer sx={{ maxHeight: 500 }}>
+        <Table stickyHeader aria-label="project table">
+          <TableHead>
+            <TableRow>
+              {columns.map((column) => (
+                <TableCell key={column.id} style={{ minWidth: column.minWidth, fontWeight: 'bold' }}>
+                  {column.label}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {projectData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((project, index) => (
+              <TableRow
+                hover
+                role="checkbox"
+                tabIndex={-1}
+                key={index}
+                onClick={() => handleRowClick(project)}
+                style={{ cursor: 'pointer' }}
+              >
+                {columns.map((column) => {
+                  const value = project[column.id];
+                  return (
+                    <TableCell key={column.id}>
+                      {value || "-"}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25]}
+        component="div"
+        count={projectData.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+    </Paper>
   );
 };
 

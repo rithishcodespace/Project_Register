@@ -21,7 +21,7 @@ import Create_team from "./components/Teacher/Create_team";
 import Cluster from "./components/Teacher/Cluster";
 import { Provider } from "react-redux";
 import ProjDetails from "./components/Teacher/ProjDetails";
-import {Store} from "./utils/Store";
+import { Store } from "./utils/Store";
 import InvitationPage from "./components/Students/InvitationPage";
 import ProtectedRoute from "./utils/ProtectedRoute"; 
 import Student_expert_mark_attendence from "./components/Subject_expert/Student_expert_mark_attendence";
@@ -38,25 +38,15 @@ import Extstudents_dashboard from "./components/extstudents/Extstudents_dashboar
 import Extstudents_add_project from "./components/extstudents/Extstudents_add_project";
 import Extstudents_team from "./components/extstudents/Extstudents_team";
 import Extstudents_progress_update from "./components/extstudents/Extstudents_progress_update";
+import Admin_projectDetails from "./components/Admin/Admin_project_details";
 
 function App() {
   return (
     <Provider store={Store}>
       <BrowserRouter>
         <Routes>
-
-          {/* Login Page */}
           <Route path="/" element={<Login />} />
-
-          {/* 🔐 Student Routes */}
-          <Route
-            path="/student"
-            element={
-              <ProtectedRoute allowedRole="student">
-                <Student />
-              </ProtectedRoute>
-            }
-          >
+          <Route path="/student" element={<Student />}>
             <Route index element={<Student_Dashboard />} />
             <Route path="Progress_update" element={<Progress_Update />} />
             <Route path="Project_Details" element={<Project_Details />} />
@@ -64,15 +54,7 @@ function App() {
             <Route path="invitations" element={<InvitationPage />} />
           </Route>
 
-          {/* 🔐 Teacher Routes */}
-          <Route
-            path="/teacher"
-            element={
-              <ProtectedRoute allowedRole="teacher">
-                <Teacher />
-              </ProtectedRoute>
-            }
-          >
+          <Route path="/teacher" element={<Teacher />}>
             <Route index element={<TeacherDashBoard />} />
             <Route path="add" element={<TeacherAdd />} />
             <Route path="posted_projects" element={<PostedProjects />} />
@@ -80,45 +62,36 @@ function App() {
             <Route path="student_progress/:cluster" element={<Cluster />} />
             <Route path="student_progress/project_details/:id" element={<Cluster />} />
             <Route path="student_progress/project_details/:cluster/:id" element={<ProjDetails />} />
-
           </Route>
 
-          {/* 🔐 Admin Routes */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute allowedRole="admin">
-                <Admin />
-              </ProtectedRoute>
-            }
-          >
+          <Route path="/admin" element={<Admin />}>
             <Route index element={<Admin_Dashboard />} />
             <Route path="Add_users" element={<Add_Users />} />
             <Route path="Add_Project" element={<Add_Project />} />
             <Route path="posted_projects" element={<Posted_project />} />
             <Route path="students_progress" element={<Students_Progress />} />
+            <Route path="/admin/posted_projects/:project_id" element={<Admin_projectDetails />} />
           </Route>
 
           <Route path="/subject_expert" element={<Subject_expert />}>
             <Route index element={<SubjectExpertDashboard />} />
             <Route path="attendance" element={<Student_expert_mark_attendence />} />
-            <Route path="review" element={<Student_expert_review/>} />
-            <Route path="remarks" element={<Subject_expert_remarks/>} />
+            <Route path="review" element={<Student_expert_review />} />
+            <Route path="remarks" element={<Subject_expert_remarks />} />
           </Route>
 
           <Route path="/guide" element={<Guide />}>
             <Route index element={<Guide_dashboard />} />
             <Route path="queries" element={<Guide_queries />} />
-            <Route path="team_progress" element={<Guide_team_progress/>} />
+            <Route path="team_progress" element={<Guide_team_progress />} />
           </Route>
 
-          <Route path="/ext_student" element={<Extstudent/>}>
+          <Route path="/ext_student" element={<Extstudent />}>
             <Route index element={<Extstudents_dashboard />} />
             <Route path="project_detail" element={<Extstudents_add_project />} />
             <Route path="team" element={<Extstudents_team />} />            
-            <Route path="Progress_update" element={<Extstudents_progress_update />} />            
+            <Route path="Progress_update" element={<Extstudents_progress_update />} />
           </Route>
-          
         </Routes>
       </BrowserRouter>
     </Provider>
