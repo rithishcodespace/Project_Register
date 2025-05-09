@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const createError = require("http-errors");
+const nodeMailer = require("nodemailer");
 const db = require("../db");
 
 // gets the request recevied by the mentor
@@ -104,11 +105,36 @@ router.post("/guide/sent_request_to_guide",(req,res,next) => {
         return res.status(400).json({ message: "All fields are required" });
       }
       let sql = "insert into guide_requests values(?,?,?,?,?,?,?,?)";
-      db.query(sql,[id,name,emailId,phone,dept,from_id,to_id,status],(error,result,next) => {
+      db.query(sql,[id,name,emailId,phone,dept,from_id,to_id,status],(error,result) => {
         if(error)return next(error);
-        else{
-            res.send("request sent successfully to the guide!");
-        }
+
+        // // Create a transporter
+        // const transporter = nodemailer.createTransport({
+        //     service: 'gmail',
+        //     auth: {
+        //     user: 'rithishvkv@gmail.com', // -> temporary
+        //     pass: 'ncwbsvgspuplvzzr',
+        //     },
+        // });
+
+        // // Define email options
+        // const mailOptions = {
+        //     from: 'rithishvkv@gmail.com',
+        //     to: emailId,
+        //     subject: 'Hello from Node.js',
+        //     text: '',
+        // };
+
+        // // Send the email
+        // transporter.sendMail(mailOptions, (error, info) => {
+        //     if (error) {
+        //     return console.log('Error:', error);
+        //     }
+        //     console.log('Email sent:', info.response);
+        // });
+        
+        res.send("request sent successfully to the guide!");
+        
       })
     }
     catch(error)

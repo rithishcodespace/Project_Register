@@ -104,7 +104,7 @@ router.post("/expert/sent_request_to_expert",(req,res,next) => {
         return res.status(400).json({ message: "All fields are required" });
       }
       let sql = "insert into sub_expert_requests values(?,?,?,?,?,?,?,?)";
-      db.query(sql,[id,name,emailId,phone,dept,from_id,to_id,status],(error,result,next) => {
+      db.query(sql,[id,name,emailId,phone,dept,from_id,to_id,status],(error,result) => {
         if(error)return next(error);
         else{
             res.send("request sent successfully to the expert!");
