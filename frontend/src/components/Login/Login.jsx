@@ -47,14 +47,18 @@ function Login() {
           navigate("/teacher");
         } else if (role === "student") {
           navigate("/student");
-        } else {
-          alert("Unknown role");
+        } else if (role == "guide"){
+          navigate("/guide")
         }
+        } else if (role == "subject_expert"){
+          navigate("/subject_expert")
+        }
+        else alert("unknown role");
       }
-    } catch (err) {
-      console.error("Login error", err);
-      alert("Invalid login");
-    }
+      catch (err) {
+        console.error("Login error", err);
+        alert("Invalid login");
+      }
   };
   
 

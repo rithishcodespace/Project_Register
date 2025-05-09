@@ -143,4 +143,38 @@ router.post("/guide/sent_request_to_guide",(req,res,next) => {
     }
 })
 
+// adds reply to the query
+
+router.patch("/guide/add_reply/:query_id",(req,res,next) => { // after 100 deletes old one
+    try{
+      const{reply} = req.body;
+      const{query_id} = req.params;
+      if(!reply) return next(createError.BadRequest("reply not found!"));
+      let sql = "UPDATE queries SET reply = ? WHERE query_id = ?;";
+      db.query(sql,[reply,query_id],(error,result) => {
+        if(error)return next(error);
+        res.send("reply added successfully!");
+      })
+    }
+    catch(error)
+    {
+      next(error);
+    }
+})
+
+// fecthes the queries received
+router.get("/guide/get_queries",(req,res,next) => {
+    try{
+      let sql = "select * from queries";
+      db.query(sql,(error,result) => {
+        if(error)return next(error);
+        res.send(result);
+      })
+    }
+    catch(error)
+    {
+       next(error);
+    }
+})
+
 module.exports = router;

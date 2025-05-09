@@ -83,6 +83,8 @@ function Add_Users() {
             <option value="admin">Admin</option>
             <option value="student">Student</option>
             <option value="staff">Staff</option>
+            <option value="guide">Guide</option>
+            <option value="sub_expert">Subject Expert</option>
           </select>
         </div>
 

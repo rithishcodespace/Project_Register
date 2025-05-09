@@ -418,5 +418,28 @@ router.get("/student/get_project_type/:reg_num",(req,res,next) => {
   }
 })
 
+// adds the query in the query table
+
+router.post("/student/add_query/:team_member",(req,res,next) => { // after 100 deletes old one
+  try{
+    const{team_id,project_id,project_name,query} = req.body;
+    const{team_member} = req.params;
+    if(!team_id || !project_id || !project_name || !team_member || !query)
+    {
+      return next(createError.BadRequest("req parameters are missing!"))
+    }
+    let sql = "insert into queries(team_id,project_id,project_name,team_member,query) values (?,?,?,?,?)";
+    db.query(sql,[team_id,project_id,project_name,team_member,query],(error,result) => {
+      if(error)return next(error);
+      res.send("query added successfully!");
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+
 
 module.exports = router;
