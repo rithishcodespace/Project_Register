@@ -109,6 +109,7 @@ function Login() {
           type="email" 
           name="username" 
           placeholder="E-mail" 
+          required
         />
       </div>
   
@@ -124,6 +125,7 @@ function Login() {
           className="lpass" 
           name="password" 
           placeholder="Password" 
+          required
         />
          <span
       onClick={() => setshowpassword(!showpassword)}

@@ -14,7 +14,7 @@ const mysql = require("mysql2");
 const pool = mysql.createPool({
     host:"localhost",
     user:"root",
-    password:"Rithish@2006",
+    password:"Mathan@2007",
     database:"project_registor",
     waitForConnections:true,
     connectionLimit:10, 
@@ -24,7 +24,7 @@ const pool = mysql.createPool({
 
 
 pool.getConnection((error,connection)=>{
-    if(error) console.log("Error connecting to db",error.message);
+    if(error) console.log("Error    connecting to db",error.message);
     else{
         console.log("Db connected successfully");
         connection.release();

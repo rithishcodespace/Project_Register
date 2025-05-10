@@ -33,7 +33,7 @@ function Guide_queries() {
   };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="p-6  min-h-screen">
       <h2 className="text-3xl text-center font-bold mb-6"> Student Queries</h2>
 
       <div className="grid gap-6">
@@ -59,9 +59,9 @@ function Guide_queries() {
                 />
                 <button
                   onClick={() => handleSendReply(q.id)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-1 hover:bg-blue-700"
+                  className="bg-purple-500 text-white px-4 py-2 rounded-lg flex items-center gap-1"
                 >
-                  <SendHorizonal size={18} />
+                  <SendHorizonal className="bg-purple-500" size={18} />
                   Send
                 </button>
               </div>
