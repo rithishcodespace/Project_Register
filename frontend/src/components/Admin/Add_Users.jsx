@@ -33,7 +33,7 @@ function Add_Users() {
   return (
     <div className=" mt-12 flex items-center justify-center ">
       <div className=" bg-white w-full max-w-md rounded-2xl shadow-2xl p-8 transition-all duration-300">
-        <h2 className="text-3xl bg-white  font-bold text-center text-purple-500 mb-6">Add New User</h2>
+        <h2 className="text-3xl bg-white  font-bold text-center  mb-6">Add New User</h2>
 
         {/* Email Field */}
         <div className="mb-5 bg-white ">
@@ -82,8 +82,9 @@ function Add_Users() {
             <option value="" disabled>-- Select Role --</option>
             <option value="admin">Admin</option>
             <option value="student">Student</option>
-            <option value="staff">Staff</option>
+            <option value="teacher">Staff</option>
             <option value="guide">Guide</option>
+            <option value="ext-guide">External Guide</option>
             <option value="sub_expert">Subject Expert</option>
           </select>
         </div>

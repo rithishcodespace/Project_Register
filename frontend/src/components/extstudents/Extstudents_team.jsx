@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {useSelector} from "react-redux";
+import { Link } from 'react-router-dom';
 
 function Extstudents_Team() {
   const [team, setTeam] = useState([]);
@@ -39,14 +40,15 @@ function Extstudents_Team() {
 
   return (
     <div className="p-6 bg-gradient-to-br min-h-60">
-      <h1 className="text-3xl font-bold text-purple-500 text-center mb-8">
+      <h1 className="text-3xl font-bold text-black text-center mb-8">
         Team Information
       </h1>
-      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-5">
+      <div className="max-w-4xl mx-auto -lg rounded-xl p-5">
         {loading ? (
-          <p className="text-center text-gray-500">Loading...</p>
+          <p className="text-center text-black-500">Loading...</p>
         ) : team.length === 0 ? (
-          <p className="text-center text-gray-500">Team not created/conformed yet</p>
+          <div className="text-center"><p className="text-center text-black-500">Team is not created/conformed yet ...</p>
+          <button className="text-center bg-purple-500 p-3 mt-10 rounded-lg"><Link to="/ext_student" className="bg-purple-500 text-white">Create Team</Link></button></div>
         ) : (
           team.map((member, index) => (
             <div

@@ -29,6 +29,7 @@ function Signup() {
               type="text" 
               name="username" 
               placeholder="E-mail" 
+              required
             />
           </div>
       
