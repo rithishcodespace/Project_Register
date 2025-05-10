@@ -61,7 +61,7 @@ function Guide_team_progress() {
             <h3 className="text-xl font-semibold mb-2 bg-white text-purple-500">{team.projectTitle}</h3>
             <p className="mb-2 text-black-300 bg-white"> Members: {team.members.join(', ')}</p>
 
-            <PieChart width={300} height={250}>
+            <PieChart width={300} height={250} style={{ outline: 'none' }}>
               <Pie
                 data={team.progress}
                 dataKey="value"
@@ -70,6 +70,7 @@ function Guide_team_progress() {
                 cy="50%"
                 outerRadius={80}
                 label
+                style={{ outline: 'none' }}
               >
                 {team.progress.map((entry, i) => (
                   <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />

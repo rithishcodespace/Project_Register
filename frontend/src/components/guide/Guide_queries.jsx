@@ -37,7 +37,7 @@ function Guide_queries() {
   };
 
   return (
-    <div className="p-6  min-h-screen">
+    <div className="p-6 ">
       <h2 className="text-3xl text-center font-bold mb-6"> Student Queries</h2>
 
       <div className="grid gap-6">
@@ -60,7 +60,8 @@ function Guide_queries() {
               <div className="mt-4 flex flex-col bg-white sm:flex-row items-center gap-2">
                 <input
                   type="text"
-                  className="flex-1 p-2 bg-white border rounded-lg w-full"
+                 className="flex-1 p-2 bg-white border border-gray-300 rounded-lg w-full 
+             focus:outline-none focus:ring-2 focus:ring-purple-500  focus:border-purple-500"
                   placeholder="Type your reply here..."
                   value={replyInputs[q.id] || ''}
                   onChange={(e) => handleReplyChange(q.id, e.target.value)}
