@@ -52,14 +52,14 @@ const mockTeams = [
 
 function Guide_team_progress() {
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h2 className="text-3xl font-bold mb-6">📊 Team Progress</h2>
+    <div className="p-6  min-h-screen">
+      <h2 className="text-3xl text-center font-bold mb-6"> Team Progress</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {mockTeams.map((team, index) => (
           <div key={team.id} className="bg-white p-5 rounded-xl shadow-lg">
-            <h3 className="text-xl font-semibold mb-2 text-blue-700">{team.projectTitle}</h3>
-            <p className="mb-2 text-gray-600">👥 Members: {team.members.join(', ')}</p>
+            <h3 className="text-xl font-semibold mb-2 bg-white text-purple-500">{team.projectTitle}</h3>
+            <p className="mb-2 text-black-300 bg-white"> Members: {team.members.join(', ')}</p>
 
             <PieChart width={300} height={250}>
               <Pie
