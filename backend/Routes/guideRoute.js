@@ -76,28 +76,6 @@ router.patch("/guide/accept_reject/:status/:project_id/:my_id",(req,res,next) =>
     }
 })
 
-// adds new guide
-router.post("/guide/add_guide",(req,res,next) => {
-    try{
-       const {id,name,emailId,phone,dept} = req.body;
-       if (!id || !name || !emailId || !phone || !dept)
-       {
-         return res.status(400).json({ message: "All fields are required" });
-       }
-       let sql = "insert into guides(id, name, emailId, phone, dept) values (?,?,?,?,?)";
-       db.query(sql,[id,name,emailId,phone,dept],(error,result) => {
-        if(error)return next(error);
-        else{
-            res.send("Guide added to db!");
-        }
-       })
-    }
-    catch(error)
-    {
-       next(error);
-    }
-})
-
 // sends request to guide
 router.post("/guide/sent_request_to_guide",(req,res,next) => {
     try{
@@ -109,30 +87,30 @@ router.post("/guide/sent_request_to_guide",(req,res,next) => {
       db.query(sql,[id,name,emailId,phone,dept,from_id,to_id,status],(error,result) => {
         if(error)return next(error);
 
-        // // Create a transporter
-        // const transporter = nodemailer.createTransport({
-        //     service: 'gmail',
-        //     auth: {
-        //     user: 'rithishvkv@gmail.com', // -> temporary
-        //     pass: 'ncwbsvgspuplvzzr',
-        //     },
-        // });
+        // Create a transporter
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+            user: 'rithishvkv@gmail.com', // -> temporary
+            pass: 'ncwbsvgspuplvzzr',
+            },
+        });
 
-        // // Define email options
-        // const mailOptions = {
-        //     from: 'rithishvkv@gmail.com',
-        //     to: emailId,
-        //     subject: 'Hello from Node.js',
-        //     text: '',
-        // };
+        // Define email options
+        const mailOptions = {
+            from: 'rithishvkv@gmail.com',
+            to: "guides.cs24@bitsathy.ac.in", // guide id -> temporary
+            subject: 'Request To Accept Invite',
+            text: `Dear Guide,\n\n${name} has requested you to be their guide. Please login to the system to accept or reject the request.\n\nThank you.`,
+        };
 
-        // // Send the email
-        // transporter.sendMail(mailOptions, (error, info) => {
-        //     if (error) {
-        //     return console.log('Error:', error);
-        //     }
-        //     console.log('Email sent:', info.response);
-        // });
+        // Send the email
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+            return console.log('Error:', error);
+            }
+            console.log('Email sent:', info.response);
+        });
         
         res.send("request sent successfully to the guide!");
         

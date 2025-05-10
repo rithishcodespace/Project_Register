@@ -75,28 +75,6 @@ router.patch("/expert/accept_reject/:status/:project_id/:my_id",(req,res,next) =
     }
 })
 
-// adds new expert
-router.post("/expert/add_sub_expert",(req,res,next) => {
-    try{
-       const {id,name,emailId,phone,dept} = req.body;
-       if (!id || !name || !emailId || !phone || !dept)
-       {
-         return res.status(400).json({ message: "All fields are required" });
-       }
-       let sql = "insert into sub_experts(id, name, emailId, phone, dept) values (?,?,?,?,?)";
-       db.query(sql,[id,name,emailId,phone,dept],(error,result) => {
-        if(error)return next(error);
-        else{
-            res.send("sub_expert added to db!");
-        }
-       })
-    }
-    catch(error)
-    {
-       next(error);
-    }
-})
-
 // sends request to expert
 router.post("/expert/sent_request_to_expert",(req,res,next) => {
     try{
