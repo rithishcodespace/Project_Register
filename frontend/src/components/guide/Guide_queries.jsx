@@ -7,12 +7,16 @@ const initialQueries = [
     student: 'Arun Kumar',
     question: 'Can we submit our design phase by next Monday?',
     answer: '',
+    projectId: 'P101',
+    projectName: 'Online Voting System',
   },
   {
     id: 2,
     student: 'Meena S',
     question: 'Should we use React or plain HTML for frontend?',
     answer: 'Yes, use React as per the project guidelines.',
+    projectId: 'P102',
+    projectName: 'Smart Attendance Tracker',
   },
 ];
 
@@ -39,20 +43,24 @@ function Guide_queries() {
       <div className="grid gap-6">
         {queries.map((q) => (
           <div key={q.id} className="bg-white p-5 rounded-xl shadow-md">
-            <div className="mb-2">
-              <span className="font-semibold text-blue-600">{q.student}</span> asked:
-              <p className="text-lg mt-1">{q.question}</p>
+            <div className="mb-2 bg-white">
+              <p className="text-sm text-gray-500 mb-2 bg-white">
+                <strong className="bg-white">Project ID:</strong> {q.projectId} &nbsp;| &nbsp;
+                <strong className="bg-white">Project Name:</strong> {q.projectName}
+              </p>
+              <span className="font-semibold bg-white text-purple-500">{q.student}</span> asked:
+              <p className="text-lg bg-white mt-1">{q.question}</p>
             </div>
 
             {q.answer ? (
-              <div className="mt-4 p-3 bg-green-100 text-green-800 rounded-lg">
-                <strong>Your Answer:</strong> {q.answer}
+              <div className="mt-4 p-3 bg-green-100  text-green-800 rounded-lg">
+                <strong className="bg-green-100">Your Answer:</strong> {q.answer}
               </div>
             ) : (
-              <div className="mt-4 flex flex-col sm:flex-row items-center gap-2">
+              <div className="mt-4 flex flex-col bg-white sm:flex-row items-center gap-2">
                 <input
                   type="text"
-                  className="flex-1 p-2 border rounded-lg w-full"
+                  className="flex-1 p-2 bg-white border rounded-lg w-full"
                   placeholder="Type your reply here..."
                   value={replyInputs[q.id] || ''}
                   onChange={(e) => handleReplyChange(q.id, e.target.value)}
