@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "framer-motion": "^12.10.4",
-    "nodemailer": "^7.0.3"
-  }
-}
