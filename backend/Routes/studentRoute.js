@@ -440,6 +440,24 @@ router.post("/student/add_query/:team_member",(req,res,next) => { // after 100 d
   }
 })
 
+// fetches the details of guide and expert
+
+router.get("/student/fetch_guide_or_expert/:role",(req,res,next) => {
+  try{
+    const{role} = req.params;
+    if(role !== "guide" && role != "sub_expert") return next(createError.BadRequest("invalid role!!"));
+    let sql = "select * from users where role = ?";
+    db.query(sql,[role],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 
 
 module.exports = router;
