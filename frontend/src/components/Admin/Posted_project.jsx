@@ -59,21 +59,25 @@ const Posted_project = () => {
     window.location.href = `/admin/posted_projects/${project.project_id}`;
   };
 
-  return (
-    <Paper sx={{ width: '100%', overflow: 'hidden', padding: 2 }}>
-      <h2 style={{ fontSize: '24px', textAlign: 'center', marginBottom: '16px' }}>
+  return (<><h2 style={{ fontSize: '24px', textAlign: 'center', marginBottom: '16px' }}>
         Posted Projects
       </h2>
+    <Paper sx={{ width: '100%', overflow: 'hidden', padding: 2 }}>
+      
       <TableContainer sx={{ maxHeight: 500 }}>
         <Table stickyHeader aria-label="project table">
           <TableHead>
-            <TableRow>
-              {columns.map((column) => (
-                <TableCell key={column.id} style={{ minWidth: column.minWidth, fontWeight: 'bold' }}>
-                  {column.label}
-                </TableCell>
-              ))}
-            </TableRow>
+                        <tr className="bg-gray-100 border-b">
+                {columns.map((column) => (
+                  <th
+                    key={column.id}
+                    className={`px-4 py-2 text-left font-bold border-r`}
+                    style={{ minWidth: column.minWidth }}
+                  >
+                    {column.label}
+                  </th>
+                ))}
+              </tr>
           </TableHead>
           <TableBody>
             {projectData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((project, index) => (
@@ -108,7 +112,7 @@ const Posted_project = () => {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-    </Paper>
+    </Paper></>
   );
 };
 

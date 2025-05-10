@@ -1,3 +1,4 @@
+// Admin_project_details.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -10,13 +11,14 @@ function Admin_project_details() {
     const fetchProjectDetails = async () => {
       try {
         const accessToken = localStorage.getItem("accessToken");
-        const response = await axios.get(`http://localhost:1234/teacher/project/${projectId}`, {
+        const response = await axios.get(`http://localhost:1234/teacher/get_projects_by_id/${projectId}`, {
           headers: {
             Authorization: `Bearer ${accessToken?.trim()}`,
           },
         });
-        if (response.status === 200) {
-          setProject(response.data);
+
+        if (response.status === 200 && response.data.length > 0) {
+          setProject(response.data[0]); // Get first item from result
         } else {
           alert("Project not found.");
         }
@@ -39,7 +41,7 @@ function Admin_project_details() {
       <p><strong>Project Name:</strong> {project.project_name}</p>
       <p><strong>Cluster:</strong> {project.cluster}</p>
       <p><strong>Description:</strong> {project.description}</p>
-      {/* Add other fields as necessary */}
+      {/* You can display other fields if needed */}
     </div>
   );
 }

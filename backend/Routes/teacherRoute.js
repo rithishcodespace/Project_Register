@@ -67,24 +67,21 @@ router.get("/teacher/get_projects_by_cluster/:cluster",(req,res,next) => {
   }
 })
 
-router.get("/teacher/get_projects_by_id/:projectId",(req,res,next) => {
-  try{
-    let {projectId} = req.params;
-    let sql = "select * from projects where project_id = ?";
-    db.query(sql,[projectId],(error,result) => {
-      if(error)return next(error);
-      else{
-        if (project.length === 0) {
-          return res.status(404).json({ message: "Project not found" });
-        }  
-         res.send(result);
+router.get("/teacher/get_projects_by_id/:projectId", (req, res, next) => {
+  try {
+    const { projectId } = req.params;
+    const sql = "SELECT * FROM projects WHERE project_id = ?";
+    db.query(sql, [projectId], (error, result) => {
+      if (error) return next(error);
+      if (result.length === 0) {
+        return res.status(404).json({ message: "Project not found" });
       }
-    })
-  }
-  catch(error)
-  {
+      res.send(result);
+    });
+  } catch (error) {
     next(error);
   }
-})
+});
+
 
 module.exports = router;
