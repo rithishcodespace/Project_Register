@@ -8,7 +8,6 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
-import { Link } from 'react-router-dom';
 
 const columns = [
   { id: 'project_id', label: 'Project ID', minWidth: 100 },
@@ -59,51 +58,75 @@ const Posted_project = () => {
     window.location.href = `/admin/posted_projects/${project.project_id}`;
   };
 
-  return (<><h2 className="text-3xl  font-bold text-center  mb-6">
-        Posted Projects
-      </h2>
-    <Paper sx={{ width: '100%', overflow: 'hidden', padding: 2 }}>
-      
-      <TableContainer sx={{ maxHeight: 500 }}>
-        <Table stickyHeader aria-label="project table">
-          <TableHead>
-                        <tr className="bg-black border-b">
+  return (
+    <>
+      <h2 className="text-3xl font-bold text-center mb-6">Posted Projects</h2>
+
+      <Paper
+        className="w-full overflow-hidden  shadow-lg border "
+        sx={{ width: '90%',marginLeft:'5%',borderRadius:"10px", overflow: 'hidden', paddingTop: 2,paddingRight: 2,paddingLeft: 2 }}
+      >
+        <TableContainer
+          className="max-h-[500px] overflow-y-auto"
+          sx={{ maxHeight: 500 }}
+        >
+          <Table
+            stickyHeader
+            aria-label="project table"
+            className="min-w-full text-sm bg- text-gray-800 border-collapse"
+          >
+            <TableHead>
+              <tr className="bg-white text-lg text-black">
                 {columns.map((column) => (
                   <th
                     key={column.id}
-                    className={`px-4 py-2 text-left font-bold border-r `}
+                    className="px-4 bg-white py-2 text-left font-semibold border-b"
                     style={{ minWidth: column.minWidth }}
                   >
                     {column.label}
                   </th>
                 ))}
               </tr>
-          </TableHead>
-          <TableBody>
-            {projectData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((project, index) => (
-              <TableRow
-                hover
-                role="checkbox"
-                tabIndex={-1}
-                key={index}
-                onClick={() => handleRowClick(project)}
-                style={{ cursor: 'pointer' }}
-              >
-                {columns.map((column) => {
-                  const value = project[column.id];
-                  return (
-                    <TableCell key={column.id}>
-                      {value || "-"}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
 
-      <TablePagination
+            <TableBody className="bg-white">
+              {projectData
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((project, index) => (
+                  <TableRow
+                    hover
+                    role="checkbox"
+                    tabIndex={-1}
+                    key={index}
+                    onClick={() => handleRowClick(project)}
+                    className="bg-white cursor-pointer hover:bg-gray-100"
+                  >
+                    {columns.map((column) => {
+                      const value = project[column.id];
+                      return (
+                        <TableCell key={column.id} className="bg-white px-4 py-2 border-b">
+                          {value || "-"}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              {projectData.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="bg-white text-center py-4 text-gray-500"
+                  >
+                    No projects found.
+                  </td>
+                </tr>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        
+    </Paper><TablePagination
         rowsPerPageOptions={[5, 10, 25]}
         component="div"
         count={projectData.length}
@@ -111,9 +134,10 @@ const Posted_project = () => {
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
-      />
-    </Paper></>
+        style={{marginRight:"4%"}}
+      /></>
+    
   );
 };
 
-export default Posted_project;
+export default Posted_project;     
