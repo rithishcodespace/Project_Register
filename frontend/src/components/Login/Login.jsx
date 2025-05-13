@@ -34,28 +34,33 @@ function Login() {
       });
 
       if (response.status === 200) {
-        const { accessToken, refreshToken, role } = response.data;
+        const { accessToken, refreshToken, role, reg_num } = response.data;
 
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("refreshToken", refreshToken);
-        console.log("user", response.data);
         dispatch(addUser(response.data));
 
-        // Role-based navigation
-        if (role === "admin") {
-          navigate("/admin");
-        } else if (role === "teacher") {
-          navigate("/teacher");
-        } else if (role === "guide") {
-          navigate("/guide");
-        } else if (role === "subject_expert") {
-          navigate("/subject_expert");
-        } else if (role === "student") {
-          // Save student info temporarily and show internal/external popup
-          setStudentUserData(response.data);
-          setShowStudentPopup(true);
+        if (role === "student") {
+          // Check if project_type exists
+          const projectTypeRes = await axios.get(`http://localhost:1234/student/get_project_type/${reg_num}`);
+          const projectType = projectTypeRes.data?.project_type;
+
+          if (projectType === "INTERNAL") {
+            navigate("/student");
+          } else if (projectType === "EXTERNAL") {
+            navigate("/ext_student");
+          } else {
+            // No project_type set
+            setStudentUserData(response.data);
+            setShowStudentPopup(true);
+          }
         } else {
-          alert("Unknown role");
+          // Other roles
+          if (role === "admin") navigate("/admin");
+          else if (role === "teacher") navigate("/teacher");
+          else if (role === "guide") navigate("/guide");
+          else if (role === "subject_expert") navigate("/subject_expert");
+          else alert("Unknown role");
         }
       }
     } catch (err) {
@@ -64,12 +69,26 @@ function Login() {
     }
   };
 
-  const handleStudentChoice = (type) => {
-    setShowStudentPopup(false);
-    if (type === "internal") {
-      navigate("/student");
-    } else {
-      navigate("/extstudent");
+  const handleStudentChoice = async (type) => {
+    if (!studentUserData) return;
+    const reg_num = studentUserData.reg_num;
+    const projectType = type === "internal" ? "INTERNAL" : "EXTERNAL";
+
+    try {
+      await axios.patch(
+        `http://localhost:1234/student/alter_project_status/${reg_num}/${projectType}`
+      );
+
+      setShowStudentPopup(false);
+
+      if (projectType === "INTERNAL") {
+        navigate("/student");
+      } else {
+        navigate("/ext_student");
+      }
+    } catch (err) {
+      console.error("Failed to update project type", err);
+      alert("Failed to set project type");
     }
   };
 
@@ -77,7 +96,7 @@ function Login() {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      const idToken = await user.getIdToken(); // Firebase ID token
+      const idToken = await user.getIdToken();
 
       console.log("Firebase ID Token:", idToken);
 
@@ -119,11 +138,7 @@ function Login() {
         </div>
 
         <div className="lpassdiv" style={{ position: "relative" }}>
-          <img
-            src={Lock}
-            className="lock"
-            alt="Lock"
-          />
+          <img src={Lock} className="lock" alt="Lock" />
           <input
             onChange={(e) => { setpassword(e.target.value) }}
             type={showpassword ? "text" : "password"}
@@ -150,17 +165,14 @@ function Login() {
         </div>
 
         <button onClick={handleLogin} className="lbutton">Submit</button>
+
         <div className="divider">
           <hr />
           <span>or</span>
         </div>
 
         <div className="gdiv" onClick={handleGoogleLogin}>
-          <img
-            src={Google}
-            className="google-logo"
-            alt="Google logo"
-          />
+          <img src={Google} className="google-logo" alt="Google logo" />
           <button className="glogin">Continue with Google</button>
         </div>
       </div>
