@@ -40,11 +40,13 @@ import Extstudents_team from "./components/extstudents/Extstudents_team";
 import Extstudents_progress_update from "./components/extstudents/Extstudents_progress_update";
 import Admin_projectDetails from "./components/Admin/Admin_project_details";
 import Queries from "./components/Students/Queries";
+import TeamDetails from "./components/extstudents/TeamDetails";
 
 function App() {
   return (
     <Provider store={Store}>
       <BrowserRouter>
+
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/student" element={<Student />}>
@@ -86,6 +88,7 @@ function App() {
             <Route index element={<Guide_dashboard />} />
             <Route path="queries" element={<Guide_queries />} />
             <Route path="team_progress" element={<Guide_team_progress />} />
+            <Route path="/guide/team_progress/:id" element={<TeamDetails/>} />
           </Route>
 
           <Route path="/ext_student" element={<Extstudent />}>
@@ -95,6 +98,7 @@ function App() {
             <Route path="Progress_update" element={<Extstudents_progress_update />} />
           </Route>
         </Routes>
+
       </BrowserRouter>
     </Provider>
   );
