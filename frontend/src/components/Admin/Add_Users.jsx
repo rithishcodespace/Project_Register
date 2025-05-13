@@ -84,7 +84,6 @@ function Add_Users() {
             <option value="student">Student</option>
             <option value="teacher">Staff</option>
             <option value="guide">Guide</option>
-            <option value="ext-guide">External Guide</option>
             <option value="sub_expert">Subject Expert</option>
           </select>
         </div>

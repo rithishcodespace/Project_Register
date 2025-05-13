@@ -448,25 +448,42 @@ router.get("/student/get_project_type/:reg_num",(req,res,next) => {
 
 // adds the query in the query table
 
-router.post("/student/add_query/:team_member",(req,res,next) => { // after 100 deletes old one
-  try{
-    const{team_id,project_id,project_name,query} = req.body;
-    const{team_member} = req.params;
-    if(!team_id || !project_id || !project_name || !team_member || !query)
-    {
-      return next(createError.BadRequest("req parameters are missing!"))
+router.post("/student/add_query/:team_member", (req, res, next) => {
+  try {
+    const { team_id, project_id, query } = req.body;
+    const { team_member } = req.params;
+
+    if (!project_id || !team_id || !team_member || !query) {
+      return next(createError.BadRequest("Required parameters are missing!"));
     }
-    let sql = "insert into queries(team_id,project_id,project_name,team_member,query) values (?,?,?,?,?)";
-    db.query(sql,[team_id,project_id,project_name,team_member,query],(error,result) => {
-      if(error)return next(error);
-      res.send("query added successfully!");
-    })
-  }
-  catch(error)
-  {
+
+    const getProjectNameSql = "SELECT project_name FROM projects WHERE project_id = ?";
+    db.query(getProjectNameSql, [project_id], (err, rows) => {
+      if (err) return next(err);
+
+      if (rows.length === 0) {
+        return next(createError.NotFound("Project not found!"));
+      }
+
+      const project_name = rows[0].project_name;
+
+      const insertQuerySql = `
+        INSERT INTO queries (team_id, project_id, project_name, team_member, query)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+      db.query(insertQuerySql, [team_id, project_id, project_name, team_member, query], (err, result) => {
+        if (err) return next(err);
+        db.query(deleteOldSql, [team_id, team_id], (err2) => {
+          if (err2) return next(err2);
+          res.send("Query added successfully!");
+        });
+      });
+    });
+  } catch (error) {
     next(error);
   }
-})
+});
+
 
 // fetches the details of guide and expert
 
