@@ -519,7 +519,22 @@ router.get("/student/getTeamdetails_using_team_id/:team_id",(req,res,next) => {
   }
 })
 
-
+//fetch queries sent by my team
+router.get("/student/get_queries_sent_by_my_team/:team_id",(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest("team_id not found!!"));
+    let sql = "select * from queries where team_id = ?";
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 
 module.exports = router;

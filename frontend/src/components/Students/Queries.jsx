@@ -1,48 +1,73 @@
 import React, { useState, useRef, useEffect } from 'react';
-
-const dummyQueries = [
-  {
-    id: 1,
-    question: 'Can we submit the design phase next week?',
-    answer: 'Yes, please submit before Friday.',
-  },
-  {
-    id: 2,
-    question: 'Should we include flowcharts in the report?',
-    answer: '',
-  },
-];
+import axios from 'axios';
+import { useSelector } from 'react-redux';
+import { Store } from 'lucide-react';
 
 function Queries() {
-  const [queries, setQueries] = useState(dummyQueries);
-  const [newQuery, setNewQuery] = useState('');
+  const [queries, setQueries] = useState([]);  
+  const [newQuery, setNewQuery] = useState(''); 
   const chatEndRef = useRef(null);
+  const selector = useSelector((Store)=>Store.userSlice);
 
-  const handleSend = (e) => {
-    e.preventDefault();
-
-    const newEntry = {
-      id: queries.length + 1,
-      question: newQuery,
-      answer: '',
+  // Fetch queries when the component mounts
+  useEffect(() => {
+    const fetchQueries = async () => {
+      try {
+        let token = localStorage.getItem("accessToken")
+        const response = await axios.get(`http://localhost:1234/student/get_queries_sent_by_my_team/${selector.project_id}`,{
+          headers:{
+            Authorization: `Bearer ${token}`
+          }
+        }); 
+        
+        // Ensure response.data is an array before setting the state
+        if (Array.isArray(response.data)) {
+          setQueries(response.data);  // Set the fetched queries to state
+        } else {
+          console.error('Response is not an array:', response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching queries:', error);
+      }
     };
 
-    setQueries([...queries, newEntry]);
-    setNewQuery('');
+    fetchQueries();
+  }, []); // Empty dependency array means it runs once when the component mounts
+
+  // Handle sending a new query
+  const handleSend = async (e) => {
+    e.preventDefault();
+
+    if (newQuery.trim() === '') return;
+
+    const newEntry = {
+      question: newQuery,
+      answer: '', // The answer will be empty initially
+    };
+
+    try {
+      // Send the new query to the backend
+      await axios.post('/api/guide/sent_query', newEntry);  // Replace with your actual endpoint
+      setQueries([...queries, { ...newEntry, id: queries.length + 1 }]); // Add the new query to the list
+      setNewQuery(''); // Clear the input field
+    } catch (error) {
+      console.error('Error sending query:', error);
+    }
   };
 
   useEffect(() => {
+    // Scroll to the latest query whenever the queries state is updated
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [queries]);
 
   return (
     <div className="flex flex-col">
-      <div className=" text-black text-2xl text-center font-semibold px-4 py-3 ">
+      <div className="text-black text-2xl text-center font-semibold px-4 py-3">
         Guide Chat
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-2 space-y-4 mb-20">
-        {queries.map((q) => (
+        {Array.isArray(queries) && queries.map((q) => (
           <div key={q.id} className="space-y-2">
             <div className="flex justify-end">
               <div className="bg-purple-500 text-white p-3 rounded-lg max-w-xs shadow-md">
