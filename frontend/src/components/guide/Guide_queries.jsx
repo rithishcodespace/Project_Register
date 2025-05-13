@@ -94,7 +94,7 @@ const Guide_queries = () => {
                 <strong>Your Answer:</strong> {q.reply}
               </div>
             ) : (
-              <div className="mt-4 flex flex-col sm:flex-row items-center gap-2">
+              <div className="mt-4 flex flex-col bg-white sm:flex-row items-center gap-2">
                 <input
                   type="text"
                   className="flex-1 p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"

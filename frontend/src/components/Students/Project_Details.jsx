@@ -6,7 +6,6 @@ import { Store } from 'lucide-react';
 const Project_Details = () => {
   const [projectData, setProjectData] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
-  const [viewModalOpen, setViewModalOpen] = useState(false);
   const [accessGranted, setAccessGranted] = useState(false);
   const selector = useSelector((Store) => Store.userSlice);
   const teamMembers = useSelector((Store) => Store.teamSlice);
@@ -17,15 +16,13 @@ const Project_Details = () => {
       const token = localStorage.getItem("accessToken");
 
       const response = await axios.patch(`http://localhost:1234/student/ongoing/${name}`, {}, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       if (response.status === 200) {
         alert("Project chosen successfully!");
         setProjectData(prev => prev.filter(proj => proj.project_name !== name));
-        setViewModalOpen(false);
+        setSelectedProject(null);
       }
 
       const newresponse = await axios.patch(`http://localhost:1234/student/assgin_project_id/${id}/${selector.reg_num}`, {}, {
@@ -37,6 +34,9 @@ const Project_Details = () => {
       if (newresponse.status === 200) {
         console.log("project_id is successfully inserted into db!");
       }
+
+      console.log("Selected guide:", guide, "Selected expert:", expert);
+
     } catch (error) {
       console.error("Error choosing project:", error);
       alert("Something went wrong while choosing project");
@@ -133,7 +133,6 @@ const Project_Details = () => {
   const handleRowClick = (projectId) => {
     const selected = projectData.find(proj => proj.project_id === projectId);
     setSelectedProject(selected);
-    setViewModalOpen(true);
   };
 
   if (accessGranted) {
@@ -144,10 +143,15 @@ const Project_Details = () => {
     );
   }
 
-  return (
+  return selectedProject ? (
+    <Proj_Details
+      project={selectedProject}
+      onBack={() => setSelectedProject(null)}
+      onTakeProject={handleTakeProject}
+    />
+  ) : (
     <div className="p-6 w-full max-w-7xl mx-auto">
       <h2 className="text-2xl font-bold text-center text-purple-700 mb-6">Posted Projects</h2>
-
       <div className="overflow-x-auto">
         <table className="min-w-full rounded-2xl shadow-md border-separate border-spacing-y-2">
           <thead>
