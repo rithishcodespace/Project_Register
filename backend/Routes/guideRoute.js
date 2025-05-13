@@ -162,7 +162,7 @@ router.get("/guide/get_queries/:guide_reg_num",(req,res,next) => {
       let sql = "select * from queries where guide_reg_num = ?";
       db.query(sql,[guide_reg_num],(error,result) => {
         if(error)return next(error);
-        if(result.length == 0)res.send("No queries found!");
+        if(result.length == 0)return res.send("No queries found!");
         res.send(result);
       })
     }
