@@ -3,32 +3,8 @@ import { SendHorizonal, Store } from 'lucide-react';
 import axios from "axios";
 import {useSelector} from "react-redux"
 
-<<<<<<< HEAD
-const initialQueries = [
-  {
-    id: 1,
-    student: 'Arun Kumar',
-    question: 'Can we submit our design phase by next Monday?',
-    answer: '',
-    projectId: 'P101',
-    projectName: 'Online Voting System',
-  },
-  {
-    id: 2,
-    student: 'Meena S',
-    question: 'Should we use React or plain HTML for frontend?',
-    answer: 'Yes, use React as per the project guidelines.',
-    projectId: 'P102',
-    projectName: 'Smart Attendance Tracker',
-  },
-];
-
-function Guide_queries() {
-  const [queries, setQueries] = useState(initialQueries);
-=======
 const Guide_queries = () => {
   const [queries, setQueries] = useState([]);
->>>>>>> 7fb5e1fcd89aeecdaa2b0dade319010236a77672
   const [replyInputs, setReplyInputs] = useState({});
   const selector = useSelector((Store)=>Store.userSlice);
 
@@ -98,26 +74,6 @@ const Guide_queries = () => {
   };
 
   return (
-<<<<<<< HEAD
-    <div className="p-6 ">
-      <h2 className="text-3xl text-center font-bold mb-6"> Student Queries</h2>
-
-      <div className="grid gap-6">
-        {queries.map((q) => (
-          <div key={q.id} className="bg-white p-5 rounded-xl shadow-md">
-            <div className="mb-2 bg-white">
-              <p className="text-sm text-gray-500 mb-2 bg-white">
-                <strong className="bg-white">Project ID:</strong> {q.projectId} &nbsp;| &nbsp;
-                <strong className="bg-white">Project Name:</strong> {q.projectName}
-              </p>
-              <span className="font-semibold bg-white text-purple-500">{q.student}</span> asked:
-              <p className="text-lg bg-white mt-1">{q.question}</p>
-            </div>
-
-            {q.answer ? (
-              <div className="mt-4 p-3 bg-green-100  text-green-800 rounded-lg">
-                <strong className="bg-green-100">Your Answer:</strong> {q.answer}
-=======
     <div className="p-6 min-h-screen">
       <h2 className="text-3xl text-center font-bold mb-6">Student Queries</h2>
 
@@ -136,18 +92,12 @@ const Guide_queries = () => {
             {q.reply ? (
               <div className="mt-4 p-3 bg-green-100 text-green-800 rounded-lg">
                 <strong>Your Answer:</strong> {q.reply}
->>>>>>> 7fb5e1fcd89aeecdaa2b0dade319010236a77672
               </div>
             ) : (
               <div className="mt-4 flex flex-col bg-white sm:flex-row items-center gap-2">
                 <input
                   type="text"
-<<<<<<< HEAD
-                 className="flex-1 p-2 bg-white border border-gray-300 rounded-lg w-full 
-             focus:outline-none focus:ring-2 focus:ring-purple-500  focus:border-purple-500"
-=======
                   className="flex-1 p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
->>>>>>> 7fb5e1fcd89aeecdaa2b0dade319010236a77672
                   placeholder="Type your reply here..."
                   value={replyInputs[q.query_id] || ''}
                   onChange={(e) => handleReplyChange(q.query_id, e.target.value)}
