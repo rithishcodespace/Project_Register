@@ -158,7 +158,7 @@ router.get("/guide/get_queries",(req,res,next) => {
 })
 
 // fetches team details mentored by me 
-router.get("/guide/fetch_mentoring teams/:guide_id",(req,res,next) => {
+router.get("/guide/fetch_mentoring_teams/:guide_id",(req,res,next) => {
     try{
       const{guide_id} = req.params;
       if(!guide_id)

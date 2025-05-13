@@ -1,5 +1,8 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { useEffect,useState } from "react";
+import axios from 'axios';
+import { useSelector } from 'react-redux';
 
 const COLORS = ['#4ade80', '#22d3ee', '#facc15', '#f472b6'];
 
@@ -51,6 +54,29 @@ const mockTeams = [
 ];
 
 function Guide_team_progress() {
+
+  // const[mockTeams,setmockTeams] = useState();
+  const selector = useSelector((Store) => Store.userSlice);
+  let token = localStorage.getItem("accessToken");
+
+  async function fetch_team_projects()
+  {
+    let response = await axios.get(`http://localhost:/guide/fetch_mentoring_teams/${selector.id}`,{
+      headers:{
+        Authorization:`Bearer ${token}`
+      }
+    })
+    if(response.status === 200)
+    {
+      // setmockTeams(response.data);
+      console.log("teams mentored by me:",response.data);
+    }
+  }
+
+  useEffect(() => {
+    fetch_team_projects();
+  },[]);
+
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <h2 className="text-3xl font-bold mb-6">📊 Team Progress</h2>

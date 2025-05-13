@@ -7,6 +7,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { addUser } from '../../utils/userSlice';
 import { addTeamMembers,removeTeamMembers } from '../../utils/teamSlice';
 import { useNavigate } from 'react-router-dom';
+import { addTeamStatus } from '../../utils/teamStatus';
 
 function StudentDashboard() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -117,7 +118,7 @@ function StudentDashboard() {
 
       if (response.status === 200) {
        
-        const { teamConformationStatus, teamMembers, pendingInvitations } = response.data;
+        var { teamConformationStatus, teamMembers, pendingInvitations, teamLeader } = response.data;
         setTeamStatus(teamConformationStatus);
         setTeamMembers(teamMembers || []);
         setPendingInvitations(pendingInvitations || []);
@@ -137,8 +138,11 @@ function StudentDashboard() {
           }
         }
         if (teamMembers.length > 0) {
+          teamMembers = [...teamMembers, { teamLeader: teamLeader }];
           dispatch(addTeamMembers(teamMembers));
+          dispatch(addTeamStatus(response.data));
         }
+
         console.log(response.data);
       }
     } catch (error) {
@@ -152,7 +156,7 @@ function StudentDashboard() {
       const regNum = selector.reg_num;
 
       const response = await axios.patch(
-        'http://localhost:1234/student/team_request/conform_team',
+        'http://localhost:1234/student/team_request/conform_team/TEAM_ID_001',
         { from_reg_num: regNum },
         {
           headers: {

@@ -4,11 +4,13 @@ import storage from "redux-persist/lib/storage"; // localStorage for web
 import { combineReducers } from "redux";
 import userReducer from "./userSlice";
 import teamReducer from "./teamSlice";
+import statusReducer from "./teamStatus"
 
 // 1. Combine your reducers
 const rootReducer = combineReducers({
   userSlice: userReducer,
   teamSlice: teamReducer,
+  teamStatusSlice:statusReducer,
 });
 
 // 2. Create persist config

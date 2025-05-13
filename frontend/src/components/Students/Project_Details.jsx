@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
+import { Store } from 'lucide-react';
 
 const Project_Details = () => {
   const [projectData, setProjectData] = useState([]);
@@ -9,11 +10,12 @@ const Project_Details = () => {
   const [accessGranted, setAccessGranted] = useState(false);
   const selector = useSelector((Store) => Store.userSlice);
   const teamMembers = useSelector((Store) => Store.teamSlice);
+  const teamStatus = useSelector((Store) => Store.teamStatusSlice);
 
-  async function handleTakeProject(name,id) {
+  async function handleTakeProject(name, id) {
     try {
       const token = localStorage.getItem("accessToken");
-      const teamStatus = JSON.parse(localStorage.getItem("teamStatus"))
+
       const response = await axios.patch(`http://localhost:1234/student/ongoing/${name}`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -26,14 +28,13 @@ const Project_Details = () => {
         setViewModalOpen(false);
       }
 
-      const newresponse = await axios.patch(`http://localhost:1234/student/assgin_project_id/${id}/${selector.reg_num}`,{},{
-        headers:{
-         Authorization: `Bearer ${token}`
+      const newresponse = await axios.patch(`http://localhost:1234/student/assgin_project_id/${id}/${selector.reg_num}`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
         }
-      })
+      });
 
-      if(newresponse.status === 200)
-      {
+      if (newresponse.status === 200) {
         console.log("project_id is successfully inserted into db!");
       }
     } catch (error) {
@@ -43,37 +44,38 @@ const Project_Details = () => {
   }
 
   function checkUserStatus() {
-    const raw = localStorage.getItem("teamStatus");
-    if (!raw) return;
-  
-    try {
-      const teamStatus = JSON.parse(localStorage.getItem("teamMembers"));
-      console.log("hi da chellam:",teamStatus);
-      // setprojectId(teamStatus.teamMembers[0].project_id)
-      const hasConfirmedTeam = teamStatus[0].team_conformed=== 1;
-      let hasNoProject = false;
-      if (teamStatus?.teamMembers?.length > 0) {
-      hasNoProject = teamStatus.teamMembers[0].project_id === null;
-      }
-      console.log("para",hasConfirmedTeam,hasNoProject);
+  try {
+    const hasConfirmedTeam = teamStatus.teamConformationStatus === 1;
+    const member = teamStatus?.teamMembers?.[0];
+    const hasNoProject = member && member.project_id === null;
 
-      if (hasConfirmedTeam && hasNoProject || !hasConfirmedTeam) {
-        setAccessGranted(true);
-      }
-    } catch (e) {
-      console.error("Invalid teamStatus in localStorage", e);
+    console.log("para:",hasConfirmedTeam,hasNoProject)
+
+    if (hasConfirmedTeam && hasNoProject) {
+      setAccessGranted(false);  // Can access & take projects
+    } else {
+      setAccessGranted(true);   // Cannot take projects
     }
+  } catch (e) {
+    console.error("Invalid teamStatus in localStorage", e);
+    setAccessGranted(true); // safer fallback
   }
-  
+}
+
 
   async function fetchProjects() {
     try {
       const token = localStorage.getItem("accessToken");
-      const departments = [
-        ...new Set(teamMembers.map(member => member.dept))
+     const departments = [
+        ...new Set([
+          ...teamMembers.map(member => member.dept),
+          teamStatus.teamLeader.dept // Adding Team Leader's department
+        ])
       ];
 
-      const response = await axios.post("http://localhost:1234/student/projects",{"departments":departments},{
+      console.log("departments",departments);
+
+      const response = await axios.post("http://localhost:1234/student/projects", { "departments": departments }, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -81,7 +83,7 @@ const Project_Details = () => {
 
       if (response.status === 200) {
         setProjectData(response.data);
-        console.log("projects:",response.data);
+        console.log("projects:", response.data);
       } else {
         alert("Error fetching projects");
       }
@@ -91,21 +93,28 @@ const Project_Details = () => {
     }
   }
 
-  async function fetchMyProject()
-  {
-    let token = localStorage.getItem("accessToken");
-    const teamStatus = JSON.parse(localStorage.getItem("teamStatus"));
-    let response = await axios(`http://localhost:1234/student/get_project_details/${teamStatus.teamMembers[0].project_id}`,{
-      headers:{
-        Authorization : `Bearer ${token}`
+  async function fetchMyProject() {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const member = teamStatus?.teamMembers?.[0];
+
+      if (member?.project_id) {
+        const response = await axios(`http://localhost:1234/student/get_project_details/${member.project_id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.status === 200) {
+          console.log("Your project details", response.data);
+        } else {
+          alert("There is an error in fetching your project details!");
+        }
+      } else {
+        console.warn("No project_id found for this team member.");
       }
-    });
-    if(response.status === 200)
-    {
-      console.log("Your project details",response.data);
-    }
-    else{
-      alert("There is an error in fetching your project details!");
+    } catch (error) {
+      console.error("Error in fetchMyProject:", error);
     }
   }
 
@@ -116,12 +125,10 @@ const Project_Details = () => {
   useEffect(() => {
     if (!accessGranted) {
       fetchProjects();
-    }
-    else{
+    } else {
       fetchMyProject();
     }
   }, [accessGranted]);
-
 
   const handleRowClick = (projectId) => {
     const selected = projectData.find(proj => proj.project_id === projectId);
@@ -132,7 +139,7 @@ const Project_Details = () => {
   if (accessGranted) {
     return (
       <div className='flex justify-center items-center h-screen'>
-        <h1 className='text-2xl font-bold text-red-500'>Mathan than paarthukolla vendum!</h1>
+        <h1 className='text-2xl font-bold text-red-500'>First Form a Team!!</h1>
       </div>
     );
   }
@@ -166,7 +173,6 @@ const Project_Details = () => {
         </table>
       </div>
 
-      {/* Popup Modal */}
       {viewModalOpen && selectedProject && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-lg">
@@ -199,13 +205,12 @@ const Project_Details = () => {
               </button>
 
               <button
-                onClick={() => handleTakeProject(selectedProject.project_name,selectedProject.project_id)}
+                onClick={() => handleTakeProject(selectedProject.project_name, selectedProject.project_id)}
                 className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700"
               >
                 Take Project
               </button>
             </div>
-
           </div>
         </div>
       )}
