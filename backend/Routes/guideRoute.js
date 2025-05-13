@@ -9,7 +9,7 @@ const db = require("../db");
 router.get("/guide/getrequests/:id",(req,res,next) => {
     try{
         let {id} = req.params;
-        let sql = "select * from guide_requests where to_id = ? and status = 'interested'";
+        let sql = "select * from guide_requests where to_guide_id = ? and status = 'interested'";
         db.query(sql,[id],(error,result) => {
             if(error)return next(error);
             if(result.length == 0)res.send("No request` found!");
@@ -25,66 +25,79 @@ router.get("/guide/getrequests/:id",(req,res,next) => {
 })
 
 // update status -> accept or reject
+router.patch("/guide/accept_reject/:status/:project_id/:my_id", (req, res, next) => {
+  try {
+    const { status, project_id, my_id } = req.params;
+    // Validate status
+    if (status !== "accept" && status !== "reject") {
+      return res.status(400).send("Invalid status");
+    }
 
-router.patch("/guide/accept_reject/:status/:project_id/:my_id",(req,res,next) => {
-    try{
-      const {status,project_id,my_id} = req.params;
-       // Validate status
-      if (status !== "accept" && status !== "reject") 
-      {
-        return res.status(400).send("Invalid status");
-      }
-      // accepts || rejects
-      let sql1 = "update guide_requests set status = ? where to_id = ? and from_id = ? and status = 'interested'";
-      db.query(sql1,[status,my_id,project_id],(error,result) => {
-        if(error)return next(error);
-        else{
-            if(status == "accept")
-            {
-                // no of mentoring projects
-                let sql2 = "select * from guide_requests where to_id = ? and status = 'accept'"; // to_id -> logged_mentor_id
-                db.query(sql2,[my_id],(error,result) => {
-                    if(error)return next(error);
-                    else{
-                        const mentoringTeams = result.length;
-                        if(mentoringTeams < 4)res.send("status updated successfully!");
-                        else{
-                            let sql3 = "delete from guides where id = ?";
-                            db.query(sql3,[my_id],(error,result) => {
-                                if(error)return next(error);
-                                else{
-                                    let sql4 = "delete from guide_requests where to_id = ? and status = 'interested'";
-                                    db.query(sql4,[my_id],(error,result) => {
-                                        if(error)return next(error);
-                                        else{
-                                            res.send("status updated successfully! by removing the guide from guides and guide_requests");
-                                        }
-                                    })
-                                }
-                            })
-                        }
-                    }
-                })
+    // Update status in guide_requests table based on the action
+    let sql1 = "UPDATE guide_requests SET status = ? WHERE to_guide_id = ? AND from_team_id = ? AND status = 'interested'";
+    db.query(sql1, [status, my_id, project_id], (error, result) => {
+      if (error) return next(error);
+      else {
+        if (status === "accept") {
+          // Check the number of accepted mentoring projects
+          let sql2 = "SELECT * FROM guide_requests WHERE to_guide_id = ? AND status = 'accept'";
+          db.query(sql2, [my_id], (error, result) => {
+            if (error) return next(error);
+            else {
+              const mentoringTeams = result.length;
+              if (mentoringTeams < 4) {
+                // After accepting the request, update the guide in team_requests
+                let sql3 = "UPDATE team_requests SET guide_reg_num = ? WHERE team_id = ?";
+                db.query(sql3, [my_id, project_id], (error, result) => {
+                  if (error) return next(error);
+                  else {
+                    res.send("Status updated successfully and guide assigned!");
+                  }
+                });
+              } else {
+                // If the guide already has 4 projects, delete their request and associated data
+                let sql4 = "DELETE FROM users WHERE reg_num = ?";
+                db.query(sql4, [my_id], (error, result) => {
+                  if (error) return next(error);
+                  else {
+                    let sql5 = "DELETE FROM guide_requests WHERE to_guide_id = ? AND status = 'interested'";
+                    db.query(sql5, [my_id], (error, result) => {
+                      if (error) return next(error);
+                      else {
+                        res.send("Status updated successfully by removing the guide from guides and guide_requests");
+                      }
+                    });
+                  }
+                });
+              }
             }
-            
+          });
+        } else if (status === "reject") {
+          // Handle rejection: update status to 'rejected' in guide_requests
+          let sql3 = "UPDATE guide_requests SET status = 'rejected' WHERE to_guide_id = ? AND from_team_id = ?";
+          db.query(sql3, [my_id, project_id], (error, result) => {
+            if (error) return next(error);
+            else {
+              res.send("Request rejected successfully!");
+            }
+          });
         }
-      }) 
-    }
-    catch(error)
-    {
-      next(error);
-    }
-})
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // sends request to guide
 router.post("/guide/sent_request_to_guide",(req,res,next) => {
     try{
-      const {id,name,emailId,phone,dept,from_id,to_id,status} = req.body;  // to details
-      if (!id || !name || !emailId || !phone || !dept || !from_id || !to_id || !status) {
+      const {from_team_id,project_id,to_guide_id} = req.body;  // to details
+      if (!from_team_id || !project_id || !to_guide_id) {
         return res.status(400).json({ message: "All fields are required" });
       }
-      let sql = "insert into guide_requests values(?,?,?,?,?,?,?,?)";
-      db.query(sql,[id,name,emailId,phone,dept,from_id,to_id,status],(error,result) => {
+      let sql = "insert into guide_requests values(?,?,?)";
+      db.query(sql,[from_team_id,project_id,to_guide_id],(error,result) => {
         if(error)return next(error);
 
         // Create a transporter
@@ -101,7 +114,7 @@ router.post("/guide/sent_request_to_guide",(req,res,next) => {
             from: 'rithishvkv@gmail.com',
             to: "guides.cs24@bitsathy.ac.in", // guide id -> temporary
             subject: 'Request To Accept Invite',
-            text: `Dear Guide,\n\n${name} has requested you to be their guide. Please login to the system to accept or reject the request.\n\nThank you.`,
+            text: `Dear Guide,\n\n${from_team_id} team has requested you to be their guide. Please login to the system to accept or reject the request.\n\nThank you.`,
         };
 
         // Send the email
@@ -142,10 +155,12 @@ router.patch("/guide/add_reply/:query_id",(req,res,next) => { // after 100 delet
 })
 
 // fecthes the queries received
-router.get("/guide/get_queries",(req,res,next) => {
+router.get("/guide/get_queries/:guide_reg_num",(req,res,next) => {
     try{
-      let sql = "select * from queries";
-      db.query(sql,(error,result) => {
+      const{guide_reg_num} = req.params;
+      if(!guide_reg_num)return next(createError.BadRequest("reg_num not found!"));
+      let sql = "select * from queries where guide_reg_num = ?";
+      db.query(sql,[guide_reg_num],(error,result) => {
         if(error)return next(error);
         if(result.length == 0)res.send("No queries found!");
         res.send(result);
@@ -157,7 +172,7 @@ router.get("/guide/get_queries",(req,res,next) => {
     }
 })
 
-// fetches team details mentored by me 
+// fetches team details mentored by me -> 
 router.get("/guide/fetch_mentoring_teams/:guide_id",(req,res,next) => {
     try{
       const{guide_id} = req.params;
@@ -165,10 +180,10 @@ router.get("/guide/fetch_mentoring_teams/:guide_id",(req,res,next) => {
       {
         return next(createError.BadRequest("guide id not found!"));
     }
-    let sql = "select * from guide_requests where to_id = ? and status = 'accept'";
+    let sql = "select * from guide_requests where to_guide_id = ? and status = 'accept'";
     db.query(sql,[guide_id],(error,result) => {
         if(error)return next(error);
-        if(result.length == 0)res.send("No Teams found!");
+        if(result.length == 0)return res.send("No Teams found!");
         res.send(result);
     })
     }

@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { addTeamStatus } from '../../utils/teamStatus';
 
 function Student_Dashboard() {
-  // Dummy data (replace with API call later)
+  
   const team = {
     members: ['John', 'Jane', 'Doe', 'Smith'],
     status: 'Confirmed',
@@ -25,6 +25,7 @@ function Student_Dashboard() {
   const guide = 'Dr. A. Kumar';
   const expert = 'Prof. S. Meena';
 
+  const overallProgress = 65; 
   const handleInviteSubmit = (e) => {
     e.preventDefault();
     if (!isValidEmail(inviteForm.email)) {
@@ -164,14 +165,12 @@ function Student_Dashboard() {
       <h1 className="text-2xl font-bold mb-6">🎓 Student Dashboard</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Team Info Card */}
         <div className="bg-white shadow-md rounded-xl p-6">
           <h2 className="text-lg font-semibold mb-2">👥 Team Status</h2>
           <p><strong>Members:</strong> {team.members.join(', ')}</p>
           <p><strong>Status:</strong> {team.status}</p>
         </div>
 
-        {/* Project Info Card */}
         <div className="bg-white shadow-md rounded-xl p-6">
           <h2 className="text-lg font-semibold mb-2">📁 Project Details</h2>
           <p><strong>Title:</strong> {project.title}</p>
@@ -179,14 +178,12 @@ function Student_Dashboard() {
           <p><strong>Status:</strong> {project.status}</p>
         </div>
 
-        {/* Guide & Expert Info */}
         <div className="bg-white shadow-md rounded-xl p-6">
           <h2 className="text-lg font-semibold mb-2">🧑‍🏫 Guide & Expert</h2>
           <p><strong>Guide:</strong> {guide}</p>
           <p><strong>Expert:</strong> {expert}</p>
         </div>
 
-        {/* Overall Progress */}
         <div className="bg-white shadow-md rounded-xl p-6">
           <h2 className="text-lg font-semibold mb-4">📊 Overall Progress</h2>
           <div className="relative w-full h-4 bg-gray-300 rounded-lg">

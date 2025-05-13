@@ -381,17 +381,27 @@ router.get("/student/get_project_details/:project_id",(req,res,next) => {
 })
 
 // GET /student/team_progress
-router.get("/student/team_progress", (req, res) => {
+router.get("/student/team_progress/:phase", (req, res) => {
+  const { phase } = req.params;
+
+  // Validate input to prevent SQL injection
+  const allowedPhases = ['phase1', 'phase2', 'phase3', 'phase4'];
+  if (!allowedPhases.includes(phase)) {
+    return res.status(400).send("Invalid phase");
+  }
+
   const sql = `
-    SELECT name, phase1_progress as value 
-    FROM team_requests 
-    WHERE team_id = '001' AND phase1_progress IS NOT NULL
+    SELECT name, ${phase}_progress AS value
+    FROM team_requests
+    WHERE team_id = '001' AND ${phase}_progress IS NOT NULL
   `;
+
   db.query(sql, (err, results) => {
     if (err) return res.status(500).send("DB error");
-    res.json(results); // Must return array with { name, value }
+    res.json(results); // [{ name, value }, ...]
   });
 });
+
 
 // updates the project type
 
@@ -491,6 +501,25 @@ router.get("/student/get_student_details_by_regnum/:reg_num",(req,res,next) => {
     next(error);
   }
 })
+
+// gets team details using the team_id
+router.get("/student/getTeamdetails_using_team_id/:team_id",(req,res,next) => {
+  try{
+    const{team_id} = req.body;
+    if(!team_id) return next(createError.BadRequest("team_id is not defined!!"));
+    let sql = "select * from team_request where team_id = ?";
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+
 
 
 module.exports = router;
