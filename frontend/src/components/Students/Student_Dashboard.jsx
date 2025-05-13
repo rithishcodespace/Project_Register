@@ -199,25 +199,20 @@ function StudentDashboard() {
   const remainingInvites = totalMembersAllowed - (1 + pendingInvitations.length + acceptedMembers.length);
 
   return (
-    <div className=" flex flex-col items-center px-6 pt-16">
-        <div className="flex justify-between items-center mb-6">
-  <div className="flex-1 flex justify-center">
-    <h1 className="text-purple-500 inline text-2xl font-bold">Your Team</h1>
-  </div>
-  <div>
-    <button
-      className="px-4 py-2 border border-purple-500 inline-block text-purple-500 rounded hover:bg-purple-500 hover:text-white transition"
-      onClick={() => navigate('/student/invitations')}
-    >
-      Invitations
-    </button>
-  </div>
-</div>
-
-
+    <div className="min-h-screen flex flex-col items-center px-6 pt-16">
+      <div className="w-full flex justify-end -mt-12 mb-6">
+        <button
+          className="px-4 py-2 border border-purple-500 text-purple-500 rounded hover:bg-purple-500 hover:text-white transition"
+          onClick={() => navigate('/student/invitations')}
+        >
+          Invitations
+        </button>
+      </div>
 
       <div className="w-[95%] max-w-[60rem] rounded-xl bg-white flex flex-col items-center gap-4 p-9 overflow-y-auto">
-        <div className="border w-full p-4 rounded bg--100">
+        <h1 className="text-purple-500 text-2xl font-bold">Your Team</h1>
+
+        <div className="border w-full p-4 rounded bg-gray-100">
           <p><strong>Leader:</strong> YOU</p>
           <p><strong>Email:</strong> {selector.emailId}</p>
           <p><strong>Register Number:</strong> {selector.reg_num}</p>
@@ -225,7 +220,7 @@ function StudentDashboard() {
         </div>
 
         {acceptedMembers.map((member, idx) => (
-          <div key={idx} className="border w-full p-4 rounded bg--50">
+          <div key={idx} className="border w-full p-4 rounded bg-gray-50">
             <p><strong>Name:</strong> {member.name}</p>
             <p><strong>Email:</strong> {member.emailId}</p>
             <p><strong>Register Number:</strong> {member.reg_num}</p>
@@ -235,7 +230,7 @@ function StudentDashboard() {
         ))}
 
         {pendingInvitations.map((invitation, idx) => (
-          <div key={idx} className="border w-full p-4 rounded bg--50">
+          <div key={idx} className="border w-full p-4 rounded bg-gray-50">
             <p><strong>Name:</strong> {invitation.name}</p>
             <p><strong>Email:</strong> {invitation.emailId}</p>
             <p><strong>Register Number:</strong> {invitation.reg_num}</p>
@@ -265,7 +260,7 @@ function StudentDashboard() {
                 onClick={handleConfirmTeam}
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
               >
-                Confirm Team
+                Conform Team
               </button>
             )}
           </div>
