@@ -1,5 +1,8 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { useEffect,useState } from 'react';
+import {useSelector} from "react-redux";
+import axios from "axios"
 
 const COLORS = ['#4ade80', '#22d3ee', '#facc15', '#f472b6'];
 
@@ -51,6 +54,34 @@ const mockTeams = [
 ];
 
 function Guide_team_progress() {
+
+  const selector = useSelector((Store) => Store.userSlice);
+
+  async function fetch_teams() {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const guide_reg_num = selector.reg_num;
+
+      const response = await axios.get(`http://localhost:1234/guide/fetch_mentoring_teams/${guide_reg_num}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 200) {
+        // setTeams(response.data); // Set fetched teams to state...
+        console.log(response.data);
+      }
+    } catch (err) {
+      console.error("Error fetching teams:", err);
+    }
+  }
+
+   
+  useEffect(()=>{
+    fetch_teams();
+  },[])
+
   return (
     <div className="p-6  min-h-screen">
       <h2 className="text-3xl text-center font-bold mb-6"> Team Progress</h2>
@@ -87,4 +118,3 @@ function Guide_team_progress() {
 }
 
 export default Guide_team_progress;
-    

@@ -102,7 +102,7 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
 
     // Step 1: Check if user is in any team (as leader or member)
     const checkTeamSQL = `
-      SELECT team_id, team_conformed 
+      SELECT team_id, team_conformed, from_reg_num AS teamLeader
       FROM team_requests 
       WHERE (from_reg_num = ? OR reg_num = ?)
       AND status = 'accept'
@@ -114,37 +114,44 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
 
       if (result1.length > 0 && result1[0].team_id) {
         const teamId = result1[0].team_id;
-        const isTeamConfirmed = result1[0].team_conformed; // Fixed variable name
+        const isTeamConfirmed = result1[0].team_conformed;
+        const teamLeaderRegNum = result1[0].teamLeader;
 
         // Step 2: Fetch all team members with that team_id
         const fetchTeamSQL = "SELECT * FROM team_requests WHERE team_id = ? AND status = 'accept'";
         db.query(fetchTeamSQL, [teamId], (err2, teamMembers) => {
           if (err2) return next(err2);
 
-          // Step 3: For unconfirmed teams, check if user has sent any invitations
-          if (!isTeamConfirmed) {
-            const fetchInvitesSQL = `
-              SELECT * FROM team_requests 
-              WHERE from_reg_num = ? AND team_conformed = 0
-            `;
+          const fetchLeaderSQL = "SELECT * FROM users WHERE reg_num = ?";
+          db.query(fetchLeaderSQL, [teamLeaderRegNum], (err3, leaderDetails) => {
+            if (err3) return next(err3);
 
-            db.query(fetchInvitesSQL, [from_reg_num], (err3, invites) => {
-              if (err3) return next(err3);
-              
-              const pendingInvitations = invites.filter(invite => invite.status !== 'accept');
-              res.json({
-                teamConformationStatus: 0, // Fixed typo in response field
-                teamMembers,
-                pendingInvitations
+            if (!isTeamConfirmed) {
+              const fetchInvitesSQL = `
+                SELECT * FROM team_requests 
+                WHERE from_reg_num = ? AND team_conformed = 0
+              `;
+
+              db.query(fetchInvitesSQL, [from_reg_num], (err4, invites) => {
+                if (err4) return next(err4);
+
+                const pendingInvitations = invites.filter(invite => invite.status !== 'accept');
+                res.json({
+                  teamConformationStatus: 0,
+                  teamMembers,
+                  pendingInvitations,
+                  teamLeader: leaderDetails[0] || null
+                });
               });
-            });
-          } else {
-            res.json({
-              teamConformationStatus: 1, // Fixed typo in response field
-              teamMembers,
-              pendingInvitations: []
-            });
-          }
+            } else {
+              res.json({
+                teamConformationStatus: 1,
+                teamMembers,
+                pendingInvitations: [],
+                teamLeader: leaderDetails[0] || null
+              });
+            }
+          });
         });
 
       } else {
@@ -161,9 +168,10 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
           const teamMembers = invites.filter(invite => invite.status === 'accept');
 
           res.json({
-            teamConformationStatus: 0, // Fixed typo in response field
+            teamConformationStatus: 0,
             teamMembers,
-            pendingInvitations
+            pendingInvitations,
+            teamLeader: null
           });
         });
       }
@@ -219,13 +227,22 @@ router.post("/student/projects",(req,res,next) => {
 // })
 
 //make the team status -> 1 
-router.patch("/student/team_request/conform_team",(req,res,next) => {
+router.patch("/student/team_request/conform_team/:team_id",(req,res,next) => {
   try{
     let {from_reg_num} = req.body;
+    const{team_id} = req.params;
+    if(!from_reg_num || !team_id)return next(createError.BadRequest("team_id or reg_num is null!"))
     let sql = "update team_requests set team_conformed = true where from_reg_num = ? and status = 'accept'";
     db.query(sql,[from_reg_num],(error,result) => {
       if(error)return next(error);
-      res.send("Team status changed from false to true");
+      let sql1 = `
+      update team_requests 
+      SET team_id = ? 
+      WHERE from_reg_num = ? AND status = 'accept'`
+      db.query(sql1,[team_id,from_reg_num],(error,result) => {
+        if(error)return next(error);
+        res.send("Team status changed from false to true");
+      })
     })
   }
   catch(error)
@@ -267,6 +284,7 @@ router.patch("/student/assgin_project_id/:project_id/:from_reg_num",(req,res,nex
   }
 })
 
+// fetches team members
 router.get("/student/getTeamDetails/:reg_num", (req, res, next) => {
   const reg_num = req.params.reg_num;
 
@@ -363,17 +381,27 @@ router.get("/student/get_project_details/:project_id",(req,res,next) => {
 })
 
 // GET /student/team_progress
-router.get("/student/team_progress", (req, res) => {
+router.get("/student/team_progress/:phase", (req, res) => {
+  const { phase } = req.params;
+
+  // Validate input to prevent SQL injection
+  const allowedPhases = ['phase1', 'phase2', 'phase3', 'phase4'];
+  if (!allowedPhases.includes(phase)) {
+    return res.status(400).send("Invalid phase");
+  }
+
   const sql = `
-    SELECT name, phase1_progress as value 
-    FROM team_requests 
-    WHERE team_id = '001' AND phase1_progress IS NOT NULL
+    SELECT name, ${phase}_progress AS value
+    FROM team_requests
+    WHERE team_id = '001' AND ${phase}_progress IS NOT NULL
   `;
+
   db.query(sql, (err, results) => {
     if (err) return res.status(500).send("DB error");
-    res.json(results); // Must return array with { name, value }
+    res.json(results); // [{ name, value }, ...]
   });
 });
+
 
 // updates the project type
 
@@ -458,6 +486,55 @@ router.get("/student/fetch_guide_or_expert/:role",(req,res,next) => {
   }
 })
 
+router.get("/student/get_student_details_by_regnum/:reg_num",(req,res,next) => {
+  try{
+    const{reg_num} = req.params;
+    if(!reg_num)return next(createError.BadRequest("reg_num not found!!"));
+    let sql = "select * from users where reg_num = ?";
+    db.query(sql,[reg_num],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+// gets team details using the team_id
+router.get("/student/getTeamdetails_using_team_id/:team_id",(req,res,next) => {
+  try{
+    const{team_id} = req.body;
+    if(!team_id) return next(createError.BadRequest("team_id is not defined!!"));
+    let sql = "select * from team_request where team_id = ?";
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+//fetch queries sent by my team
+router.get("/student/get_queries_sent_by_my_team/:team_id",(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest("team_id not found!!"));
+    let sql = "select * from queries where team_id = ?";
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 
 module.exports = router;
