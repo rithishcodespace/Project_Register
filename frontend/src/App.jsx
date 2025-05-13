@@ -39,6 +39,7 @@ import Extstudents_add_project from "./components/extstudents/Extstudents_add_pr
 import Extstudents_team from "./components/extstudents/Extstudents_team";
 import Extstudents_progress_update from "./components/extstudents/Extstudents_progress_update";
 import Admin_projectDetails from "./components/Admin/Admin_project_details";
+import Queries from "./components/Students/Queries";
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
             <Route path="Project_Details" element={<Project_Details />} />
             <Route path="Students_team" element={<Student_Team />} />
             <Route path="invitations" element={<InvitationPage />} />
+            <Route path="queries" element={<Queries />} />
           </Route>
 
           <Route path="/teacher" element={<Teacher />}>

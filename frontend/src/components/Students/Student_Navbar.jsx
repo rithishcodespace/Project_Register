@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, Users, FileText, BarChart2, LogOut } from 'lucide-react';
+import { Home, Users, FileText, BarChart2, LogOut,MessagesSquare } from 'lucide-react';
 import college_img from "../../assets/college_img.png";
 import menu from "../../assets/menu.png"
 import wrong from "../../assets/wrong.png"
@@ -94,6 +94,11 @@ function Student_navbar({ isOpen, toggleSidebar }) {
         <Link to="Project_Details" className={`${navDiv("Project_Details")} group`}>
           <FileText size={24} className={navIcon("Project_Details")} />
           <p className={navText("Project_Details")}>Project Details</p>
+        </Link>
+
+        <Link to="queries" className={`${navDiv("queries")} group`}>
+          <MessagesSquare size={24} className={navIcon("queries")} />
+          <p className={navText("queries")}>Queries</p>
         </Link>
 
         <Link to="Students_team" className={`${navDiv("Students_team")} group`}>
