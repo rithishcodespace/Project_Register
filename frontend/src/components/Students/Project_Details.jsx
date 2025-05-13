@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
-import { Store } from 'lucide-react';
 
 const Project_Details = () => {
   const [projectData, setProjectData] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
-  const [accessGranted, setAccessGranted] = useState(false);
+  const [userStatus, setUserStatus] = useState("loading"); // "no_team", "no_project", "has_project"
+  const [myProject, setMyProject] = useState(null); // project assigned to team
+
   const selector = useSelector((Store) => Store.userSlice);
   const teamMembers = useSelector((Store) => Store.teamSlice);
   const teamStatus = useSelector((Store) => Store.teamStatusSlice);
@@ -23,19 +24,17 @@ const Project_Details = () => {
         alert("Project chosen successfully!");
         setProjectData(prev => prev.filter(proj => proj.project_name !== name));
         setSelectedProject(null);
+        setUserStatus("has_project");
+        setMyProject(selectedProject);
       }
 
       const newresponse = await axios.patch(`http://localhost:1234/student/assgin_project_id/${id}/${selector.reg_num}`, {}, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       if (newresponse.status === 200) {
         console.log("project_id is successfully inserted into db!");
       }
-
-      console.log("Selected guide:", guide, "Selected expert:", expert);
 
     } catch (error) {
       console.error("Error choosing project:", error);
@@ -44,46 +43,40 @@ const Project_Details = () => {
   }
 
   function checkUserStatus() {
-  try {
-    const hasConfirmedTeam = teamStatus.teamConformationStatus === 1;
-    const member = teamStatus?.teamMembers?.[0];
-    const hasNoProject = member && member.project_id === null;
-
-    console.log("para:",hasConfirmedTeam,hasNoProject)
-
-    if (hasConfirmedTeam && hasNoProject) {
-      setAccessGranted(false);  // Can access & take projects
-    } else {
-      setAccessGranted(true);   // Cannot take projects
+    try {
+      if (!teamStatus.teamConformationStatus) {
+        setUserStatus("no_team");
+      } else {
+        const member = teamStatus?.teamMembers?.[0];
+        if (member?.project_id) {
+          setUserStatus("has_project");
+        } else {
+          setUserStatus("no_project");
+        }
+      }
+    } catch (e) {
+      console.error("Invalid teamStatus in store", e);
+      setUserStatus("no_team");
     }
-  } catch (e) {
-    console.error("Invalid teamStatus in localStorage", e);
-    setAccessGranted(true); // safer fallback
   }
-}
-
 
   async function fetchProjects() {
     try {
       const token = localStorage.getItem("accessToken");
-     const departments = [
+
+      const departments = [
         ...new Set([
           ...teamMembers.map(member => member.dept),
-          teamStatus.teamLeader.dept // Adding Team Leader's department
+          teamStatus.teamLeader.dept
         ])
       ];
 
-      console.log("departments",departments);
-
-      const response = await axios.post("http://localhost:1234/student/projects", { "departments": departments }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+      const response = await axios.post("http://localhost:1234/student/projects", { departments }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       if (response.status === 200) {
         setProjectData(response.data);
-        console.log("projects:", response.data);
       } else {
         alert("Error fetching projects");
       }
@@ -100,18 +93,14 @@ const Project_Details = () => {
 
       if (member?.project_id) {
         const response = await axios(`http://localhost:1234/student/get_project_details/${member.project_id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
 
         if (response.status === 200) {
-          console.log("Your project details", response.data);
+          setMyProject(response.data[0]);
         } else {
-          alert("There is an error in fetching your project details!");
+          alert("Error fetching your project details");
         }
-      } else {
-        console.warn("No project_id found for this team member.");
       }
     } catch (error) {
       console.error("Error in fetchMyProject:", error);
@@ -123,19 +112,20 @@ const Project_Details = () => {
   }, []);
 
   useEffect(() => {
-    if (!accessGranted) {
+    if (userStatus === "no_project") {
       fetchProjects();
-    } else {
+    } else if (userStatus === "has_project") {
       fetchMyProject();
     }
-  }, [accessGranted]);
+  }, [userStatus]);
 
   const handleRowClick = (projectId) => {
     const selected = projectData.find(proj => proj.project_id === projectId);
     setSelectedProject(selected);
   };
 
-  if (accessGranted) {
+  // No team case
+  if (userStatus === "no_team") {
     return (
       <div className='flex justify-center items-center h-screen'>
         <h1 className='text-2xl font-bold text-red-500'>First Form a Team!!</h1>
@@ -143,13 +133,36 @@ const Project_Details = () => {
     );
   }
 
-  return selectedProject ? (
-    <Proj_Details
-      project={selectedProject}
-      onBack={() => setSelectedProject(null)}
-      onTakeProject={handleTakeProject}
-    />
-  ) : (
+  // Project already taken case
+  if (userStatus === "has_project" && myProject) {
+    return (
+      <div className="p-6 w-full max-w-4xl mx-auto">
+        <h2 className="text-2xl font-bold text-center text-green-700 mb-6">Your Assigned Project</h2>
+        <div className="bg-white p-6 rounded-xl shadow-xl">
+          <p><strong>Name:</strong> {myProject.project_name}</p>
+          <p><strong>Cluster:</strong> {myProject.cluster}</p>
+          <p><strong>Description:</strong> {myProject.description}</p>
+
+          <div className="mt-4">
+            <h4 className="text-lg font-bold text-purple-600 mb-2">Project Phases</h4>
+            <div className="space-y-2 text-sm">
+              {[1, 2, 3, 4, 5].map(phase => (
+                myProject[`phase_${phase}_requirements`] && (
+                  <div key={phase}>
+                    <p><strong>Phase {phase} Requirements:</strong> {myProject[`phase_${phase}_requirements`]}</p>
+                    <p><strong>Phase {phase} Deadline:</strong> {myProject[`phase_${phase}_deadline`]}</p>
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // No project yet — show list
+  return (
     <div className="p-6 w-full max-w-7xl mx-auto">
       <h2 className="text-2xl font-bold text-center text-purple-700 mb-6">Posted Projects</h2>
       <div className="overflow-x-auto">
@@ -177,7 +190,8 @@ const Project_Details = () => {
         </table>
       </div>
 
-      {viewModalOpen && selectedProject && (
+      {/* Modal for Project Details */}
+      {selectedProject && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-lg">
             <h3 className="text-xl font-semibold text-purple-700 mb-4">Project Details</h3>
@@ -203,7 +217,7 @@ const Project_Details = () => {
             <div className="mt-6 text-right flex justify-between items-stretch">
               <button
                 className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700"
-                onClick={() => setViewModalOpen(false)}
+                onClick={() => setSelectedProject(null)}
               >
                 Close
               </button>
