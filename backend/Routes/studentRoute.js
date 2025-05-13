@@ -502,5 +502,24 @@ router.get("/student/get_student_details_by_regnum/:reg_num",(req,res,next) => {
   }
 })
 
+// gets team details using the team_id
+router.get("/student/getTeamdetails_using_team_id/:team_id",(req,res,next) => {
+  try{
+    const{team_id} = req.body;
+    if(!team_id) return next(createError.BadRequest("team_id is not defined!!"));
+    let sql = "select * from team_request where team_id = ?";
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+
+
 
 module.exports = router;

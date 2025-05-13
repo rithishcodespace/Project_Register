@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { SendHorizonal } from 'lucide-react';
+import { SendHorizonal, Store } from 'lucide-react';
 import axios from "axios";
+import {useSelector} from "react-redux"
 
 const Guide_queries = () => {
   const [queries, setQueries] = useState([]);
   const [replyInputs, setReplyInputs] = useState({});
+  const selector = useSelector((Store)=>Store.userSlice);
 
   // Fetch queries from the backend
   async function fetchQueries() {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get("http://localhost:1234/guide/get_queries", {
+      const response = await axios.get(`http://localhost:1234/guide/get_queries/${selector.reg_num}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
