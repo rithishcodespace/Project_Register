@@ -24,6 +24,7 @@ const InvitationPage = () => {
           return;
         }
         let token = localStorage.getItem('accessToken');
+        console.log(selector.reg_num)
         const response = await axios.get(
           `http://localhost:1234/student/request_recived/${selector.reg_num}`,
           {
@@ -34,6 +35,7 @@ const InvitationPage = () => {
         );
 
         if (response.status === 200 && response.data.length > 0) {
+         
           let fromUserId = response.data[0].from_reg_num;
 
           if (fromUserId) {
