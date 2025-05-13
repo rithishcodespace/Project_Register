@@ -381,17 +381,27 @@ router.get("/student/get_project_details/:project_id",(req,res,next) => {
 })
 
 // GET /student/team_progress
-router.get("/student/team_progress", (req, res) => {
+router.get("/student/team_progress/:phase", (req, res) => {
+  const { phase } = req.params;
+
+  // Validate input to prevent SQL injection
+  const allowedPhases = ['phase1', 'phase2', 'phase3', 'phase4'];
+  if (!allowedPhases.includes(phase)) {
+    return res.status(400).send("Invalid phase");
+  }
+
   const sql = `
-    SELECT name, phase1_progress as value 
-    FROM team_requests 
-    WHERE team_id = '001' AND phase1_progress IS NOT NULL
+    SELECT name, ${phase}_progress AS value
+    FROM team_requests
+    WHERE team_id = '001' AND ${phase}_progress IS NOT NULL
   `;
+
   db.query(sql, (err, results) => {
     if (err) return res.status(500).send("DB error");
-    res.json(results); // Must return array with { name, value }
+    res.json(results); // [{ name, value }, ...]
   });
 });
+
 
 // updates the project type
 

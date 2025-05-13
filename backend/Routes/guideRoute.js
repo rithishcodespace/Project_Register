@@ -9,7 +9,7 @@ const db = require("../db");
 router.get("/guide/getrequests/:id",(req,res,next) => {
     try{
         let {id} = req.params;
-        let sql = "select * from guide_requests where to_id = ? and status = 'interested'";
+        let sql = "select * from guide_requests where to_guide_id = ? and status = 'interested'";
         db.query(sql,[id],(error,result) => {
             if(error)return next(error);
             if(result.length == 0)res.send("No request` found!");
@@ -35,25 +35,25 @@ router.patch("/guide/accept_reject/:status/:project_id/:my_id",(req,res,next) =>
         return res.status(400).send("Invalid status");
       }
       // accepts || rejects
-      let sql1 = "update guide_requests set status = ? where to_id = ? and from_id = ? and status = 'interested'";
+      let sql1 = "update guide_requests set status = ? where to_guide_id = ? and from_team_id = ? and status = 'interested'";
       db.query(sql1,[status,my_id,project_id],(error,result) => {
         if(error)return next(error);
         else{
             if(status == "accept")
             {
                 // no of mentoring projects
-                let sql2 = "select * from guide_requests where to_id = ? and status = 'accept'"; // to_id -> logged_mentor_id
+                let sql2 = "select * from guide_requests where to_guide_id = ? and status = 'accept'"; // to_id -> logged_mentor_id
                 db.query(sql2,[my_id],(error,result) => {
                     if(error)return next(error);
                     else{
                         const mentoringTeams = result.length;
                         if(mentoringTeams < 4)res.send("status updated successfully!");
                         else{
-                            let sql3 = "delete from guides where id = ?";
+                            let sql3 = "delete from users where reg_num = ?";
                             db.query(sql3,[my_id],(error,result) => {
                                 if(error)return next(error);
                                 else{
-                                    let sql4 = "delete from guide_requests where to_id = ? and status = 'interested'";
+                                    let sql4 = "delete from guide_requests where to_guide_id = ? and status = 'interested'";
                                     db.query(sql4,[my_id],(error,result) => {
                                         if(error)return next(error);
                                         else{
@@ -79,12 +79,12 @@ router.patch("/guide/accept_reject/:status/:project_id/:my_id",(req,res,next) =>
 // sends request to guide
 router.post("/guide/sent_request_to_guide",(req,res,next) => {
     try{
-      const {id,name,emailId,phone,dept,from_id,to_id,status} = req.body;  // to details
-      if (!id || !name || !emailId || !phone || !dept || !from_id || !to_id || !status) {
+      const {from_team_id,project_id,to_guide_id} = req.body;  // to details
+      if (!from_team_id || !project_id || !to_guide_id) {
         return res.status(400).json({ message: "All fields are required" });
       }
-      let sql = "insert into guide_requests values(?,?,?,?,?,?,?,?)";
-      db.query(sql,[id,name,emailId,phone,dept,from_id,to_id,status],(error,result) => {
+      let sql = "insert into guide_requests values(?,?,?)";
+      db.query(sql,[from_team_id,project_id,to_guide_id],(error,result) => {
         if(error)return next(error);
 
         // Create a transporter
@@ -101,7 +101,7 @@ router.post("/guide/sent_request_to_guide",(req,res,next) => {
             from: 'rithishvkv@gmail.com',
             to: "guides.cs24@bitsathy.ac.in", // guide id -> temporary
             subject: 'Request To Accept Invite',
-            text: `Dear Guide,\n\n${name} has requested you to be their guide. Please login to the system to accept or reject the request.\n\nThank you.`,
+            text: `Dear Guide,\n\n${from_team_id} team has requested you to be their guide. Please login to the system to accept or reject the request.\n\nThank you.`,
         };
 
         // Send the email
@@ -157,7 +157,7 @@ router.get("/guide/get_queries",(req,res,next) => {
     }
 })
 
-// fetches team details mentored by me 
+// fetches team details mentored by me -> 
 router.get("/guide/fetch_mentoring_teams/:guide_id",(req,res,next) => {
     try{
       const{guide_id} = req.params;
@@ -168,7 +168,7 @@ router.get("/guide/fetch_mentoring_teams/:guide_id",(req,res,next) => {
     let sql = "select * from guide_requests where to_id = ? and status = 'accept'";
     db.query(sql,[guide_id],(error,result) => {
         if(error)return next(error);
-        if(result.length == 0)res.send("No Teams found!");
+        if(result.length == 0)return res.send("No Teams found!");
         res.send(result);
     })
     }
