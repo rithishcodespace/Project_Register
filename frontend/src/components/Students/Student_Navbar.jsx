@@ -1,10 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-<<<<<<< HEAD
 import { Home, Users, FileText, BarChart2, LogOut,MessagesSquare } from 'lucide-react';
-=======
-import { Home, Users, FileText, BarChart2, LogOut, MessagesSquare } from 'lucide-react';
->>>>>>> 96955cb0a97b878b6433892f0b8bc2a8df9e5c07
 import college_img from "../../assets/college_img.png";
 import menu from "../../assets/menu.png";
 import wrong from "../../assets/wrong.png";

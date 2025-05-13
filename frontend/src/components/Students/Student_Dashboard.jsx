@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-import React from 'react';
-=======
 import { useState, useEffect } from 'react';
 import CreateForm from './CreateForm';
 import InviteForm from './InviteForm';
@@ -11,7 +8,6 @@ import { addUser } from '../../utils/userSlice';
 import { addTeamMembers,removeTeamMembers } from '../../utils/teamSlice';
 import { useNavigate } from 'react-router-dom';
 import { addTeamStatus } from '../../utils/teamStatus';
->>>>>>> 96955cb0a97b878b6433892f0b8bc2a8df9e5c07
 
 function Student_Dashboard() {
   // Dummy data (replace with API call later)
@@ -29,9 +25,6 @@ function Student_Dashboard() {
   const guide = 'Dr. A. Kumar';
   const expert = 'Prof. S. Meena';
 
-<<<<<<< HEAD
-  const overallProgress = 65; // percentage
-=======
   const handleInviteSubmit = (e) => {
     e.preventDefault();
     if (!isValidEmail(inviteForm.email)) {
@@ -165,7 +158,6 @@ function Student_Dashboard() {
 
   const acceptedMembers = teamMembers.filter(member => member.status === 'accept');
   const remainingInvites = totalMembersAllowed - (1 + pendingInvitations.length + acceptedMembers.length);
->>>>>>> 96955cb0a97b878b6433892f0b8bc2a8df9e5c07
 
   return (
     <div className="p-6 text-gray-800">

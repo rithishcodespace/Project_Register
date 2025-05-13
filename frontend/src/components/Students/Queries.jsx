@@ -85,8 +85,4 @@ function Queries() {
   );
 }
 
-<<<<<<< HEAD
 export default Queries;
-=======
-export default Queries;
->>>>>>> 96955cb0a97b878b6433892f0b8bc2a8df9e5c07

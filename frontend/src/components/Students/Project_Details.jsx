@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
-<<<<<<< HEAD
 import Proj_Details from './Proj_Details';
-=======
 import { Store } from 'lucide-react';
->>>>>>> 96955cb0a97b878b6433892f0b8bc2a8df9e5c07
 
 const Project_Details = () => {
   const [projectData, setProjectData] = useState([]);
@@ -15,11 +12,7 @@ const Project_Details = () => {
   const teamMembers = useSelector((Store) => Store.teamSlice);
   const teamStatus = useSelector((Store) => Store.teamStatusSlice);
 
-<<<<<<< HEAD
   async function handleTakeProject(name, id, guide, expert) {
-=======
-  async function handleTakeProject(name, id) {
->>>>>>> 96955cb0a97b878b6433892f0b8bc2a8df9e5c07
     try {
       const token = localStorage.getItem("accessToken");
 
@@ -34,13 +27,9 @@ const Project_Details = () => {
       }
 
       const newresponse = await axios.patch(`http://localhost:1234/student/assgin_project_id/${id}/${selector.reg_num}`, {}, {
-<<<<<<< HEAD
-        headers: { Authorization: `Bearer ${token}` }
-=======
         headers: {
           Authorization: `Bearer ${token}`
         }
->>>>>>> 96955cb0a97b878b6433892f0b8bc2a8df9e5c07
       });
 
       if (newresponse.status === 200) {
@@ -56,23 +45,10 @@ const Project_Details = () => {
   }
 
   function checkUserStatus() {
-<<<<<<< HEAD
-    const raw = localStorage.getItem("teamStatus");
-    if (!raw) return;
-
-    try {
-      const teamStatus = JSON.parse(localStorage.getItem("teamMembers"));
-      const hasConfirmedTeam = teamStatus[0].team_conformed === 1;
-      let hasNoProject = false;
-      if (teamStatus?.teamMembers?.length > 0) {
-        hasNoProject = teamStatus.teamMembers[0].project_id === null;
-      }
-=======
   try {
     const hasConfirmedTeam = teamStatus.teamConformationStatus === 1;
     const member = teamStatus?.teamMembers?.[0];
     const hasNoProject = member && member.project_id === null;
->>>>>>> 96955cb0a97b878b6433892f0b8bc2a8df9e5c07
 
     console.log("para:",hasConfirmedTeam,hasNoProject)
 
@@ -85,21 +61,12 @@ const Project_Details = () => {
     console.error("Invalid teamStatus in localStorage", e);
     setAccessGranted(true); // safer fallback
   }
-<<<<<<< HEAD
-=======
 }
 
->>>>>>> 96955cb0a97b878b6433892f0b8bc2a8df9e5c07
 
   async function fetchProjects() {
     try {
       const token = localStorage.getItem("accessToken");
-<<<<<<< HEAD
-      const departments = [...new Set(teamMembers.map(member => member.dept))];
-
-      const response = await axios.post("http://localhost:1234/student/projects", { departments }, {
-        headers: { Authorization: `Bearer ${token}` }
-=======
      const departments = [
         ...new Set([
           ...teamMembers.map(member => member.dept),
@@ -113,7 +80,6 @@ const Project_Details = () => {
         headers: {
           Authorization: `Bearer ${token}`
         }
->>>>>>> 96955cb0a97b878b6433892f0b8bc2a8df9e5c07
       });
 
       if (response.status === 200) {
@@ -129,18 +95,6 @@ const Project_Details = () => {
   }
 
   async function fetchMyProject() {
-<<<<<<< HEAD
-    let token = localStorage.getItem("accessToken");
-    const teamStatus = JSON.parse(localStorage.getItem("teamStatus"));
-    let response = await axios(`http://localhost:1234/student/get_project_details/${teamStatus.teamMembers[0].project_id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    if (response.status === 200) {
-      console.log("Your project details", response.data);
-    } else {
-      alert("There is an error in fetching your project details!");
-=======
     try {
       const token = localStorage.getItem("accessToken");
       const member = teamStatus?.teamMembers?.[0];
@@ -162,7 +116,6 @@ const Project_Details = () => {
       }
     } catch (error) {
       console.error("Error in fetchMyProject:", error);
->>>>>>> 96955cb0a97b878b6433892f0b8bc2a8df9e5c07
     }
   }
 
@@ -224,8 +177,6 @@ const Project_Details = () => {
           </tbody>
         </table>
       </div>
-<<<<<<< HEAD
-=======
 
       {viewModalOpen && selectedProject && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
@@ -268,7 +219,6 @@ const Project_Details = () => {
           </div>
         </div>
       )}
->>>>>>> 96955cb0a97b878b6433892f0b8bc2a8df9e5c07
     </div>
   );
 };
