@@ -35,7 +35,7 @@ function Guide_dashboard() {
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-3xl font-bold text-center flex-1">Welcome, Guide</h1>
               <button
-                className="relative ml-auto p-2 rounded-full hover:bg-gray-100 transition"
+                className="relative ml-auto p-2 rounded-full hover: transition"
                 onClick={() => setShowPopup(true)}
               >
                 <Bell className="w-6 h-6 text-black-500" />
@@ -93,14 +93,14 @@ function Guide_dashboard() {
       <div className="bg-white p-6 rounded-2xl shadow-md w-full max-w-4xl mx-auto">
         <h2 className="text-2xl font-semibold mb-4 text-center bg-white ">Team Progress Overview</h2>
         <ResponsiveContainer width="100%" bg-color="white" height={300} >
-          <PieChart className="bg-white">
-            <Pie data={progressData} dataKey="value" nameKey="name" outerRadius={100} innerRadius={50} className="bg-white" label>
+          <PieChart className="bg-white" style={{ outline: 'none' }}>
+            <Pie data={progressData} dataKey="value" nameKey="name" outerRadius={100} innerRadius={50} style={{ outline: 'none' }} className="bg-white" label>
               {progressData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip />
-            <Legend verticalAlign="bottom" height={36} />
+            <Tooltip contentStyle={{ backgroundColor: 'white', border: 'none', color: 'white' }} />
+            <Legend    verticalAlign="bottom" height={36} />
           </PieChart>
         </ResponsiveContainer>
       </div>

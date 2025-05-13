@@ -6,52 +6,56 @@ const Guide_queries = () => {
   const [queries, setQueries] = useState([]);
   const [replyInputs, setReplyInputs] = useState({});
 
+  // Fetch queries from the backend
   async function fetchQueries() {
-      try {
-        const token = localStorage.getItem("accessToken");
-        const response = await axios.get("http://localhost:1234/guide/get_queries", {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        if (response.status === 200) {
-          console.log(response.data);
-          setQueries(response.data); // Make sure response.data is an array of queries
-        }
-      } catch (error) {
-        console.error("Error fetching queries:", error);
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get("http://localhost:1234/guide/get_queries", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 200) {
+        setQueries(response.data); // Assuming response.data is an array of queries
       }
+    } catch (error) {
+      console.error("Error fetching queries:", error);
     }
+  }
 
-
+  // Fetch queries when component mounts, and update every 3 seconds
   useEffect(() => {
-    const interval = setInterval(() => fetchQueries(),3000);
-    fetchQueries(); // call first time only
+    fetchQueries(); // Initial fetch
+    const interval = setInterval(() => fetchQueries(), 3000); // Periodic fetch
 
-    // calls during unmouting
-    return () => clearInterval(interval);
+    return () => clearInterval(interval); // Clean up on unmount
   }, []);
 
+  // Handle reply input changes
   const handleReplyChange = (queryId, value) => {
     setReplyInputs((prev) => ({
       ...prev,
-      [queryId]: value
+      [queryId]: value,
     }));
   };
 
+  // Send reply to backend
   const handleSendReply = async (queryId) => {
     const reply = replyInputs[queryId];
     if (!reply) return;
 
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.patch(`http://localhost:1234/guide/add_reply/${queryId}`, {
-        "reply":reply
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
+      const response = await axios.patch(
+        `http://localhost:1234/guide/add_reply/${queryId}`,
+        { reply },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
 
       if (response.status === 200) {
         // Update the UI to reflect the sent reply
@@ -75,7 +79,11 @@ const Guide_queries = () => {
         {queries.map((q) => (
           <div key={q.query_id} className="bg-white p-5 rounded-xl shadow-md">
             <div className="mb-2">
-              <span className="font-semibold text-blue-600">{q.team_member}</span> asked:
+              <p className="text-sm text-gray-500 mb-2">
+                <strong>Project ID:</strong> {q.project_id} &nbsp;| &nbsp;
+                <strong>Project Name:</strong> {q.project_name}
+              </p>
+              <span className="font-semibold text-purple-500">{q.team_member}</span> asked:
               <p className="text-lg mt-1">{q.query}</p>
             </div>
 
@@ -87,7 +95,7 @@ const Guide_queries = () => {
               <div className="mt-4 flex flex-col sm:flex-row items-center gap-2">
                 <input
                   type="text"
-                  className="flex-1 p-2 border rounded-lg w-full"
+                  className="flex-1 p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   placeholder="Type your reply here..."
                   value={replyInputs[q.query_id] || ''}
                   onChange={(e) => handleReplyChange(q.query_id, e.target.value)}
