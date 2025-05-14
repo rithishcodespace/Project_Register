@@ -6,10 +6,13 @@ const teamStatus = createSlice({
   reducers: {
     addTeamStatus: (state, action) => {
       return action.payload;
+    },
+    removeTeamStatus: (state,action) => {
+      return null;
     }
   }
 });
 
 // Exporting the action and reducer
-export const { addTeamStatus } = teamStatus.actions;
+export const { addTeamStatus,removeTeamStatus } = teamStatus.actions;
 export default teamStatus.reducer;

@@ -105,9 +105,9 @@ router.post("/auth/role",(req,res,next) => {
 router.delete("/auth/logout",async(req,res,next) => {
     try {
         const { refreshToken } = req.body;
-        if (!refreshToken) throw createError.BadRequest("Refresh token is required");
+        // if (!refreshToken) throw createError.BadRequest("Refresh token is required");
           
-        const userId = await verifyRefreshToken(refreshToken);
+        // const userId = await verifyRefreshToken(refreshToken);
         // await client.del(userId); // deletes the refresh token in redis 
         res.status(200).send("User logged out successfully");
     }

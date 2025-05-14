@@ -56,7 +56,8 @@ const ProjectProgress = () => {
         <select
           value={phase}
           onChange={(e) => setPhase(e.target.value)}
-          className="w-full p-2 mt-2 border border-gray-300 rounded-md"
+          className="flex-1 p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+          
         >
           <option value="phase1_progress">Phase 1</option>
           <option value="phase2_progress">Phase 2</option>
@@ -73,7 +74,7 @@ const ProjectProgress = () => {
           type="text"
           value={regNum}
           onChange={(e) => setRegNum(e.target.value)}
-          className="w-full p-2 mt-2 border border-gray-300 rounded-md"
+          className="flex-1 p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
         />
       </div>
 
@@ -84,7 +85,7 @@ const ProjectProgress = () => {
           type="number"
           value={contribution}
           onChange={(e) => setContribution(e.target.value)}
-          className="w-full p-2 mt-2 border border-gray-300 rounded-md"
+          className="flex-1 p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
         />
       </div>
 
