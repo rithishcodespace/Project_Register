@@ -14,6 +14,7 @@ function Admin_Dashboard() {
       });
 
       if (response.status === 200) {
+        console.log(response.data)
         setProjects(response.data);
       } else {
         alert("Error fetching projects");
@@ -30,9 +31,9 @@ function Admin_Dashboard() {
 
   const stats = [
     { title: 'Total Projects', value: projects.length },
-    { title: 'Projects Taken', value: projects.filter(p => p.status === 'Ongoing' || p.status === 'Completed').length },
-    { title: 'Ongoing Projects', value: projects.filter(p => p.status === 'Ongoing').length },
-    { title: 'Completed Projects', value: projects.filter(p => p.status === 'Completed').length },
+    { title: 'Projects Taken', value: projects.filter(p => p.status === 'ongoing' || p.status === 'completed').length },
+    { title: 'Ongoing Projects', value: projects.filter(p => p.status === 'ongoing').length },
+    { title: 'Completed Projects', value: projects.filter(p => p.status === 'completed').length },
   ];
 
   const upcoming = projects
@@ -42,8 +43,12 @@ function Admin_Dashboard() {
       name: p.project_name,
       deadline: p.deadline
     }));
+    
+const activity = [...projects]
+  .sort((a, b) => new Date(b.posted_date) - new Date(a.posted_date))
+  .slice(0, 3)
+  .map(p => `Project "${p.project_name}" was posted on ${new Date(p.posted_date).toLocaleDateString()}.`);
 
-  const activity = projects.slice(0, 3).map(p => `Project "${p.project_name}" was updated or added.`);
   
     return (
       <div className="p-6 bg- rounded-xl h-[90%]">

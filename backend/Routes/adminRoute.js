@@ -7,8 +7,8 @@ const db = require("../db");
 
 router.post("/admin/adduser",(req,res,next) => {
    try{
-     let sql = "insert into users(emailId,password,role,reg_num) values(?,?,?,?)";
-     const values = [req.body.emailId,req.body.password,req.body.role,req.body.reg_num];
+     let sql = "insert into users(name,emailId,password,role,dept,reg_num,phone_number) values(?,?,?,?,?,?,?)";
+     const values = [req.body.name,req.body.emailId,req.body.password,req.body.role,req.body.dept,req.body.reg_num,req.body.phone_number];
      db.query(sql,values,(error,result) => {
         if(error) next(error);
         res.send("user added successfully by admin!");
@@ -81,6 +81,22 @@ router.patch("/admin/edit_project/:project_id", (req, res, next) => {
      next(error);
   }
 });
+
+router.get("/fetchUsers/:role",(req,res,next) => {
+  try{
+     const{role} = req.params;
+     if(!role)return next(createError.BadRequest("role not found!"));
+     let sql = "select * from users where role = ?";
+     db.query(sql,[role],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+     })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 
 module.exports = router;
