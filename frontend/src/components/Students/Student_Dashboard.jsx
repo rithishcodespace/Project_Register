@@ -156,7 +156,7 @@ function StudentDashboard() {
       const regNum = selector.reg_num;
 
       const response = await axios.patch(
-        'http://localhost:1234/student/team_request/conform_team/TEAM_ID_001',
+        'http://localhost:1234/student/team_request/conform_team/TEAM_ID_002',
         { from_reg_num: regNum },
         {
           headers: {
