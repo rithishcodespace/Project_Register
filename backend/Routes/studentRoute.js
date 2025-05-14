@@ -270,34 +270,43 @@ router.patch("/student/:status/:project_name",(req,res,next) => {
 })
 
 // assigns the project_id to the team_mates
-router.patch("/student/assgin_project_id/:project_id/:from_reg_num",(req,res,next) => {
-  try{
-     const {project_id,from_reg_num} = req.params;
-     let sql = "UPDATE team_requests SET project_id = ? WHERE from_reg_num = ? AND status = 'accept'";
-     db.query(sql,[project_id,from_reg_num],(error,result) => {
-      if(error)next(error);
-      res.send("Project_Id updated successfully")
-     })
-     // generates deadline 
-     let sql1 = "select project_picked_date,team_id from team_requests where project_id = ?";
-     db.query(sql,[project_id],(error,result) => {
-      if(error)return next(error);
-      if(result.project_picked_date.length === 0)return res.send("picked date not found!");
-      const deadlines = generateWeeklyDeadlines(result.project_picked_date); // generating deadlines for 12weeks
-      // insert into deadlines table
-      let sql2 = "insert into weekly_logs_deadlines(team_id,week_number,deadline_date) values(?,?,?)"
-      for(let i=0;i<=12;i++)
-      {
-        db.query(sql2,[result.team_id,i+1,deadlines[i]]);
-      }
-      res.send("12 deadlines generated successfully and also project_id also assigned")
-     })
-  }
-  catch(error)
-  {
+router.patch("/student/assign_project_id/:project_id/:from_reg_num", (req, res, next) => {
+  try {
+    const { project_id, from_reg_num } = req.params;
+
+    const updateSQL = "UPDATE team_requests SET project_id = ? WHERE from_reg_num = ? AND status = 'accept'";
+    db.query(updateSQL, [project_id, from_reg_num], (error, updateResult) => {
+      if (error) return next(error);
+
+      const selectSQL = "SELECT project_picked_date, team_id FROM team_requests WHERE project_id = ?";
+      db.query(selectSQL, [project_id], (error, result) => {
+        if (error) return next(error);
+        if (result.length === 0 || !result[0].project_picked_date) {
+          return res.send("Picked date not found!");
+        }
+
+        const pickedDate = new Date(result[0].project_picked_date);
+        const teamId = result[0].team_id;
+        const deadlines = generateWeeklyDeadlines(pickedDate); // returns 12 weeks
+
+        const insertSQL = "INSERT INTO weekly_logs_deadlines (team_id, week_number, deadline_date) VALUES (?, ?, ?)";
+        let inserted = 0;
+
+        for (let i = 0; i < deadlines.length; i++) {
+          db.query(insertSQL, [teamId, i + 1, deadlines[i]], (error) => {
+            if (error) return next(error);
+            inserted++;
+            if (inserted === deadlines.length) {
+              res.send("Project ID assigned and 12 deadlines generated successfully");
+            }
+          });
+        }
+      });
+    });
+  } catch (error) {
     next(error);
   }
-})
+});
 
 // fetches team members
 router.get("/student/getTeamDetails/:reg_num", (req, res, next) => {
@@ -348,28 +357,16 @@ router.get("/student/getTeamDetails/:reg_num", (req, res, next) => {
   });
 });
 
-
+// updates the progress
 
 router.post("/student/update_progress/:phase/:reg_num", (req, res, next) => {
   try {
     const { phase, reg_num } = req.params;
-    const { contribution,progress } = req.body;
+    const { contribution, progress } = req.body;
 
-    // Validate phase name
-    const validPhases = [
-      "phase1",
-      "phase2",
-      "phase3",
-      "phase4",
-      "phase5",
-      "phase6",
-      "phase7",
-      "phase8",
-      "phase9",
-      "phase10",
-      "phase11",
-      "phase12",
-    ];
+   const validPhases = [
+    "phase1", "phase2", "phase3", "phase4", "phase5", "phase6",
+    "phase7", "phase8", "phase9", "phase10", "phase11", "phase12"];
 
     if (!validPhases.includes(phase)) {
       return res.status(400).json({ message: "Invalid phase name" });
@@ -379,12 +376,38 @@ router.post("/student/update_progress/:phase/:reg_num", (req, res, next) => {
 
     db.query(sql, [contribution, progress, reg_num], (err, result) => {
       if (err) return next(err);
-      res.send("Progress updated successfully!");
+
+      // Email setup
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: "rithishvkv@gmail.com",
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: '"No Reply" <rithishvkv@gmail.com>',
+        to: "rithishs.cs24@bitsathy.ac.in",
+        subject: "Progress update by your mentee",
+        text: `Student with reg_num ${reg_num} has updated progress for ${phase}. Please check the Project Register.`,
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error("Email Error:", error);
+          return res.status(500).send("Progress updated, but failed to send email.");
+        } else {
+          console.log("Email sent:", info.response);
+          return res.send("Progress updated and email sent successfully!");
+        }
+      });
     });
   } catch (error) {
     next(error);
   }
 });
+
 
 // brings the details of the project through project_id
 router.get("/student/get_project_details/:project_id",(req,res,next) => {
