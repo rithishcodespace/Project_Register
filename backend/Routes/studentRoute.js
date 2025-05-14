@@ -3,6 +3,7 @@ const { route } = require("./teacherRoute");
 const createError = require("http-errors");
 const verifyAccessToken = require("../utils/verifyAccessToken");
 const router = express.Router();
+const generateWeeklyDeadlines = require("../utils/generateWeeklyDeadlines");
 const db = require("../db");
 
 // adds the connection request in the db -> invite button
@@ -277,6 +278,8 @@ router.patch("/student/assgin_project_id/:project_id/:from_reg_num",(req,res,nex
       if(error)next(error);
       res.send("Project_Id updated successfully")
      })
+     // generates and sets the deadline in deadline table
+    //  let sql = "select (team_id,project_id) "
   }
   catch(error)
   {
