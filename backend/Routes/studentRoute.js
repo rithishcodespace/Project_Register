@@ -338,24 +338,31 @@ router.get("/student/getTeamDetails/:reg_num", (req, res, next) => {
 router.post("/student/update_progress/:phase/:reg_num", (req, res, next) => {
   try {
     const { phase, reg_num } = req.params;
-    const { contribution } = req.body;
+    const { contribution,progress } = req.body;
 
     // Validate phase name
     const validPhases = [
-      "phase1_progress",
-      "phase2_progress",
-      "phase3_progress",
-      "phase4_progress",
-      "phase5_progress",
+      "phase1",
+      "phase2",
+      "phase3",
+      "phase4",
+      "phase5",
+      "phase6",
+      "phase7",
+      "phase8",
+      "phase9",
+      "phase10",
+      "phase11",
+      "phase12",
     ];
 
     if (!validPhases.includes(phase)) {
       return res.status(400).json({ message: "Invalid phase name" });
     }
 
-    const sql = `UPDATE team_requests SET ${phase} = ? WHERE reg_num = ?`;
+    const sql = `UPDATE team_requests SET ${phase}_contribution = ?, ${phase}_progress = ? WHERE reg_num = ?`;
 
-    db.query(sql, [contribution, reg_num], (err, result) => {
+    db.query(sql, [contribution, progress, reg_num], (err, result) => {
       if (err) return next(err);
       res.send("Progress updated successfully!");
     });
