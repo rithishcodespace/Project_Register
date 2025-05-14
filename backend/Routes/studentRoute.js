@@ -100,7 +100,7 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
   try {
     const { from_reg_num } = req.body; // logged user's reg num
 
-    // Step 1: Check if user is in any team (as leader or member)
+    // Step 1: Check if user is in any confirmed team (as leader or member)
     const checkTeamSQL = `
       SELECT team_id, team_conformed, from_reg_num AS teamLeader
       FROM team_requests 
@@ -117,8 +117,8 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
         const isTeamConfirmed = result1[0].team_conformed;
         const teamLeaderRegNum = result1[0].teamLeader;
 
-        // Step 2: Fetch all team members with that team_id
-        const fetchTeamSQL = "SELECT * FROM team_requests WHERE team_id = ? AND status = 'accept'";
+        // Step 2: Fetch all confirmed team members with that team_id
+        const fetchTeamSQL = "SELECT * FROM team_requests WHERE team_id = ? AND status = 'accept' AND team_conformed = 1";
         db.query(fetchTeamSQL, [teamId], (err2, teamMembers) => {
           if (err2) return next(err2);
 
@@ -126,12 +126,12 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
           db.query(fetchLeaderSQL, [teamLeaderRegNum], (err3, leaderDetails) => {
             if (err3) return next(err3);
 
+            // If team is not confirmed, fetch pending invitations
             if (!isTeamConfirmed) {
               const fetchInvitesSQL = `
                 SELECT * FROM team_requests 
                 WHERE from_reg_num = ? AND team_conformed = 0
               `;
-
               db.query(fetchInvitesSQL, [from_reg_num], (err4, invites) => {
                 if (err4) return next(err4);
 
@@ -155,7 +155,7 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
         });
 
       } else {
-        // User is not in any team, fetch invitations they've sent
+        // User is not in any confirmed team, fetch invitations they've sent
         const fetchInvitesSQL = `
           SELECT * FROM team_requests 
           WHERE from_reg_num = ? AND team_conformed = 0
@@ -448,15 +448,16 @@ router.get("/student/get_project_type/:reg_num",(req,res,next) => {
 
 // adds the query in the query table
 
-router.post("/student/add_query/:team_member", (req, res, next) => {
+router.post("/student/add_query/:team_member/:guide_reg_num", (req, res, next) => {
   try {
     const { team_id, project_id, query } = req.body;
-    const { team_member } = req.params;
+    const { team_member, guide_reg_num } = req.params;
 
-    if (!project_id || !team_id || !team_member || !query) {
+    if (!project_id || !team_id || !team_member || !query || !guide_reg_num) {
       return next(createError.BadRequest("Required parameters are missing!"));
     }
 
+    // Step 1: Fetch project name using project_id
     const getProjectNameSql = "SELECT project_name FROM projects WHERE project_id = ?";
     db.query(getProjectNameSql, [project_id], (err, rows) => {
       if (err) return next(err);
@@ -467,14 +468,32 @@ router.post("/student/add_query/:team_member", (req, res, next) => {
 
       const project_name = rows[0].project_name;
 
+      // Step 2: Insert the query into the queries table
       const insertQuerySql = `
-        INSERT INTO queries (team_id, project_id, project_name, team_member, query)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO queries (team_id, project_id, project_name, team_member, query, guide_reg_num)
+        VALUES (?, ?, ?, ?, ?, ?)
       `;
-      db.query(insertQuerySql, [team_id, project_id, project_name, team_member, query], (err, result) => {
+      db.query(insertQuerySql, [team_id, project_id, project_name, team_member, query, guide_reg_num], (err, result) => {
         if (err) return next(err);
-        db.query(deleteOldSql, [team_id, team_id], (err2) => {
+
+        // Step 3: Delete older answered queries, keeping only the latest 5
+        const deleteOldSql = `
+          DELETE FROM queries 
+          WHERE query_id IN (
+            SELECT query_id FROM (
+              SELECT query_id 
+              FROM queries 
+              WHERE team_id = ? AND reply IS NOT NULL
+              ORDER BY created_at DESC
+              LIMIT 18446744073709551615 OFFSET 5
+            ) AS temp
+          )
+        `;
+
+        db.query(deleteOldSql, [team_id], (err2) => {
           if (err2) return next(err2);
+
+          // Step 4: Send a success response
           res.send("Query added successfully!");
         });
       });

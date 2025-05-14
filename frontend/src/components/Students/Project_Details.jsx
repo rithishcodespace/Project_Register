@@ -101,7 +101,7 @@ const Project_Details = () => {
         } else {
           alert("Error fetching your project details");
         }
-      }
+      }  
     } catch (error) {
       console.error("Error in fetchMyProject:", error);
     }
