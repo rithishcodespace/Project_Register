@@ -100,7 +100,7 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
   try {
     const { from_reg_num } = req.body; // logged user's reg num
 
-    // Step 1: Check if user is in any team (as leader or member)
+    // Step 1: Check if user is in any confirmed team (as leader or member)
     const checkTeamSQL = `
       SELECT team_id, team_conformed, from_reg_num AS teamLeader
       FROM team_requests 
@@ -117,8 +117,8 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
         const isTeamConfirmed = result1[0].team_conformed;
         const teamLeaderRegNum = result1[0].teamLeader;
 
-        // Step 2: Fetch all team members with that team_id
-        const fetchTeamSQL = "SELECT * FROM team_requests WHERE team_id = ? AND status = 'accept'";
+        // Step 2: Fetch all confirmed team members with that team_id
+        const fetchTeamSQL = "SELECT * FROM team_requests WHERE team_id = ? AND status = 'accept' AND team_conformed = 1";
         db.query(fetchTeamSQL, [teamId], (err2, teamMembers) => {
           if (err2) return next(err2);
 
@@ -126,12 +126,12 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
           db.query(fetchLeaderSQL, [teamLeaderRegNum], (err3, leaderDetails) => {
             if (err3) return next(err3);
 
+            // If team is not confirmed, fetch pending invitations
             if (!isTeamConfirmed) {
               const fetchInvitesSQL = `
                 SELECT * FROM team_requests 
                 WHERE from_reg_num = ? AND team_conformed = 0
               `;
-
               db.query(fetchInvitesSQL, [from_reg_num], (err4, invites) => {
                 if (err4) return next(err4);
 
@@ -155,7 +155,7 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
         });
 
       } else {
-        // User is not in any team, fetch invitations they've sent
+        // User is not in any confirmed team, fetch invitations they've sent
         const fetchInvitesSQL = `
           SELECT * FROM team_requests 
           WHERE from_reg_num = ? AND team_conformed = 0
