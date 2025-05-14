@@ -21,6 +21,7 @@ const Project_Details = () => {
       });
 
       if (response.status === 200) {
+        console.log(response.data)
         alert("Project chosen successfully!");
         setProjectData(prev => prev.filter(proj => proj.project_name !== name));
         setSelectedProject(null);
@@ -101,7 +102,7 @@ const Project_Details = () => {
         } else {
           alert("Error fetching your project details");
         }
-      }  
+      }
     } catch (error) {
       console.error("Error in fetchMyProject:", error);
     }

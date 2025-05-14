@@ -89,7 +89,8 @@ function StudentDashboard() {
       }
       const response = await axios.get('http://localhost:1234/profile/view', {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`
+          ,
         },
       });
 
@@ -111,7 +112,11 @@ function StudentDashboard() {
         { "from_reg_num": reg_num },
         {
           headers: {
+<<<<<<< HEAD
             Authorization:` Bearer ${token}`,
+=======
+            Authorization: `Bearer ${token}`,
+>>>>>>> 7cfa851b9ed52d0df5844f6ec82d2b366b763690
           },
         }
       );
@@ -160,7 +165,11 @@ function StudentDashboard() {
         { from_reg_num: regNum },
         {
           headers: {
+<<<<<<< HEAD
             Authorization:` Bearer ${token}`,
+=======
+            Authorization: `Bearer ${token}`,
+>>>>>>> 7cfa851b9ed52d0df5844f6ec82d2b366b763690
           },
         }
       );
