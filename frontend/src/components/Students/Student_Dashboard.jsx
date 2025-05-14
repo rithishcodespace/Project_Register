@@ -89,7 +89,7 @@ function StudentDashboard() {
       }
       const response = await axios.get('http://localhost:1234/profile/view', {
         headers: {
-          Authorization: Bearer ${token},
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -111,7 +111,7 @@ function StudentDashboard() {
         { "from_reg_num": reg_num },
         {
           headers: {
-            Authorization: Bearer ${token},
+            Authorization:`Bearer ${token}`,
           },
         }
       );
@@ -127,7 +127,7 @@ function StudentDashboard() {
           // checks whether he is a team member of another team without conformed
           let res = await axios.get(`http://localhost:1234/student/check_accepted_status/${reg_num}`,{
             headers:{
-              Authorization : Bearer ${token}
+              Authorization : `Bearer ${token}`
             }
           })
           if(res.status === 200 && res.data)
@@ -160,7 +160,7 @@ function StudentDashboard() {
         { from_reg_num: regNum },
         {
           headers: {
-            Authorization: Bearer ${token},
+            Authorization: `Bearer ${token}`,
           },
         }
       );

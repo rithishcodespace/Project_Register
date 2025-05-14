@@ -11,7 +11,7 @@ function Student() {
     };
 
   return (
-    <div className="flex min-h-screen bg-red-500">
+    <div className="flex min-h-screen ">
      <Student_navbar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <div className={`transition-all duration-500 flex-1 overflow-y-auto h-screen ${isSidebarOpen ? 'ml-64' : 'ml-24'}`}>
           <Header />
