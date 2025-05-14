@@ -5,10 +5,15 @@ import college_img from "../../assets/college_img.png";
 import menu from "../../assets/menu.png"
 import wrong from "../../assets/wrong.png"
 import axios from 'axios';
+import { removeUser} from '../../utils/userSlice';
+import { removeTeamMembers } from '../../utils/teamSlice';
+import {removeTeamStatus} from "../../utils/teamStatus";
+import { useDispatch } from 'react-redux';
 
 function Teacher_navbar({ isOpen, toggleSidebar }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
 
   const handleLogout = async () => {
     try {
@@ -29,6 +34,9 @@ function Teacher_navbar({ isOpen, toggleSidebar }) {
       });
   
       // Finally navigate to login page
+      dispatch(removeTeamMembers());
+      dispatch(removeUser());
+      dispatch(removeTeamStatus());
       navigate("/");
     } catch (error) {
       console.error("Logout failed:", error);

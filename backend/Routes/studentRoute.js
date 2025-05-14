@@ -278,8 +278,20 @@ router.patch("/student/assgin_project_id/:project_id/:from_reg_num",(req,res,nex
       if(error)next(error);
       res.send("Project_Id updated successfully")
      })
-     // generates and sets the deadline in deadline table
-    //  let sql = "select (team_id,project_id) "
+     // generates deadline 
+     let sql1 = "select project_picked_date,team_id from team_requests where project_id = ?";
+     db.query(sql,[project_id],(error,result) => {
+      if(error)return next(error);
+      if(result.project_picked_date.length === 0)return res.send("picked date not found!");
+      const deadlines = generateWeeklyDeadlines(result.project_picked_date); // generating deadlines for 12weeks
+      // insert into deadlines table
+      let sql2 = "insert into weekly_logs_deadlines(team_id,week_number,deadline_date) values(?,?,?)"
+      for(let i=0;i<=12;i++)
+      {
+        db.query(sql2,[result.team_id,i+1,deadlines[i]]);
+      }
+      res.send("12 deadlines generated successfully and also project_id also assigned")
+     })
   }
   catch(error)
   {
@@ -572,6 +584,21 @@ router.get("/student/get_queries_sent_by_my_team/:team_id",(req,res,next) => {
     if(!team_id)return next(createError.BadRequest("team_id not found!!"));
     let sql = "select * from queries where team_id = ?";
     db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+router.get("/student/check_accepted_status/:reg_num",(req,res,next) => {
+  try{
+    const{reg_num} = req.params;
+    let sql = "SELECT * FROM team_requests WHERE (to_reg_num = ? OR from_reg_num = ?) AND status = 'accepted'";
+    db.query(sql,[reg_num,reg_num],(error,result) => {
       if(error)return next(error);
       res.send(result);
     })

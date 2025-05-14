@@ -111,11 +111,7 @@ function StudentDashboard() {
         { "from_reg_num": reg_num },
         {
           headers: {
-<<<<<<< HEAD
-            Authorization: `Bearer ${token}`,
-=======
             Authorization:` Bearer ${token}`,
->>>>>>> c03bb79d1a8b35e5ff44949e2b253dd19786058b
           },
         }
       );
@@ -134,7 +130,7 @@ function StudentDashboard() {
               Authorization : `Bearer ${token}`
             }
           })
-          if(res.status === 200 && res.data)
+          if(res.status === 200 && res.data.length > 0)
           {
             console.log("second api: ",res.data);
             setteamConformationPending(true);
@@ -164,11 +160,7 @@ function StudentDashboard() {
         { from_reg_num: regNum },
         {
           headers: {
-<<<<<<< HEAD
-            Authorization: `Bearer ${token}`,
-=======
             Authorization:` Bearer ${token}`,
->>>>>>> c03bb79d1a8b35e5ff44949e2b253dd19786058b
           },
         }
       );
