@@ -125,8 +125,10 @@ const Posted_project = () => {
           </Table>
         </TableContainer>
 
-        
-    </Paper><TablePagination
+  
+    </Paper>
+
+    <TablePagination
         rowsPerPageOptions={[5, 10, 25]}
         component="div"
         count={projectData.length}
@@ -135,9 +137,10 @@ const Posted_project = () => {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
         style={{marginRight:"4%"}}
-      /></>
-    
+      />
+
+      </>
   );
 };
 
-export default Posted_project;     
+export default Posted_project;

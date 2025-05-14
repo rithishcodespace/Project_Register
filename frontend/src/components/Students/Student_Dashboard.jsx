@@ -9,23 +9,65 @@ import { addTeamMembers,removeTeamMembers } from '../../utils/teamSlice';
 import { useNavigate } from 'react-router-dom';
 import { addTeamStatus } from '../../utils/teamStatus';
 
-function Student_Dashboard() {
-  
-  const team = {
-    members: ['John', 'Jane', 'Doe', 'Smith'],
-    status: 'Confirmed',
+function StudentDashboard() {
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [teamConformationPending,setteamConformationPending] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    email: '',
+    registerNumber: '',
+    department: '',
+  });
+  const [inviteForm, setInviteForm] = useState({
+    name: '',
+    email: '',
+    registerNumber: '',
+    department: '',
+  });
+  const [teamStatus, setTeamStatus] = useState(null); // 0 or 1
+  const [teamMembers, setTeamMembers] = useState([]); // Accepted members
+  const [pendingInvitations, setPendingInvitations] = useState([]);
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const selector = useSelector((state) => state.userSlice);
+
+  const departments = [
+    'CSE', 'AIDS', 'IT', 'AIML', 'CT', 'AGRI', 'ECE', 'EIE', 'EEE', 'MECH', 'FT', 'FD'
+  ];
+
+  const totalMembersAllowed = 4;
+
+  const isValidEmail = (email) => email.endsWith('@bitsathy.ac.in');
+
+  const handleCreateChange = (e) => {
+    const { name, value } = e.target;
+    setCreateForm((f) => ({ ...f, [name]: value }));
   };
 
-  const project = {
-    title: 'AI Chatbot for College',
-    domain: 'AI/ML',
-    status: 'Approved',
+  const handleCreateSubmit = (e) => {
+    e.preventDefault();
+    if (!isValidEmail(createForm.email)) {
+      alert('Email must be a valid @bitsathy.ac.in address.');
+      return;
+    }
+
+    dispatch(addUser({
+      name: createForm.name,
+      email: createForm.email,
+      registerNumber: createForm.registerNumber,
+      department: createForm.department,
+    }));
+
+    setIsCreateOpen(false);
   };
 
-  const guide = 'Dr. A. Kumar';
-  const expert = 'Prof. S. Meena';
+  const handleInviteChange = (e) => {
+    const { name, value } = e.target;
+    setInviteForm((f) => ({ ...f, [name]: value }));
+  };
 
-  const overallProgress = 65; 
   const handleInviteSubmit = (e) => {
     e.preventDefault();
     if (!isValidEmail(inviteForm.email)) {
@@ -47,7 +89,7 @@ function Student_Dashboard() {
       }
       const response = await axios.get('http://localhost:1234/profile/view', {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: Bearer ${token},
         },
       });
 
@@ -69,7 +111,7 @@ function Student_Dashboard() {
         { "from_reg_num": reg_num },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: Bearer ${token},
           },
         }
       );
@@ -85,7 +127,7 @@ function Student_Dashboard() {
           // checks whether he is a team member of another team without conformed
           let res = await axios.get(`http://localhost:1234/student/check_accepted_status/${reg_num}`,{
             headers:{
-              Authorization : `Bearer ${token}`
+              Authorization : Bearer ${token}
             }
           })
           if(res.status === 200 && res.data)
@@ -114,11 +156,11 @@ function Student_Dashboard() {
       const regNum = selector.reg_num;
 
       const response = await axios.patch(
-        'http://localhost:1234/student/team_request/conform_team/TEAM_ID_001',
+        'http://localhost:1234/student/team_request/conform_team/TEAM_ID_002',
         { from_reg_num: regNum },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: Bearer ${token},
           },
         }
       );
@@ -161,42 +203,81 @@ function Student_Dashboard() {
   const remainingInvites = totalMembersAllowed - (1 + pendingInvitations.length + acceptedMembers.length);
 
   return (
-    <div className="p-6 text-gray-800">
-      <h1 className="text-2xl font-bold mb-6">🎓 Student Dashboard</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white shadow-md rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-2">👥 Team Status</h2>
-          <p><strong>Members:</strong> {team.members.join(', ')}</p>
-          <p><strong>Status:</strong> {team.status}</p>
-        </div>
-
-        <div className="bg-white shadow-md rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-2">📁 Project Details</h2>
-          <p><strong>Title:</strong> {project.title}</p>
-          <p><strong>Domain:</strong> {project.domain}</p>
-          <p><strong>Status:</strong> {project.status}</p>
-        </div>
-
-        <div className="bg-white shadow-md rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-2">🧑‍🏫 Guide & Expert</h2>
-          <p><strong>Guide:</strong> {guide}</p>
-          <p><strong>Expert:</strong> {expert}</p>
-        </div>
-
-        <div className="bg-white shadow-md rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4">📊 Overall Progress</h2>
-          <div className="relative w-full h-4 bg-gray-300 rounded-lg">
-            <div
-              className="absolute top-0 left-0 h-4 bg-green-500 rounded-lg"
-              style={{ width: `${overallProgress}%` }}
-            />
-          </div>
-          <p className="mt-2">{overallProgress}% Completed</p>
-        </div>
+    <div className="min-h-screen flex flex-col items-center px-6 pt-16">
+      <div className="w-full flex justify-end -mt-12 mb-6">
+        <button
+          className="px-4 py-2 border border-purple-500 text-purple-500 rounded hover:bg-purple-500 hover:text-white transition"
+          onClick={() => navigate('/student/invitations')}
+        >
+          Invitations
+        </button>
       </div>
+
+      <div className="w-[95%] max-w-[60rem] rounded-xl bg-white flex flex-col items-center gap-4 p-9 overflow-y-auto">
+        <h1 className="text-purple-500 text-2xl font-bold">Your Team</h1>
+
+        <div className="border w-full p-4 rounded bg-gray-100">
+          <p><strong>Leader:</strong> YOU</p>
+          <p><strong>Email:</strong> {selector.emailId}</p>
+          <p><strong>Register Number:</strong> {selector.reg_num}</p>
+          <p className="text-green-600 font-semibold">Status: Accepted</p>
+        </div>
+
+        {acceptedMembers.map((member, idx) => (
+          <div key={idx} className="border w-full p-4 rounded bg-gray-50">
+            <p><strong>Name:</strong> {member.name}</p>
+            <p><strong>Email:</strong> {member.emailId}</p>
+            <p><strong>Register Number:</strong> {member.reg_num}</p>
+            <p><strong>Department:</strong> {member.dept}</p>
+            <p className="text-green-500 font-semibold">Status: Accepted</p>
+          </div>
+        ))}
+
+        {pendingInvitations.map((invitation, idx) => (
+          <div key={idx} className="border w-full p-4 rounded bg-gray-50">
+            <p><strong>Name:</strong> {invitation.name}</p>
+            <p><strong>Email:</strong> {invitation.emailId}</p>
+            <p><strong>Register Number:</strong> {invitation.reg_num}</p>
+            <p><strong>Department:</strong> {invitation.dept}</p>
+            <p className={`font-semibold ${
+              invitation.status === 'accept' ? 'text-green-500' :
+              invitation.status === 'reject' ? 'text-red-500' :
+              'text-yellow-500'
+            }`}>
+              Status: {invitation.status === 'interested' ? 'Pending' : invitation.status}
+            </p>
+          </div>
+        ))}
+
+        {(remainingInvites > 0 || acceptedMembers.length + 1 >= 3) && (
+          <div className="mt-6 flex flex-col sm:flex-row gap-4">
+            {remainingInvites > 0 && (
+              <button
+                onClick={() => setIsInviteOpen(true)}
+                className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition"
+              >
+                Invite Member
+              </button>
+            )}
+            {acceptedMembers.length + 1 >= 2 && !selector.teamConfirmationStatus && (
+              <button
+                onClick={handleConfirmTeam}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+              >
+                Conform Team
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {isInviteOpen && (
+        <InviteForm
+          {...{ inviteForm, handleInviteChange, handleInviteSubmit, departments, setIsInviteOpen }}
+        />
+      )}
     </div>
   );
-} 
+}
 
-export default Student_Dashboard;
+export default StudentDashboard;

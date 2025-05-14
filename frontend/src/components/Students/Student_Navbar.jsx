@@ -70,7 +70,7 @@ function Student_navbar({ isOpen, toggleSidebar }) {
       </div>
 
       <div className="bg-white px-2">
-        <Link to="/" className={`${navDiv("")} group`}>
+        <Link to="" className={`${navDiv("")} group`}>
           <Home size={24} className={navIcon("")} />
           <p className={navText("")}>Dashboard</p>
         </Link>

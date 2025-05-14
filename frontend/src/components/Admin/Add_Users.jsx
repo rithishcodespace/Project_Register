@@ -150,6 +150,48 @@ function Add_Users() {
           )}
         </div>
 
+        {/* Password Field */}
+        <div className="mb-5 relative bg-white ">
+          <label className="block text-sm  bg-white  text-black mb-2">Password</label>
+          <input
+            type='text'
+            placeholder="Enter password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-2 pr-10 border bg-white  border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          
+        </div>
+        <div className="mb-5 relative bg-white ">
+          <label className="block text-sm bg-white  text-black mb-2">Register Number</label>
+          <input
+            type='text'
+            placeholder="Enter register number"
+            value={RegisterNumber}
+            onChange={(e) => setRegisterNumber(e.target.value)}
+            className="w-full px-4 py-2 pr-10 border bg-white  border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          
+        </div>
+
+        {/* Role Dropdown */}
+        <div className="mb-6 bg-white ">
+          <label className="block text-sm text-black  bg-white mb-2">Select Role</label>
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="" disabled>-- Select Role --</option>
+            <option value="admin">Admin</option>
+            <option value="student">Student</option>
+            <option value="teacher">Staff</option>
+            <option value="guide">Guide</option>
+            <option value="sub_expert">Subject Expert</option>
+          </select>
+        </div>
+
+        {/* Submit Button */}
         <button
           onClick={handleSubmit}
           className="mt-6 w-full bg-purple-500 text-white py-2 rounded-lg font-semibold text-lg hover:bg-purple-600 transition duration-200 shadow-md"
