@@ -4,7 +4,7 @@ const mysql = require("mysql2");
 // const pool = mysql.createPool({
 //     host:"localhost",
 //     user:"root",
-//     password:"prakashbit",
+//     password:"Rithish@2006",
 //     database:"project_registor",
 //     waitForConnections:true,
 //     connectionLimit:10, 
@@ -14,8 +14,7 @@ const mysql = require("mysql2");
 const pool = mysql.createPool({
     host:"localhost",
     user:"root",
-    password:"Rithish@2006",
-    // pa   ssword:"Mathan@2007",
+    password:"Mathan@2007",
     database:"project_registor",
     waitForConnections:true,
     connectionLimit:10, 
