@@ -51,7 +51,11 @@ router.patch("/guide/accept_reject/:status/:project_id/:my_id", (req, res, next)
                 db.query(sql3, [my_id, project_id], (error, result) => {
                   if (error) return next(error);
                   else {
-                    res.send("Status updated successfully and guide assigned!");
+                    let sql4 = "update projects set guide_reg_num = ? where project_id = ?";
+                    db.query(sql4,[my_id,project_id],(error,result) => {
+                      if(error)return next(error);
+                      res.send("Status updated successfully and guide assigned!");
+                    })
                   }
                 });
               } else {
@@ -192,6 +196,7 @@ router.get("/guide/fetch_mentoring_teams/:guide_id",(req,res,next) => {
        next(error);
     }
 })
+
 
 
 module.exports = router;

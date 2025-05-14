@@ -82,5 +82,21 @@ router.patch("/admin/edit_project/:project_id", (req, res, next) => {
   }
 });
 
+router.get("/fetchUsers/:role",(req,res,next) => {
+  try{
+     const{role} = req.params;
+     if(!role)return next(createError.BadRequest("role not found!"));
+     let sql = "select * from users where role = ?";
+     db.query(sql,[role],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+     })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 
 module.exports = router;
