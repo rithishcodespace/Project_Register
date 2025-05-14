@@ -4,6 +4,7 @@ import axios from 'axios';
 
 function Add_Users() {
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('');
   const [RegisterNumber, setRegisterNumber] = useState('');
@@ -18,14 +19,17 @@ function Add_Users() {
     }
 
     const userData = {
-      emailId: name,
+      emailId: email,
+      name:name,
+      dept:subject,
+      phone_number:phoneNumber,
       password: password,
       reg_num: RegisterNumber,
       role: role,
     };
 
     if ((role === 'guide' || role === 'ext-guide') && phoneNumber) {
-      userData.phoneNumber = phoneNumber;
+      userData.phone_number = phoneNumber;
     }
 
     if (role === 'sub_expert' && subject) {
@@ -35,6 +39,7 @@ function Add_Users() {
     let response = await axios.post("http://localhost:1234/admin/adduser", userData);
     if (response.status === 200) {
       setName("");
+      setEmail("");
       setPassword("");
       setRegisterNumber("");
       setRole("");
@@ -57,6 +62,7 @@ function Add_Users() {
               type="name"
               placeholder="Enter user Name"
               value={name}
+              onChange={(e) => setName(e.target.value)}
               className="w-full bg-white  px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -66,8 +72,8 @@ function Add_Users() {
             <input
               type="email"
               placeholder="Enter user email"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 border bg-white  border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -79,8 +85,13 @@ function Add_Users() {
               placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-white  px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+              list="password-suggestions"
+              className="w-full bg-white px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />            
+            <datalist id="password-suggestions">
+              <option value="Bitsathy@1" />   
+            </datalist>
+
           </div>
 
           <div className="mb-5  bg-white ">
@@ -106,7 +117,6 @@ function Add_Users() {
               <option value="student">Student</option>
               <option value="teacher">Staff</option>
               <option value="guide">Guide</option>
-              <option value="ext-guide">External Guide</option>
               <option value="sub_expert">Subject Expert</option>
             </select>
           </div>
@@ -150,46 +160,7 @@ function Add_Users() {
           )}
         </div>
 
-        {/* Password Field */}
-        <div className="mb-5 relative bg-white ">
-          <label className="block text-sm  bg-white  text-black mb-2">Password</label>
-          <input
-            type='text'
-            placeholder="Enter password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 pr-10 border bg-white  border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          
-        </div>
-        <div className="mb-5 relative bg-white ">
-          <label className="block text-sm bg-white  text-black mb-2">Register Number</label>
-          <input
-            type='text'
-            placeholder="Enter register number"
-            value={RegisterNumber}
-            onChange={(e) => setRegisterNumber(e.target.value)}
-            className="w-full px-4 py-2 pr-10 border bg-white  border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          
-        </div>
 
-        {/* Role Dropdown */}
-        <div className="mb-6 bg-white ">
-          <label className="block text-sm text-black  bg-white mb-2">Select Role</label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="" disabled>-- Select Role --</option>
-            <option value="admin">Admin</option>
-            <option value="student">Student</option>
-            <option value="teacher">Staff</option>
-            <option value="guide">Guide</option>
-            <option value="sub_expert">Subject Expert</option>
-          </select>
-        </div>
 
         {/* Submit Button */}
         <button
