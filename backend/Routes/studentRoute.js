@@ -1,10 +1,21 @@
 const express = require("express");
 const { route } = require("./teacherRoute");
 const createError = require("http-errors");
-const verifyAccessToken = require("../utils/verifyAccessToken");
+// const verifyAccessToken = require("../utils/verifyAccessToken");
 const router = express.Router();
 const generateWeeklyDeadlines = require("../utils/generateWeeklyDeadlines");
 const db = require("../db");
+const userAuth = require("../middlewares/userAuth")
+
+// common to all route
+router.get("/profile/view",userAuth,(req,res)=>{
+    try{
+      res.send(req.user);  
+    }
+    catch(error){
+      next(error);
+    }
+})
 
 // adds the connection request in the db -> invite button
 router.post("/student/join_request",(req,res,next) => {

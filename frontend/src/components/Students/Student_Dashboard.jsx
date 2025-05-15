@@ -81,25 +81,27 @@ function StudentDashboard() {
   };
 
   const getProfile = async () => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        console.error("Access token is missing");
-        return;
-      }
-      const response = await axios.get('http://localhost:1234/profile/view', {
-        headers: {
-          Authorization: `Bearer ${token}`
-          ,
-        },
-      });
+  try {
+    const response = await axios.get('http://localhost:1234/profile/view', {
+      withCredentials: true
+    });
 
+    if (response.status === 200) {
+      console.log("Profile Data:", response.data);
       dispatch(addUser(response.data[0]));
       checkUserStatus(response.data[0].reg_num);
-    } catch (error) {
-      console.error('Error fetching profile:', error.response ? error.response.data : error.message);
+    } else {
+      console.error("Failed to fetch profile:", response.status);
     }
-  };
+  } catch (error) {
+    console.error('Error fetching profile:', error.response ? error.response.data : error.message);
+    // Attempt to call checkUserStatus with local reg_num if profile fails
+    if (selector.reg_num) {
+      console.log("Attempting to check status without profile data...");
+      checkUserStatus(selector.reg_num);
+    }
+  }
+};
 
   const checkUserStatus = async (reg_num) => {
     try {

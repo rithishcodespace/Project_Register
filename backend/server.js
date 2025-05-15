@@ -4,9 +4,9 @@ const app = express();
 const cors = require("cors");
 const createError = require("http-errors");
 const morgan = require("morgan");
+const cookieParser = require("cookie-parser");
 const PORT = process.env.PORT;
 const authRoute = require("./Routes/authRoute");
-const profileRoute = require("./Routes/profile");
 const teacherRoute = require("./Routes/teacherRoute");
 const studentRoute = require("./Routes/studentRoute");
 const adminRouter = require("./Routes/adminRoute");
@@ -15,16 +15,16 @@ const subjectExpertRouter = require("./Routes/subjectExpertRouter");
 const uploadRouter = require("./Routes/uploadRoute");
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(morgan('dev')); //development build
 app.use(cors({
     origin: "http://localhost:5173", // Vite's default port
-    credentials: true,
+    credentials: true, // accepts cookie's from frontend
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"]
   }));
 
 app.use("/",authRoute);
-app.use("/",profileRoute);
 app.use("/",teacherRoute);
 app.use("/",studentRoute);
 app.use("/",adminRouter);
