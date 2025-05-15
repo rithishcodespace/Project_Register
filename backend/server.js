@@ -12,6 +12,7 @@ const studentRoute = require("./Routes/studentRoute");
 const adminRouter = require("./Routes/adminRoute");
 const guideRouter = require("./Routes/GuideRoute")
 const subjectExpertRouter = require("./Routes/subjectExpertRouter");
+const uploadRouter = require("./Routes/uploadRoute");
 
 app.use(express.json());
 app.use(morgan('dev')); //development build
@@ -29,6 +30,7 @@ app.use("/",studentRoute);
 app.use("/",adminRouter);
 app.use("/",guideRouter);
 app.use("/",subjectExpertRouter);
+app.use("/",uploadRouter);
 
 app.use((req,res,next) => {
     next(createError.NotFound("api do not found"));
