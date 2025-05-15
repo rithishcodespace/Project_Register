@@ -25,25 +25,27 @@ router.post("/student/join_request",(req,res,next) => {
     }
 })
 
-// sets the team_id to the connected team members -> clicks conform button
-router.post("/student/add_team_id/:from_reg_num/:team_id",(req,res,next) => {
-  try{
-    const team_id = req.params.team_id;
-    const sql = `
-    UPDATE team_requests 
-    SET team_id = ? 
-    WHERE from_reg_num = ? AND status = 'accepted'
-  `;
-    db.query(sql,[team_id],(error,result) => {
-      if(error) next(error);
-      res.send("teamId inserted successfully!");
-    })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
+// // sets the team_id to the connected team members -> clicks conform button
+// router.post("/student/add_team_id/:from_reg_num",async(req,res,next) => {
+//   try{
+//     const{from_reg_num} = req.params;
+    
+//     if(!from_reg_num || !team_id)return next(createError.BadRequest("reg_num or team_id not found!!"))
+//     const sql = `
+//     UPDATE team_requests 
+//     SET team_id = ? 
+//     WHERE from_reg_num = ? AND status = 'accepted'
+//   `;
+//     db.query(sql,[team_id,from_reg_num],(error,result) => {
+//       if(error) next(error);
+//       res.send("teamId inserted successfully!");
+//     })
+//   }
+//   catch(error)
+//   {
+//     next(error);
+//   }
+// })
 
 // filters the request i received -> notification
 router.get("/student/request_recived/:regnum",(req,res,next) => {
@@ -227,11 +229,14 @@ router.post("/student/projects",(req,res,next) => {
 //   }
 // })
 
-//make the team status -> 1 
-router.patch("/student/team_request/conform_team/:team_id",(req,res,next) => {
+//make the team status -> 1 and assings team id to the team
+router.patch("/student/team_request/conform_team",async(req,res,next) => {
   try{
     let {from_reg_num} = req.body;
-    const{team_id} = req.params;
+    // returns an array like = [{"count:1"},{"count":2}] -> this destructed and stored in existingTeams
+    const[existingTeams] = await db.query("select count(*) as count from team_requests where team_conformed = true");
+    const teamNumber = existingTeams[0].count+1;
+    const team_id = `TEAM-${String(teamNumber).padStart(4,"0")}`; //TEAM-ID-0001
     if(!from_reg_num || !team_id)return next(createError.BadRequest("team_id or reg_num is null!"))
     let sql = "update team_requests set team_conformed = true where from_reg_num = ? and status = 'accept'";
     db.query(sql,[from_reg_num],(error,result) => {
