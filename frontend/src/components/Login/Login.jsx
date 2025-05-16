@@ -57,7 +57,7 @@ function Login() {
           if (role === "admin") navigate("/admin");
           else if (role === "teacher") navigate("/teacher");
           else if (role === "guide") navigate("/guide");
-          else if (role === "subject_expert") navigate("/subject_expert");
+          else if (role === "sub_expert") navigate("/subject_expert");
           else alert("Unknown role");
         }
       }
