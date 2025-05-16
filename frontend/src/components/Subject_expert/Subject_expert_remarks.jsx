@@ -60,18 +60,18 @@ function Subject_expert_remarks() {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold text-purple-700 mb-6">
+      <h2 className="text-2xl flex justify-center font-bold text-black mb-6">
         Subject Expert - Phase-wise Remarks
       </h2>
 
       {projects.map((project) => (
         <div
           key={project.id}
-          className="mb-8 p-6 bg-gray-100 rounded shadow border"
+          className="mb-8 p-6 bg-white rounded shadow border"
         >
-          <h3 className="text-xl font-semibold">{project.name}</h3>
-          <p className="text-gray-700">
-            <strong>Team Lead:</strong> {project.teamLead}
+          <h3 className="text-xl bg-white  font-semibold">{project.name}</h3>
+          <p className="text-gray-700 bg-white ">
+            <strong className=" bg-white ">Team Lead:</strong> {project.teamLead}
           </p>
 
           {project.phases.map((phase, index) => {
@@ -83,16 +83,16 @@ function Subject_expert_remarks() {
             return (
               <div
                 key={index}
-                className="mt-4 p-4 border rounded bg-white shadow-sm"
+                className="mt-4 p-4 border shadow-sm rounded bg-white"
               >
-                <p className="font-medium text-blue-800">{phase.phase}</p>
-                <p className="text-gray-600">
-                  <strong>Scheduled:</strong>{" "}
+                <p className="font-medium bg-white  text-purple-500">{phase.phase}</p>
+                <p className="text-gray-600 bg-white ">
+                  <strong className=" bg-white ">Scheduled:</strong>{" "}
                   {new Date(phase.scheduledDate).toLocaleString()}
                 </p>
 
                 {phase.mark !== null ? (
-                  <p className="mt-2 text-green-600 font-semibold">
+                  <p className="mt-2 text-green-600 bg-white  font-semibold">
                     ✅ Marks Entered: {phase.mark}/10
                   </p>
                 ) : canEnter ? (
@@ -106,17 +106,17 @@ function Subject_expert_remarks() {
                         handleMarkChange(project.id, index, e.target.value)
                       }
                       placeholder="Enter mark (0–10)"
-                      className="border p-2 rounded w-32"
+                      className="border p-2  bg-white rounded w-32"
                     />
                     <button
                       onClick={() => handleSubmit(project.id, index)}
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                      className="px-4 py-2 bg-green-600  text-white rounded hover:bg-green-700"
                     >
                       Submit
                     </button>
                   </div>
                 ) : (
-                  <p className="mt-2 text-red-500 font-semibold">
+                  <p className="mt-2 text-red-500 bg-white  font-semibold">
                     {reviewStarted
                       ? "❌ Mark entry window expired (after 2 days)"
                       : "⏳ Review time has not started yet"}
