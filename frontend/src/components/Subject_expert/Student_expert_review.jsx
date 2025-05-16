@@ -5,7 +5,7 @@ const sampleProjects = [
     id: 1,
     projectName: "Smart Attendance System",
     teamLead: "Keerthana M",
-    scheduledDate: "2025-05-09T11:13", // For testing: May 8, 2025, 2 PM
+    scheduledDate: "2025-05-16T13:13", // For testing: May 8, 2025, 2 PM
   },
   {
     id: 2,
@@ -97,7 +97,7 @@ function Student_expert_review() {
 
   return (
     <div className="p-6">
-      <h2 className="text-3xl font-bold text-center text-purple-700 mb-6">
+      <h2 className="text-3xl font-bold text-center text-black mb-6">
         Review Projects
       </h2>
 
@@ -117,41 +117,41 @@ function Student_expert_review() {
         return (
           <div
             key={project.id}
-            className="mb-6 p-6 bg-blue-50 rounded shadow-lg border"
+            className="mb-6 p-6  bg-white rounded shadow-lg border"
           >
-            <h3 className="text-xl font-semibold">{project.projectName}</h3>
-            <p className="text-gray-700 mt-1">
-              <strong>Team Lead:</strong> {project.teamLead}
+            <h3 className="text-xl font-semibold bg-white">{project.projectName}</h3>
+            <p className="text-gray-700  bg-white mt-1">
+              <strong className=" bg-white ">Team Lead:</strong> {project.teamLead}
             </p>
-            <p className="text-gray-700 mt-1">
-              <strong>Scheduled Time:</strong>{" "}
+            <p className="text-gray-700 bg-white  mt-1">
+              <strong className=" bg-white ">Scheduled Time:</strong>{" "}
               {scheduledDate.toLocaleString()}
             </p>
 
-            <div className="mt-4">
-              <p className="font-medium text-gray-800">
+            <div className="mt-4 bg-white ">
+              <p className="font-medium bg-white  text-gray-800">
                 Timer: {formatTime(timerValue)}
               </p>
-              <p className="text-green-600 font-semibold mt-2">
+              <p className="text-green-600 bg-white  font-semibold mt-2">
                 {isPresent && "✅ Attendance Marked"}
               </p>
               {!isPresent && isAbsent && (
-                <p className="text-red-600 font-semibold mt-2">
+                <p className="text-red-600  bg-white font-semibold mt-2">
                    Absent
                 </p>
               )}
               {!isPresent && !isAbsent && showBeforeTime && (
-                <p className="text-yellow-600 font-semibold mt-2">
+                <p className="text-yellow-600 bg-white  font-semibold mt-2">
                   Review time has not started yet
                 </p>
-              )}
+              )} 
             </div>
 
-            <div className="mt-4 flex gap-4">
+            <div className="mt-4 flex bg-white  gap-4">
               <button
                 onClick={() => handleStartReview(project.id)}
                 disabled={isActive || isAbsent || showBeforeTime}
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400"
+                className="px-4 py-2 bg-green-500  text-white rounded hover:bg-green-600 disabled:bg-gray-400"
               >
                 Start Review
               </button>

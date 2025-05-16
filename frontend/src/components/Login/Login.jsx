@@ -7,6 +7,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import React from "react";
 import college_img from "../../assets/college_img.png";
 import axios from "axios";
+import LockIcon from '@mui/icons-material/Lock';
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../../utils/firebase";
 import { useDispatch } from "react-redux";
@@ -28,9 +29,7 @@ function Login() {
         emailId,
         password,
       }, {
-        headers: {
-          "Content-Type": "application/json"
-        }
+       withCredentials:true
       });
 
       if (response.status === 200) {
@@ -59,7 +58,7 @@ function Login() {
           if (role === "admin") navigate("/admin");
           else if (role === "teacher") navigate("/teacher");
           else if (role === "guide") navigate("/guide");
-          else if (role === "subject_expert") navigate("/subject_expert");
+          else if (role === "sub_expert") navigate("/subject_expert");
           else alert("Unknown role");
         }
       }
@@ -125,7 +124,7 @@ function Login() {
         <img src={college_img} style={{ width: "50%", marginTop: "-6%", marginLeft: "25%", backgroundColor: "white", zIndex: 1 }} alt="" />
         <p className="Login">Hi, Welcome back</p><br />
 
-        <div className="lnamediv">
+        <div className="lnamediv bg-white">
           <p className="symbol">@</p>
           <input
             onChange={(e) => { setemailId(e.target.value) }}
@@ -138,7 +137,7 @@ function Login() {
         </div>
 
         <div className="lpassdiv" style={{ position: "relative" }}>
-          <img src={Lock} className="lock" alt="Lock" />
+          <LockIcon className="lock" />
           <input
             onChange={(e) => { setpassword(e.target.value) }}
             type={showpassword ? "text" : "password"}
@@ -194,11 +193,26 @@ function Login() {
             textAlign: "center",
             minWidth: "300px"
           }}>
-            <h3>Are you an internal or external student?</h3>
-            <div style={{ marginTop: "20px", display: "flex", justifyContent: "space-around" }}>
-              <button onClick={() => handleStudentChoice("internal")} style={{ padding: "10px 20px", cursor: "pointer" }}>Internal</button>
-              <button onClick={() => handleStudentChoice("external")} style={{ padding: "10px 20px", cursor: "pointer" }}>External</button>
+            <div className="flex flex-col items-center justify-center sm:w-[20px] md:w-[357px] bg-white ">
+              <h1 className=" text-md bg-white md:text-xl font-semibold text-gray-800 mb-4">
+                Are you an internal or external student?
+              </h1>
+              <div className="flex flex-col gap-4 bg-white">
+                <button
+                  onClick={() => handleStudentChoice("internal")}
+                  className="px-6 py-3  md:w-96 bg-purple-500 text-white rounded-xl shadow hover:bg-purple-700 transition-all duration-200"
+                >
+                  Internal
+                </button>
+                <button
+                  onClick={() => handleStudentChoice("external")}
+                  className="px-6 py-3 bg-green-600 text-white rounded-xl shadow hover:bg-green-700 transition-all duration-200"
+                >
+                  External
+                </button>
+              </div>
             </div>
+
           </div>
         </div>
       )}

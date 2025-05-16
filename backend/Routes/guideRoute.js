@@ -109,7 +109,7 @@ router.post("/guide/sent_request_to_guide",(req,res,next) => {
             service: 'gmail',
             auth: {
             user: 'rithishvkv@gmail.com', // -> temporary
-            pass: 'ncwbsvgspuplvzzr',
+            pass: process.env.EMAIL_PASS
             },
         });
 

@@ -28,10 +28,10 @@ function Guide_navbar({ isOpen, toggleSidebar }) {
       dispatch(removeTeamMembers());
       dispatch(removeTeamStatus());
 
-      navigate("/");
+      navigate("/login");
     } catch (error) {
       console.error("Logout failed:", error);
-      navigate("/");
+      navigate("/login");
     }
   };
 

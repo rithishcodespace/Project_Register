@@ -80,7 +80,7 @@ function Student_expert_mark_attendence() {
 
   return (
     <div className="p-6">
-      <h2 className="text-3xl font-bold mb-6 text-center text-purple-700">
+      <h2 className="text-3xl font-bold mb-6 text-center text-black">
         Schedule Projects for Review
       </h2>
 
@@ -94,29 +94,29 @@ function Student_expert_mark_attendence() {
             return (
               <div
                 key={project.id}
-                className="p-5 border rounded-lg shadow-md hover:shadow-lg transition"
+                className="p-5 bg-white  border rounded-lg shadow-md hover:shadow-lg transition"
               >
-                <h3 className="text-xl font-semibold text-gray-800">{project.projectName}</h3>
-                <p className="text-gray-600 mt-2">Team Lead: {project.teamLead}</p>
-                <p className="text-gray-500 mt-1">
+                <h3 className="text-xl  bg-white font-semibold text-gray-800">{project.projectName}</h3>
+                <p className="text-gray-600  bg-white mt-2">Team Lead: {project.teamLead}</p>
+                <p className="text-gray-500 bg-white  mt-1">
                   Current Schedule:{' '}
                   {new Date(project.scheduledDateTime).toLocaleString()}
                 </p>
 
                 {/* DateTime Input */}
-                <div className="flex flex-col mt-4">
-                  <label className="text-gray-700">New Schedule (Date & Time):</label>
+                <div className="flex flex-col  bg-white mt-4">
+                  <label className="text-gray-700 bg-white ">New Schedule (Date & Time):</label>
                   <input
                     type="datetime-local"
                     defaultValue={project.scheduledDateTime}
                     ref={inputRefs.current[project.id]}
-                    className="mt-2 p-2 border rounded"
+                    className="mt-2 p-2 bg-white  border rounded"
                   />
                 </div>
 
-                <div className="mt-4 flex justify-between items-center">
+                <div className="mt-4  bg-white flex justify-between items-center">
                   <button
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
                     onClick={() => handleSave(project.id)}
                   >
                     Save Schedule
@@ -125,7 +125,7 @@ function Student_expert_mark_attendence() {
                 </div>
 
                 {!validateSchedule(project.scheduledDateTime) && (
-                  <p className="text-red-500 text-sm mt-2">
+                  <p className="text-red-500 text-sm  bg-white mt-2">
                     Invalid: Date must be after today, within 90 days, and time between 9AM–6PM.
                   </p>
                 )}

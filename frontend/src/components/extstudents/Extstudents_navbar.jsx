@@ -35,11 +35,11 @@ function Extstudents_navbar({ isOpen, toggleSidebar }) {
 
       localStorage.clear(); // clear entire localStorage safely
 
-      navigate("/");
+      navigate("/login");
     } catch (error) {
 
       console.error("Logout failed:", error);
-      navigate("/");
+      navigate("/login");
       
     }
   };
