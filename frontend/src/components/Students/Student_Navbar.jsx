@@ -14,6 +14,7 @@ function Student_navbar({ isOpen, toggleSidebar }) {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const currentPath = location.pathname;
 
   const handleLogout = async () => {
     try {
@@ -34,10 +35,11 @@ function Student_navbar({ isOpen, toggleSidebar }) {
   };
 
   const isActive = (path) => {
-    const currentPath = location.pathname;
-    if (path === "") return currentPath === "/student";
-    return currentPath.endsWith(path) || currentPath === `/student/${path}`;
-  };
+  const currentPath = location.pathname;
+  if (path === "") return currentPath === "/student" || currentPath === "/student/invitations";
+  return currentPath.endsWith(path) || currentPath === `/student/${path}`;
+};
+
 
   const navDiv = (path) => 
     `ml-3 mb-10 flex items-center rounded-lg px-3 py-2 ${isActive(path) ? "bg-purple-400 text-white" : "bg-white"} ${isOpen ? "w-52" : "w-12"}`;
