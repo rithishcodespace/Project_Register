@@ -22,6 +22,32 @@ function Queries() {
     }
   }
 
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (newQuery.trim() === '') return;
+
+    try {
+      let token = localStorage.getItem("accessToken");
+      await axios.post(
+        'http://localhost:1234/student/send_query',
+        {
+          query: newQuery,
+          team_id: selector[0].team_id,
+          team_member: selector[0].team_leader,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setNewQuery('');
+    } catch (error) {
+      console.error("Error sending query:", error);
+    }
+  };
+
+
   useEffect(() => {
     const fetchQueries = async () => {
       try {
@@ -49,31 +75,7 @@ function Queries() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (newQuery.trim() === '') return;
-
-    try {
-      let token = localStorage.getItem("accessToken");
-      await axios.post(
-        'http://localhost:1234/student/send_query',
-        {
-          query: newQuery,
-          team_id: selector[0].team_id,
-          team_member: selector[0].team_leader,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setNewQuery('');
-    } catch (error) {
-      console.error("Error sending query:", error);
-    }
-  };
-
+  
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [queries]);
