@@ -98,7 +98,7 @@ function App() {
 
           <Route path="/subject_expert" element={<Subject_expert />}>
             <Route index element={<SubjectExpertDashboard />} />
-            <Route path="attendance" element={<Student_expert_mark_attendence />} />
+            <Route path="schedule_review" element={<Student_expert_mark_attendence />} />
             <Route path="review" element={<Student_expert_review />} />
             <Route path="remarks" element={<Subject_expert_remarks />} />
           </Route>

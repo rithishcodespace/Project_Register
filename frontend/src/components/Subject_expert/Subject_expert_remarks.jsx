@@ -6,7 +6,7 @@ const sampleProjects = [
     name: "Smart Attendance System",
     teamLead: "Keerthana M",
     phases: [
-      { phase: "Phase 1", scheduledDate: "2025-05-08T10:00:00", mark: null },
+      { phase: "Phase 1", scheduledDate: "2025-05-15T10:00:00", mark: null },
       { phase: "Phase 2", scheduledDate: "2025-05-10T10:00:00", mark: null },
       { phase: "Phase 3", scheduledDate: "2025-05-14T10:00:00", mark: null },
     ],
@@ -95,8 +95,9 @@ function Subject_expert_remarks() {
                   <p className="mt-2 text-green-600 bg-white  font-semibold">
                     ✅ Marks Entered: {phase.mark}/10
                   </p>
-                ) : canEnter ? (
-                  <div className="mt-2 flex items-center gap-2">
+                ) : canEnter ? (<>
+                  <div className="mt-2 flex mb-5 items-center bg-white gap-2">
+                    
                     <input
                       type="number"
                       min="0"
@@ -106,7 +107,7 @@ function Subject_expert_remarks() {
                         handleMarkChange(project.id, index, e.target.value)
                       }
                       placeholder="Enter mark (0–10)"
-                      className="border p-2  bg-white rounded w-32"
+                      className="border p-2 min-w-48 bg-white rounded w-32"
                     />
                     <button
                       onClick={() => handleSubmit(project.id, index)}
@@ -115,6 +116,8 @@ function Subject_expert_remarks() {
                       Submit
                     </button>
                   </div>
+                  <textarea className="w-full min-h-28 p-2 relative bg-white border min-w-" placeholder="Enter Remarks ..."></textarea>
+                  </>
                 ) : (
                   <p className="mt-2 text-red-500 bg-white  font-semibold">
                     {reviewStarted
