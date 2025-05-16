@@ -117,7 +117,7 @@ function Student_expert_review() {
         return (
           <div
             key={project.id}
-            className="mb-6 p-6 bg-blue-50  bg-white rounded shadow-lg border"
+            className="mb-6 p-6  bg-white rounded shadow-lg border"
           >
             <h3 className="text-xl font-semibold bg-white">{project.projectName}</h3>
             <p className="text-gray-700  bg-white mt-1">
@@ -151,7 +151,7 @@ function Student_expert_review() {
               <button
                 onClick={() => handleStartReview(project.id)}
                 disabled={isActive || isAbsent || showBeforeTime}
-                className="px-4 py-2 bg-green-500 bg-white  text-white rounded hover:bg-green-600 disabled:bg-gray-400"
+                className="px-4 py-2 bg-green-500  text-white rounded hover:bg-green-600 disabled:bg-gray-400"
               >
                 Start Review
               </button>
