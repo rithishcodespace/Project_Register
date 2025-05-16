@@ -83,15 +83,10 @@ function Student_Team() {
 
   const getProfile = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        console.error("Access token is missing");
-        return;
-      }
+      
       const response = await axios.get('http://localhost:1234/profile/view', {
         headers: {
-          Authorization: `Bearer ${token}`
-          ,
+          withCredentials:true  
         },
       });
 
@@ -104,17 +99,11 @@ function Student_Team() {
 
   const checkUserStatus = async (reg_num) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        console.error("Access token is missing");
-        return;
-      }
+    
       const response = await axios.post('http://localhost:1234/student/fetch_team_status_and_invitations', 
         { "from_reg_num": reg_num },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+         withCredentials:true
         }
       );
 
@@ -129,7 +118,7 @@ function Student_Team() {
           // checks whether he is a team member of another team without conformed
           let res = await axios.get(`http://localhost:1234/student/check_accepted_status/${reg_num}`,{
             headers:{
-              Authorization : `Bearer ${token}`
+              withCredentials:true
             }
           })
           if(res.status === 200 && res.data.length > 0)
@@ -217,32 +206,32 @@ function Student_Team() {
       </div>
 
       <div className="w-[95%] max-w-[60rem] rounded-xl  flex flex-col items-center gap-4 p-9 overflow-y-auto">
-        <h1 className="text-purple-500  text-2xl font-bold">Your Team</h1>
+        <h1 className="text-black text-2xl font-bold">Your Team</h1>
 
-        <div className="border w-full p-4 rounded ">
-          <p><strong>Leader:</strong> YOU</p>
-          <p><strong>Email:</strong> {selector.emailId}</p>
-          <p><strong>Register Number:</strong> {selector.reg_num}</p>
-          <p className="text-green-600 font-semibold">Status: Accepted</p>
+        <div className="border w-full bg-white p-4 rounded-xl ">
+          <p className="bg-white"><strong className="bg-white">Leader:</strong> YOU</p>
+          <p className="bg-white"><strong className="bg-white">Email:</strong> {selector.emailId}</p>
+          <p className="bg-white"><strong className="bg-white">Register Number:</strong> {selector.reg_num}</p>
+          <p className=" bg-white text-green-600 font-semibold">Status: Accepted</p>
         </div>
 
         {acceptedMembers.map((member, idx) => (
-          <div key={idx} className="border w-full p-4 rounded ">
-            <p><strong>Name:</strong> {member.name}</p>
-            <p><strong>Email:</strong> {member.emailId}</p>
-            <p><strong>Register Number:</strong> {member.reg_num}</p>
-            <p><strong>Department:</strong> {member.dept}</p>
-            <p className="text-green-500 font-semibold">Status: Accepted</p>
+          <div key={idx} className="border bg-white w-full p-4 rounded-xl ">
+            <p className="bg-white"><strong className="bg-white">Name:</strong> {member.name}</p>
+            <p className="bg-white"><strong className="bg-white">Email:</strong> {member.emailId}</p>
+            <p className="bg-white"><strong className="bg-white">Register Number:</strong> {member.reg_num}</p>
+            <p className="bg-white"><strong className="bg-white">Department:</strong> {member.dept}</p>
+            <p className="text-green-500 bg-white font-semibold">Status: Accepted</p>
           </div>
         ))}
 
         {pendingInvitations.map((invitation, idx) => (
-          <div key={idx} className="border w-full p-4 rounded ">
-            <p><strong>Name:</strong> {invitation.name}</p>
-            <p><strong>Email:</strong> {invitation.emailId}</p>
-            <p><strong>Register Number:</strong> {invitation.reg_num}</p>
-            <p><strong>Department:</strong> {invitation.dept}</p>
-            <p className={`font-semibold ${
+          <div key={idx} className="border bg-white w-full p-4 rounded-xl ">
+            <p className="bg-white"><strong className="bg-white">Name:</strong> {invitation.name}</p>
+            <p className="bg-white"><strong className="bg-white">Email:</strong> {invitation.emailId}</p>
+            <p className="bg-white"><strong className="bg-white">Register Number:</strong> {invitation.reg_num}</p>
+            <p className="bg-white"><strong className="bg-white">Department:</strong> {invitation.dept}</p>
+            <p className={`font-semibold bg-white ${
               invitation.status === 'accept' ? 'text-green-500' :
               invitation.status === 'reject' ? 'text-red-500' :
               'text-yellow-500'
