@@ -14,6 +14,7 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 router.post("/auth/login",(req,res,next) => {
    const{emailId,password} = req.body;
+   console.log(emailId +" " + password) ;
    try{
      if(!emailId || !password) throw createError.BadRequest();
      validate(emailId,password);
