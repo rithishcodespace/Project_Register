@@ -73,14 +73,15 @@ router.patch("/admin/edit_project/:project_id", (req, res, next) => {
       return res.send("Project updated successfully!");
     }
   }
-);
-
+  );
   } 
   catch (error) 
   {
      next(error);
   }
 });
+
+// fetches the users based on the given role
 
 router.get("/fetchUsers/:role",(req,res,next) => {
   try{

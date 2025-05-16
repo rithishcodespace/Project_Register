@@ -89,7 +89,7 @@ router.patch("/sub_expert/accept_reject/:status/:project_id/:my_id", (req, res, 
 });
 
 // sends request to expert
-// sends request to guide
+
 router.post("/sub_expert/sent_request_to_expert",(req,res,next) => {
     try{
       const {from_team_id,project_id,to_expert_id} = req.body;  // to details
@@ -136,7 +136,8 @@ router.post("/sub_expert/sent_request_to_expert",(req,res,next) => {
 })
 
 
-// fetches team details, i am acting as the subject expert 
+// fetches team details, i am acting as the subject expert
+
 router.get("/sub_expert/fetch_teams/:expert_id",(req,res,next) => {
     try{
       const{expert_id} = req.params;
@@ -158,6 +159,7 @@ router.get("/sub_expert/fetch_teams/:expert_id",(req,res,next) => {
 })
 
 // adding review details in scheduled reviews
+
 router.post("/sub_expert/add_review_details",(req,res,next) => {
     try{
       const{project_id,project_name,team_lead,review_date,start_time} = req.body;
