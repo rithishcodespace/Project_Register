@@ -9,7 +9,7 @@ import { addTeamMembers,removeTeamMembers } from '../../utils/teamSlice';
 import { useNavigate } from 'react-router-dom';
 import { addTeamStatus } from '../../utils/teamStatus';
 
-function StudentDashboard() {
+function Student_Dashboard() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [teamConformationPending,setteamConformationPending] = useState(false);
@@ -260,4 +260,4 @@ function StudentDashboard() {
   );
 }
 
-export default StudentDashboard;
+export default Student_Dashboard;
