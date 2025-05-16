@@ -325,7 +325,7 @@ router.patch("/student/assign_project_id/:project_id/:from_reg_num", (req, res, 
   try {
     const { project_id, from_reg_num } = req.params;
 
-    const updateSQL = "UPDATE team_requests SET project_id = ?,  project_picked_date = CURRENT_TIMESTAMP WHERE from_reg_num = ? AND status = 'accept'";
+    const updateSQL = "UPDATE team_requests SET project_id = ?,  project_picked_date = CURRENT_TIMESTAMP  WHERE from_reg_num = ? AND status = 'accept'";
     db.query(updateSQL, [project_id, from_reg_num], (error, updateResult) => {
       if (error) return next(error);
 

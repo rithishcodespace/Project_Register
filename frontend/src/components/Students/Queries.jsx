@@ -107,18 +107,16 @@ function Queries() {
           <div ref={chatEndRef} />
         </div>
 
-        {/* Input */}
-       
         <form
           onSubmit={handleSend}
-          className="fixed ml- -mx-4 bottom-0 flex items-center p-3 border-t border-gray-300 bg-white"
+          className=" w-full  sticky -mx-4 bottom-0  flex  p-3  bg-white"
         > 
           <input
             type="text"
             value={newQuery}
             onChange={(e) => setNewQuery(e.target.value)}
             placeholder="Type your query..."
-            className="flex-1 w-full p-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="flex-1 w-full  p-2 border border-gray-300 rounded-full  focus:outline-none focus:ring-2 focus:ring-purple-500"
             required
           />
           <button

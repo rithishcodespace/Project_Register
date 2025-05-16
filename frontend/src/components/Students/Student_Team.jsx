@@ -1,68 +1,37 @@
 import { useState, useEffect } from 'react';
 import CreateForm from './CreateForm';
 import InviteForm from './InviteForm';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import TeamDetails from './TeamDetails';
 import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { addUser } from '../../utils/userSlice';
-import { addTeamMembers,removeTeamMembers } from '../../utils/teamSlice';
-import { useNavigate } from 'react-router-dom';
+import { addTeamMembers } from '../../utils/teamSlice';
 import { addTeamStatus } from '../../utils/teamStatus';
 
 function Student_Team() {
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [teamConformationPending,setteamConformationPending] = useState(false);
-  const [createForm, setCreateForm] = useState({
-    name: '',
-    email: '',
-    registerNumber: '',
-    department: '',
-  });
+  const [teamConformationPending, setTeamConformationPending] = useState(false);
   const [inviteForm, setInviteForm] = useState({
     name: '',
     email: '',
     registerNumber: '',
     department: '',
   });
+
   const [teamStatus, setTeamStatus] = useState(null); // 0 or 1
   const [teamMembers, setTeamMembers] = useState([]); // Accepted members
   const [pendingInvitations, setPendingInvitations] = useState([]);
-
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const selector = useSelector((state) => state.userSlice);
-
   const departments = [
-    'CSE', 'AIDS', 'IT', 'AIML', 'CT', 'AGRI', 'ECE', 'EIE', 'EEE', 'MECH', 'FT', 'FD'
+    'CSE', 'AIDS', 'IT', 'AIML', 'CT', 'AGRI', 'ECE', 'EIE', 'EEE', 'MECH', 'FT', 'FD',
   ];
-
   const totalMembersAllowed = 4;
 
   const isValidEmail = (email) => email.endsWith('@bitsathy.ac.in');
-
-  const handleCreateChange = (e) => {
-    const { name, value } = e.target;
-    setCreateForm((f) => ({ ...f, [name]: value }));
-  };
-
-  const handleCreateSubmit = (e) => {
-    e.preventDefault();
-    if (!isValidEmail(createForm.email)) {
-      alert('Email must be a valid @bitsathy.ac.in address.');
-      return;
-    }
-
-    dispatch(addUser({
-      name: createForm.name,
-      email: createForm.email,
-      registerNumber: createForm.registerNumber,
-      department: createForm.department,
-    }));
-
-    setIsCreateOpen(false);
-  };
 
   const handleInviteChange = (e) => {
     const { name, value } = e.target;
@@ -76,83 +45,71 @@ function Student_Team() {
       return;
     }
 
-    setPendingInvitations(prev => [...prev, { ...inviteForm, status: 'Pending' }]);
+    setPendingInvitations((prev) => [
+      ...prev,
+      { ...inviteForm, status: 'Pending' },
+    ]);
     setInviteForm({ name: '', email: '', registerNumber: '', department: '' });
     setIsInviteOpen(false);
   };
 
   const getProfile = async () => {
     try {
-      
       const response = await axios.get('http://localhost:1234/profile/view', {
-        headers: {
-          withCredentials:true  
-        },
+        withCredentials: true,
       });
-
       dispatch(addUser(response.data[0]));
       checkUserStatus(response.data[0].reg_num);
     } catch (error) {
-      console.error('Error fetching profile:', error.response ? error.response.data : error.message);
+      console.error('Error fetching profile:', error.message);
     }
   };
 
   const checkUserStatus = async (reg_num) => {
     try {
-    
-      const response = await axios.post('http://localhost:1234/student/fetch_team_status_and_invitations', 
-        { "from_reg_num": reg_num },
-        {
-         withCredentials:true
-        }
+      const response = await axios.post(
+        'http://localhost:1234/student/fetch_team_status_and_invitations',
+        { from_reg_num: reg_num },
+        { withCredentials: true }
       );
 
       if (response.status === 200) {
-       
-        var { teamConformationStatus, teamMembers, pendingInvitations, teamLeader } = response.data;
+        let { teamConformationStatus, teamMembers, pendingInvitations, teamLeader } =
+          response.data;
+
         setTeamStatus(teamConformationStatus);
         setTeamMembers(teamMembers || []);
         setPendingInvitations(pendingInvitations || []);
-        if(teamMembers.length == 0)
-        { 
-          // checks whether he is a team member of another team without conformed
-          let res = await axios.get(`http://localhost:1234/student/check_accepted_status/${reg_num}`,{
-            headers:{
-              withCredentials:true
-            }
-          })
-          if(res.status === 200 && res.data.length > 0)
-          {
-            console.log("second api: ",res.data);
-            setteamConformationPending(true);
 
+        // Check if part of another team but not confirmed
+        if (teamMembers.length === 0) {
+          const res = await axios.get(
+            `http://localhost:1234/student/check_accepted_status/${reg_num}`,
+            { withCredentials: true }
+          );
+          if (res.status === 200 && res.data.length > 0) {
+            setTeamConformationPending(true);
           }
         }
+
         if (teamMembers.length > 0) {
-          teamMembers = [...teamMembers, { teamLeader: teamLeader }];
-          dispatch(addTeamMembers(teamMembers));
+          const fullTeam = [...teamMembers, { teamLeader }];
+          dispatch(addTeamMembers(fullTeam));
           dispatch(addTeamStatus(response.data));
         }
-
-        console.log(response.data);
       }
     } catch (error) {
-      console.error('Error checking team status:', error.response ? error.response.data : error.message);
+      console.error('Error checking team status:', error.message);
     }
   };
 
   const handleConfirmTeam = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const regNum = selector.reg_num;
-
       const response = await axios.patch(
         'http://localhost:1234/student/team_request/conform_team/TEAM_ID_002',
-        { from_reg_num: regNum },
+        { from_reg_num: selector.reg_num },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          withCredentials: true,
         }
       );
 
@@ -161,7 +118,7 @@ function Student_Team() {
         alert('Team confirmed successfully!');
       }
     } catch (error) {
-      console.error('Error confirming team:', error.response ? error.response.data : error.message);
+      console.error('Error confirming team:', error.message);
     }
   };
 
@@ -170,17 +127,26 @@ function Student_Team() {
   }, []);
 
   if (teamStatus === null) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">Loading...</div>
+    );
   }
 
   if (teamStatus === 1) {
     return (
       <div className="flex flex-col justify-center items-center h-[600px]">
-        <h1 className="text-3xl font-bold text-purple-600 mb-11">Welcome to your Team Dashboard!</h1>
-        <Link to="/"><button className=" text-lg rounded-lg p-2">Create Team</button></Link>
+        <h1 className="text-3xl font-bold text-purple-600 mb-11">
+          Welcome to your Team Dashboard!
+        </h1>
+        <Link to="/">
+          <button className="text-lg rounded-lg p-2 bg-purple-600 text-white hover:bg-purple-700">
+            Create Team
+          </button>
+        </Link>
       </div>
     );
   }
+
   if (teamConformationPending) {
     return (
       <div className="flex flex-col justify-center items-center h-screen">
@@ -191,8 +157,12 @@ function Student_Team() {
     );
   }
 
-  const acceptedMembers = teamMembers.filter(member => member.status === 'accept');
-  const remainingInvites = totalMembersAllowed - (1 + pendingInvitations.length + acceptedMembers.length);
+  const acceptedMembers = teamMembers.filter(
+    (member) => member.status === 'accept'
+  );
+  const remainingInvites =
+    totalMembersAllowed -
+    (1 + pendingInvitations.length + acceptedMembers.length);
 
   return (
     <div className="min-h-screen flex flex-col items-center px-6 pt-16">
@@ -205,38 +175,42 @@ function Student_Team() {
         </button>
       </div>
 
-      <div className="w-[95%] max-w-[60rem] rounded-xl  flex flex-col items-center gap-4 p-9 overflow-y-auto">
+      <div className="w-[95%] max-w-[60rem] rounded-xl flex flex-col items-center gap-4 p-9 overflow-y-auto">
         <h1 className="text-black text-2xl font-bold">Your Team</h1>
 
         <div className="border w-full bg-white p-4 rounded-xl ">
-          <p className="bg-white"><strong className="bg-white">Leader:</strong> YOU</p>
-          <p className="bg-white"><strong className="bg-white">Email:</strong> {selector.emailId}</p>
-          <p className="bg-white"><strong className="bg-white">Register Number:</strong> {selector.reg_num}</p>
-          <p className=" bg-white text-green-600 font-semibold">Status: Accepted</p>
+          <p><strong>Leader:</strong> YOU</p>
+          <p><strong>Email:</strong> {selector.emailId}</p>
+          <p><strong>Register Number:</strong> {selector.reg_num}</p>
+          <p className="text-green-600 font-semibold">Status: Accepted</p>
         </div>
 
         {acceptedMembers.map((member, idx) => (
-          <div key={idx} className="border bg-white w-full p-4 rounded-xl ">
-            <p className="bg-white"><strong className="bg-white">Name:</strong> {member.name}</p>
-            <p className="bg-white"><strong className="bg-white">Email:</strong> {member.emailId}</p>
-            <p className="bg-white"><strong className="bg-white">Register Number:</strong> {member.reg_num}</p>
-            <p className="bg-white"><strong className="bg-white">Department:</strong> {member.dept}</p>
-            <p className="text-green-500 bg-white font-semibold">Status: Accepted</p>
+          <div key={idx} className="border bg-white w-full p-4 rounded-xl">
+            <p><strong>Name:</strong> {member.name}</p>
+            <p><strong>Email:</strong> {member.emailId}</p>
+            <p><strong>Register Number:</strong> {member.reg_num}</p>
+            <p><strong>Department:</strong> {member.dept}</p>
+            <p className="text-green-500 font-semibold">Status: Accepted</p>
           </div>
         ))}
 
-        {pendingInvitations.map((invitation, idx) => (
-          <div key={idx} className="border bg-white w-full p-4 rounded-xl ">
-            <p className="bg-white"><strong className="bg-white">Name:</strong> {invitation.name}</p>
-            <p className="bg-white"><strong className="bg-white">Email:</strong> {invitation.emailId}</p>
-            <p className="bg-white"><strong className="bg-white">Register Number:</strong> {invitation.reg_num}</p>
-            <p className="bg-white"><strong className="bg-white">Department:</strong> {invitation.dept}</p>
-            <p className={`font-semibold bg-white ${
-              invitation.status === 'accept' ? 'text-green-500' :
-              invitation.status === 'reject' ? 'text-red-500' :
-              'text-yellow-500'
-            }`}>
-              Status: {invitation.status === 'interested' ? 'Pending' : invitation.status}
+        {pendingInvitations.map((inv, idx) => (
+          <div key={idx} className="border bg-white w-full p-4 rounded-xl">
+            <p><strong>Name:</strong> {inv.name}</p>
+            <p><strong>Email:</strong> {inv.emailId}</p>
+            <p><strong>Register Number:</strong> {inv.reg_num}</p>
+            <p><strong>Department:</strong> {inv.dept}</p>
+            <p
+              className={`font-semibold ${
+                inv.status === 'accept'
+                  ? 'text-green-500'
+                  : inv.status === 'reject'
+                  ? 'text-red-500'
+                  : 'text-yellow-500'
+              }`}
+            >
+              Status: {inv.status === 'interested' ? 'Pending' : inv.status}
             </p>
           </div>
         ))}
@@ -256,7 +230,7 @@ function Student_Team() {
                 onClick={handleConfirmTeam}
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
               >
-                Conform Team
+                Confirm Team
               </button>
             )}
           </div>
@@ -265,7 +239,13 @@ function Student_Team() {
 
       {isInviteOpen && (
         <InviteForm
-          {...{ inviteForm, handleInviteChange, handleInviteSubmit, departments, setIsInviteOpen }}
+          {...{
+            inviteForm,
+            handleInviteChange,
+            handleInviteSubmit,
+            departments,
+            setIsInviteOpen,
+          }}
         />
       )}
     </div>
