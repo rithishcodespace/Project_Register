@@ -90,9 +90,7 @@ function Student_Dashboard() {
       const response = await axios.post('http://localhost:1234/student/fetch_team_status_and_invitations', 
         { "from_reg_num": reg_num },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+         withCredentials:true
         }
       );
 

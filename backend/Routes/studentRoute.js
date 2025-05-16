@@ -324,6 +324,7 @@ router.patch("/student/:status/:project_name",(req,res,next) => {
 router.patch("/student/assign_project_id/:project_id/:from_reg_num", (req, res, next) => {
   try {
     const { project_id, from_reg_num } = req.params;
+    if(!project_id || !from_reg_num)return next(createError.BadRequest("project_id or from_reg_num is not present!!"))
 
     const updateSQL = "UPDATE team_requests SET project_id = ?,  project_picked_date = CURRENT_TIMESTAMP  WHERE from_reg_num = ? AND status = 'accept'";
     db.query(updateSQL, [project_id, from_reg_num], (error, updateResult) => {
@@ -340,18 +341,19 @@ router.patch("/student/assign_project_id/:project_id/:from_reg_num", (req, res, 
         const teamId = result[0].team_id;
         const deadlines = generateWeeklyDeadlines(pickedDate); // returns 12 weeks
 
-        const insertSQL = "INSERT INTO weekly_logs_deadlines (team_id, week_number, deadline_date) VALUES (?, ?, ?)";
-        let inserted = 0;
+        const insertSQL = "INSERT INTO weekly_logs_deadlines (team_id, project_id, week_1, week_2, week_3, week_4, week_5, week_6, week_7, week_8, week_9, week_10, week_11, week_12) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        const values = [teamId, project_id, ...deadlines];
 
-        for (let i = 0; i < deadlines.length; i++) {
-          db.query(insertSQL, [teamId, i + 1, deadlines[i]], (error) => {
-            if (error) return next(error);
-            inserted++;
-            if (inserted === deadlines.length) {
-              res.send("Project ID assigned and 12 deadlines generated successfully");
-            }
-          });
-        }
+        db.query(insertSQL,values,(error,result) => {
+          if(error)return next(error);
+         res.json({
+          message: "Project assigned and weekly deadlines set.",
+          project_id,
+          teamId,
+          deadlines
+        });
+        })
+
       });
     });
   } catch (error) {

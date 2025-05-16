@@ -28,9 +28,7 @@ const Project_Details = () => {
         setMyProject(selectedProject);
       }
 
-      const newresponse = await axios.patch(`http://localhost:1234/student/assgin_project_id/${id}/${selector.reg_num}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const newresponse = await axios.patch(`http://localhost:1234/student/assign_project_id/${id}/${selector.reg_num}`, {withCredentials: true});
 
       if (newresponse.status === 200) {
         console.log("project_id is successfully inserted into db!");
