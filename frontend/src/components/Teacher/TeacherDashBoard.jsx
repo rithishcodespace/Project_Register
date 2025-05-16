@@ -30,9 +30,9 @@ const TeacherDashboard = () => {
 
   const stats = [
     { title: 'Total Projects', value: projects.length },
-    { title: 'Projects Taken', value: projects.filter(p => p.status === 'Ongoing' || p.status === 'Completed').length },
-    { title: 'Ongoing Projects', value: projects.filter(p => p.status === 'Ongoing').length },
-    { title: 'Completed Projects', value: projects.filter(p => p.status === 'Completed').length },
+    { title: 'Projects Taken', value: projects.filter(p => p.status === 'ongoing' || p.status === 'completed').length },
+    { title: 'Ongoing Projects', value: projects.filter(p => p.status === 'ongoing').length },
+    { title: 'Completed Projects', value: projects.filter(p => p.status === 'completed').length },
   ];
 
   const upcoming = projects
@@ -43,7 +43,10 @@ const TeacherDashboard = () => {
       deadline: p.deadline
     }));
 
-  const activity = projects.slice(0, 3).map(p => `Project "${p.project_name}" was updated or added.`);
+const activity = [...projects]
+  .sort((a, b) => new Date(b.posted_date) - new Date(a.posted_date))
+  .slice(0, 3)
+  .map(p => `Project "${p.project_name}" was posted on ${new Date(p.posted_date).toLocaleDateString()}.`);
 
   return (
     <div className="p-6  rounded-xl h-[90%]">

@@ -14,7 +14,6 @@ function Admin_Dashboard() {
       });
 
       if (response.status === 200) {
-        console.log(response.data)
         setProjects(response.data);
       } else {
         alert("Error fetching projects");
@@ -69,17 +68,17 @@ const activity = [...projects]
   
         {/* Upcoming Deadlines */}
         <div className="bg-white p-6 rounded-2xl shadow mb-6 hover:scale-105 transition duration-200">
-          <h3 className="text-xl bg-white font-semibold  mb-4 flex items-center">
-             Upcoming Deadlines
-          </h3>
-          <ul className="list-disc pl-6 bg-white space-y-2 text-gray-700">
-            {upcoming.map((item, index) => (
-              <li key={index} className='bg-white'>
-                <span className="font-medium bg-white">{item.name}</span> — {item.deadline}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <h3 className="text-xl bg-white font-semibold  mb-4 flex items-center">
+          Upcoming Deadlines
+        </h3>
+        <ul className="list-disc pl-6 bg-white space-y-2 text-gray-700">
+          {upcoming.length > 0 ? upcoming.map((item, index) => (
+            <li key={index} className='bg-white'>
+              <span className="font-medium bg-white">{item.name}</span> — {item.deadline}
+            </li>
+          )) : <p className='text-gray-500 bg-white'>No upcoming deadlines</p>}
+        </ul>
+      </div>
   
         {/* Recent Activity */}
         <div className="bg-white p-6 rounded-2xl shadow hover:scale-105 transition duration-200">
