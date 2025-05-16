@@ -91,7 +91,7 @@ function Student_Dashboard() {
         { "from_reg_num": reg_num },
         {
           headers: {
-            Authorization: Bearer ${token},
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -107,7 +107,7 @@ function Student_Dashboard() {
           // checks whether he is a team member of another team without conformed
           let res = await axios.get(`http://localhost:1234/student/check_accepted_status/${reg_num}`,{
             headers:{
-              Authorization : Bearer ${token}
+              Authorization: `Bearer ${token}`,
             }
           })
           if(res.status === 200 && res.data.length > 0)
@@ -140,7 +140,7 @@ function Student_Dashboard() {
         { from_reg_num: regNum },
         {
           headers: {
-            Authorization: Bearer ${token},
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -184,31 +184,35 @@ function Student_Dashboard() {
 
   return (
     <div className="min-h-screen flex flex-col items-center px-6 pt-16">
-      <div className="w-full flex justify-end -mt-12 mb-6">
+      
+      <div className="w-full relative flex justify-end items-center -mt-12 mb-6">
+        <h2 className="absolute text-2xl left-1/2 transform -translate-x-1/2  font-bold text-black">
+          Your Team
+        </h2>
         <button
-          className="px-4 py-2 border border-purple-500 text-purple-500 rounded hover:bg-purple-500 hover:text-white transition"
+          className="px-4 py-2 border border-purple-500 text-white bg-purple-500 rounded hover:bg-purple-500 hover:text-white transition"
           onClick={() => navigate('/student/invitations')}
         >
           Invitations
         </button>
       </div>
 
-      <div className="w-[95%] max-w-[60rem] rounded-xl bg-white flex flex-col items-center gap-4 p-9 overflow-y-auto">
-        <h1 className="text-purple-500 text-2xl font-bold">Your Team</h1>
 
-        <div className="border w-full p-4 rounded bg-gray-100">
-          <p><strong>Leader:</strong> YOU</p>
-          <p><strong>Email:</strong> {selector.emailId}</p>
-          <p><strong>Register Number:</strong> {selector.reg_num}</p>
-          <p className="text-green-600 font-semibold">Status: Accepted</p>
+      <div className="w-[95%] max-w-[60rem] rounded-xl bg- flex flex-col items-center gap-4 p-3 overflow-y-auto">
+
+        <div className="border w-full p-4  bg-white rounded-xl ">
+          <p className=" bg-white "><strong className="bg-white">Leader:</strong> YOU</p>
+          <p className=" bg-white "><strong className="bg-white">Email:</strong> {selector.emailId}</p>
+          <p className=" bg-white "><strong className="bg-white">Register Number:</strong> {selector.reg_num}</p>
+          <p className="text-green-600 bg-white font-semibold">Status: Accepted</p>
         </div>
 
         {acceptedMembers.map((member, idx) => (
           <div key={idx} className="border w-full p-4 rounded bg-gray-50">
-            <p><strong>Name:</strong> {member.name}</p>
-            <p><strong>Email:</strong> {member.emailId}</p>
-            <p><strong>Register Number:</strong> {member.reg_num}</p>
-            <p><strong>Department:</strong> {member.dept}</p>
+            <p className="bg-white"><strong bg-white>Name:</strong> {member.name}</p>
+            <p className="bg-white"><strong bg-white>Email:</strong> {member.emailId}</p>
+            <p className="bg-white"><strong bg-white>Register Number:</strong> {member.reg_num}</p>
+            <p className="bg-white"><strong bg-white>Department:</strong> {member.dept}</p>
             <p className="text-green-500 font-semibold">Status: Accepted</p>
           </div>
         ))}

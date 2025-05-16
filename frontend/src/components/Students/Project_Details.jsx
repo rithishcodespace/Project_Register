@@ -14,10 +14,9 @@ const Project_Details = () => {
 
   async function handleTakeProject(name, id) {
     try {
-      const token = localStorage.getItem("accessToken");
 
       const response = await axios.patch(`http://localhost:1234/student/ongoing/${name}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
+       withCredentials:true
       });
 
       if (response.status === 200) {
