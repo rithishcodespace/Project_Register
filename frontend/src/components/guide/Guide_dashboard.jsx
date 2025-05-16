@@ -16,8 +16,6 @@ function Guide_dashboard() {
   const [showPopup, setShowPopup] = useState(false);
 
   const invitations = [
-    { id: 1, team: 'Team Alpha', message: 'Request to join under your guidance.' },
-    { id: 2, team: 'Team Beta', message: 'Seeking approval for project supervision.' },
   ];
 
   const handleAccept = (id) => {
