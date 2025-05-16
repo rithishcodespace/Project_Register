@@ -5,6 +5,7 @@ const db = require("../db");
 const createError = require("http-errors");
 const validate = require("../utils/validator");
 const jwt = require("jsonwebtoken");
+const userAuth = require("../middlewares/userAuth");
 // const client = require("../utils/redis");
 const bcrypt = require("bcrypt");
 const verifyRefreshToken = require("../utils/verifyRefreshToken");
@@ -27,8 +28,27 @@ router.post("/auth/login",(req,res,next) => {
         if(password != user.password)return next(createError.Unauthorized('Username/Password invalid'));
 
         // generating tokens
-        const accessToken = jwt.sign({id:user.id},process.env.ACCESS_TOKEN_SECRET,{expiresIn:"1hr"});
-        const refreshToken = jwt.sign({id:user.id},process.env.REFRESH_TOKEN_SECRET,{expiresIn:"7d"});
+        // const accessToken = jwt.sign({id:user.id},process.env.ACCESS_TOKEN_SECRET,{expiresIn:"1hr"});
+        // const refreshToken = jwt.sign({id:user.id},process.env.REFRESH_TOKEN_SECRET,{expiresIn:"7d"});
+        const token = jwt.sign(
+        {
+          id: user.id,
+          role: user.role, 
+          name: user.name, 
+          email: user.email // Optional - User's email
+        },
+        process.env.TOKEN_SECRET,
+        {
+          expiresIn: "1h" // Token valid for 1 week
+        }
+      );
+       // Set the cookie with secure and samesite settings
+        res.cookie("token", token, {
+          httpOnly: true,       // Makes it inaccessible to JavaScript (secure)
+          secure: false,        // Set to false for localhost (development)
+          sameSite: "lax",      // Allows cookies for same-site and top-level navigation
+          maxAge: 60 * 60 * 1000 // 1 hour (in milliseconds)
+        });
 
         try{ // storing in redis
 
@@ -38,8 +58,8 @@ router.post("/auth/login",(req,res,next) => {
 
           res.status(200).json({
             message:"user logged in successfull",
-            "accessToken" : accessToken,
-            "refreshToken" : refreshToken,
+            // "accessToken" : accessToken,
+            // "refreshToken" : refreshToken,
             "id": result[0].id,
             "emailId" : result[0].emailId,
             "password" : result[0].password,
@@ -104,11 +124,7 @@ router.post("/auth/role",(req,res,next) => {
 
 router.delete("/auth/logout",async(req,res,next) => {
     try {
-        const { refreshToken } = req.body;
-        // if (!refreshToken) throw createError.BadRequest("Refresh token is required");
-          
-        // const userId = await verifyRefreshToken(refreshToken);
-        // await client.del(userId); // deletes the refresh token in redis 
+        res.cookie("token",null,{expiresIn: new Date(Date.now())}) 
         res.status(200).send("User logged out successfully");
     }
     catch (error) {
