@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { Users, Check,ClipboardList, MessageCircle, Bell } from 'lucide-react';
+import React, { useState,useEffect } from 'react';
+import { Users, Check,ClipboardList, MessageCircle, Bell, Store } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import InvitationCenterPopup from './InvitationCenterPopup';
+import axios from "axios";
+import {useSelector} from "react-redux";
 
 const progressData = [
   { name: 'Team A', value: 70 },
@@ -14,13 +16,11 @@ const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'];
 
 function Guide_dashboard() {
   const [showPopup, setShowPopup] = useState(false);
+  const [invitations,setinvitations] = useState([]);
+  const selector = useSelector((Store) => Store.userSlice);
 
-  const invitations = [
-    { id: 1, team: 'Team Alpha', message: 'Request to join under your guidance.' },
-    { id: 2, team: 'Team Beta', message: 'Seeking approval for project supervision.' },
-  ];
-
-  const handleAccept = (id) => {
+  const handleAccept = async(team_id) => {
+    let response = await axios.patch(`http://localhost:1234/guide/accept_reject/accept/${team_id}/${selector.reg_num}`)
     alert(`Accepted invitation from team ID ${id}`);
     setShowPopup(false);
   };
@@ -29,6 +29,22 @@ function Guide_dashboard() {
     alert(`Rejected invitation from team ID ${id}`);
     setShowPopup(false);
   };
+
+  async function fetchInvitations()
+  {
+    let response = await axios.get(`http://localhost:1234/guide/getrequests/${selector.reg_num}`,{
+      withCredentials: true
+    })
+
+    if(response.status === 200)
+    {
+      setinvitations(response.data);
+    }
+  }
+
+  useEffect(() => {
+    fetchInvitations()
+  },[])
 
   return (
           <div className="p-6  ">

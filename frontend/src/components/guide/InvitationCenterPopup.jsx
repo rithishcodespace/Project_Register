@@ -16,18 +16,17 @@ const InvitationCenterPopup = ({ invitations, onAccept, onReject, onClose }) => 
         ) : (
           <ul className="space-y-4">
             {invitations.map((invite) => (
-              <li key={invite.id} className="border rounded-lg p-4 shadow">
-                <p className="font-semibold">{invite.team}</p>
-                <p className="text-sm text-gray-600 mb-3">{invite.message}</p>
+              <li key={invite.from_team_id} className="border rounded-lg p-4 shadow">
+                <p className="font-semibold">{invite.from_team_id}</p>
                 <div className="flex justify-end gap-2">
                   <button
-                    onClick={() => onAccept(invite.id)}
+                    onClick={() => onAccept(invite.from_team_id)}
                     className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded"
                   >
                     Accept
                   </button>
                   <button
-                    onClick={() => onReject(invite.id)}
+                    onClick={() => onReject(invite.from_team_id)}
                     className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
                   >
                     Reject
