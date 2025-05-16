@@ -4,69 +4,129 @@ import InviteForm from './InviteForm';
 import TeamDetails from './TeamDetails';
 import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
-import { addTeamMembers } from '../../utils/teamSlice';
-import { addTeamStatus } from '../../utils/teamStatus';
+import { addUser } from '../../utils/userSlice';
+import { addTeamMembers,removeTeamMembers } from '../../utils/teamSlice';
 import { useNavigate } from 'react-router-dom';
+import { addTeamStatus } from '../../utils/teamStatus';
 
 function StudentDashboard() {
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [teamConformationPending, setTeamConformationPending] = useState(false);
-  const [teamStatus, setTeamStatus] = useState(null);
-  const [teamMembers, setTeamMembers] = useState([]);
+  const [teamConformationPending,setteamConformationPending] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    email: '',
+    registerNumber: '',
+    department: '',
+  });
+  const [inviteForm, setInviteForm] = useState({
+    name: '',
+    email: '',
+    registerNumber: '',
+    department: '',
+  });
+  const [teamStatus, setTeamStatus] = useState(null); // 0 or 1
+  const [teamMembers, setTeamMembers] = useState([]); // Accepted members
   const [pendingInvitations, setPendingInvitations] = useState([]);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const selector = useSelector((state) => state.userSlice);
 
+  const departments = [
+    'CSE', 'AIDS', 'IT', 'AIML', 'CT', 'AGRI', 'ECE', 'EIE', 'EEE', 'MECH', 'FT', 'FD'
+  ];
+
   const totalMembersAllowed = 4;
 
-useEffect(() => {
-  if (selector?.reg_num) {
-    checkUserStatus(selector.reg_num);
-  }
-  else 
-  {
-    console.log("reg_num is not found so team_status api is not called!");
-  }
-}, [selector?.reg_num]);
+  const isValidEmail = (email) => email.endsWith('@bitsathy.ac.in');
+
+  const handleCreateChange = (e) => {
+    const { name, value } = e.target;
+    setCreateForm((f) => ({ ...f, [name]: value }));
+  };
+
+  const handleCreateSubmit = (e) => {
+    e.preventDefault();
+    if (!isValidEmail(createForm.email)) {
+      alert('Email must be a valid @bitsathy.ac.in address.');
+      return;
+    }
+
+    dispatch(addUser({
+      name: createForm.name,
+      email: createForm.email,
+      registerNumber: createForm.registerNumber,
+      department: createForm.department,
+    }));
+
+    setIsCreateOpen(false);
+  };
+
+  const handleInviteChange = (e) => {
+    const { name, value } = e.target;
+    setInviteForm((f) => ({ ...f, [name]: value }));
+  };
+
+  const handleInviteSubmit = (e) => {
+    e.preventDefault();
+    if (!isValidEmail(inviteForm.email)) {
+      alert('Email must be a valid @bitsathy.ac.in address.');
+      return;
+    }
+
+    setPendingInvitations(prev => [...prev, { ...inviteForm, status: 'Pending' }]);
+    setInviteForm({ name: '', email: '', registerNumber: '', department: '' });
+    setIsInviteOpen(false);
+  };
 
   const checkUserStatus = async (reg_num) => {
     try {
-
-      const response = await axios.post(
-        'http://localhost:1234/student/fetch_team_status_and_invitations',
-        { from_reg_num: reg_num },
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.error("Access token is missing");
+        return;
+      }
+      const response = await axios.post('http://localhost:1234/student/fetch_team_status_and_invitations', 
+        { "from_reg_num": reg_num },
         {
-          withCredentials:true
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
       if (response.status === 200) {
-        const { teamConformationStatus, teamMembers, pendingInvitations, teamLeader } = response.data;
+       
+        var { teamConformationStatus, teamMembers, pendingInvitations, teamLeader } = response.data;
         setTeamStatus(teamConformationStatus);
         setTeamMembers(teamMembers || []);
         setPendingInvitations(pendingInvitations || []);
+        if(teamMembers.length == 0)
+        { 
+          // checks whether he is a team member of another team without conformed
+          let res = await axios.get(`http://localhost:1234/student/check_accepted_status/${reg_num}`,{
+            headers:{
+              Authorization : `Bearer ${token}`
+            }
+          })
+          if(res.status === 200 && res.data.length > 0)
+          {
+            console.log("second api: ",res.data);
+            setteamConformationPending(true);
 
-        if (teamMembers.length === 0) {
-          const res = await axios.get(
-            `http://localhost:1234/student/check_accepted_status/${reg_num}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-
-          if (res.status === 200 && res.data.length > 0) {
-            setTeamConformationPending(true);
           }
         }
-
         if (teamMembers.length > 0) {
-          teamMembers.push({ teamLeader });
+          teamMembers = [...teamMembers, { teamLeader: teamLeader }];
           dispatch(addTeamMembers(teamMembers));
           dispatch(addTeamStatus(response.data));
         }
+
+        console.log(response.data);
       }
     } catch (error) {
-      console.error('Error checking team status:', error.response?.data || error.message);
+      console.error('Error checking team status:', error.response ? error.response.data : error.message);
     }
   };
 
@@ -78,7 +138,11 @@ useEffect(() => {
       const response = await axios.patch(
         'http://localhost:1234/student/team_request/conform_team',
         { from_reg_num: regNum },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (response.status === 200) {
@@ -86,9 +150,13 @@ useEffect(() => {
         alert('Team confirmed successfully!');
       }
     } catch (error) {
-      console.error('Error confirming team:', error.response?.data || error.message);
+      console.error('Error confirming team:', error.response ? error.response.data : error.message);
     }
   };
+
+  useEffect(() => {
+    checkUserStatus(selector.reg_num);
+  }, []);
 
   if (teamStatus === null) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
@@ -101,7 +169,6 @@ useEffect(() => {
       </div>
     );
   }
-
   if (teamConformationPending) {
     return (
       <div className="flex flex-col justify-center items-center h-screen">
@@ -141,36 +208,52 @@ useEffect(() => {
             <p><strong>Name:</strong> {member.name}</p>
             <p><strong>Email:</strong> {member.emailId}</p>
             <p><strong>Register Number:</strong> {member.reg_num}</p>
+            <p><strong>Department:</strong> {member.dept}</p>
             <p className="text-green-500 font-semibold">Status: Accepted</p>
           </div>
         ))}
 
-        {remainingInvites > 0 && (
-          <button
-            onClick={() => setIsInviteOpen(true)}
-            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition"
-          >
-            Invite Member
-          </button>
-        )}
+        {pendingInvitations.map((invitation, idx) => (
+          <div key={idx} className="border w-full p-4 rounded bg-gray-50">
+            <p><strong>Name:</strong> {invitation.name}</p>
+            <p><strong>Email:</strong> {invitation.emailId}</p>
+            <p><strong>Register Number:</strong> {invitation.reg_num}</p>
+            <p><strong>Department:</strong> {invitation.dept}</p>
+            <p className={`font-semibold ${
+              invitation.status === 'accept' ? 'text-green-500' :
+              invitation.status === 'reject' ? 'text-red-500' :
+              'text-yellow-500'
+            }`}>
+              Status: {invitation.status === 'interested' ? 'Pending' : invitation.status}
+            </p>
+          </div>
+        ))}
 
-        {acceptedMembers.length + 1 >= 2 && (
-          <button
-            onClick={handleConfirmTeam}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-          >
-            Confirm Team
-          </button>
+        {(remainingInvites > 0 || acceptedMembers.length + 1 >= 3) && (
+          <div className="mt-6 flex flex-col sm:flex-row gap-4">
+            {remainingInvites > 0 && (
+              <button
+                onClick={() => setIsInviteOpen(true)}
+                className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition"
+              >
+                Invite Member
+              </button>
+            )}
+            {acceptedMembers.length + 1 >= 2 && !selector.teamConfirmationStatus && (
+              <button
+                onClick={handleConfirmTeam}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+              >
+                Conform Team
+              </button>
+            )}
+          </div>
         )}
       </div>
 
       {isInviteOpen && (
         <InviteForm
-          inviteForm={{}}
-          handleInviteChange={() => {}}
-          handleInviteSubmit={() => {}}
-          departments={[]}
-          setIsInviteOpen={setIsInviteOpen}
+          {...{ inviteForm, handleInviteChange, handleInviteSubmit, departments, setIsInviteOpen }}
         />
       )}
     </div>

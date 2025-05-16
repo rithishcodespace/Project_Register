@@ -44,8 +44,8 @@ const routeUserByRole = (role, navigate) => {
     case "guide":
       navigate("/guide");
       break;
-    case "subject_expert":
-      navigate("/expert");
+    case "sub_expert":
+      navigate("/subject_expert");
       break;
     case "ext_student":
         navigate("/ext_student")

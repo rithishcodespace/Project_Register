@@ -32,23 +32,38 @@ router.get("/profile/view", userAuth, (req, res, next) => {
 });
 
 // adds the connection request in the db -> invite button
-router.post("/student/join_request",(req,res,next) => {
-    try{
-      let {name,emailId,reg_num,dept,from_reg_num,to_reg_num} = req.body;
-      if(name.trim() == "" || emailId.trim() == "" || reg_num.trim() == "" || dept.trim() == "" || from_reg_num.trim() == "" || to_reg_num.trim() == "")return next(createError.BadRequest());
-      let sql1 = "insert into team_requests(name,emailId,reg_num,dept,from_reg_num,to_reg_num) values (?,?,?,?,?,?)";
-      let values = [name,emailId,reg_num,dept,from_reg_num,to_reg_num];
-      // inserts the request in the request db
-      db.query(sql1,values,(error,result) => {
-        if(error) next(error);
-        res.send("request added successfully!");
-      })
+router.post("/student/join_request", (req, res, next) => {
+  try {
+    let { name, emailId, reg_num, dept, from_reg_num, to_reg_num } = req.body;
+    
+    if (!name.trim() || !emailId.trim() || !reg_num.trim() || !dept.trim() || !from_reg_num.trim() || !to_reg_num.trim()) {
+      return next(createError.BadRequest());
     }
-    catch(error)
-    {
-        next(error.message);
-    }
-})
+
+    // checks for already a connection request exists or not
+    let sql = "SELECT * FROM team_requests WHERE from_reg_num = ? AND to_reg_num = ?";
+    db.query(sql, [from_reg_num, to_reg_num], (error, result) => {
+      if (error) return next(error);
+
+      if (result.length > 0) {
+        return res.send(`Connection request already exists with status: ${result[0].status}`);
+      }
+
+      // inserts the request in the request db (only if no existing request)
+      let sql1 = "INSERT INTO team_requests (name, emailId, reg_num, dept, from_reg_num, to_reg_num) VALUES (?,?,?,?,?,?)";
+      let values = [name, emailId, reg_num, dept, from_reg_num, to_reg_num];
+      
+      db.query(sql1, values, (error, result) => {
+        if (error) return next(error);  // Use return here to prevent further code execution
+        
+        return res.send("Request added successfully!");
+      });
+    });
+  } catch (error) {
+    next(error.message);
+  }
+});
+
 
 // // sets the team_id to the connected team members -> clicks conform button
 // router.post("/student/add_team_id/:from_reg_num",async(req,res,next) => {
@@ -255,32 +270,38 @@ router.post("/student/projects",(req,res,next) => {
 // })
 
 //make the team status -> 1 and assings team id to the team
-router.patch("/student/team_request/conform_team",async(req,res,next) => {
-  try{
-    let {from_reg_num} = req.body;
-    // returns an array like = [{"count:1"},{"count":2}] -> this destructed and stored in existingTeams
-    const[existingTeams] = await db.query("select count(*) as count from team_requests where team_conformed = true");
-    const teamNumber = existingTeams[0].count+1;
-    const team_id = `TEAM-${String(teamNumber).padStart(4,"0")}`; //TEAM-ID-0001
-    if(!from_reg_num || !team_id)return next(createError.BadRequest("team_id or reg_num is null!"))
-    let sql = "update team_requests set team_conformed = true where from_reg_num = ? and status = 'accept'";
-    db.query(sql,[from_reg_num],(error,result) => {
-      if(error)return next(error);
-      let sql1 = `
-      update team_requests 
-      SET team_id = ? 
-      WHERE from_reg_num = ? AND status = 'accept'`
-      db.query(sql1,[team_id,from_reg_num],(error,result) => {
-        if(error)return next(error);
-        res.send("Team status changed from false to true");
-      })
-    })
+router.patch("/student/team_request/conform_team", (req, res, next) => {
+  let { from_reg_num } = req.body;
+
+  if (!from_reg_num) {
+    return next(createError.BadRequest("from_reg_num is null!"));
   }
-  catch(error)
-  {
-      next(error);
-  }
-})
+
+  // count the number of teams
+  let sql = "SELECT COUNT(*) as count FROM team_requests WHERE team_conformed = true"
+  db.query(sql,(err, result) => {
+
+      if (err) return next(err);
+
+      const teamNumber = result[0].count + 1;
+      const team_id = `TEAM-${String(teamNumber).padStart(4, "0")}`;
+
+      // makes team_conformed
+      let sql1 ="UPDATE team_requests SET team_conformed = true WHERE from_reg_num = ? AND status = 'accept'";
+      db.query(sql1, [from_reg_num], (error1, result1) => {
+        if (error1) return next(error1);
+
+        // sets the team_id
+        let sql2 ="UPDATE team_requests SET team_id = ? WHERE from_reg_num = ? AND status = 'accept'";
+        db.query(sql2, [team_id, from_reg_num], (error2, result2) => {
+          if (error2) return next(error2);
+
+          res.send("Team status changed from false to true");
+        });
+      });
+    }
+  );
+});
 
 // make project status -> ongoing
 router.patch("/student/:status/:project_name",(req,res,next) => {
@@ -299,12 +320,12 @@ router.patch("/student/:status/:project_name",(req,res,next) => {
     }
 })
 
-// assigns the project_id to the team_mates
+// assigns the project_id to the team_mates and inserts the deadlines in the weekly log table
 router.patch("/student/assign_project_id/:project_id/:from_reg_num", (req, res, next) => {
   try {
     const { project_id, from_reg_num } = req.params;
 
-    const updateSQL = "UPDATE team_requests SET project_id = ? WHERE from_reg_num = ? AND status = 'accept'";
+    const updateSQL = "UPDATE team_requests SET project_id = ?,  project_picked_date = CURRENT_TIMESTAMP  WHERE from_reg_num = ? AND status = 'accept'";
     db.query(updateSQL, [project_id, from_reg_num], (error, updateResult) => {
       if (error) return next(error);
 
@@ -500,7 +521,7 @@ router.patch("/student/alter_project_status/:reg_num/:type",(req,res,next) => {
   }
 })
 
-// checks whether the user have given project_type
+// checks whether the user have given project_type -> INTERNAL OR EXTERNAL
 router.get("/student/get_project_type/:reg_num",(req,res,next) => {
   try{
     const{reg_num} = req.params;
@@ -597,6 +618,8 @@ router.get("/student/fetch_guide_or_expert/:role",(req,res,next) => {
   }
 })
 
+// gets student details by reg_num
+
 router.get("/student/get_student_details_by_regnum/:reg_num",(req,res,next) => {
   try{
     const{reg_num} = req.params;
@@ -614,6 +637,7 @@ router.get("/student/get_student_details_by_regnum/:reg_num",(req,res,next) => {
 })
 
 // gets team details using the team_id
+
 router.get("/student/getTeamdetails_using_team_id/:team_id",(req,res,next) => {
   try{
     const{team_id} = req.body;
@@ -631,6 +655,7 @@ router.get("/student/getTeamdetails_using_team_id/:team_id",(req,res,next) => {
 })
 
 //fetch queries sent by my team
+
 router.get("/student/get_queries_sent_by_my_team/:team_id",(req,res,next) => {
   try{
     const{team_id} = req.params;
@@ -646,6 +671,8 @@ router.get("/student/get_queries_sent_by_my_team/:team_id",(req,res,next) => {
     next(error);
   }
 })
+
+// checks whether he is already a member of another team
 
 router.get("/student/check_accepted_status/:reg_num",(req,res,next) => {
   try{
