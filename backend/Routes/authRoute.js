@@ -30,7 +30,18 @@ router.post("/auth/login",(req,res,next) => {
         // generating tokens
         // const accessToken = jwt.sign({id:user.id},process.env.ACCESS_TOKEN_SECRET,{expiresIn:"1hr"});
         // const refreshToken = jwt.sign({id:user.id},process.env.REFRESH_TOKEN_SECRET,{expiresIn:"7d"});
-        const token = jwt.sign({id:user.id},process.env.TOKEN_SECRET,{expiresIn:"1hr"});
+        const token = jwt.sign(
+        {
+          id: user.id,
+          role: user.role, 
+          name: user.name, 
+          email: user.email // Optional - User's email
+        },
+        process.env.TOKEN_SECRET,
+        {
+          expiresIn: "1h" // Token valid for 1 week
+        }
+      );
        // Set the cookie with secure and samesite settings
         res.cookie("token", token, {
           httpOnly: true,       // Makes it inaccessible to JavaScript (secure)

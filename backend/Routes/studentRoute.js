@@ -8,14 +8,28 @@ const db = require("../db");
 const userAuth = require("../middlewares/userAuth")
 
 // common to all route
-router.get("/profile/view",userAuth,(req,res)=>{
-    try{
-      res.send(req.user);  
-    }
-    catch(error){
-      next(error);
-    }
-})
+router.get("/profile/view", userAuth, (req, res, next) => {
+  try {
+    const userId = req.user;
+    console.log("User ID from auth middleware:", userId);
+    const sql = "SELECT * FROM users WHERE id = ?";
+    db.query(sql, [userId], (error, result) => {
+      if (error) return next(error);
+
+      if (result.length === 0) {
+        return next(createError.NotFound("User profile not found"));
+      }
+      
+      res.status(200).json({
+        success: true,
+        message: "Profile fetched successfully",
+        data: result[0] // Send the user profile data directly
+      });
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // adds the connection request in the db -> invite button
 router.post("/student/join_request",(req,res,next) => {

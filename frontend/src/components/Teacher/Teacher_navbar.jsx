@@ -37,11 +37,11 @@ function Teacher_navbar({ isOpen, toggleSidebar }) {
       dispatch(removeTeamMembers());
       dispatch(removeUser());
       dispatch(removeTeamStatus());
-      navigate("/");
+      navigate("/login");
     } catch (error) {
       console.error("Logout failed:", error);
       // Even if server logout fails, move user to login
-      navigate("/");
+      navigate("/login");
     }
   };
   

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import Login from "./components/Login/Login";
 import TeacherDashBoard from "./components/Teacher/TeacherDashBoard";
 import TeacherAdd from "./components/Teacher/TeacherAdd";
@@ -41,14 +41,33 @@ import Extstudents_progress_update from "./components/extstudents/Extstudents_pr
 import Admin_projectDetails from "./components/Admin/Admin_project_details";
 import Queries from "./components/Students/Queries";
 import TeamDetails from "./components/extstudents/TeamDetails";
+import {getProfile} from "./services/authService";
+import { useDispatch } from "react-redux";
+import { useEffect } from "react";
+
+
+const Loader = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    getProfile(dispatch, navigate);
+  }, [dispatch, navigate]);
+
+  return <div>Loading...</div>;
+};
 
 function App() {
+
   return (
     <Provider store={Store}>
       <BrowserRouter>
 
         <Routes>
-          <Route path="/" element={<Login />} />
+          <Route path="/" element={<Loader />} />
+
+          <Route path="/login" element={<Login />} />
+
           <Route path="/student" element={<Student />}>
             <Route index element={<Student_Dashboard />} />
             <Route path="Progress_update" element={<Progress_Update />} />

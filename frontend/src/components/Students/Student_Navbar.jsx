@@ -17,26 +17,19 @@ function Student_navbar({ isOpen, toggleSidebar }) {
 
   const handleLogout = async () => {
     try {
-      let token = localStorage.getItem("refreshToken");
   
       await axios.delete("http://localhost:1234/auth/logout", {
-        data: {
-          refreshToken: token
-        },
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        withCredentials:true
       });
 
-      localStorage.clear();
       dispatch(removeUser());
       dispatch(removeTeamMembers());
       dispatch(removeTeamStatus());
 
-      navigate("/");
+      navigate("/login");
     } catch (error) {
       console.error("Logout failed:", error);
-      navigate("/");
+      navigate("/login");
     }
   };
 
