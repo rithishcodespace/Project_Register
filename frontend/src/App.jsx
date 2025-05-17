@@ -44,6 +44,7 @@ import TeamDetails from "./components/extstudents/TeamDetails";
 import {getProfile} from "./services/authService";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
+import Proj_Details from "./components/Students/Proj_Details";
 
 
 const Loader = () => {
@@ -75,6 +76,7 @@ function App() {
             <Route path="Students_team" element={<Student_Team />} />
             <Route path="invitations" element={<InvitationPage />} />
             <Route path="queries" element={<Queries />} />
+           <Route path="Project_Details/proj_details/:id" element={<Proj_Details/>} />
           </Route>
 
           <Route path="/teacher" element={<Teacher />}>
