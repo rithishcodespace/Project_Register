@@ -83,12 +83,13 @@ const ProjectProgress = () => {
       <h2 className="text-2xl font-semibold text-center mb-6">Update Project Progress</h2>
       <div className="max-w-3xl bg-white mx-auto p-5 rounded-lg">
         {/* Phase Selector */}
-        <div className="mb-4">
-          <label className="block text-lg font-medium">Select Phase:</label>
+        <div className="mb-4 bg-white ">
+          <label className="block text-lg bg-white  font-medium"> Phase</label>
           <select
             value={phase}
+            disabled
             onChange={(e) => setPhase(e.target.value)}
-            className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="p-2 border bg-white  border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
             {getAvailablePhases().map((p) => (
               <option key={p} value={p}>{p.replace('_', ' ').toUpperCase()}</option>
@@ -97,28 +98,28 @@ const ProjectProgress = () => {
         </div>
 
         {/* Contribution Input */}
-        <div className="mb-4">
-          <label className="block text-lg font-medium">Contribution (%):</label>
+        <div className="mb-4 bg-white ">
+          <label className="block bg-white  text-lg font-medium">Contribution (%)</label>
           <input
             type="number"
             value={contribution}
             onChange={(e) => setContribution(e.target.value)}
-            className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="p-2 border bg-white  border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-black"
           />
         </div>
 
         {/* Register Number Hidden but Used */}
-        <div className="mb-4">
-          <label className="block text-lg font-medium"></label>
+        <div className="mb-4 bg-white ">
+          <label className="block bg-white  text-lg font-medium">Description</label>
           <textarea
             type="text"
             value={regNum}
-            className="p-2 border border-gray-300 rounded-lg w-full bg-gray-100"
+            className="p-2 border border-gray-300 rounded-lg w-full bg-white "
           />
         </div>
 
         {/* Submit Button */}
-        <div className="text-center mb-4">
+        <div className="text-center bg-white  mb-4">
           <button
             onClick={handleUpdateProgress}
             className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
@@ -129,11 +130,11 @@ const ProjectProgress = () => {
 
         {/* Response Message */}
         {responseMessage && (
-          <p className="text-center font-semibold text-red-600">{responseMessage}</p>
+          <p className="text-center  bg-white font-semibold text-red-600">{responseMessage}</p>
         )}
 
         {/* Chart */}
-        <h3 className="text-xl font-semibold text-center mt-8 mb-4">Team Contributions</h3>
+        <h3 className="text-xl font-semibold text-center bg-white  mt-8 mb-4">Team Contributions</h3>
         <div className="flex justify-center">
           <PieChart width={400} height={400}>
             <Pie
