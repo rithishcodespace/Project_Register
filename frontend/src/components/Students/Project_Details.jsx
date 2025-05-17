@@ -181,20 +181,20 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
   if (userStatus === 'has_project' && myProject) {
     return (
       <div className="p-6 w-full max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold text-center text-green-700 mb-6">
+        <h2 className="text-2xl font-bold text-center text-black mb-6">
           Your Assigned Project
         </h2>
 
         <div className="bg-white p-6 rounded-xl shadow-xl">
-          <p><strong>Name:</strong> {myProject.project_name}</p>
-          <p><strong>Cluster:</strong> {myProject.cluster}</p>
-          <p><strong>Description:</strong> {myProject.description}</p>
+          <p className="bg-white"><strong className="bg-white">Name:</strong> {myProject.project_name}</p>
+          <p className="bg-white"><strong className="bg-white">Cluster:</strong> {myProject.cluster}</p>
+          <p className="bg-white"><strong className="bg-white">Description:</strong> {myProject.description}</p>
 
-          <div className="mt-4">
-            <h4 className="text-lg font-bold text-purple-600 mb-2">Project Phases</h4>
-            <div className="space-y-2 text-sm">
+          <div className="mt-4 bg-white">
+            <h4 className="text-lg font-bold bg-white text-purple-600 mb-2">Project Phases :</h4>
+            <div className="space-y-2 bg-white text-sm">
               {[1, 2, 3, 4, 5].map((phase) => (
-                <p key={phase}>
+                <p key={phase} className="bg-white">
                   Phase {phase}: {myProject[`phase${phase}`] || 'Not updated'}
                 </p>
               ))}
@@ -321,8 +321,8 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
                     onClick={() => toggleExpertSelection(expert)}
                     className={`px-3 py-1 rounded-full border bg-white ${
                       selectedExperts.includes(expert)
-                        ? 'bg-purple-600 text-white border-purple-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
+                        ? 'bg-purple-300 text-black border-purple-400'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-grey-300'
                     }`}
                   >
                     {expert}
@@ -340,8 +340,8 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
                     onClick={() => toggleGuideSelection(guide)}
                     className={`px-3 py-1 rounded-full border ${
                       selectedGuides.includes(guide)
-                        ? 'bg-green-600 text-white border-green-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-green-100'
+                        ? 'bg-purple-300 text-black border-purple-400'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
                     }`}
                   >
                     {guide}
