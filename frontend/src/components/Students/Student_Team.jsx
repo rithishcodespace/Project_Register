@@ -41,12 +41,12 @@ function Student_Team() {
     <div className="p-6 bg-gradient-to-br min-h-60">
       <h1 className="text-3xl font-bold text-purple-500 text-center mb-8">
         Team Information
-      </h1>
-      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-5">
+      </h1><div className="flex justify-center">
+      <div className="flex justify-center "></div>
         {loading ? (
-          <p className="text-center text-gray-500">Loading...</p>
+          <p className="text-center flex text-gray-500">Loading...</p>
         ) : team.length === 0 ? (
-          <p className="text-center text-gray-500">Team not created/conformed yet</p>
+          <p className="text-center bg-white p-2 rounded-md text-gray-500">Team not created/conformed yet</p>
         ) : (
           team.map((member, index) => (
             <div

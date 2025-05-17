@@ -70,7 +70,7 @@ const Posted_project = () => {
           className="max-h-[500px] overflow-y-auto"
           sx={{ maxHeight: 500 }}
         >
-          <Table
+          <Table  
             stickyHeader
             aria-label="project table"
             className="min-w-full text-sm bg- text-gray-800 border-collapse"

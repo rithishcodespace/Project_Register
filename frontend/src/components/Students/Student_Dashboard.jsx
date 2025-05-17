@@ -6,7 +6,7 @@ import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { addUser } from '../../utils/userSlice';
 import { addTeamMembers,removeTeamMembers } from '../../utils/teamSlice';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate ,Link  } from 'react-router-dom';
 import { addTeamStatus } from '../../utils/teamStatus';
 
 function Student_Dashboard() {
@@ -127,7 +127,7 @@ function Student_Dashboard() {
       console.error('Error checking team status:', error.response ? error.response.data : error.message);
     }
   };
-
+        
   const handleConfirmTeam = async () => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -153,8 +153,8 @@ function Student_Dashboard() {
   };
 
   useEffect(() => {
-    checkUserStatus(selector.reg_num);
-  }, []);
+  if (selector.reg_num) checkUserStatus(selector.reg_num);
+}, [selector.reg_num]);
 
   if (teamStatus === null) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
@@ -206,22 +206,22 @@ function Student_Dashboard() {
         </div>
 
         {acceptedMembers.map((member, idx) => (
-          <div key={idx} className="border w-full p-4 rounded bg-gray-50">
-            <p className="bg-white"><strong bg-white>Name:</strong> {member.name}</p>
-            <p className="bg-white"><strong bg-white>Email:</strong> {member.emailId}</p>
-            <p className="bg-white"><strong bg-white>Register Number:</strong> {member.reg_num}</p>
-            <p className="bg-white"><strong bg-white>Department:</strong> {member.dept}</p>
-            <p className="text-green-500 font-semibold">Status: Accepted</p>
+          <div key={idx} className="border w-full p-4 rounded-xl bg-gray-50">
+            <p className="bg-white"><strong className="bg-white">Name:</strong> {member.name}</p>
+            <p className="bg-white"><strong className="bg-white">Email:</strong> {member.emailId}</p>
+            <p className="bg-white"><strong className="bg-white">Register Number:</strong> {member.reg_num}</p>
+            <p className="bg-white"><strong className="bg-white">Department:</strong> {member.dept}</p>
+            <p className="text-green-500 bg-white font-semibold">Status: Accepted</p>
           </div>
         ))}
 
         {pendingInvitations.map((invitation, idx) => (
-          <div key={idx} className="border w-full p-4 rounded bg-gray-50">
-            <p><strong>Name:</strong> {invitation.name}</p>
-            <p><strong>Email:</strong> {invitation.emailId}</p>
-            <p><strong>Register Number:</strong> {invitation.reg_num}</p>
-            <p><strong>Department:</strong> {invitation.dept}</p>
-            <p className={`font-semibold ${
+          <div key={idx} className="border w-full p-4 rounded-xl bg-gray-50">
+            <p className="bg-white"><strong className="bg-white">Name:</strong> {invitation.name}</p>
+            <p className="bg-white"><strong className="bg-white">Email:</strong> {invitation.emailId}</p>
+            <p className="bg-white"><strong className="bg-white">Register Number:</strong> {invitation.reg_num}</p>
+            <p className="bg-white"><strong className="bg-white">Department:</strong> {invitation.dept}</p>
+            <p className={`font-semibold bg-white ${
               invitation.status === 'accept' ? 'text-green-500' :
               invitation.status === 'reject' ? 'text-red-500' :
               'text-yellow-500'
@@ -245,8 +245,8 @@ function Student_Dashboard() {
               <button
                 onClick={handleConfirmTeam}
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-              >
-                Conform Team
+              ><Link to="/student">Confirm Team</Link>
+                
               </button>
             )}
           </div>
