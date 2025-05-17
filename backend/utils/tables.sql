@@ -27,25 +27,28 @@ CREATE TABLE `projects` (
   `cluster` varchar(100) DEFAULT NULL,
   `description` text,
   `phase_1_requirements` text,
-  `phase_1_deadline` int DEFAULT NULL,
   `phase_2_requirements` text,
-  `phase_2_deadline` int DEFAULT NULL,
   `phase_3_requirements` text,
-  `phase_3_deadline` int DEFAULT NULL,
   `phase_4_requirements` text,
-  `phase_4_deadline` int DEFAULT NULL,
   `phase_5_requirements` text,
-  `phase_5_deadline` int DEFAULT NULL,
+  `phase_6_requirements` text,
+  `phase_7_requirements` text,
+  `phase_8_requirements` text,
+  `phase_9_requirements` text,
+  `phase_10_requirements` text,
+  `phase_11_requirements` text,
+  `phase_12_requirements` text,
   `status` varchar(100) DEFAULT 'available',
   `guide_reg_num` varchar(5000) DEFAULT NULL,
   `posted_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`),
   UNIQUE KEY `unique_project_name` (`project_name`),
-  INDEX `idx_status` (status)
-)
+  INDEX `idx_status` (`status`)
+);
+
 
 CREATE TABLE `team_requests` (
-  `team_id` varchar(255) NOT NULL,
+  `team_id` varchar(255) NULL,
   `name` varchar(255) DEFAULT NULL,
   `emailId` varchar(255) DEFAULT NULL,
   `reg_num` varchar(255) DEFAULT NULL,
@@ -83,7 +86,6 @@ CREATE TABLE `team_requests` (
   `phase12_progress` varchar(200) DEFAULT NULL,
   `phase12_contribution` decimal(5,2) DEFAULT NULL,
   UNIQUE KEY `unique_request` (`from_reg_num`,`to_reg_num`),
-  PRIMARY KEY (`team_id`)
 )
 
 CREATE TABLE `queries` (
