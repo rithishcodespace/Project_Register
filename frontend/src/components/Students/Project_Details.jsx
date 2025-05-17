@@ -239,7 +239,7 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
 
       {/* Custom Pagination Controls */}
       <div className="flex justify-between items-center mt-4">
-        
+
         <div>
           Rows per page:
           <select
@@ -321,9 +321,9 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
                   <button
                     key={expert}
                     onClick={() => toggleExpertSelection(expert)}
-                    className={`px-3 py-1 rounded-full border bg-white ${
+                    className={`px-3 py-1 rounded-full border ${
                       selectedExperts.includes(expert)
-                        ? 'bg-purple-600 text-white border-purple-600'
+                        ? 'bg-purple-500 text-white border-purple-600'
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
                     }`}
                   >
@@ -343,7 +343,7 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
                     className={`px-3 py-1 rounded-full border ${
                       selectedGuides.includes(guide)
                         ? 'bg-green-600 text-white border-green-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-green-100'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
                     }`}
                   >
                     {guide}
@@ -361,7 +361,7 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
                   selectedGuides
                 )
               }
-              className="w-full bg-gradient-to-r from-purple-800 to-purple-600 text-white py-3 rounded-md font-semibold hover:opacity-90 transition-opacity"
+              className="w-full bg-gradient-to-r from-purple-500 to-purple-900 text-white py-3 rounded-md font-semibold hover:opacity-90 transition-opacity"
             >
               Take Project
             </button>
