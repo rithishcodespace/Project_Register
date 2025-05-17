@@ -1,29 +1,25 @@
 require("dotenv").config();
 const mysql = require("mysql2");
 
-// const pool = mysql.createPool({
-//     host:"localhost",
-//     user:"root",
-//     password:"Rithish@2006",
-//     database:"project_registor",
-//     waitForConnections:true,
-//     connectionLimit:10, 
-//     queueLimit:0
-// })
-
 const pool = mysql.createPool({
     host:"localhost",
     user:"root",
-<<<<<<< HEAD
     password:"Mathan@2007",
-=======
-    password:"prakashbit",
->>>>>>> 5a5feecc5cb8d587166820e266572d450a0cac95
     database:"project_registor",
     waitForConnections:true,
     connectionLimit:10, 
     queueLimit:0
 })
+
+// const pool = mysql.createPool({
+//     host:"localhost",
+//     user:"root",
+//     password:"prakashbit",
+//     database:"project_registor",
+//     waitForConnections:true,
+//     connectionLimit:10, 
+//     queueLimit:0
+// })
 
 
 

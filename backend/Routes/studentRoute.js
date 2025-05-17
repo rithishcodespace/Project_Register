@@ -478,7 +478,8 @@ router.get("/student/get_project_details/:project_id",(req,res,next) => {
   }
 })
 
-// GET /student/team_progress
+// fetches the team_progress of a single phase
+
 router.get("/student/team_progress/:team_id/:phase", (req, res) => {
   const { phase,team_id } = req.params;
 
@@ -499,7 +500,7 @@ router.get("/student/team_progress/:team_id/:phase", (req, res) => {
   });
 });
 
-// fetches the progress of entire team
+// fetches the progress of all phases
 
 router.get("/student/fetch_team_progress/:team_id", (req, res, next) => {
   try {

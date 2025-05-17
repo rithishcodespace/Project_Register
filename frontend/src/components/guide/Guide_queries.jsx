@@ -91,7 +91,7 @@ const Guide_queries = () => {
 
             {q.reply ? (
               <div className="mt-4 p-3 bg-green-100 text-green-800 rounded-lg">
-                <strong>Your Answer:</strong> {q.reply}
+                <strong className="bg-green-100">Your Answer:</strong> {q.reply}
               </div>
             ) : (
               <div className="mt-4 flex flex-col bg-white sm:flex-row items-center gap-2">

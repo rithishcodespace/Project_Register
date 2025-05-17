@@ -71,8 +71,8 @@ router.patch("/guide/accept_reject/:status/:team_id/:my_id", (req, res, next) =>
                 });
               });
             } else {
-              // Step 6: Guide already has 4 projects, remove them
-              let sql4 = "DELETE FROM users WHERE reg_num = ?";
+              // Step 6: Guide already has 4 projects, mark them as unavailable(false)
+              let sql4 = "update table users set available = false where reg_num = ?";
               db.query(sql4, [my_id], (error, result) => {
                 if (error) return next(error);
 
