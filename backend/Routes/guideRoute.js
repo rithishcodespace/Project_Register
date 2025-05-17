@@ -72,7 +72,7 @@ router.patch("/guide/accept_reject/:status/:team_id/:my_id", (req, res, next) =>
               });
             } else {
               // Step 6: Guide already has 4 projects, mark them as unavailable(false)
-              let sql4 = "update table users set available = false where reg_num = ?";
+              let sql4 = "update users set available = false where reg_num = ?";
               db.query(sql4, [my_id], (error, result) => {
                 if (error) return next(error);
 
@@ -85,12 +85,24 @@ router.patch("/guide/accept_reject/:status/:team_id/:my_id", (req, res, next) =>
             }
           });
         } else if (status === "reject") {
-          // Handle rejection
-          let sql3 = "UPDATE guide_requests SET status = 'rejected' WHERE to_guide_reg_num = ? AND from_team_id = ?";
-          db.query(sql3, [my_id, team_id], (error, result) => {
-            if (error) return next(error);
-            res.send("Request rejected successfully!");
-          });
+            
+          // counts the number of teams he guides
+            let sql4 = "SELECT COUNT(*) AS total FROM guide_requests WHERE to_guide_reg_num = ? AND status = 'accept'";
+            db.query(sql4,[my_id],(error,result) => {
+              if(error)return next(error);
+
+              const mentoringTeams = result[0].total;
+              
+              //make available or unavailable based on the count of mentoring teams
+
+              let sql5 = "UPDATE users SET available = ? WHERE reg_num = ?";
+              const isAvailable = mentoringTeams < 4 ? 1 : 0;
+              db.query(sql5,[isAvailable,my_id],(error,result) => {
+                if(error)return next(error);
+                res.send("Request rejected and availability updated.");
+              })
+            })
+          
         }
       });
     });

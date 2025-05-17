@@ -244,8 +244,8 @@ function Student_Dashboard() {
             {acceptedMembers.length + 1 >= 2 && !selector.teamConfirmationStatus && (
               <button
                 onClick={handleConfirmTeam}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-              ><Link to="/student">Confirm Team</Link>
+                className="px-4 py-2 bg-green-600 text-white rounded"
+              ><Link to="/student" className='bg-green-600' >Confirm Team</Link>
                 
               </button>
             )}
