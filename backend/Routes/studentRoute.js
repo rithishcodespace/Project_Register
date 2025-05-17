@@ -7,7 +7,7 @@ const generateWeeklyDeadlines = require("../utils/generateWeeklyDeadlines");
 const db = require("../db");
 const userAuth = require("../middlewares/userAuth")
 
-// common to all route
+// common to all route -> for jwt auth
 router.get("/profile/view", userAuth, (req, res, next) => {
   try {
     const userId = req.user;
@@ -49,7 +49,17 @@ router.post("/student/join_request", (req, res, next) => {
         return res.send(`Connection request already exists with status: ${result[0].status}`);
       }
 
-      // inserts the request in the request db (only if no existing request)
+      let query = "SELECT project_type FROM users WHERE reg_num IN (?,?)";
+      db.query(query,[from_reg_num,to_reg_num],(error,result) => {
+        if(error)return next(error);
+        if (result.length !== 2) {
+          return res.status(400).send("One or both students not found.");
+        }
+        const type1 = result[0].project_type;
+        const type2 = result[1].project_type;
+        if(type1 != type2)return res.send("BOTH MEMBERS SHOULD BE EITHER INTERNAL OR EXTERNAL!!");
+
+        // inserts the request in the request db (only if no existing request)
       let sql1 = "INSERT INTO team_requests (name, emailId, reg_num, dept, from_reg_num, to_reg_num) VALUES (?,?,?,?,?,?)";
       let values = [name, emailId, reg_num, dept, from_reg_num, to_reg_num];
       
@@ -58,6 +68,8 @@ router.post("/student/join_request", (req, res, next) => {
         
         return res.send("Request added successfully!");
       });
+      })
+
     });
   } catch (error) {
     next(error.message);
