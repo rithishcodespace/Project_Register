@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
+
 const Project_Details = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -238,15 +239,16 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
 
       {/* Custom Pagination Controls */}
       <div className="flex justify-between items-center mt-4">
+        
         <div>
           Rows per page:
           <select
-            className="ml-2 border px-2 py-1 rounded"
+            className="ml-2 rounded px-2 py-1 shadow focus:outline-none "
             value={rowsPerPage}
             onChange={handleChangeRowsPerPage}
           >
             {[5, 10, 25].map((rows) => (
-              <option key={rows} value={rows}>
+              <option className='' key={rows} value={rows}>
                 {rows}
               </option>
             ))}

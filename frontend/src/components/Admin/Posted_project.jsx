@@ -93,6 +93,7 @@ const Posted_project = () => {
         </table>
       
         <div className="flex bg-white justify-between items-center p-4">
+          
           <div className='bg-white'>
             Rows per page:
             <select

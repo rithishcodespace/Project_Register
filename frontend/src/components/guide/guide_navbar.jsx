@@ -56,7 +56,7 @@ function Guide_navbar({ isOpen, toggleSidebar }) {
 
   return (
     <div
-      className={`fixed top-0 pb-5 left-0 h-screen bg-white flex flex-col py-6 overflow-y-auto shadow-2xl z-50 transition-all duration-500 ease-in-out
+      className={`fixed top-0 pb-5 left-0 h-screen bg-white flex flex-col py-6 overflow-y-auto shadow-2xl z-50 transition-[width] duration-500 ease-in-out
          ${isOpen ? "w-64" : "w-24"}`}
     >
       <button
