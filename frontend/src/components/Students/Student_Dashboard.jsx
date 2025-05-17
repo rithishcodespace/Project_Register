@@ -162,7 +162,7 @@ function Student_Dashboard() {
 
   if (teamStatus === 1) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen">
+      <div className="flex flex-col justify-center items-center h-96">
         <h1 className="text-3xl font-bold text-green-600">Welcome to your Team Dashboard!</h1>
       </div>
     );
