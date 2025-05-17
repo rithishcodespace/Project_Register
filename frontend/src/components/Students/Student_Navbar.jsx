@@ -10,7 +10,6 @@ import { removeUser } from '../../utils/userSlice';
 import { removeTeamMembers } from '../../utils/teamSlice';
 import { removeTeamStatus } from "../../utils/teamStatus";
 
-
 function Student_navbar({ isOpen, toggleSidebar }) {
   const [team, setTeam] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +17,6 @@ function Student_navbar({ isOpen, toggleSidebar }) {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  const currentPath = location.pathname;
 
   const handleLogout = async () => {
     try {
@@ -40,12 +38,13 @@ function Student_navbar({ isOpen, toggleSidebar }) {
   const fetchTeam = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const reg_num = selector[0]?.reg_num;
 
-      if (!reg_num) {
-        console.error("No reg_num available!");
+      if (!Array.isArray(selector) || selector.length === 0 || !selector[0]?.reg_num) {
+        console.error("Team selector or reg_num not available.");
         return;
       }
+
+      const reg_num = selector[0].reg_num;
 
       const response = await axios.get(
         `http://localhost:1234/student/getTeamDetails/${reg_num}`,
@@ -68,8 +67,10 @@ function Student_navbar({ isOpen, toggleSidebar }) {
   };
 
   useEffect(() => {
-    fetchTeam();
-  }, []);
+    if (Array.isArray(selector) && selector.length > 0) {
+      fetchTeam();
+    }
+  }, [selector]);
 
   const isActive = (path) => {
     const currentPath = location.pathname;
