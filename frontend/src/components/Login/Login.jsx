@@ -12,10 +12,6 @@ import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../../utils/firebase";
 import { useDispatch } from "react-redux";
 import { addUser } from "../../utils/userSlice";
-import * as React from 'react';
-import Button from '@mui/material/Button';
-import Snackbar from '@mui/material/Snackbar';
-
 
 function Login() {
   const [emailId, setemailId] = useState("");
@@ -63,22 +59,12 @@ function Login() {
           else if (role === "teacher") navigate("/teacher");
           else if (role === "guide") navigate("/guide");
           else if (role === "sub_expert") navigate("/subject_expert");
-          else <Snackbar
-        open={open}
-        autoHideDuration={5000}
-        onClose={handleClose}
-        message="Unknown role"
-      />;
+          else alert("Unknown role");
         }
       }
     } catch (err) {
       console.error("Login error", err);
-      <Snackbar
-        open={open}
-        autoHideDuration={5000}
-        onClose={handleClose}
-        message="Invalid Login"
-      />;
+      alert("Invalid login");
     }
   };
 
@@ -101,12 +87,7 @@ function Login() {
       }
     } catch (err) {
       console.error("Failed to update project type", err);
-      <Snackbar
-        open={open}
-        autoHideDuration={5000}
-        onClose={handleClose}
-        message="Failed to set project type"
-      />;
+      alert("Failed to set project type");
     }
   };
 
