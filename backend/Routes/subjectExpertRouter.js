@@ -54,7 +54,7 @@ router.patch("/sub_expert/accept_reject/:status/:team_id/:my_id", (req, res, nex
                   }
                 });
               } else {
-                // If the guide already has 4 projects, delete their request and associated data
+                // If the expert already has 4 projects, delete their request and associated data
                 let sql4 = "DELETE FROM users WHERE reg_num = ?";
                 db.query(sql4, [my_id], (error, result) => {
                   if (error) return next(error);
@@ -92,12 +92,12 @@ router.patch("/sub_expert/accept_reject/:status/:team_id/:my_id", (req, res, nex
 
 router.post("/sub_expert/sent_request_to_expert",(req,res,next) => {
     try{
-      const {from_team_id,project_id,to_expert_reg_num} = req.body;  // to details
-      if (!from_team_id || !project_id || !to_expert_reg_num) {
+      const {from_team_id,project_id,project_name,to_expert_reg_num} = req.body;  // to details
+      if (!from_team_id || !project_id || !project_name || !to_expert_reg_num) {
         return res.status(400).json({ message: "All fields are required" });
       }
-      let sql = "insert into sub_expert_requests values(?,?,?)";
-      db.query(sql,[from_team_id,project_id,to_expert_reg_num],(error,result) => {
+      let sql = "insert into sub_expert_requests (from_team_id,project_id,project_name,to_expert_reg_num) values(?,?,?,?)";
+      db.query(sql,[from_team_id,project_id,project_name,to_expert_reg_num],(error,result) => {
         if(error)return next(error);
 
         // Create a transporter

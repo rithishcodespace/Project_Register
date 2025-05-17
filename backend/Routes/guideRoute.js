@@ -28,80 +28,87 @@ router.get("/guide/getrequests/:reg_num",(req,res,next) => {
 router.patch("/guide/accept_reject/:status/:team_id/:my_id", (req, res, next) => {
   try {
     const { status, team_id, my_id } = req.params;
-    // Validate status
+
     if (status !== "accept" && status !== "reject") {
       return res.status(400).send("Invalid status");
     }
 
-    // Update status in guide_requests table based on the action
-    let sql1 = "UPDATE guide_requests SET status = ? WHERE to_guide_reg_num = ? AND from_team_id = ? AND status = 'interested'";
-    db.query(sql1, [status, my_id, team_id], (error, result) => {
+    if (!team_id || !my_id) {
+      return res.status(400).json({ error: 'Invalid team_id or reg_num' });
+    }
+
+    // Step 1: Get project_id
+    let sql = "SELECT project_id FROM team_requests WHERE team_id = ?";
+    db.query(sql, [team_id], (error, result) => {
       if (error) return next(error);
-      else {
+      if (result.length === 0) return res.status(404).send("Project not found");
+
+      const project_id = result[0].project_id;
+
+      // Step 2: Update guide_requests
+      let sql1 = "UPDATE guide_requests SET status = ? WHERE to_guide_reg_num = ? AND from_team_id = ? AND status = 'interested'";
+      db.query(sql1, [status, my_id, team_id], (error, result) => {
+        if (error) return next(error);
+
         if (status === "accept") {
-          // Check the number of accepted mentoring projects
+          // Step 3: Count how many projects the guide has
           let sql2 = "SELECT * FROM guide_requests WHERE to_guide_reg_num = ? AND status = 'accept'";
           db.query(sql2, [my_id], (error, result) => {
             if (error) return next(error);
-            else {
-              const mentoringTeams = result.length;
-              if (mentoringTeams < 4) {
-                // After accepting the request, update the guide in team_requests
-                let sql3 = "UPDATE team_requests SET guide_reg_num = ? WHERE team_id = ?";
-                db.query(sql3, [my_id, team_id], (error, result) => {
+
+            const mentoringTeams = result.length;
+            if (mentoringTeams < 4) {
+              // Step 4: Assign guide to team_requests
+              let sql3 = "UPDATE team_requests SET guide_reg_num = ? WHERE team_id = ?";
+              db.query(sql3, [my_id, team_id], (error, result) => {
+                if (error) return next(error);
+
+                // Step 5: Assign guide to projects
+                let sql4 = "UPDATE projects SET guide_reg_num = ? WHERE project_id = ?";
+                db.query(sql4, [my_id, project_id], (error, result) => {
                   if (error) return next(error);
-                  else {
-                    let sql4 = "update projects set guide_reg_num = ? where team_id = ?";
-                    db.query(sql4,[my_id,team_id],(error,result) => {
-                      if(error)return next(error);
-                      res.send("Status updated successfully and guide assigned!");
-                    })
-                  }
+                  res.send("Status updated successfully and guide assigned!");
                 });
-              } else {
-                // If the guide already has 4 projects, delete their request and associated data
-                let sql4 = "DELETE FROM users WHERE reg_num = ?";
-                db.query(sql4, [my_id], (error, result) => {
+              });
+            } else {
+              // Step 6: Guide already has 4 projects, remove them
+              let sql4 = "DELETE FROM users WHERE reg_num = ?";
+              db.query(sql4, [my_id], (error, result) => {
+                if (error) return next(error);
+
+                let sql5 = "DELETE FROM guide_requests WHERE to_guide_reg_num = ? AND status = 'interested'";
+                db.query(sql5, [my_id], (error, result) => {
                   if (error) return next(error);
-                  else {
-                    let sql5 = "DELETE FROM guide_requests WHERE to_guide_reg_num = ? AND status = 'interested'";
-                    db.query(sql5, [my_id], (error, result) => {
-                      if (error) return next(error);
-                      else {
-                        res.send("Status updated successfully by removing the guide from guides and guide_requests");
-                      }
-                    });
-                  }
+                  res.send("Status updated successfully by removing the guide from guides and guide_requests");
                 });
-              }
+              });
             }
           });
         } else if (status === "reject") {
-          // Handle rejection: update status to 'rejected' in guide_requests
+          // Handle rejection
           let sql3 = "UPDATE guide_requests SET status = 'rejected' WHERE to_guide_reg_num = ? AND from_team_id = ?";
           db.query(sql3, [my_id, team_id], (error, result) => {
             if (error) return next(error);
-            else {
-              res.send("Request rejected successfully!");
-            }
+            res.send("Request rejected successfully!");
           });
         }
-      }
+      });
     });
   } catch (error) {
     next(error);
   }
 });
 
+
 // sends request to guide
 router.post("/guide/sent_request_to_guide",(req,res,next) => {
     try{
-      const {from_team_id,project_id,to_guide_reg_num} = req.body;  // to details
-      if (!from_team_id || !project_id || !to_guide_reg_num) {
+      const {from_team_id,project_id,project_name,to_guide_reg_num} = req.body;  // to details
+      if (!from_team_id || !project_id || !project_name || !to_guide_reg_num) {
         return res.status(400).json({ message: "All fields are required" });
       }
-      let sql = "insert into guide_requests values(?,?,?)";
-      db.query(sql,[from_team_id,project_id,to_guide_reg_num],(error,result) => {
+      let sql = "insert into guide_requests (from_team_id,project_id,project_name,to_guide_reg_num) values(?,?,?,?)";
+      db.query(sql,[from_team_id,project_id,project_name,to_guide_reg_num],(error,result) => {
         if(error)return next(error);
 
         // Create a transporter

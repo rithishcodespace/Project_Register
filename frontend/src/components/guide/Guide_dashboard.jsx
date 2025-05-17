@@ -20,13 +20,35 @@ function Guide_dashboard() {
   const selector = useSelector((Store) => Store.userSlice);
 
   const handleAccept = async(team_id) => {
-    let response = await axios.patch(`http://localhost:1234/guide/accept_reject/accept/${team_id}/${selector.reg_num}`)
-    alert(`Accepted invitation from team ID ${id}`);
+    let response = await axios.patch(
+  `http://localhost:1234/guide/accept_reject/accept/${team_id}/${selector.reg_num}`, 
+  {}, 
+  { withCredentials: true }
+  );
+    if(response.status === 200)
+    {
+      alert(`Accepted invitation from team ID ${team_id}`);
+    }
+    else{
+      alert(`error occured while accepting the  invitation from team ID ${team_id}`);
+    }
     setShowPopup(false);
   };
 
-  const handleReject = (id) => {
-    alert(`Rejected invitation from team ID ${id}`);
+  const handleReject = async(team_id) => {
+   let response = await axios.patch(
+  `http://localhost:1234/guide/accept_reject/reject/${team_id}/${selector.reg_num}`, 
+  {}, 
+  { withCredentials: true }
+  );
+
+    if(response.status === 200)
+    {
+      alert(`Rejected invitation from team ID ${team_id}`);
+    }
+    else{
+      alert(`error occured while rejecting the  invitation from team ID ${team_id}`);
+    }
     setShowPopup(false);
   };
 
