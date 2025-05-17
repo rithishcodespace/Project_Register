@@ -13,6 +13,8 @@ const adminRouter = require("./Routes/adminRoute");
 const guideRouter = require("./Routes/GuideRoute")
 const subjectExpertRouter = require("./Routes/subjectExpertRouter");
 const uploadRouter = require("./Routes/uploadRoute");
+const path = require("path");
+
 
 app.use(express.json());
 app.use(cookieParser());
@@ -31,6 +33,9 @@ app.use("/",adminRouter);
 app.use("/",guideRouter);
 app.use("/",subjectExpertRouter);
 app.use("/",uploadRouter);
+
+// Serve static files from the uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use((req,res,next) => {
     next(createError.NotFound("api do not found"));

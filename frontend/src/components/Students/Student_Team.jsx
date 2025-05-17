@@ -37,7 +37,7 @@ function Student_Team() {
 
   return (
     <div className="p-6 bg-gradient-to-br min-h-60">
-      <h1 className="text-3xl font-bold text-purple-500 text-center mb-8">
+      <h1 className="text-3xl font-bold text-black-500 text-center mb-8">
         Team Information
       </h1><div className="flex justify-center">
       <div className="flex justify-center "></div>
@@ -46,32 +46,52 @@ function Student_Team() {
         ) : team.length === 0 ? (
           <p className="text-center bg-white p-2 rounded-md text-gray-500">Team not created/conformed yet</p>
         ) : (
-          team.map((member, index) => (
-            <div
-              key={index}
-              className="flex flex-col bg-white sm:flex-row sm:items-center justify-between border-b py-4"
-            >
-              <div>
-                <p className="text-lg bg-white font-semibold text-gray-800">
-                  {member.name}{' '}
-                  {member.isLead && (
-                    <span className="text-sm bg-white text-yellow-500 font-bold ml-2">
-                      👑 Team Lead
-                    </span>
-                  )}
-                </p>
-                <p className="text-sm bg-white text-gray-600">{member.email}</p>
-              </div>
-              <div className="text-sm text-gray-700 mt-2 sm:mt-0">
-                <p className="bg-white">
-                  Reg No: <span className="bg-white font-medium">{member.reg_num}</span>
-                </p>
-                <p className="bg-white">
-                  Cluster: <span className="bg-white font-medium">{member.dept}</span>
-                </p>
-              </div>
-            </div>
-          ))
+            <div className="overflow-x-auto">
+  <div className="overflow-x-auto w-full rounded-lg shadow-md border border-gray-200">
+  <table className="w-full  divide-y divide-gray-200">
+    <thead className="bg-gray-100">
+      <tr>
+        <th className="px-6 py-3 text-left text-lg font-bold text-black-700 bg-white tracking-wide">Name</th>
+        <th className="px-6 py-3 text-left text-lg font-bold text-black-700 bg-white tracking-wide">Register Number</th>
+        <th className="px-6 py-3 text-left text-lg font-bold text-black-700 bg-white tracking-wide">Department</th>
+      </tr>
+    </thead>
+    <tbody className="bg-white divide-y divide-gray-200">
+  {team
+    .filter((member) => !member.status) // first, only team lead
+    .map((member, index) => (
+      <tr key={`lead-${index}`} className="hover:bg-gray-50 transition duration-150 ease-in-out">
+        <td className="px-6 py-4 bg-white text-sm text-gray-900 font-medium">
+          {member.name}
+          <span className="ml-2 inline-block bg-white text-yellow-700 font-semibold text-xs px-2 py-0.5 rounded-full">
+            👑 Team Lead
+          </span>
+          <div className="text-xs bg-white text-gray-500">{member.email}</div>
+        </td>
+        <td className="px-6 py-4 bg-white text-sm text-gray-700">{member.reg_num}</td>
+        <td className="px-6 py-4 bg-white text-sm text-gray-700">{member.dept}</td>
+      </tr>
+    ))}
+
+  {team
+    .filter((member) => member.status) // then, rest of the members
+    .map((member, index) => (
+      <tr key={`member-${index}`} className="hover:bg-gray-50 transition duration-150 ease-in-out">
+        <td className="px-6 py-4 bg-white text-sm text-gray-900 font-medium">
+          {member.name}
+          <div className="text-xs bg-white text-gray-500">{member.email}</div>
+        </td>
+        <td className="px-6 py-4 bg-white text-sm text-gray-700">{member.reg_num}</td>
+        <td className="px-6 py-4 bg-white text-sm text-gray-700">{member.dept}</td>
+      </tr>
+    ))}
+</tbody>
+
+  </table>
+</div>
+
+</div>
+
         )}
       </div>
     </div>
