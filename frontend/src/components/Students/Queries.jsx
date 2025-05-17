@@ -77,8 +77,16 @@ function Queries() {
 
   
   useEffect(() => {
+  const isUserAtBottom = () => {
+    const container = document.querySelector('.query-container');
+    return container.scrollHeight - container.scrollTop - container.clientHeight < 50;
+  };
+
+  const container = document.querySelector('.query-container');
+  if (container && isUserAtBottom()) {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [queries]);
+  }
+}, [queries]);
 
   return (
     <div className="min-h-screen w-full bg-gray-50">
@@ -110,10 +118,11 @@ function Queries() {
         </div>
 
         {/* Input */}
-       
+
+        <div className='w-full'>       
         <form
           onSubmit={handleSend}
-          className="fixed ml- -mx-4 bottom-0 flex items-center p-3 border-t border-gray-300 bg-white"
+          className="-ml-4 w-[100%] flex items-center p-3 border-t border-gray-300 bg-white"
         > 
           <input
             type="text"
@@ -131,6 +140,7 @@ function Queries() {
             Send
           </button>
         </form>
+        </div>
       </div>
     </div>
   );
