@@ -14,9 +14,7 @@ function Student_Team() {
       let response;
       if (reg_num) {
          response = await axios.get(`http://localhost:1234/student/getTeamDetails/${reg_num}`, {
-          headers: {
-            Authorization:`Bearer ${token}`
-          }
+         withCredentials:true
         });
       } else {
         console.error("No reg_num available!");
