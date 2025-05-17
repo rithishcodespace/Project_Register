@@ -91,7 +91,7 @@ function Student_navbar({ isOpen, toggleSidebar }) {
     `ml-3 text-lg font-medium ${isOpen ? "opacity-100" : "opacity-0 hidden"} ${isActive(path) ? "bg-purple-400 text-white" : "text-gray-600 bg-white group-hover:text-purple-600"}`;
 
   return (
-    <div className={`fixed top-0 pb-5 left-0 h-screen bg-white flex flex-col py-6 overflow-y-auto shadow-2xl z-50 transition-all duration-500 ease-in-out ${isOpen ? "w-64" : "w-24"}`}>
+    <div className={`fixed top-0 pb-5 left-0 h-screen bg-white flex flex-col py-6 overflow-y-auto shadow-2xl z-50 transition-[width] duration-500 ease-in-out ${isOpen ? "w-64" : "w-24"}`}>
       {/* Toggle Button */}
       <button
         onClick={toggleSidebar}

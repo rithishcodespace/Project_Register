@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Legend, Tooltip } from 'recharts';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
+import { Store } from 'lucide-react';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -21,8 +23,10 @@ const phaseLabels = [
 
 const ProjectProgress = () => {
   const student = JSON.parse(localStorage.getItem('studentData'));
-  const regNum = student?.reg_num;
+  const[progress,setprogress] = useState("");
   const email = student?.emailId;
+  const selector = useSelector((Store) => Store.userSlice);
+  const team = useSelector((Store) => Store.teamSlice);
 
   const [phase, setPhase] = useState('phase1_progress');
   const [contribution, setContribution] = useState('');
@@ -33,8 +37,8 @@ const ProjectProgress = () => {
   const handleUpdateProgress = async () => {
     try {
       const response = await axios.post(
-        `http://localhost:1234/student/update_progress/${phase}/${regNum}`,
-        { contribution },
+        `http://localhost:1234/student/update_progress/${phase}/${selector.reg_num}`,
+        { "contribution" : contribution, "progress" : progress },
         { withCredentials: true }
       );
       setResponseMessage(response.data);
@@ -46,28 +50,7 @@ const ProjectProgress = () => {
     }
   };
 
-  const fetchTeamData = async () => {
-    try {
-      const res = await axios.get('http://localhost:1234/student/team_progress');
-      setData(res.data);
-    } catch (error) {
-      console.error('Failed to load team data');
-    }
-  };
 
-  const fetchStudentProgress = async () => {
-    try {
-      const res = await axios.get(`http://localhost:1234/student/my_progress/${regNum}`);
-      setStudentPhases(res.data); // { phase1_progress: 100, ... }
-    } catch (error) {
-      console.error('Failed to fetch student progress');
-    }
-  };
-
-  useEffect(() => {
-    fetchTeamData();
-    fetchStudentProgress();
-  }, []);
 
   const getAvailablePhases = () => {
     for (let i = 0; i < phaseLabels.length; i++) {
