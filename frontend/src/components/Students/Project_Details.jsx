@@ -1,69 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
-import {
-  Paper,
-  Table,
-  TableBody,
-  TableContainer,
-  TableHead,
-  TablePagination
-} from '@mui/material';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 const Project_Details = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-
-  // State to hold all projects available for selection
   const [projectData, setProjectData] = useState([]);
-
-  // State for the currently selected project in the modal
   const [selectedProject, setSelectedProject] = useState(null);
-
-  // User status: "loading" | "no_team" | "no_project" | "has_project"
   const [userStatus, setUserStatus] = useState('loading');
-
-  // State for project assigned to the user's team
   const [myProject, setMyProject] = useState(null);
 
-  // Redux selectors
   const selector = useSelector((Store) => Store.userSlice);
   const teamMembers = useSelector((Store) => Store.teamSlice);
   const teamStatus = useSelector((Store) => Store.teamStatusSlice);
 
-  // State for selected experts and guides (multiple selections)
   const [selectedExperts, setSelectedExperts] = useState([]);
   const [selectedGuides, setSelectedGuides] = useState([]);
 
-  // List of experts (hardcoded for now, can be dynamic later)
   const expertsList = ['Expert A', 'Expert B', 'Expert C', 'Expert D', 'Expert E'];
-
-  // List of guides (hardcoded for now, can be dynamic later)
   const guidesList = ['Guide X', 'Guide Y', 'Guide Z', 'Guide W', 'Guide V'];
 
-  // Toggle expert selection
   const toggleExpertSelection = (expertName) => {
-    setSelectedExperts((prev) => {
-      if (prev.includes(expertName)) {
-        return prev.filter((e) => e !== expertName);
-      } else {
-        return [...prev, expertName];
-      }
-    });
+    setSelectedExperts((prev) =>
+      prev.includes(expertName) ? prev.filter((e) => e !== expertName) : [...prev, expertName]
+    );
   };
 
-  // Toggle guide selection
+  const startIndex = page * rowsPerPage;
+const pageCount = Math.ceil(projectData.length / rowsPerPage);
+
   const toggleGuideSelection = (guideName) => {
-    setSelectedGuides((prev) => {
-      if (prev.includes(guideName)) {
-        return prev.filter((g) => g !== guideName);
-      } else {
-        return [...prev, guideName];
-      }
-    });
+    setSelectedGuides((prev) =>
+      prev.includes(guideName) ? prev.filter((g) => g !== guideName) : [...prev, guideName]
+    );
   };
 
-  // Check user status based on team info
   function checkUserStatus() {
     try {
       if (!teamStatus.teamConformationStatus) {
@@ -82,12 +54,8 @@ const Project_Details = () => {
     }
   }
 
-  // Pagination handlers
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+  const handleChangeRowsPerPage = (e) => {
+    setRowsPerPage(parseInt(e.target.value));
     setPage(0);
   };
 
@@ -96,12 +64,9 @@ const Project_Details = () => {
     page * rowsPerPage + rowsPerPage
   );
 
-  // Fetch projects filtered by team departments
   async function fetchProjects() {
     try {
       const token = localStorage.getItem('accessToken');
-
-      // Get unique departments from team members + team leader
       const departments = [
         ...new Set([
           ...teamMembers.map((member) => member.dept),
@@ -112,9 +77,7 @@ const Project_Details = () => {
       const response = await axios.post(
         'http://localhost:1234/student/projects',
         { departments },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.status === 200) {
@@ -128,7 +91,6 @@ const Project_Details = () => {
     }
   }
 
-  // Assign project with experts and guides
   async function handleTakeProject(name, id, experts, guides) {
     if (!experts || !guides || experts.length < 3 || guides.length < 3) {
       alert('Please select at least 3 experts and 3 guides');
@@ -138,20 +100,15 @@ const Project_Details = () => {
     try {
       const response = await axios.patch(
         `http://localhost:1234/student/ongoing/${name}`,
-        {
-          expert: experts,
-          guide: guides
-        },
+        { expert: experts, guide: guides },
         { withCredentials: true }
       );
 
       if (response.status === 200) {
         alert('Project chosen successfully!');
-
         setProjectData((prev) =>
           prev.filter((proj) => proj.project_name !== name)
         );
-
         setSelectedProject(null);
         setUserStatus('has_project');
         setMyProject(selectedProject);
@@ -159,13 +116,9 @@ const Project_Details = () => {
         setSelectedGuides([]);
       }
 
-      // Assign project ID to student
       const newresponse = await axios.patch(
         `http://localhost:1234/student/assign_project_id/${id}/${selector.reg_num}`,
-        {
-          expert: experts,
-          guide: guides
-        },
+        { expert: experts, guide: guides },
         { withCredentials: true }
       );
 
@@ -178,7 +131,6 @@ const Project_Details = () => {
     }
   }
 
-  // Fetch assigned project details
   async function fetchMyProject() {
     try {
       const token = localStorage.getItem('accessToken');
@@ -187,9 +139,7 @@ const Project_Details = () => {
       if (member?.project_id) {
         const response = await axios(
           `http://localhost:1234/student/get_project_details/${member.project_id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` }
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
         if (response.status === 200) {
@@ -203,29 +153,23 @@ const Project_Details = () => {
     }
   }
 
-  // On mount, check user status
   useEffect(() => {
     checkUserStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fetch projects or assigned project based on user status
   useEffect(() => {
     if (userStatus === 'no_project') {
       fetchProjects();
     } else if (userStatus === 'has_project') {
       fetchMyProject();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userStatus]);
 
-  // Set selected project on row click
   const handleRowClick = (projectId) => {
     const selected = projectData.find((proj) => proj.project_id === projectId);
     setSelectedProject(selected);
   };
 
-  // Render no team message
   if (userStatus === 'no_team') {
     return (
       <div className="flex justify-center items-center mt-20">
@@ -234,7 +178,6 @@ const Project_Details = () => {
     );
   }
 
-  // Render assigned project details
   if (userStatus === 'has_project' && myProject) {
     return (
       <div className="p-6 w-full max-w-4xl mx-auto">
@@ -243,15 +186,9 @@ const Project_Details = () => {
         </h2>
 
         <div className="bg-white p-6 rounded-xl shadow-xl">
-          <p>
-            <strong>Name:</strong> {myProject.project_name}
-          </p>
-          <p>
-            <strong>Cluster:</strong> {myProject.cluster}
-          </p>
-          <p>
-            <strong>Description:</strong> {myProject.description}
-          </p>
+          <p><strong>Name:</strong> {myProject.project_name}</p>
+          <p><strong>Cluster:</strong> {myProject.cluster}</p>
+          <p><strong>Description:</strong> {myProject.description}</p>
 
           <div className="mt-4">
             <h4 className="text-lg font-bold text-purple-600 mb-2">Project Phases</h4>
@@ -268,69 +205,92 @@ const Project_Details = () => {
     );
   }
 
-  // Render available projects list
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6 text-center text-black">
-        Available Projects
-      </h1>
-      <Paper
-        className="w-full overflow-hidden shadow-lg border"
-        sx={{
-          width: '90%',
-          marginLeft: '5%',
-          borderRadius: "10px",
-          overflow: 'hidden',
-          paddingTop: 2,
-          paddingRight: 2,
-          paddingLeft: 2
-        }}
-      >
-        <TableContainer
-          className="max-h-[500px] overflow-y-auto scrollbar-hide"
-          sx={{ maxHeight: 500 }}
-        >
-          <Table stickyHeader aria-label="project table">
-            <TableHead>
-              <tr className="h-12 rounded-lg bg-gradient-to-r from-purple-700 to-pink-600 text-white text-left">
-                <th className="p-4">Project ID</th>
-                <th className="p-4">Project Name</th>
-                <th className="p-4">Cluster</th>
-                <th className="p-4">Description</th>
+      <h1 className="text-2xl font-bold mb-6 text-center text-black">Available Projects</h1>
+
+      <div className="overflow-x-auto border rounded-lg shadow-md">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gradient-to-r from-purple-700 to-pink-600 text-white">
+            <tr>
+              <th className="px-6 py-3 text-left bg-white text-black">Project ID</th>
+              <th className="px-6 py-3 text-left bg-white text-black">Project Name</th>
+              <th className="px-6 py-3 text-left bg-white text-black">Cluster</th>
+              <th className="px-6 py-3 text-left bg-white text-black">Description</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {paginatedProjects.map((proj) => (
+              <tr
+                key={proj.project_id}
+                className="hover:bg-purple-100 cursor-pointer"
+                onClick={() => handleRowClick(proj.project_id)}
+              >
+                <td className="px-6 py-4 bg-white">{proj.project_id}</td>
+                <td className="px-6 py-4 bg-white">{proj.project_name}</td>
+                <td className="px-6 py-4 bg-white">{proj.cluster}</td>
+                <td className="px-6 py-4 bg-white">{proj.description}</td>
               </tr>
-            </TableHead>
-            <TableBody className="bg-white">
-              {paginatedProjects.map((proj) => (
-                <tr
-                  key={proj.project_id}
-                  onClick={() => handleRowClick(proj.project_id)}
-                  className="cursor-pointer hover:bg-purple-100"
-                >
-                  <td className="p-4 border-b">{proj.project_id}</td>
-                  <td className="p-4 border-b">{proj.project_name}</td>
-                  <td className="p-4 border-b">{proj.cluster}</td>
-                  <td className="p-4 border-b">{proj.description}</td>
-                </tr>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-        <TablePagination
-          component="div"
-          count={projectData.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[5, 10, 25]}
-        />
-      </Paper>
+      {/* Custom Pagination Controls */}
+      <div className="flex justify-between items-center mt-4">
+        <div>
+          Rows per page:
+          <select
+            className="ml-2 border px-2 py-1 rounded"
+            value={rowsPerPage}
+            onChange={handleChangeRowsPerPage}
+          >
+            {[5, 10, 25].map((rows) => (
+              <option key={rows} value={rows}>
+                {rows}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      {/* Modal for project selection */}
+        <div className="flex items-center justify-between mt-4 px-4">
+          <span className="text-sm text-gray-700">
+            {startIndex + 1}–{Math.min(startIndex + rowsPerPage, projectData.length)} of {projectData.length}
+          </span>
+        
+          <div className="flex items-center">
+            <button
+              onClick={() => handleChangePage(null, page - 1)}
+              disabled={page === 0}
+              className="px-2 py-1 rounded mr-2"
+              title="Previous Page"
+            >
+              <FaChevronLeft
+                className=""
+                color={page === 0 ? '#A0A0A0' : '#000000'}
+              />
+            </button>
+        
+            <button
+              onClick={() => handleChangePage(null, page + 1)}
+              disabled={page >= pageCount - 1}
+              className="px-2 py-1 rounded"
+              title="Next Page"
+            >
+              <FaChevronRight
+                className=""
+                color={page >= pageCount - 1 ? '#A0A0A0' : '#000000'}
+              />
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Popup modal for project selection */}
       {selectedProject && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-8 max-w-3xl w-full relative">
+          <div className="bg-white rounded-lg shadow-lg p-7 max-w-3xl w-full relative">
             <button
               onClick={() => {
                 setSelectedProject(null);
@@ -339,27 +299,27 @@ const Project_Details = () => {
               }}
               className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
             >
-              &#10005; {/* X close button */}
+              &#10005;
             </button>
 
-            <h2 className="text-2xl font-semibold mb-4 text-center text-gray-800">
+            <h2 className="text-2xl font-semibold mb-4 bg-white text-center text-gray-800">
               Select Project: {selectedProject.project_name}
             </h2>
 
-            <div className="mb-4">
-              <p><strong>Project ID:</strong> {selectedProject.project_id}</p>
-              <p><strong>Cluster:</strong> {selectedProject.cluster}</p>
-              <p><strong>Description:</strong> {selectedProject.description}</p>
+            <div className="mb-4 bg-white">
+              <p className='bg-white'><strong className='bg-white'>Project ID:</strong> {selectedProject.project_id}</p>
+              <p className='bg-white'><strong className='bg-white'>Cluster:</strong> {selectedProject.cluster}</p>
+              <p className='bg-white'><strong className='bg-white'>Description:</strong> {selectedProject.description}</p>
             </div>
 
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold mb-2">Select at least 3 Experts:</h3>
-              <div className="flex flex-wrap gap-3">
+            <div className="mb-4 bg-white">
+              <h3 className="text-lg font-semibold mb-2 bg-white">Select at least 3 Experts:</h3>
+              <div className="flex flex-wrap gap-3 bg-white">
                 {expertsList.map((expert) => (
                   <button
                     key={expert}
                     onClick={() => toggleExpertSelection(expert)}
-                    className={`px-3 py-1 rounded-full border ${
+                    className={`px-3 py-1 rounded-full border bg-white ${
                       selectedExperts.includes(expert)
                         ? 'bg-purple-600 text-white border-purple-600'
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
@@ -371,9 +331,9 @@ const Project_Details = () => {
               </div>
             </div>
 
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Select at least 3 Guides:</h3>
-              <div className="flex flex-wrap gap-3">
+            <div className="mb-6 bg-white">
+              <h3 className="text-lg font-semibold mb-2 bg-white">Select at least 3 Guides:</h3>
+              <div className="flex flex-wrap gap-3 bg-white">
                 {guidesList.map((guide) => (
                   <button
                     key={guide}
@@ -399,7 +359,7 @@ const Project_Details = () => {
                   selectedGuides
                 )
               }
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-semibold hover:opacity-90 transition-opacity"
+              className="w-full bg-gradient-to-r from-purple-800 to-purple-600 text-white py-3 rounded-md font-semibold hover:opacity-90 transition-opacity"
             >
               Take Project
             </button>
