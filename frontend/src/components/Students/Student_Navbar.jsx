@@ -1,25 +1,29 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, Users, FileText, BarChart2, LogOut,MessagesSquare } from 'lucide-react';
+import { Home, Users, FileText, BarChart2, LogOut, MessagesSquare } from 'lucide-react';
 import college_img from "../../assets/college_img.png";
 import menu from "../../assets/menu.png";
 import wrong from "../../assets/wrong.png";
 import axios from 'axios';
-import { useDispatch } from 'react-redux';
-import { removeUser} from '../../utils/userSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { removeUser } from '../../utils/userSlice';
 import { removeTeamMembers } from '../../utils/teamSlice';
-import {removeTeamStatus} from "../../utils/teamStatus";
+import { removeTeamStatus } from "../../utils/teamStatus";
+
 
 function Student_navbar({ isOpen, toggleSidebar }) {
+  const [team, setTeam] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const selector = useSelector((store) => store.teamSlice);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const currentPath = location.pathname;
 
   const handleLogout = async () => {
     try {
-  
       await axios.delete("http://localhost:1234/auth/logout", {
-        withCredentials:true
+        withCredentials: true
       });
 
       dispatch(removeUser());
@@ -33,16 +37,53 @@ function Student_navbar({ isOpen, toggleSidebar }) {
     }
   };
 
+  const fetchTeam = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const reg_num = selector[0]?.reg_num;
+
+      if (!reg_num) {
+        console.error("No reg_num available!");
+        return;
+      }
+
+      const response = await axios.get(
+        `http://localhost:1234/student/getTeamDetails/${reg_num}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.status === 200) {
+        setTeam(response.data || []);
+        console.log("team members array:", response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching team details:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTeam();
+  }, []);
+
   const isActive = (path) => {
     const currentPath = location.pathname;
-    if (path === "") return currentPath === "/student";
+    if (path === "") return currentPath === "/student" || currentPath === "/student/invitations";
     return currentPath.endsWith(path) || currentPath === `/student/${path}`;
   };
 
-  const navDiv = (path) => 
+  const isTeamAvailable = team.length > 0;
+  const disabledClass = "pointer-events-none opacity-60";
+
+  const navDiv = (path) =>
     `ml-3 mb-10 flex items-center rounded-lg px-3 py-2 ${isActive(path) ? "bg-purple-400 text-white" : "bg-white"} ${isOpen ? "w-52" : "w-12"}`;
 
-  const navIcon = (path) => 
+  const navIcon = (path) =>
     `${isActive(path) ? "bg-purple-400 text-white" : "bg-transparent bg-white text-gray-600 group-hover:text-purple-600"}`;
 
   const navText = (path) =>
@@ -72,27 +113,44 @@ function Student_navbar({ isOpen, toggleSidebar }) {
       </div>
 
       <div className="bg-white px-2">
+        {/* Dashboard */}
         <Link to="" className={`${navDiv("")} group`}>
           <Home size={24} className={navIcon("")} />
           <p className={navText("")}>Dashboard</p>
         </Link>
 
-        <Link to="Project_Details" className={`${navDiv("Project_Details")} group`}>
+        {/* Project Details */}
+        <Link
+          to="Project_Details"
+          className={`${navDiv("Project_Details")} group ${!isTeamAvailable ? disabledClass : ""}`}
+        >
           <FileText size={24} className={navIcon("Project_Details")} />
           <p className={navText("Project_Details")}>Project Details</p>
         </Link>
 
-        <Link to="queries" className={`${navDiv("queries")} group`}>
+        {/* Queries */}
+        <Link
+          to="queries"
+          className={`${navDiv("queries")} group ${!isTeamAvailable ? disabledClass : ""}`}
+        >
           <MessagesSquare size={24} className={navIcon("queries")} />
           <p className={navText("queries")}>Queries</p>
         </Link>
 
-        <Link to="Students_team" className={`${navDiv("Students_team")} group`}>
+        {/* Student Team */}
+        <Link
+          to="Students_team"
+          className={`${navDiv("Students_team")} group ${!isTeamAvailable ? disabledClass : ""}`}
+        >
           <Users size={24} className={navIcon("Students_team")} />
           <p className={navText("Students_team")}>Student Team</p>
         </Link>
 
-        <Link to="Progress_update" className={`${navDiv("Progress_update")} group`}>
+        {/* Progress Update */}
+        <Link
+          to="Progress_update"
+          className={`${navDiv("Progress_update")} group ${!isTeamAvailable ? disabledClass : ""}`}
+        >
           <BarChart2 size={24} className={navIcon("Progress_update")} />
           <p className={navText("Progress_update")}>Progress Update</p>
         </Link>

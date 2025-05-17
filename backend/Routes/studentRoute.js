@@ -324,8 +324,9 @@ router.patch("/student/:status/:project_name",(req,res,next) => {
 router.patch("/student/assign_project_id/:project_id/:from_reg_num", (req, res, next) => {
   try {
     const { project_id, from_reg_num } = req.params;
+    if(!project_id || !from_reg_num)return next(createError.BadRequest("project_id or from_reg_num is not present!!"))
 
-    const updateSQL = "UPDATE team_requests SET project_id = ?,  project_picked_date = CURRENT_TIMESTAMP WHERE from_reg_num = ? AND status = 'accept'";
+    const updateSQL = "UPDATE team_requests SET project_id = ?,  project_picked_date = CURRENT_TIMESTAMP  WHERE from_reg_num = ? AND status = 'accept'";
     db.query(updateSQL, [project_id, from_reg_num], (error, updateResult) => {
       if (error) return next(error);
 
@@ -340,18 +341,19 @@ router.patch("/student/assign_project_id/:project_id/:from_reg_num", (req, res, 
         const teamId = result[0].team_id;
         const deadlines = generateWeeklyDeadlines(pickedDate); // returns 12 weeks
 
-        const insertSQL = "INSERT INTO weekly_logs_deadlines (team_id, week_number, deadline_date) VALUES (?, ?, ?)";
-        let inserted = 0;
+        const insertSQL = "INSERT INTO weekly_logs_deadlines (team_id, project_id, week_1, week_2, week_3, week_4, week_5, week_6, week_7, week_8, week_9, week_10, week_11, week_12) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        const values = [teamId, project_id, ...deadlines];
 
-        for (let i = 0; i < deadlines.length; i++) {
-          db.query(insertSQL, [teamId, i + 1, deadlines[i]], (error) => {
-            if (error) return next(error);
-            inserted++;
-            if (inserted === deadlines.length) {
-              res.send("Project ID assigned and 12 deadlines generated successfully");
-            }
-          });
-        }
+        db.query(insertSQL,values,(error,result) => {
+          if(error)return next(error);
+         res.json({
+          message: "Project assigned and weekly deadlines set.",
+          project_id,
+          teamId,
+          deadlines
+        });
+        })
+
       });
     });
   } catch (error) {
@@ -477,25 +479,51 @@ router.get("/student/get_project_details/:project_id",(req,res,next) => {
 })
 
 // GET /student/team_progress
-router.get("/student/team_progress/:phase", (req, res) => {
-  const { phase } = req.params;
+router.get("/student/team_progress/:team_id/:phase", (req, res) => {
+  const { phase,team_id } = req.params;
+
+  if(!phase || !team_id)return next(createError.BadRequest("team_id or phase is missing!!"));
 
   // Validate input to prevent SQL injection
-  const allowedPhases = ['phase1', 'phase2', 'phase3', 'phase4'];
+  const allowedPhases = ['phase1', 'phase2', 'phase3', 'phase4', 'phase5', 'phase6', 'phase7', 'phase8', 'phase9', 'phase10', 'phase11', 'phase12',];
   if (!allowedPhases.includes(phase)) {
     return res.status(400).send("Invalid phase");
   }
 
-  const sql = `
-    SELECT name, ${phase}_progress AS value
-    FROM team_requests
-    WHERE team_id = '001' AND ${phase}_progress IS NOT NULL
-  `;
+  const sql = `SELECT name, ${phase}_progress AS progress, ${phase}_contribution AS contribution FROM team_requests WHERE team_id = ? AND ${phase}_progress IS NOT NULL
+`;
 
-  db.query(sql, (err, results) => {
+  db.query(sql,[team_id],(err, results) => {
     if (err) return res.status(500).send("DB error");
     res.json(results); // [{ name, value }, ...]
   });
+});
+
+// fetches the progress of entire team
+
+router.get("/student/fetch_team_progress/:team_id", (req, res, next) => {
+  try {
+    const { team_id } = req.params;
+    if (!team_id) return next(createError.BadRequest("team_id is null!!"));
+
+    const columns = []; 
+    // add column names
+    for (let i = 1; i <= 12; i++) {
+      columns.push(`phase${i}_contribution`, `phase${i}_progress`);
+    }
+
+    // making column names comma seperated
+    const sql = `SELECT ${columns.join(", ")} FROM team_requests WHERE team_id = ?`;
+
+    db.query(sql, [team_id], (error, result) => {
+      if (error) return next(error);
+      if (result.length === 0) return res.status(404).send("No team data found!");
+
+      res.json(result[0]); // only one row expected for team_id
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 
@@ -679,6 +707,24 @@ router.get("/student/check_accepted_status/:reg_num",(req,res,next) => {
     const{reg_num} = req.params;
     let sql = "SELECT * FROM team_requests WHERE (to_reg_num = ? OR from_reg_num = ?) AND status = 'accepted'";
     db.query(sql,[reg_num,reg_num],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+// fetchs the deadlines from weekly_logs table
+
+router.get("/student/fetchDeadlines/:team_id",(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest("teamid not found!"));
+    let sql = "select * from weekly_logs_deadlines";
+    db.query(sql,(error,result) => {
       if(error)return next(error);
       res.send(result);
     })

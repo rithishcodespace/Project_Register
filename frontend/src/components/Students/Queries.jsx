@@ -22,32 +22,6 @@ function Queries() {
     }
   }
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (newQuery.trim() === '') return;
-
-    try {
-      let token = localStorage.getItem("accessToken");
-      await axios.post(
-        'http://localhost:1234/student/send_query',
-        {
-          query: newQuery,
-          team_id: selector[0].team_id,
-          team_member: selector[0].team_leader,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setNewQuery('');
-    } catch (error) {
-      console.error("Error sending query:", error);
-    }
-  };
-
-
   useEffect(() => {
     const fetchQueries = async () => {
       try {
@@ -75,18 +49,34 @@ function Queries() {
     return () => clearInterval(interval);
   }, []);
 
-  
-  useEffect(() => {
-  const isUserAtBottom = () => {
-    const container = document.querySelector('.query-container');
-    return container.scrollHeight - container.scrollTop - container.clientHeight < 50;
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (newQuery.trim() === '') return;
+
+    try {
+      let token = localStorage.getItem("accessToken");
+      await axios.post(
+        'http://localhost:1234/student/send_query',
+        {
+          query: newQuery,
+          team_id: selector[0].team_id,
+          team_member: selector[0].team_leader,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setNewQuery('');
+    } catch (error) {
+      console.error("Error sending query:", error);
+    }
   };
 
-  const container = document.querySelector('.query-container');
-  if (container && isUserAtBottom()) {
+  useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }
-}, [queries]);
+  }, [queries]);
 
   return (
     <div className="min-h-screen w-full bg-gray-50">
@@ -117,19 +107,16 @@ function Queries() {
           <div ref={chatEndRef} />
         </div>
 
-        {/* Input */}
-
-        <div className='w-full'>       
         <form
           onSubmit={handleSend}
-          className="-ml-4 w-[100%] flex items-center p-3 border-t border-gray-300 bg-white"
+          className=" w-full  sticky -mx-4 bottom-0  flex  p-3  bg-white"
         > 
           <input
             type="text"
             value={newQuery}
             onChange={(e) => setNewQuery(e.target.value)}
             placeholder="Type your query..."
-            className="flex-1 w-full p-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="flex-1 w-full  p-2 border border-gray-300 rounded-full  focus:outline-none focus:ring-2 focus:ring-purple-500"
             required
           />
           <button
@@ -140,7 +127,6 @@ function Queries() {
             Send
           </button>
         </form>
-        </div>
       </div>
     </div>
   );
