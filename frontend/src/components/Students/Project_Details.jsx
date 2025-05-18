@@ -95,53 +95,6 @@ const Project_Details = () => {
 
   async function fetchExpertsAndGuides() {
     try {
-<<<<<<< HEAD
-      const response = await axios.post(
-        `http://localhost:1234/guide/sent_request_to_guide`,
-        { 
-          "from_team_id":teamMembers.team_id,
-          "project_id":id,
-          "project_name":name,
-          "to_guide_reg_num":guides
-        },
-        { withCredentials: true }
-      );
-
-      if (response.status === 200) {
-        const response1 = await axios.post(
-        `http://localhost:1234/sub_expert/sent_request_to_expert`,
-        { 
-          "from_team_id":teamMembers.team_id,
-          "project_id":id,
-          "project_name":name,
-          "to_guide_reg_num":experts
-        },
-        { withCredentials: true }
-      );
-       if(response1.status === 200)
-       {
-          alert('Project chosen successfully!');
-          setProjectData((prev) =>
-            prev.filter((proj) => proj.project_name !== name)
-          );
-          setSelectedProject(null);
-          setUserStatus('has_project');
-          setMyProject(selectedProject);
-          setSelectedExperts([]);
-          setSelectedGuides([]);
-      }
-       }
-
-      const newresponse = await axios.patch(
-        `http://localhost:1234/student/assign_project_id/${id}/${selector.reg_num}`,
-        { expert: experts, guide: guides },
-        { withCredentials: true }
-      );
-
-      if (newresponse.status === 200) {
-        console.log('project_id successfully inserted into db!');
-      }
-=======
       const [expertRes, guideRes] = await Promise.all([
         axios.get('http://localhost:1234/student/fetch_guide_or_expert/sub_expert'),
         axios.get('http://localhost:1234/student/fetch_guide_or_expert/guide'),
@@ -149,7 +102,6 @@ const Project_Details = () => {
 
       if (expertRes.status === 200) setExpertsList(expertRes.data);
       if (guideRes.status === 200) setGuidesList(guideRes.data);
->>>>>>> 3f0644b6dc4cefa6b1b8b8f7fe56eb0499d9bf13
     } catch (error) {
       console.error('Error fetching experts/guides:', error);
       alert('Failed to load experts and guides');
