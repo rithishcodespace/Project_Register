@@ -99,23 +99,41 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
     }
 
     try {
-      const response = await axios.patch(
-        `http://localhost:1234/student/ongoing/${name}`,
-        { expert: experts, guide: guides },
+      const response = await axios.post(
+        `http://localhost:1234/guide/sent_request_to_guide`,
+        { 
+          "from_team_id":teamMembers.team_id,
+          "project_id":id,
+          "project_name":name,
+          "to_guide_reg_num":guides
+        },
         { withCredentials: true }
       );
 
       if (response.status === 200) {
-        alert('Project chosen successfully!');
-        setProjectData((prev) =>
-          prev.filter((proj) => proj.project_name !== name)
-        );
-        setSelectedProject(null);
-        setUserStatus('has_project');
-        setMyProject(selectedProject);
-        setSelectedExperts([]);
-        setSelectedGuides([]);
+        const response1 = await axios.post(
+        `http://localhost:1234/sub_expert/sent_request_to_expert`,
+        { 
+          "from_team_id":teamMembers.team_id,
+          "project_id":id,
+          "project_name":name,
+          "to_guide_reg_num":experts
+        },
+        { withCredentials: true }
+      );
+       if(response1.status === 200)
+       {
+          alert('Project chosen successfully!');
+          setProjectData((prev) =>
+            prev.filter((proj) => proj.project_name !== name)
+          );
+          setSelectedProject(null);
+          setUserStatus('has_project');
+          setMyProject(selectedProject);
+          setSelectedExperts([]);
+          setSelectedGuides([]);
       }
+       }
 
       const newresponse = await axios.patch(
         `http://localhost:1234/student/assign_project_id/${id}/${selector.reg_num}`,

@@ -123,7 +123,18 @@ router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",(req,res,
       let sql = `UPDATE team_requests SET status = ? WHERE to_reg_num = ? AND from_reg_num = ? AND status = 'interested'`;
       db.query(sql,[status, to_reg_num, from_reg_num],(error,result) => {
         if(error) return next(error);
-        res.send(`status updated to ${status}`);
+        let sql1 = "select * from team_requests where from_reg_num = ? and status = 'accept'";
+        db.query(sql1,[from_reg_num],(error1,result1) => {
+          if(error1)return next(error1);
+          if(result1.length >= 3)
+          {
+            let sql2 = "DELETE FROM team_requests WHERE from_reg_num = ? AND status <> 'accept'";
+            db.query(sql2,[from_reg_num],(error2,result2) => {
+              if(error2)return next(error2);
+              res.send(`status updated to ${status}`);
+            })
+          }
+        })
       })
     }
     catch(error)
@@ -279,7 +290,7 @@ router.patch("/student/team_request/conform_team", (req, res, next) => {
         // Insert the team request (Executed Last)
         let sql3 = `
           INSERT INTO team_requests (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status,team_conformed) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'accept','true')
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'accept',1)
         `;
         db.query(sql3, [team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num], (error3, result3) => {
           if (error3) return next(error3);
@@ -354,53 +365,13 @@ router.patch("/student/assign_project_id/:project_id/:from_reg_num", (req, res, 
 
 // fetches team members
 router.get("/student/getTeamDetails/:reg_num", (req, res, next) => {
-  const reg_num = req.params.reg_num;
-
-  if(!reg_num)next(createError.BadRequest("reg_num not found!"))
-
-  // First, fetch the initial request to find out if the student is in a confirmed team
-  const getInitialRequestSql = `
-    SELECT * FROM team_requests 
-    WHERE (from_reg_num = ? OR to_reg_num = ?) AND Team_conformed = 1
-  `;
-
-  db.query(getInitialRequestSql, [reg_num, reg_num], (err, results) => {
-    if (err) return next(err);
-
-    if (results.length === 0) {
-      return res.status(404).json({ message: "No confirmed team found" });
-    }
-
-    const teamLeaderRegNum = results[0].from_reg_num;
-
-    const getTeamSql = `
-      SELECT * FROM team_requests 
-      WHERE from_reg_num = ? AND Team_conformed = 1
-    `;
-
-    db.query(getTeamSql, [teamLeaderRegNum], (err2, teamDetails) => {
-      if (err2) return next(err2);
-
-      // If no team members are found, return a 404 error
-      if (teamDetails.length === 0) {
-        return res.status(404).json({ message: "No team members found" });
-      }
-
-      // Fetch the team leader's details
-      let sql3 = "SELECT * FROM users WHERE reg_num = ?";
-      db.query(sql3, [teamLeaderRegNum], (error, tldetails) => {
-        if (error) return next(error);
-
-        if (tldetails.length === 0) {
-          return res.status(404).json({ message: "No team leader found" });
-        }
-
-        const finalResults = [...teamDetails, ...tldetails];
-
-        res.send(finalResults);
-      });
-    });
-  });
+  const{reg_num} = req.params;
+  if(!reg_num)return next(createError.BadRequest("reg_num not found!"));
+  let sql = "select * from team_requests where from_reg_num = ? and status = 'accept'";
+  db.query(sql,[reg_num],(error,result) => {
+    if(error)return next(error);
+    res.send(result);
+  })
 });
 
 // updates the progress
