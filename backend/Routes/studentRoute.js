@@ -721,14 +721,13 @@ router.get("/student/fetchDeadlines/:team_id",(req,res,next) => {
 })
 
 // by mathan
-
 router.get("/student/check_phase_eligibility/:reg_num", (req, res, next) => {
   const reg_num = req.params.reg_num;
   if (!reg_num) return res.status(400).send("reg_num is required");
 
   const today = new Date();
-  const dayOfWeek = today.getDay(); // 6 = Saturday
-  const isSaturday = dayOfWeek === 6;
+  const dayOfWeek = today.getDay(); // 1 = Monday
+  const isMonday = dayOfWeek === 1;
 
   // Step 1: Find team_id and project_picked_date
   const teamQuery = `SELECT team_id, project_id, project_picked_date FROM team_requests WHERE reg_num = ? LIMIT 1`;
@@ -756,13 +755,10 @@ router.get("/student/check_phase_eligibility/:reg_num", (req, res, next) => {
       res.json({
         allowedPhase: currentPhase,
         weekNumber,
-        canUpdate: isSaturday && !alreadyUpdated,
+        canUpdate: isMonday && !alreadyUpdated,
         alreadyUpdated,
-        isSaturday
+        isMonday
       });
     });
   });
 });
-
-
-module.exports = router;

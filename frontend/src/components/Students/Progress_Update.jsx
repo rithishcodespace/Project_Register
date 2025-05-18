@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 const ProjectProgress = () => {
   const student = JSON.parse(localStorage.getItem('studentData'));
   const reg_num = student?.reg_num;
+  const team_id = student?.team_id; // make sure team_id is stored in localStorage
   const selector = useSelector((state) => state.userSlice);
 
   const [contribution, setContribution] = useState('');
@@ -14,19 +15,51 @@ const ProjectProgress = () => {
   const [canUpdate, setCanUpdate] = useState(false);
   const [message, setMessage] = useState('');
 
+  const phaseLabels = [
+    'phase1_progress',
+    'phase2_progress',
+    'phase3_progress',
+    'phase4_progress',
+    'phase5_progress',
+    'phase6_progress',
+  ];
+
+  const getNextPhase = (currentPhase) => {
+    const index = phaseLabels.indexOf(currentPhase);
+    return index !== -1 && index + 1 < phaseLabels.length ? phaseLabels[index + 1] : null;
+  };
+
   const fetchEligibility = async () => {
     try {
+      // 1. Get current phase and status
       const res = await axios.get(`http://localhost:1234/student/check_phase_eligibility/${selector.reg_num}`);
-      setPhase(res.data.allowedPhase);
-      setWeek(res.data.weekNumber);
-      setCanUpdate(res.data.canUpdate);
-      if (!res.data.isSaturday) {
-        setMessage("Updates are allowed only on Saturdays");
+      let currentPhase = res.data.allowedPhase;
+      const weekNumber = res.data.weekNumber;
+      const isMonday = res.data.isMonday;
+
+      // 2. Check all team member progress
+      const teamRes = await axios.get(`http://localhost:1234/student/team_progress/${team_id}/${currentPhase.replace('_progress', '')}`);
+      const allMembers = teamRes.data;
+
+      const allCompleted = allMembers.every(member => parseInt(member.progress) === 100);
+
+      // 3. Advance phase if all done
+      const finalPhase = allCompleted ? getNextPhase(currentPhase) || currentPhase : currentPhase;
+
+      setPhase(finalPhase);
+      setWeek(weekNumber);
+      setCanUpdate(isMonday && !res.data.alreadyUpdated);
+
+      if (!isMonday) {
+        setMessage("Updates allowed only on Mondays");
       } else if (res.data.alreadyUpdated) {
-        setMessage("You’ve already submitted this phase this week");
+        setMessage("You already submitted this phase this week");
+      } else {
+        setMessage('');
       }
     } catch (err) {
-      setMessage("Error fetching update permission");
+      console.error(err);
+      setMessage("Error fetching eligibility data");
     }
   };
 
@@ -40,6 +73,7 @@ const ProjectProgress = () => {
         { withCredentials: true }
       );
       setMessage(res.data);
+      fetchEligibility(); // Refresh the page state after update
     } catch (err) {
       setMessage(err.response?.data || "Something went wrong");
     }
@@ -53,19 +87,40 @@ const ProjectProgress = () => {
     <div className="max-w-xl mx-auto mt-10 p-6 bg-white shadow rounded">
       <h2 className="text-2xl font-bold text-center mb-4">Weekly Progress Update</h2>
 
+      <p className="text-center text-blue-600 font-medium mb-4">
+        Week {week} | Updating: {phase.replace('_progress', '').toUpperCase()}
+      </p>
+
       <div className="mb-4">
         <label className="block font-semibold">Current Phase</label>
-        <input type="text" value={phase.replace('_progress', '').toUpperCase()} disabled className="w-full border p-2 rounded" />
+        <input
+          type="text"
+          value={phase.replace('_progress', '').toUpperCase()}
+          disabled
+          className="w-full border p-2 rounded"
+        />
       </div>
 
       <div className="mb-4">
-        <label className="block font-semibold">Your Contribution (%)</label>
-        <input type="number" value={contribution} onChange={(e) => setContribution(e.target.value)} className="w-full border p-2 rounded" />
+        <label className="block font-semibold">Description</label>
+        <input
+          type="text"
+          value={contribution}
+          onChange={(e) => setContribution(e.target.value)}
+          className="w-full border p-2 rounded"
+          placeholder="Example: Circuit built, report submitted..."
+        />
       </div>
 
       <div className="mb-4">
-        <label className="block font-semibold">Overall Phase Progress (%)</label>
-        <input type="number" value={progress} onChange={(e) => setProgress(e.target.value)} className="w-full border p-2 rounded" />
+        <label className="block font-semibold">Your Phase Progress (%)</label>
+        <input
+          type="number"
+          value={progress}
+          onChange={(e) => setProgress(e.target.value)}
+          className="w-full border p-2 rounded"
+          placeholder="Ex: 50 or 100"
+        />
       </div>
 
       <button
@@ -76,7 +131,9 @@ const ProjectProgress = () => {
         {canUpdate ? "Submit Update" : "Not Allowed"}
       </button>
 
-      {message && <p className="text-center mt-4 text-red-600 font-medium">{message}</p>}
+      {message && (
+        <p className="text-center mt-4 text-red-600 font-medium">{message}</p>
+      )}
     </div>
   );
 };
