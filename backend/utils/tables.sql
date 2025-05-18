@@ -87,6 +87,7 @@ CREATE TABLE `team_requests` (
   `phase12_progress` varchar(200) DEFAULT NULL,
   `phase12_contribution` decimal(5,2) DEFAULT NULL,
   UNIQUE KEY `unique_request` (`from_reg_num`,`to_reg_num`),
+  PRIMARY KEY (from_reg_num, to_reg_num);
 )
 
 CREATE TABLE `queries` (

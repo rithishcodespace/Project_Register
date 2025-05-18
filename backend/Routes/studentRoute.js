@@ -252,37 +252,46 @@ router.post("/student/projects",(req,res,next) => {
 //make the team status -> 1 and assings team id to the team
 
 router.patch("/student/team_request/conform_team", (req, res, next) => {
-  let { from_reg_num } = req.body;
+  let { name, emailId, reg_num, dept, from_reg_num, to_reg_num } = req.body;
 
-  if (!from_reg_num) {
-    return next(createError.BadRequest("from_reg_num is null!"));
+  if (!name || !emailId || !reg_num || !dept || !from_reg_num || !to_reg_num) {
+    return next(createError.BadRequest("some req.body is null!"));
   }
 
-  // count the number of teams
-  let sql = "SELECT COUNT(*) as count FROM team_requests WHERE team_conformed = true"
-  db.query(sql,(err, result) => {
+  //Count the number of confirmed teams
+  let sql = "SELECT COUNT(*) as count FROM team_requests WHERE team_conformed = true";
+  db.query(sql, (err, result) => {
+    if (err) return next(err);
 
-      if (err) return next(err);
+    const teamNumber = result[0].count + 1;
+    const team_id = `TEAM-${String(teamNumber).padStart(4, "0")}`;
 
-      const teamNumber = result[0].count + 1;
-      const team_id = `TEAM-${String(teamNumber).padStart(4, "0")}`;
+    //Set team as confirmed
+    let sql1 = "UPDATE team_requests SET team_conformed = true WHERE from_reg_num = ? AND status = 'accept'";
+    db.query(sql1, [from_reg_num], (error1, result1) => {
+      if (error1) return next(error1);
 
-      // makes team_conformed
-      let sql1 ="UPDATE team_requests SET team_conformed = true WHERE from_reg_num = ? AND status = 'accept'";
-      db.query(sql1, [from_reg_num], (error1, result1) => {
-        if (error1) return next(error1);
+      // Assign team ID
+      let sql2 = "UPDATE team_requests SET team_id = ? WHERE from_reg_num = ? AND status = 'accept'";
+      db.query(sql2, [team_id, from_reg_num], (error2, result2) => {
+        if (error2) return next(error2);
 
-        // sets the team_id
-        let sql2 ="UPDATE team_requests SET team_id = ? WHERE from_reg_num = ? AND status = 'accept'";
-        db.query(sql2, [team_id, from_reg_num], (error2, result2) => {
-          if (error2) return next(error2);
+        // Insert the team request (Executed Last)
+        let sql3 = `
+          INSERT INTO team_requests (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status,team_conformed) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'accept','true')
+        `;
+        db.query(sql3, [team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num], (error3, result3) => {
+          if (error3) return next(error3);
 
-          res.send("Team status changed from false to true");
+          // Response to Client
+          res.send("Team status changed from false to true, and team request added.");
         });
       });
-    }
-  );
+    });
+  });
 });
+
 
 // make project status -> ongoing
 router.patch("/student/:status/:project_name",(req,res,next) => {
@@ -722,13 +731,14 @@ router.get("/student/fetchDeadlines/:team_id",(req,res,next) => {
 })
 
 // by mathan
+
 router.get("/student/check_phase_eligibility/:reg_num", (req, res, next) => {
   const reg_num = req.params.reg_num;
   if (!reg_num) return res.status(400).send("reg_num is required");
 
   const today = new Date();
-  const dayOfWeek = today.getDay(); // 1 = Monday
-  const isMonday = dayOfWeek === 1;
+  const dayOfWeek = today.getDay(); // 6 = Saturday
+  const isSaturday = dayOfWeek === 6;
 
   // Step 1: Find team_id and project_picked_date
   const teamQuery = `SELECT team_id, project_id, project_picked_date FROM team_requests WHERE reg_num = ? LIMIT 1`;
@@ -756,9 +766,9 @@ router.get("/student/check_phase_eligibility/:reg_num", (req, res, next) => {
       res.json({
         allowedPhase: currentPhase,
         weekNumber,
-        canUpdate: isMonday && !alreadyUpdated,
+        canUpdate: isSaturday && !alreadyUpdated,
         alreadyUpdated,
-        isMonday
+        isSaturday
       });
     });
   });
