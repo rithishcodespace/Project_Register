@@ -135,7 +135,14 @@ function Student_Dashboard() {
 
       const response = await axios.patch(
         'http://localhost:1234/student/team_request/conform_team',
-        { from_reg_num: regNum },
+        { 
+          name: selector.name,
+          emailId: selector.emailId,
+          reg_num: selector.reg_num,
+          dept: selector.dept,
+          from_reg_num: regNum,
+          to_reg_num: selector.reg_num 
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
