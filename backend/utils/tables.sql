@@ -1,4 +1,5 @@
 CREATE TABLE guide_requests (
+  `id` int `AUTO_INCREMENT`
   `from_team_id` VARCHAR(200) NOT NULL,
   `project_id` VARCHAR(200) NOT NULL,
   `to_guide_reg_num` VARCHAR(200) NOT NULL,
