@@ -144,7 +144,7 @@ router.post("/guide/sent_request_to_guide", (req, res, next) => {
                 // Define email options
                 const mailOptions = {
                     from: 'rithishvkv@gmail.com',
-                    to: "guides.cs24@bitsathy.ac.in", // guide id -> temporary
+                    to: "rithishcodespace@gmail.com", // guide id -> temporary
                     subject: 'Request To Accept Invite',
                     text: `Dear Guide,\n\n${from_team_id} team has requested you to be their guide. Please login to the system to accept or reject the request.\n\nThank you.`,
                 };
