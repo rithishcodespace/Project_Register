@@ -90,50 +90,66 @@ router.patch("/sub_expert/accept_reject/:status/:team_id/:my_id", (req, res, nex
 
 // sends request to expert
 
-router.post("/sub_expert/sent_request_to_expert",(req,res,next) => {
-    try{
-      const {from_team_id,project_id,project_name,to_expert_reg_num} = req.body;  // to details
-      if (!from_team_id || !project_id || !project_name || !to_expert_reg_num) {
-        return res.status(400).json({ message: "All fields are required" });
-      }
-      let sql = "insert into sub_expert_requests (from_team_id,project_id,project_name,to_expert_reg_num) values(?,?,?,?)";
-      db.query(sql,[from_team_id,project_id,project_name,to_expert_reg_num],(error,result) => {
-        if(error)return next(error);
+router.post("/sub_expert/sent_request_to_expert", (req, res, next) => {
+    try {
+        const { from_team_id, project_id, project_name, to_expert_reg_num } = req.body;
+        if (!from_team_id || !project_id || !project_name || !Array.isArray(to_expert_reg_num) || to_expert_reg_num.length == 0) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
 
         // Create a transporter
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-            user: 'rithishvkv@gmail.com', // -> temporary
-            pass: 'ncwbsvgspuplvzzr',
+                user: 'rithishvkv@gmail.com', // -> temporary
+                pass: 'ncwbsvgspuplvzzr',
             },
         });
 
-        // Define email options
-        const mailOptions = {
-            from: 'rithishvkv@gmail.com',
-            to: "guides.cs24@bitsathy.ac.in", // guide id -> temporary
-            subject: 'Request To Accept Invite',
-            text: `Dear Expert,\n\n${from_team_id} team has requested you to be their expert. Please login to the system to accept or reject the request.\n\nThank you.`,
-        };
+        let errorOccured = false;
+        let completedRequests = 0;
 
-        // Send the email
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-            return console.log('Error:', error);
-            }
-            console.log('Email sent:', info.response);
-        });
-        
-        res.send("request sent successfully to the guide!");
-        
-      })
-    }
-    catch(error)
-    {
+        for (let i = 0; i < to_expert_reg_num.length; i++) {
+            let sql = "insert into sub_expert_requests (from_team_id, project_id, project_name, to_expert_reg_num) values (?,?,?,?)";
+            db.query(sql, [from_team_id, project_id, project_name, to_expert_reg_num[i]], (dbError, result) => {
+                if (dbError) {
+                    console.error(`DATABASE ERROR: ${dbError}`);
+                    errorOccured = true;
+                } else {
+                    // Define email options
+                    const mailOptions = {
+                        from: 'rithishvkv@gmail.com',
+                        to: "guides.cs24@bitsathy.ac.in", // guide id -> temporary
+                        subject: 'Request To Accept Invite',
+                        text: `Dear Expert,\n\n${from_team_id} team has requested you to be their expert. Please login to the system to accept or reject the request.\n\nThank you.`,
+                    };
+
+                    // Send the email
+                    transporter.sendMail(mailOptions, (emailError, info) => {
+                        if (emailError) {
+                            console.error('Email Error:', emailError);
+                            errorOccured = true;
+                        } else {
+                            console.log('Email sent:', info.response);
+                        }
+
+                        // Increment after both DB and Email are done
+                        completedRequests++;
+                        if (completedRequests === to_expert_reg_num.length) {
+                            if (errorOccured) {
+                                res.status(500).json({ "message": "Some request failed, check logs!!" });
+                            } else {
+                                res.send("Request sent successfully to the guide!");
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    } catch (error) {
         next(error);
     }
-})
+});
 
 
 // fetches team details, i am acting as the subject expert
