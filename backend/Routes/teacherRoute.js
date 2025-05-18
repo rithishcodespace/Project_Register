@@ -6,12 +6,12 @@ const db = require("../db");
 
 router.post("/teacher/addproject",(req,res,next) => {
     try{
-      const {project_id,project,cluster,description,phase_1_requirement,phase_1_deadline,phase_2_requirement,phase_2_deadline,phase_3_requirement,phase_3_deadline,phase_4_requirement,phase_4_deadline,phase_5_requirement,phase_5_deadline} = req.body;
-      if (!project_id || !project || !cluster || !description) {
+      const {project_id,project,cluster,description,phase_1_requirement,phase_2_requirement,phase_3_requirement,phase_4_requirement,phase_5_requirement,phase_6_requirement,phase_7_requirement,phase_8_requirement,phase_9_requirement,phase_10_requirement,phase_11_requirement,phase_12_requirement} = req.body;
+      if (!project_id || !project || !cluster || !description || !phase_1_requirement || !phase_2_requirement || !phase_3_requirement || !phase_4_requirement || !phase_5_requirement || !phase_6_requirement || !phase_7_requirement || !phase_8_requirement || !phase_9_requirement || !phase_10_requirement || !phase_11_requirement|| !phase_12_requirement) {
         return res.status(400).json({ message: "Required fields are missing." });
       }
-      let sql = "INSERT INTO projects (project_id, project_name, cluster, description, phase_1_requirements, phase_1_deadline, phase_2_requirements, phase_2_deadline, phase_3_requirements, phase_3_deadline, phase_4_requirements, phase_4_deadline, phase_5_requirements, phase_5_deadline) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-      const values = [project_id,project,cluster,description,phase_1_requirement,phase_1_deadline,phase_2_requirement,phase_2_deadline,phase_3_requirement,phase_3_deadline,phase_4_requirement,phase_4_deadline,phase_5_requirement,phase_5_deadline];
+      let sql = "INSERT INTO projects (project_id,project,cluster,description,phase_1_requirement,phase_2_requirement,phase_3_requirement,phase_4_requirement,phase_5_requirement,phase_6_requirement,phase_7_requirement,phase_8_requirement,phase_9_requirement,phase_10_requirement,phase_11_requirement,phase_12_requirement) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+      const values = [project_id,project,cluster,description,phase_1_requirement,phase_2_requirement,phase_3_requirement,phase_4_requirement,phase_5_requirement,phase_6_requirement,phase_7_requirement,phase_8_requirement,phase_9_requirement,phase_10_requirement,phase_11_requirement,phase_12_requirement];
       db.query(sql,values,(error,result) => {
         if(error) return next(error);
         res.send("project added successfully!");
@@ -81,6 +81,27 @@ router.get("/teacher/get_projects_by_id/:projectId", (req, res, next) => {
   } catch (error) {
     next(error);
   }
+});
+
+// Get teams by project
+router.get("/teacher/get_teams_by_project/:projectId", (req, res, next) => {
+  const projectId = req.params.projectId;
+  const sql = `SELECT team_id, team_name FROM teams WHERE project_id = ?`;
+  db.query(sql, [projectId], (err, results) => {
+    if (err) return next(err);
+    res.json(results);
+  });
+});
+
+// Get team progress by teamId
+router.get("/teacher/get_team_progress/:teamId", (req, res, next) => {
+  const teamId = req.params.teamId;
+  // Example progress data from a 'team_progress' table
+  const sql = `SELECT phase_name as name, progress_percentage as progress, details FROM team_progress WHERE team_id = ? ORDER BY phase_number`;
+  db.query(sql, [teamId], (err, results) => {
+    if (err) return next(err);
+    res.json({ phases: results });
+  });
 });
 
 

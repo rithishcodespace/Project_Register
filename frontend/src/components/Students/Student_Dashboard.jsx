@@ -135,7 +135,14 @@ function Student_Dashboard() {
 
       const response = await axios.patch(
         'http://localhost:1234/student/team_request/conform_team',
-        { from_reg_num: regNum },
+        { 
+          name: selector.name,
+          emailId: selector.emailId,
+          reg_num: selector.reg_num,
+          dept: selector.dept,
+          from_reg_num: regNum,
+          to_reg_num: selector.reg_num 
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -244,8 +251,8 @@ function Student_Dashboard() {
             {acceptedMembers.length + 1 >= 2 && !selector.teamConfirmationStatus && (
               <button
                 onClick={handleConfirmTeam}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-              ><Link to="/student">Confirm Team</Link>
+                className="px-4 py-2 bg-green-600 text-white rounded"
+              ><Link to="/student" className='bg-green-600' >Confirm Team</Link>
                 
               </button>
             )}

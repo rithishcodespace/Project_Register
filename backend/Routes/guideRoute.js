@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const createError = require("http-errors");
-const nodeMailer = require("nodemailer");
+const nodemailer = require("nodemailer");
 const db = require("../db");
 
 // gets the request recevied by the mentor
@@ -71,8 +71,8 @@ router.patch("/guide/accept_reject/:status/:team_id/:my_id", (req, res, next) =>
                 });
               });
             } else {
-              // Step 6: Guide already has 4 projects, remove them
-              let sql4 = "DELETE FROM users WHERE reg_num = ?";
+              // Step 6: Guide already has 4 projects, mark them as unavailable(false)
+              let sql4 = "update users set available = false where reg_num = ?";
               db.query(sql4, [my_id], (error, result) => {
                 if (error) return next(error);
 
@@ -85,12 +85,24 @@ router.patch("/guide/accept_reject/:status/:team_id/:my_id", (req, res, next) =>
             }
           });
         } else if (status === "reject") {
-          // Handle rejection
-          let sql3 = "UPDATE guide_requests SET status = 'rejected' WHERE to_guide_reg_num = ? AND from_team_id = ?";
-          db.query(sql3, [my_id, team_id], (error, result) => {
-            if (error) return next(error);
-            res.send("Request rejected successfully!");
-          });
+            
+          // counts the number of teams he guides
+            let sql4 = "SELECT COUNT(*) AS total FROM guide_requests WHERE to_guide_reg_num = ? AND status = 'accept'";
+            db.query(sql4,[my_id],(error,result) => {
+              if(error)return next(error);
+
+              const mentoringTeams = result[0].total;
+              
+              //make available or unavailable based on the count of mentoring teams
+
+              let sql5 = "UPDATE users SET available = ? WHERE reg_num = ?";
+              const isAvailable = mentoringTeams < 4 ? 1 : 0;
+              db.query(sql5,[isAvailable,my_id],(error,result) => {
+                if(error)return next(error);
+                res.send("Request rejected and availability updated.");
+              })
+            })
+          
         }
       });
     });
@@ -100,50 +112,71 @@ router.patch("/guide/accept_reject/:status/:team_id/:my_id", (req, res, next) =>
 });
 
 // sends request to guide
-router.post("/guide/sent_request_to_guide",(req,res,next) => {
-    try{
-      const {from_team_id,project_id,project_name,to_guide_reg_num} = req.body;  // to details
-      if (!from_team_id || !project_id || !project_name || !to_guide_reg_num) {
-        return res.status(400).json({ message: "All fields are required" });
-      }
-      let sql = "insert into guide_requests (from_team_id,project_id,project_name,to_guide_reg_num) values(?,?,?,?)";
-      db.query(sql,[from_team_id,project_id,project_name,to_guide_reg_num],(error,result) => {
-        if(error)return next(error);
+router.post("/guide/sent_request_to_guide", (req, res, next) => {
+    try {
+        const { from_team_id, project_id, project_name, to_guide_reg_num } = req.body;
+        if (!from_team_id || !project_id || !project_name || !Array.isArray(to_guide_reg_num) || to_guide_reg_num.length == 0) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
 
         // Create a transporter
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-            user: 'rithishvkv@gmail.com', // -> temporary
-            pass: process.env.EMAIL_PASS
+                user: 'rithishvkv@gmail.com', // -> temporary
+                pass: process.env.EMAIL_PASS
             },
         });
 
-        // Define email options
-        const mailOptions = {
-            from: 'rithishvkv@gmail.com',
-            to: "guides.cs24@bitsathy.ac.in", // guide id -> temporary
-            subject: 'Request To Accept Invite',
-            text: `Dear Guide,\n\n${from_team_id} team has requested you to be their guide. Please login to the system to accept or reject the request.\n\nThank you.`,
-        };
+        let errorOccured = false;
+        let completedRequests = 0;
 
-        // Send the email
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-            return console.log('Error:', error);
-            }
-            console.log('Email sent:', info.response);
-        });
-        
-        res.send("request sent successfully to the guide!");
-        
-      })
-    }
-    catch(error)
-    {
+        // Loop for each guide
+        for (let i = 0; i < to_guide_reg_num.length; i++) {
+            let sql = "INSERT INTO guide_requests (from_team_id, project_id, project_name, to_guide_reg_num) VALUES (?,?,?,?)";
+            db.query(sql, [from_team_id, project_id, project_name, to_guide_reg_num[i]], (error, result) => {
+                if (error) {
+                    console.error(`DATABASE ERROR: ${error}`);
+                    errorOccured = true;
+                }
+
+                // Define email options
+                const mailOptions = {
+                    from: 'rithishvkv@gmail.com',
+                    to: "rithishcodespace@gmail.com", // guide id -> temporary
+                    subject: 'Request To Accept Invite',
+                    text: `Dear Guide,\n\n${from_team_id} team has requested you to be their guide. Please login to the system to accept or reject the request.\n\nThank you.`,
+                };
+
+                // Send the email
+                transporter.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                        console.error('Email Error:', error);
+                        errorOccured = true;
+                    } else {
+                        console.log('Email sent:', info.response);
+                    }
+
+                    // Track completed requests
+                    completedRequests++;
+
+                    // When all requests are done
+                    if (completedRequests === to_guide_reg_num.length) {
+                        if (errorOccured) {
+                            return res.status(500).json({ "message": "Some requests failed, check logs!" });
+                        } else {
+                            res.send("Request sent successfully to the given guide!");
+                        }
+                    }
+                });
+            });
+        }
+
+    } catch (error) {
         next(error);
     }
-})
+});
+
 
 // adds reply to the query
 

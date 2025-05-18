@@ -45,7 +45,11 @@ import {getProfile} from "./services/authService";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import Proj_Details from "./components/Students/Proj_Details";
+<<<<<<< HEAD
 import ProjectFileUpload from "./components/Students/ProjectFileUpload";
+=======
+import Admin_project_details from "./components/Admin/Admin_project_details";
+>>>>>>> 787ac75059fe081e53b3f20cb5a240699b1d5f7e
 
 
 const Loader = () => {
@@ -93,11 +97,12 @@ function App() {
 
           <Route path="/admin" element={<Admin />}>
             <Route index element={<Admin_Dashboard />} />
-            <Route path="Add_users" element={<Add_Users />} />
-            <Route path="Add_Project" element={<Add_Project />} />
+            <Route path="add_users" element={<Add_Users />} />
+            <Route path="add_Project" element={<Add_Project />} />
             <Route path="posted_projects" element={<Posted_project />} />
             <Route path="students_progress" element={<Students_Progress />} />
             <Route path="/admin/posted_projects/:project_id" element={<Admin_projectDetails />} />
+            <Route path="student_progress/:cluster" element={<Admin_project_details />} />
           </Route>
 
           <Route path="/subject_expert" element={<Subject_expert />}>
