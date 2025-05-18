@@ -720,5 +720,49 @@ router.get("/student/fetchDeadlines/:team_id",(req,res,next) => {
   }
 })
 
+// by mathan
+
+router.get("/student/check_phase_eligibility/:reg_num", (req, res, next) => {
+  const reg_num = req.params.reg_num;
+  if (!reg_num) return res.status(400).send("reg_num is required");
+
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 6 = Saturday
+  const isSaturday = dayOfWeek === 6;
+
+  // Step 1: Find team_id and project_picked_date
+  const teamQuery = `SELECT team_id, project_id, project_picked_date FROM team_requests WHERE reg_num = ? LIMIT 1`;
+  db.query(teamQuery, [reg_num], (err1, teamRes) => {
+    if (err1) return next(err1);
+    if (!teamRes.length) return res.status(404).send("Team info not found");
+
+    const { team_id, project_id, project_picked_date } = teamRes[0];
+    const pickedDate = new Date(project_picked_date);
+    const timeDiff = today - pickedDate;
+    const weekNumber = Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 7));
+
+    // Step 2: Find current phase from weekNumber
+    const phaseNum = Math.min(Math.floor((weekNumber - 1) / 2) + 1, 6);
+    const currentPhase = `phase${phaseNum}_progress`;
+
+    // Step 3: Check if update already done in this phase
+    const checkPhaseQuery = `SELECT ${currentPhase} FROM team_requests WHERE reg_num = ?`;
+    db.query(checkPhaseQuery, [reg_num], (err2, phaseRes) => {
+      if (err2) return next(err2);
+
+      const phaseProgress = phaseRes[0]?.[currentPhase] || "";
+      const alreadyUpdated = parseInt(phaseProgress) > 0;
+
+      res.json({
+        allowedPhase: currentPhase,
+        weekNumber,
+        canUpdate: isSaturday && !alreadyUpdated,
+        alreadyUpdated,
+        isSaturday
+      });
+    });
+  });
+});
+
 
 module.exports = router;

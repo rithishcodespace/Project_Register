@@ -1,160 +1,82 @@
-import React, { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, Legend, Tooltip } from 'recharts';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-
-const phaseLabels = [
-  'phase1_progress',
-  'phase2_progress',
-  'phase3_progress',
-  'phase4_progress',
-  'phase5_progress',
-  'phase6_progress',
-  'phase7_progress',
-  'phase8_progress',
-  'phase9_progress',
-  'phase10_progress',
-  'phase11_progress',
-  'phase12_progress',
-];
+import { useSelector } from 'react-redux';
 
 const ProjectProgress = () => {
   const student = JSON.parse(localStorage.getItem('studentData'));
-  const regNum = student?.reg_num;
-  const email = student?.emailId;
+  const reg_num = student?.reg_num;
+  const selector = useSelector((state) => state.userSlice);
 
-  const [phase, setPhase] = useState('phase1_progress');
   const [contribution, setContribution] = useState('');
-  const [responseMessage, setResponseMessage] = useState('');
-  const [data, setData] = useState([]);
-  const [studentPhases, setStudentPhases] = useState({});
+  const [progress, setProgress] = useState('');
+  const [phase, setPhase] = useState('');
+  const [week, setWeek] = useState(0);
+  const [canUpdate, setCanUpdate] = useState(false);
+  const [message, setMessage] = useState('');
 
-  const handleUpdateProgress = async () => {
+  const fetchEligibility = async () => {
     try {
-      const response = await axios.post(
-        `http://localhost:1234/student/update_progress/${phase}/${regNum}`,
-        { contribution },
+      const res = await axios.get(`http://localhost:1234/student/check_phase_eligibility/${selector.reg_num}`);
+      setPhase(res.data.allowedPhase);
+      setWeek(res.data.weekNumber);
+      setCanUpdate(res.data.canUpdate);
+      if (!res.data.isSaturday) {
+        setMessage("Updates are allowed only on Saturdays");
+      } else if (res.data.alreadyUpdated) {
+        setMessage("You’ve already submitted this phase this week");
+      }
+    } catch (err) {
+      setMessage("Error fetching update permission");
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!canUpdate) return;
+
+    try {
+      const res = await axios.post(
+        `http://localhost:1234/student/update_progress/${phase}/${selector.reg_num}`,
+        { contribution, progress },
         { withCredentials: true }
       );
-      setResponseMessage(response.data);
-      fetchTeamData();
-      fetchStudentProgress();
-    } catch (error) {
-      console.error(error);
-      setResponseMessage('Error updating progress');
-    }
-  };
-
-  const fetchTeamData = async () => {
-    try {
-      const res = await axios.get('http://localhost:1234/student/team_progress');
-      setData(res.data);
-    } catch (error) {
-      console.error('Failed to load team data');
-    }
-  };
-
-  const fetchStudentProgress = async () => {
-    try {
-      const res = await axios.get(`http://localhost:1234/student/my_progress/${regNum}`);
-      setStudentPhases(res.data); // { phase1_progress: 100, ... }
-    } catch (error) {
-      console.error('Failed to fetch student progress');
+      setMessage(res.data);
+    } catch (err) {
+      setMessage(err.response?.data || "Something went wrong");
     }
   };
 
   useEffect(() => {
-    fetchTeamData();
-    fetchStudentProgress();
+    fetchEligibility();
   }, []);
 
-  const getAvailablePhases = () => {
-    for (let i = 0; i < phaseLabels.length; i++) {
-      if (!studentPhases[phaseLabels[i]] || studentPhases[phaseLabels[i]] < 100) {
-        return [phaseLabels[i]]; // Only allow current phase until it's 100%
-      }
-    }
-    return [];
-  };
-
   return (
-    <div>
-      <h2 className="text-2xl font-semibold bg-  text-center mb-6">Update Project Progress</h2>
-      <div className="max-w-3xl bg-white mx-auto p-5 rounded-lg">
-        {/* Phase Selector */}
-        <div className="mb-4 bg-white ">
-          <label className="block bg-white  text-lg font-medium">Select Phase:</label>
-          <select
-            value={phase}
-            onChange={(e) => setPhase(e.target.value)}
-            className="p-2 border bg-white  border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
-          >
-            {getAvailablePhases().map((p) => (
-              <option key={p} value={p}>{p.replace('_', ' ').toUpperCase()}</option>
-            ))}
-          </select>
-        </div>
+    <div className="max-w-xl mx-auto mt-10 p-6 bg-white shadow rounded">
+      <h2 className="text-2xl font-bold text-center mb-4">Weekly Progress Update</h2>
 
-        {/* Contribution Input */}
-        <div className="mb-4 bg-white ">
-          <label className="block  bg-white text-lg font-medium">Contribution (%):</label>
-          <input
-            type="number"
-            value={contribution}
-            onChange={(e) => setContribution(e.target.value)}
-            className="p-2 border bg-white  border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-        </div>
-
-        {/* Register Number Hidden but Used */}
-        <div className="mb-4 bg-white ">
-          <label className="block text-lg  bg-white  font-medium">Description </label>
-          <textarea
-            type="text"
-            value={regNum}
-            className="p-2 border bg-white  border-gray-300 rounded-lg w-full "
-          />
-        </div>
-
-        {/* Submit Button */}
-        <div className="text-center bg-white  mb-4">
-          <button
-            onClick={handleUpdateProgress}
-            className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-          >
-            Update Progress
-          </button>
-        </div>
-
-        {/* Response Message */}
-        {responseMessage && (
-          <p className="text-center font-semibold text-red-600">{responseMessage}</p>
-        )}
-
-        {/* Chart */}
-        <h3 className="text-xl font-semibold text-center mt-8 bg-white  mb-4">Team Contributions</h3>
-        <div className="flex justify-center">
-          <PieChart width={400} height={400}>
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={100}
-              fill="#8884d8"
-              label
-            >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend />
-          </PieChart>
-        </div>
+      <div className="mb-4">
+        <label className="block font-semibold">Current Phase</label>
+        <input type="text" value={phase.replace('_progress', '').toUpperCase()} disabled className="w-full border p-2 rounded" />
       </div>
+
+      <div className="mb-4">
+        <label className="block font-semibold">Your Contribution (%)</label>
+        <input type="number" value={contribution} onChange={(e) => setContribution(e.target.value)} className="w-full border p-2 rounded" />
+      </div>
+
+      <div className="mb-4">
+        <label className="block font-semibold">Overall Phase Progress (%)</label>
+        <input type="number" value={progress} onChange={(e) => setProgress(e.target.value)} className="w-full border p-2 rounded" />
+      </div>
+
+      <button
+        onClick={handleUpdate}
+        disabled={!canUpdate}
+        className={`w-full py-2 mt-2 text-white rounded ${canUpdate ? "bg-green-600 hover:bg-green-700" : "bg-gray-400 cursor-not-allowed"}`}
+      >
+        {canUpdate ? "Submit Update" : "Not Allowed"}
+      </button>
+
+      {message && <p className="text-center mt-4 text-red-600 font-medium">{message}</p>}
     </div>
   );
 };

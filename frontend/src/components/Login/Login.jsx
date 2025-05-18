@@ -120,7 +120,7 @@ function Login() {
 
   return (
     <>
-      <div className="login_div">
+      <div className="login_div"><form action="" className="bg-white">
         <img src={college_img} style={{ width: "50%", marginTop: "-6%", marginLeft: "25%", backgroundColor: "white", zIndex: 1 }} alt="" />
         <p className="Login">Hi, Welcome back</p><br />
 
@@ -159,7 +159,7 @@ function Login() {
               backgroundColor: "white"
             }}
           >
-            {showpassword ? <FaEyeSlash style={{ backgroundColor: 'white', fontSize: "120%" }} /> : <FaEye style={{ backgroundColor: 'white', fontSize: "120%" }} />}
+            {showpassword ? <FaEye style={{ backgroundColor: 'white', fontSize: "120%" }} /> : <FaEyeSlash style={{ backgroundColor: 'white', fontSize: "120%" }} />}
           </span><><p style={{ fontSize: "000" }}>.</p></>
         </div>
 
@@ -173,7 +173,7 @@ function Login() {
         <div className="gdiv" onClick={handleGoogleLogin}>
           <img src={Google} className="google-logo" alt="Google logo" />
           <button className="glogin">Continue with Google</button>
-        </div>
+        </div></form>
       </div>
 
       {/* Student internal/external popup */}

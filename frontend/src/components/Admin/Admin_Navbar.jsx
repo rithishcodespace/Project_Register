@@ -36,12 +36,18 @@ function Admin_Navbar({ isOpen, toggleSidebar }) {
     }
   };
 
-  const isActive = (path) => {
+  const isActive = (paths) => {
     const currentPath = location.pathname;
-    if (path === "") return currentPath === "/admin";
-    // Check for paths that start with /admin/posted_projects (including subroutes)
-    return currentPath.startsWith(`/admin/${path}`);
+
+    if (paths === "") return currentPath === "/admin";
+    if (typeof paths === "string") return currentPath.startsWith(`/admin/${paths}`);
+    if (Array.isArray(paths)) {
+      return paths.some((path) => currentPath.startsWith(`/admin/${path}`));
+    }
+
+    return false;
   };
+
 
   const navDiv = (path) =>
     `ml-3 mb-10 flex items-center rounded-lg px-3 py-2 ${
@@ -97,15 +103,16 @@ function Admin_Navbar({ isOpen, toggleSidebar }) {
           <p className={navText("Add_Users")}>Add Users</p>
         </Link>
 
-        <Link to="posted_projects" className={`${navDiv("posted_projects")} group`}>
-          <FileText size={24} className={navIcon("posted_projects")} />
-          <p className={navText("posted_projects")}>Posted Projects</p>
+        <Link to="posted_projects" className={`${navDiv(["posted_projects", "Add_project"])} group`}>
+          <FileText size={24} className={navIcon(["posted_projects", "Add_project"])} />
+          <p className={navText(["posted_projects", "Add_project"])}>Posted Projects</p>
         </Link>
 
         <Link to="students_progress" className={`${navDiv("students_progress")} group`}>
           <BarChart2 size={24} className={navIcon("students_progress")} />
           <p className={navText("students_progress")}>Student Progress</p>
         </Link>
+
 
         {/* Logout */}
         <button
