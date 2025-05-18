@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Legend, Tooltip } from 'recharts';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -125,7 +126,15 @@ const ProjectProgress = () => {
           >
             Update Progress
           </button>
+          
         </div>
+       {studentPhases.phase10_progress === 100 && (
+  <div className="text-center mb-4">
+    <Link to="/student/upload-project-files" className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
+      Go to Project File Upload
+    </Link>
+  </div>
+)}
 
         {/* Response Message */}
         {responseMessage && (

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-
+import { Link } from 'react-router-dom';
 
 const Project_Details = () => {
   const [page, setPage] = useState(0);
@@ -19,8 +19,8 @@ const Project_Details = () => {
   const [selectedExperts, setSelectedExperts] = useState([]);
   const [selectedGuides, setSelectedGuides] = useState([]);
 
-  const expertsList = ['Expert A', 'Expert B', 'Expert C', 'Expert D', 'Expert E'];
-  const guidesList = ['Guide X', 'Guide Y', 'Guide Z', 'Guide W', 'Guide V'];
+  const [expertsList, setExpertsList] = useState([]);
+  const [guidesList, setGuidesList] = useState([]);
 
   const toggleExpertSelection = (expertName) => {
     setSelectedExperts((prev) =>
@@ -28,14 +28,25 @@ const Project_Details = () => {
     );
   };
 
-  const startIndex = page * rowsPerPage;
-const pageCount = Math.ceil(projectData.length / rowsPerPage);
-
   const toggleGuideSelection = (guideName) => {
     setSelectedGuides((prev) =>
       prev.includes(guideName) ? prev.filter((g) => g !== guideName) : [...prev, guideName]
     );
   };
+
+  const startIndex = page * rowsPerPage;
+  const pageCount = Math.ceil(projectData.length / rowsPerPage);
+
+  const handleChangeRowsPerPage = (e) => {
+    setRowsPerPage(parseInt(e.target.value));
+    setPage(0);
+  };
+
+  const handleChangePage = (_, newPage) => {
+    setPage(newPage);
+  };
+
+  const paginatedProjects = projectData.slice(startIndex, startIndex + rowsPerPage);
 
   function checkUserStatus() {
     try {
@@ -55,24 +66,14 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
     }
   }
 
-  const handleChangeRowsPerPage = (e) => {
-    setRowsPerPage(parseInt(e.target.value));
-    setPage(0);
-  };
-
-  const paginatedProjects = projectData.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
-
   async function fetchProjects() {
     try {
       const token = localStorage.getItem('accessToken');
       const departments = [
         ...new Set([
           ...teamMembers.map((member) => member.dept),
-          teamStatus.teamLeader.dept
-        ])
+          teamStatus.teamLeader.dept,
+        ]),
       ];
 
       const response = await axios.post(
@@ -92,45 +93,64 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
     }
   }
 
-  async function handleTakeProject(name, id, experts, guides) {
-    if (!experts || !guides || experts.length < 3 || guides.length < 3) {
-      alert('Please select at least 3 experts and 3 guides');
-      return;
-    }
-
+  async function fetchExpertsAndGuides() {
     try {
-      const response = await axios.patch(
-        `http://localhost:1234/student/ongoing/${name}`,
-        { expert: experts, guide: guides },
-        { withCredentials: true }
-      );
+      const [expertRes, guideRes] = await Promise.all([
+        axios.get('http://localhost:1234/student/fetch_guide_or_expert/sub_expert'),
+        axios.get('http://localhost:1234/student/fetch_guide_or_expert/guide'),
+      ]);
 
-      if (response.status === 200) {
-        alert('Project chosen successfully!');
-        setProjectData((prev) =>
-          prev.filter((proj) => proj.project_name !== name)
-        );
-        setSelectedProject(null);
-        setUserStatus('has_project');
-        setMyProject(selectedProject);
-        setSelectedExperts([]);
-        setSelectedGuides([]);
-      }
-
-      const newresponse = await axios.patch(
-        `http://localhost:1234/student/assign_project_id/${id}/${selector.reg_num}`,
-        { expert: experts, guide: guides },
-        { withCredentials: true }
-      );
-
-      if (newresponse.status === 200) {
-        console.log('project_id successfully inserted into db!');
-      }
+      if (expertRes.status === 200) setExpertsList(expertRes.data);
+      if (guideRes.status === 200) setGuidesList(guideRes.data);
     } catch (error) {
-      console.error('Error choosing project:', error);
-      alert('Something went wrong while choosing project');
+      console.error('Error fetching experts/guides:', error);
+      alert('Failed to load experts and guides');
     }
   }
+
+ async function handleTakeProject(name, id, experts, guides) {
+  console.log("Selected Experts:", experts);
+  console.log("Selected Guides:", guides);
+
+  // if (!experts || !guides || experts.length < 3 || guides.length < 3) {
+  //   alert('Please select at least 3 experts and 3 guides');
+  //   return;
+  // }
+
+  try {
+    const response = await axios.patch(
+      `http://localhost:1234/student/ongoing/${name}`,
+      { expert: experts, guide: guides },
+      { withCredentials: true }
+    );
+
+    if (response.status === 200) {
+      alert('Project chosen successfully!');
+      setProjectData((prev) =>
+        prev.filter((proj) => proj.project_name !== name)
+      );
+      setSelectedProject(null);
+      setUserStatus('has_project');
+      setMyProject(selectedProject);
+      setSelectedExperts([]);
+      setSelectedGuides([]);
+    }
+
+    const newresponse = await axios.patch(
+      `http://localhost:1234/student/assign_project_id/${id}/${selector.reg_num}`,
+      { expert: experts, guide: guides },
+      { withCredentials: true }
+    );
+
+    if (newresponse.status === 200) {
+      console.log('project_id successfully inserted into db!');
+    }
+  } catch (error) {
+    console.error('Error choosing project:', error);
+    alert('Something went wrong while choosing project');
+  }
+}
+
 
   async function fetchMyProject() {
     try {
@@ -138,7 +158,7 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
       const member = teamStatus?.teamMembers?.[0];
 
       if (member?.project_id) {
-        const response = await axios(
+        const response = await axios.get(
           `http://localhost:1234/student/get_project_details/${member.project_id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -164,6 +184,7 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
     } else if (userStatus === 'has_project') {
       fetchMyProject();
     }
+    fetchExpertsAndGuides();
   }, [userStatus]);
 
   const handleRowClick = (projectId) => {
@@ -210,6 +231,7 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
     <div className="max-w-6xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6 text-center text-black">Available Projects</h1>
 
+      {/* Project Table */}
       <div className="overflow-x-auto border rounded-lg shadow-md">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gradient-to-r from-purple-700 to-pink-600 text-white">
@@ -237,9 +259,8 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
         </table>
       </div>
 
-      {/* Custom Pagination Controls */}
+      {/* Pagination */}
       <div className="flex justify-between items-center mt-4">
-
         <div>
           Rows per page:
           <select
@@ -248,9 +269,7 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
             onChange={handleChangeRowsPerPage}
           >
             {[5, 10, 25].map((rows) => (
-              <option className='' key={rows} value={rows}>
-                {rows}
-              </option>
+              <option key={rows} value={rows}>{rows}</option>
             ))}
           </select>
         </div>
@@ -265,31 +284,25 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
               onClick={() => handleChangePage(null, page - 1)}
               disabled={page === 0}
               className="px-2 py-1 rounded mr-2"
-              title="Previous Page"
             >
-              <FaChevronLeft
-                className=""
-                color={page === 0 ? '#A0A0A0' : '#000000'}
-              />
+              <FaChevronLeft color={page === 0 ? '#A0A0A0' : '#000000'} />
             </button>
-        
+
             <button
               onClick={() => handleChangePage(null, page + 1)}
               disabled={page >= pageCount - 1}
               className="px-2 py-1 rounded"
-              title="Next Page"
             >
-              <FaChevronRight
-                className=""
-                color={page >= pageCount - 1 ? '#A0A0A0' : '#000000'}
-              />
+              <FaChevronRight color={page >= pageCount - 1 ? '#A0A0A0' : '#000000'} />
             </button>
+            <Link to="/upload-project-files" className="text-blue-600 hover:underline">
+  Go to Project File Upload
+</Link>
           </div>
         </div>
-
       </div>
 
-      {/* Popup modal for project selection */}
+      {/* Modal */}
       {selectedProject && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-7 max-w-3xl w-full relative">
@@ -304,49 +317,49 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
               &#10005;
             </button>
 
-            <h2 className="text-2xl font-semibold mb-4 bg-white text-center text-gray-800">
+            <h2 className="text-2xl font-semibold mb-4 text-center text-gray-800">
               Select Project: {selectedProject.project_name}
             </h2>
 
-            <div className="mb-4 bg-white">
-              <p className='bg-white'><strong className='bg-white'>Project ID:</strong> {selectedProject.project_id}</p>
-              <p className='bg-white'><strong className='bg-white'>Cluster:</strong> {selectedProject.cluster}</p>
-              <p className='bg-white'><strong className='bg-white'>Description:</strong> {selectedProject.description}</p>
+            <div className="mb-4">
+              <p><strong>Project ID:</strong> {selectedProject.project_id}</p>
+              <p><strong>Cluster:</strong> {selectedProject.cluster}</p>
+              <p><strong>Description:</strong> {selectedProject.description}</p>
             </div>
 
-            <div className="mb-4 bg-white">
-              <h3 className="text-lg font-semibold mb-2 bg-white">Select at least 3 Experts:</h3>
-              <div className="flex flex-wrap gap-3 bg-white">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold mb-2">Select at least 3 Experts:</h3>
+              <div className="flex flex-wrap gap-3">
                 {expertsList.map((expert) => (
                   <button
-                    key={expert}
-                    onClick={() => toggleExpertSelection(expert)}
+                    key={expert.reg_num}
+                    onClick={() => toggleExpertSelection(expert.name)}
                     className={`px-3 py-1 rounded-full border ${
-                      selectedExperts.includes(expert)
+                      selectedExperts.includes(expert.name)
                         ? 'bg-purple-500 text-white border-purple-600'
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
                     }`}
                   >
-                    {expert}
+                    {expert.name}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="mb-6 bg-white">
-              <h3 className="text-lg font-semibold mb-2 bg-white">Select at least 3 Guides:</h3>
-              <div className="flex flex-wrap gap-3 bg-white">
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2">Select at least 3 Guides:</h3>
+              <div className="flex flex-wrap gap-3">
                 {guidesList.map((guide) => (
                   <button
-                    key={guide}
-                    onClick={() => toggleGuideSelection(guide)}
+                    key={guide.reg_num}
+                    onClick={() => toggleGuideSelection(guide.name)}
                     className={`px-3 py-1 rounded-full border ${
-                      selectedGuides.includes(guide)
+                      selectedGuides.includes(guide.name)
                         ? 'bg-green-600 text-white border-green-600'
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
                     }`}
                   >
-                    {guide}
+                    {guide.name}
                   </button>
                 ))}
               </div>
@@ -365,6 +378,7 @@ const pageCount = Math.ceil(projectData.length / rowsPerPage);
             >
               Take Project
             </button>
+            
           </div>
         </div>
       )}

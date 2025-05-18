@@ -99,7 +99,6 @@ router.patch("/guide/accept_reject/:status/:team_id/:my_id", (req, res, next) =>
   }
 });
 
-
 // sends request to guide
 router.post("/guide/sent_request_to_guide",(req,res,next) => {
     try{
