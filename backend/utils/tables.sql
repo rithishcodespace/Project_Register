@@ -160,3 +160,14 @@ CREATE TABLE `users` (
   UNIQUE KEY `unique_email` (`emailId`)
 )
 
+CREATE TABLE timeline (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    start_date DATETIME NOT NULL,
+    end_date DATETIME NOT NULL,
+    INDEX index_start_date (start_date),
+    INDEX index_end_date (end_date),
+    INDEX index_date_range (start_date, end_date)
+);
+
+

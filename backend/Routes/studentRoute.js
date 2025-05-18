@@ -6,6 +6,7 @@ const router = express.Router();
 const generateWeeklyDeadlines = require("../utils/generateWeeklyDeadlines");
 const db = require("../db");
 const userAuth = require("../middlewares/userAuth")
+const checkTimeline = require("../middlewares/timeLine");
 
 // common to all route -> for jwt auth
 router.get("/profile/view", userAuth, (req, res, next) => {
@@ -763,6 +764,23 @@ router.get("/student/check_phase_eligibility/:reg_num", (req, res, next) => {
     });
   });
 });
+
+// gives the weekly deadlines for the specific team -> we can filter the current phase
+router.get("students/get_current_week/:team_id",(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest("team_id not found!"));
+    let sql = "select * from weekly_logs_deadlines";
+    db.query(sql,(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 
 module.exports = router;

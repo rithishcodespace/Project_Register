@@ -99,5 +99,26 @@ router.get("/fetchUsers/:role",(req,res,next) => {
   }
 })
 
+// adds timeline to the timeline table
+
+router.post("/admin/addTimeLine",(req,res,next) => {
+  try{
+    const{name,start_date,end_date} = req.body;
+    if(!name.trim() || !start_date || end_date)
+    {
+      return next(createError.BadRequest("name or start_date or end_date is undefined!"));
+    }
+    let sql = "insert into timeline values (?,?,?)";
+    db.query(sql,[name,start_date,end_date],(error,result) => {
+      if(error)return next(error);
+      res.send("Timeline added successfully to the timeline table!!");
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 
 module.exports = router;
