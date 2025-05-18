@@ -52,7 +52,7 @@ const handleNavigate = (dept) => {
             <div className="bg-blue-100 rounded-full mb-4">
               <img src={dept.image} alt={dept.name} className="rounded-full w-24 h-24 object-cover" />
             </div>
-            <h2 className="text-lg font-semibold">{dept.name}</h2>
+            <h2 className="text-lg bg-white font-semibold">{dept.name}</h2>
           </div>
         ))}
       </div>

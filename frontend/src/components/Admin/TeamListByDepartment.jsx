@@ -43,7 +43,7 @@ export default function TeamListByDepartment() {
     <h2>Teams or Projects for Department: {department}</h2>
     <ul>
       {progressData.map((item) => (
-        <li key={item.team_id /* or unique id key */}>
+        <li key={item.team_id || item.project_id || `item-${index}`}>
           <Link to={`/admin/team_progress/${item.team_id}`}>
             {item.project_name || item.team_name || 'Unnamed Project'}
           </Link>
