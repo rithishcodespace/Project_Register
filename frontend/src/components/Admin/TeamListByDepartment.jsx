@@ -1,55 +1,63 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 
 export default function TeamListByDepartment() {
-  const { department } = useParams();  // get the department param from URL
-  const [progressData, setProgressData] = useState(null);
+  const { department } = useParams();
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchProjects() {
       try {
-        // If you want to fetch projects/teams by department:
-        // Make sure your backend has an API endpoint that accepts `department`
         const res = await fetch(`http://localhost:1234/student/projects`, {
-            
-            
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ departments: [department] }),
         });
-        if (!res.ok) throw new Error("Failed to fetch data");
+
+        if (!res.ok) throw new Error("Failed to fetch project data");
         const data = await res.json();
-         console.log("Team Details Data:", data);
-        
-        setProgressData(data);
+        console.log("Fetched projects:", data);
+        setProjects(data);
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     }
-    if(department) fetchData();
-  }, [department]); 
 
-  if (loading) return <p>Loading data...</p>;
-  if (error) return <p>Error: {error}</p>;
-  if (!progressData || progressData.length === 0) return <p>No data found for {department}</p>;
+    if (department) fetchProjects();
+  }, [department]);
+
+  if (loading) return <p className="text-center mt-10">Loading data...</p>;
+  if (error) return <p className="text-center text-red-500 mt-10">Error: {error}</p>;
+  if (!projects || projects.length === 0) return <p className="text-center mt-10">No data found for {department}</p>;
 
   return (
-     <div>
-    <h2>Teams or Projects for Department: {department}</h2>
-    <ul>
-      {progressData.map((item) => (
-        <li key={item.team_id || item.project_id || `item-${index}`}>
-          <Link to={`/admin/team_progress/${item.team_id}`}>
-            {item.project_name || item.team_name || 'Unnamed Project'}
+    <div className="p-6 min-h-screen">
+      <h1 className="text-2xl font-bold mb-6 text-center">Projects for {department}</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {projects.map((project, index) => (
+          <Link
+            to={`/admin/team_progress/${project.project_id}`}
+            key={index}
+            className="bg-white shadow-md rounded-xl p-6 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer"
+          >
+            <h2 className="text-xl bg-white font-semibold mb-2">{project.project_name}</h2>
+            <p className="text-sm mb-2 bg-white text-gray-600">{project.description}</p>
+            <p className="text-sm text-gray-500 bg-white mb-4">Project ID: {project.project_id}</p>
+            <div className="text-sm">
+              <p className="bg-white"><strong className="bg-white">Phase 1:</strong> {project.phase_1_requirements}</p>
+              <p className="bg-white"><strong className="bg-white">Phase 2:</strong> {project.phase_2_requirements}</p>
+              <p className="bg-white"><strong className="bg-white">Phase 3:</strong> {project.phase_3_requirements}</p>
+              <p className="bg-white"><strong className="bg-white">Phase 4:</strong> {project.phase_4_requirements}</p>
+              <p className="bg-white"><strong className="bg-white">Phase 5:</strong> {project.phase_5_requirements}</p>
+              <p className="bg-white"><strong className="bg-white">Phase 6:</strong> {project.phase_6_requirements}</p>
+            </div>
           </Link>
-        </li>
-      ))}
-    </ul>
-  </div>
+        ))}
+      </div>
+    </div>
   );
 }

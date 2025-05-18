@@ -101,7 +101,7 @@ function App() {
             <Route path="posted_projects" element={<Posted_project />} />
             <Route path="students_progress" element={<Students_Progress />} />
             <Route path="team_list/:department" element={<TeamListByDepartment />} />
-            <Route path="team_progress/:team_id" element={<Admin_project_details />} />
+            <Route path="/admin/team_progress/:project_id" element={<Admin_project_details />} />
           </Route>
 
           <Route path="/subject_expert" element={<Subject_expert />}>
