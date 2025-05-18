@@ -45,7 +45,11 @@ import {getProfile} from "./services/authService";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import Proj_Details from "./components/Students/Proj_Details";
+<<<<<<< HEAD
+import ProjectFileUpload from "./components/Students/ProjectFileUpload";
+=======
 import Admin_project_details from "./components/Admin/Admin_project_details";
+>>>>>>> 787ac75059fe081e53b3f20cb5a240699b1d5f7e
 
 
 const Loader = () => {
@@ -78,6 +82,7 @@ function App() {
             <Route path="invitations" element={<InvitationPage />} />
             <Route path="queries" element={<Queries />} />
            <Route path="Project_Details/proj_details/:id" element={<Proj_Details/>} />
+           <Route path="upload-project-files" element={<ProjectFileUpload/>} />
           </Route>
 
           <Route path="/teacher" element={<Teacher />}>
