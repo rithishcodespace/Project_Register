@@ -47,6 +47,11 @@ import { useEffect } from "react";
 import Proj_Details from "./components/Students/Proj_Details";
 import ProjectFileUpload from "./components/Students/ProjectFileUpload";
 import Admin_project_details from "./components/Admin/Admin_project_details";
+<<<<<<< HEAD
+=======
+import TeamListByDepartment from "./components/Admin/TeamListByDepartment";
+
+>>>>>>> 276738873a5914fe06448b621def645ba1b98e84
 
 
 const Loader = () => {
@@ -98,8 +103,8 @@ function App() {
             <Route path="add_Project" element={<Add_Project />} />
             <Route path="posted_projects" element={<Posted_project />} />
             <Route path="students_progress" element={<Students_Progress />} />
-            <Route path="/admin/posted_projects/:project_id" element={<Admin_projectDetails />} />
-            <Route path="student_progress/:cluster" element={<Admin_project_details />} />
+            <Route path="team_list/:department" element={<TeamListByDepartment />} />
+            <Route path="team_progress/:team_id" element={<Admin_project_details />} />
           </Route>
 
           <Route path="/subject_expert" element={<Subject_expert />}>

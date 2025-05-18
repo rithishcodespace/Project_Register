@@ -236,29 +236,30 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
 //226  499 
 // it gets all the projects available -> filters by the dept of team members
 router.post("/student/projects",(req,res,next) => {
-    try{
-      const departments = req.body.departments;
-
-      if (!Array.isArray(departments)) {
-        return res.status(400).json({ error: 'departments must be an array' });
-      }
-
-      if (departments.length === 0) {
-        return res.status(400).json({ error: 'departments array cannot be empty' });
-      }
-
-      const placeholders = departments.map(() => "?").join(", ");
-      const sql = `SELECT * FROM projects WHERE status = 'available' AND cluster IN (${placeholders})`;
-      db.query(sql,departments,(error,result) => {
-        if(error) return next(error);
-        res.send(result);
-      })
+  try{
+    const departments = req.body.departments;
+    console.log(departments);  // corrected logging
+    
+    if (!Array.isArray(departments)) {
+      return res.status(400).json({ error: 'departments must be an array' });
     }
-    catch(error)
-    {
-      next(error);
+
+    if (departments.length === 0) {
+      return res.status(400).json({ error: 'departments array cannot be empty' });
     }
-})
+
+    const placeholders = departments.map(() => "?").join(", ");
+    const sql = `SELECT * FROM projects WHERE status = 'available' AND cluster IN (${placeholders})`;
+    db.query(sql,departments,(error,result) => {
+      if(error) return next(error);
+      res.send(result);console.log(res.data)
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+});
 
 //make the team status -> 1 and assings team id to the team
 
