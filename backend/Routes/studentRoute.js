@@ -466,7 +466,7 @@ router.get("/student/team_progress/:team_id/:phase", (req, res) => {
   });
 });
 
-// fetches the progress of all phases
+// fetches the progress of all phases -> team_id
 
 router.get("/student/fetch_team_progress/:team_id", (req, res, next) => {
   try {
@@ -492,6 +492,22 @@ router.get("/student/fetch_team_progress/:team_id", (req, res, next) => {
     next(error);
   }
 });
+
+router.get("/student/get_progress_by_project_id/:project_id",(req,res,next) => {
+  try{
+    const{project_id} = req.params;
+    if(!project_id) return next(createError.BadRequest("project_id not found!!"));
+    let sql = "select * from team_requests where project_id = ?";
+    db.query(sql,[project_id],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error)
+  }
+})
 
 
 // updates the project type

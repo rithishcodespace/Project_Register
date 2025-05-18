@@ -47,11 +47,8 @@ import { useEffect } from "react";
 import Proj_Details from "./components/Students/Proj_Details";
 import ProjectFileUpload from "./components/Students/ProjectFileUpload";
 import Admin_project_details from "./components/Admin/Admin_project_details";
-<<<<<<< HEAD
-=======
 import TeamListByDepartment from "./components/Admin/TeamListByDepartment";
 
->>>>>>> 276738873a5914fe06448b621def645ba1b98e84
 
 
 const Loader = () => {
