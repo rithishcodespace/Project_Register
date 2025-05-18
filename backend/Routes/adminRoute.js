@@ -120,5 +120,27 @@ router.post("/admin/addTimeLine",(req,res,next) => {
   }
 })
 
+// Add this in your router file, e.g., routes/projects.js
+
+router.get("/teacher/student_progress/:cluster", (req, res, next) => {
+  try {
+    const { cluster } = req.params;
+    if (!cluster) return res.status(400).json({ message: "Cluster is required" });
+
+    const sql = `
+      SELECT name, reg_num, phase, progress
+      FROM student_progress
+      WHERE cluster = ?
+    `;
+
+    db.query(sql, [cluster], (error, results) => {
+      if (error) return next(error);
+      res.json(results);
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 
 module.exports = router;

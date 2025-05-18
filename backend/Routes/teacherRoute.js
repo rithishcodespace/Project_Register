@@ -83,5 +83,26 @@ router.get("/teacher/get_projects_by_id/:projectId", (req, res, next) => {
   }
 });
 
+// Get teams by project
+router.get("/teacher/get_teams_by_project/:projectId", (req, res, next) => {
+  const projectId = req.params.projectId;
+  const sql = `SELECT team_id, team_name FROM teams WHERE project_id = ?`;
+  db.query(sql, [projectId], (err, results) => {
+    if (err) return next(err);
+    res.json(results);
+  });
+});
+
+// Get team progress by teamId
+router.get("/teacher/get_team_progress/:teamId", (req, res, next) => {
+  const teamId = req.params.teamId;
+  // Example progress data from a 'team_progress' table
+  const sql = `SELECT phase_name as name, progress_percentage as progress, details FROM team_progress WHERE team_id = ? ORDER BY phase_number`;
+  db.query(sql, [teamId], (err, results) => {
+    if (err) return next(err);
+    res.json({ phases: results });
+  });
+});
+
 
 module.exports = router;
