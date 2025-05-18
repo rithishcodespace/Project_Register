@@ -95,7 +95,6 @@ const Project_Details = () => {
 
   async function fetchExpertsAndGuides() {
     try {
-<<<<<<< HEAD
       const response = await axios.post(
         `http://localhost:1234/guide/sent_request_to_guide`,
         { 
@@ -141,15 +140,6 @@ const Project_Details = () => {
       if (newresponse.status === 200) {
         console.log('project_id successfully inserted into db!');
       }
-=======
-      const [expertRes, guideRes] = await Promise.all([
-        axios.get('http://localhost:1234/student/fetch_guide_or_expert/sub_expert'),
-        axios.get('http://localhost:1234/student/fetch_guide_or_expert/guide'),
-      ]);
-
-      if (expertRes.status === 200) setExpertsList(expertRes.data);
-      if (guideRes.status === 200) setGuidesList(guideRes.data);
->>>>>>> 3f0644b6dc4cefa6b1b8b8f7fe56eb0499d9bf13
     } catch (error) {
       console.error('Error fetching experts/guides:', error);
       alert('Failed to load experts and guides');
@@ -383,15 +373,9 @@ const Project_Details = () => {
                     key={expert.reg_num}
                     onClick={() => toggleExpertSelection(expert.name)}
                     className={`px-3 py-1 rounded-full border ${
-<<<<<<< HEAD
-                      selectedExperts.includes(expert.name)
-                        ? 'bg-purple-500 text-white border-purple-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
-=======
                       selectedExperts.includes(expert)
                         ? 'bg-purple-300 text-black border-purple-400'
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-grey-300'
->>>>>>> 787ac75059fe081e53b3f20cb5a240699b1d5f7e
                     }`}
                   >
                     {expert.name}
@@ -408,13 +392,8 @@ const Project_Details = () => {
                     key={guide.reg_num}
                     onClick={() => toggleGuideSelection(guide.name)}
                     className={`px-3 py-1 rounded-full border ${
-<<<<<<< HEAD
-                      selectedGuides.includes(guide.name)
-                        ? 'bg-green-600 text-white border-green-600'
-=======
                       selectedGuides.includes(guide)
                         ? 'bg-purple-300 text-black border-purple-400'
->>>>>>> 787ac75059fe081e53b3f20cb5a240699b1d5f7e
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
                     }`}
                   >

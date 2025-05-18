@@ -45,11 +45,8 @@ import {getProfile} from "./services/authService";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import Proj_Details from "./components/Students/Proj_Details";
-<<<<<<< HEAD
 import ProjectFileUpload from "./components/Students/ProjectFileUpload";
-=======
 import Admin_project_details from "./components/Admin/Admin_project_details";
->>>>>>> 787ac75059fe081e53b3f20cb5a240699b1d5f7e
 
 
 const Loader = () => {
