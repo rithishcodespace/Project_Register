@@ -1,27 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-<<<<<<< HEAD
-import { Link } from 'react-router-dom';
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-
-const phaseLabels = [
-  'phase1_progress',
-  'phase2_progress',
-  'phase3_progress',
-  'phase4_progress',
-  'phase5_progress',
-  'phase6_progress',
-  'phase7_progress',
-  'phase8_progress',
-  'phase9_progress',
-  'phase10_progress',
-  'phase11_progress',
-  'phase12_progress',
-];
-=======
 import { useSelector } from 'react-redux';
->>>>>>> 787ac75059fe081e53b3f20cb5a240699b1d5f7e
 
 const ProjectProgress = () => {
   const student = JSON.parse(localStorage.getItem('studentData'));
@@ -112,63 +91,6 @@ const ProjectProgress = () => {
         Week {week} | Updating: {phase.replace('_progress', '').toUpperCase()}
       </p>
 
-<<<<<<< HEAD
-        {/* Register Number Hidden but Used */}
-        <div className="mb-4">
-          <label className="block text-lg font-medium"></label>
-          <textarea
-            type="text"
-            value={regNum}
-            className="p-2 border border-gray-300 rounded-lg w-full bg-gray-100"
-          />
-        </div>
-
-        {/* Submit Button */}
-        <div className="text-center mb-4">
-          <button
-            onClick={handleUpdateProgress}
-            className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-          >
-            Update Progress
-          </button>
-          
-        </div>
-       {studentPhases.phase10_progress === 100 && (
-  <div className="text-center mb-4">
-    <Link to="/student/upload-project-files" className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
-      Go to Project File Upload
-    </Link>
-  </div>
-)}
-
-        {/* Response Message */}
-        {responseMessage && (
-          <p className="text-center font-semibold text-red-600">{responseMessage}</p>
-        )}
-
-        {/* Chart */}
-        <h3 className="text-xl font-semibold text-center mt-8 mb-4">Team Contributions</h3>
-        <div className="flex justify-center">
-          <PieChart width={400} height={400}>
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={100}
-              fill="#8884d8"
-              label
-            >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend />
-          </PieChart>
-        </div>
-=======
       <div className="mb-4">
         <label className="block font-semibold">Current Phase</label>
         <input
@@ -177,7 +99,6 @@ const ProjectProgress = () => {
           disabled
           className="w-full border p-2 rounded"
         />
->>>>>>> 787ac75059fe081e53b3f20cb5a240699b1d5f7e
       </div>
 
       <div className="mb-4">

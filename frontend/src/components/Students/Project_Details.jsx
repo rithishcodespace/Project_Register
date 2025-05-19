@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
 
 const Project_Details = () => {
   const [page, setPage] = useState(0);
@@ -108,14 +107,11 @@ const Project_Details = () => {
     }
   }
 
- async function handleTakeProject(name, id, experts, guides) {
+async function handleTakeProject(name, id, experts, guides) {
   console.log("Selected Experts:", experts);
   console.log("Selected Guides:", guides);
 
-  // if (!experts || !guides || experts.length < 3 || guides.length < 3) {
-  //   alert('Please select at least 3 experts and 3 guides');
-  //   return;
-  // }
+ 
 
   try {
     const response = await axios.patch(
@@ -203,20 +199,20 @@ const Project_Details = () => {
   if (userStatus === 'has_project' && myProject) {
     return (
       <div className="p-6 w-full max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold text-center text-black mb-6">
+        <h2 className="text-2xl font-bold text-center text-green-700 mb-6">
           Your Assigned Project
         </h2>
 
         <div className="bg-white p-6 rounded-xl shadow-xl">
-          <p className="bg-white"><strong className="bg-white">Name:</strong> {myProject.project_name}</p>
-          <p className="bg-white"><strong className="bg-white">Cluster:</strong> {myProject.cluster}</p>
-          <p className="bg-white"><strong className="bg-white">Description:</strong> {myProject.description}</p>
+          <p><strong>Name:</strong> {myProject.project_name}</p>
+          <p><strong>Cluster:</strong> {myProject.cluster}</p>
+          <p><strong>Description:</strong> {myProject.description}</p>
 
-          <div className="mt-4 bg-white">
-            <h4 className="text-lg font-bold bg-white text-purple-600 mb-2">Project Phases :</h4>
-            <div className="space-y-2 bg-white text-sm">
+          <div className="mt-4">
+            <h4 className="text-lg font-bold text-purple-600 mb-2">Project Phases</h4>
+            <div className="space-y-2 text-sm">
               {[1, 2, 3, 4, 5].map((phase) => (
-                <p key={phase} className="bg-white">
+                <p key={phase}>
                   Phase {phase}: {myProject[`phase${phase}`] || 'Not updated'}
                 </p>
               ))}
@@ -295,9 +291,6 @@ const Project_Details = () => {
             >
               <FaChevronRight color={page >= pageCount - 1 ? '#A0A0A0' : '#000000'} />
             </button>
-            <Link to="/upload-project-files" className="text-blue-600 hover:underline">
-  Go to Project File Upload
-</Link>
           </div>
         </div>
       </div>
@@ -335,15 +328,9 @@ const Project_Details = () => {
                     key={expert.reg_num}
                     onClick={() => toggleExpertSelection(expert.name)}
                     className={`px-3 py-1 rounded-full border ${
-<<<<<<< HEAD
                       selectedExperts.includes(expert.name)
                         ? 'bg-purple-500 text-white border-purple-600'
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
-=======
-                      selectedExperts.includes(expert)
-                        ? 'bg-purple-300 text-black border-purple-400'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-grey-300'
->>>>>>> 787ac75059fe081e53b3f20cb5a240699b1d5f7e
                     }`}
                   >
                     {expert.name}
@@ -360,13 +347,8 @@ const Project_Details = () => {
                     key={guide.reg_num}
                     onClick={() => toggleGuideSelection(guide.name)}
                     className={`px-3 py-1 rounded-full border ${
-<<<<<<< HEAD
                       selectedGuides.includes(guide.name)
                         ? 'bg-green-600 text-white border-green-600'
-=======
-                      selectedGuides.includes(guide)
-                        ? 'bg-purple-300 text-black border-purple-400'
->>>>>>> 787ac75059fe081e53b3f20cb5a240699b1d5f7e
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
                     }`}
                   >
@@ -389,7 +371,6 @@ const Project_Details = () => {
             >
               Take Project
             </button>
-            
           </div>
         </div>
       )}

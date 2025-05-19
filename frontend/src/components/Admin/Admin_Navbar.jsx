@@ -108,6 +108,11 @@ function Admin_Navbar({ isOpen, toggleSidebar }) {
           <p className={navText(["posted_projects", "Add_project"])}>Posted Projects</p>
         </Link>
 
+         <Link to="TimeLine" className={`${navDiv("TimeLine")} group`}>
+          <UploadCloud size={24} className={navIcon("TimeLine")} />
+          <p className={navText("TimeLine")}>TimeLine</p>
+        </Link>
+
         <Link to="students_progress" className={`${navDiv("students_progress")} group`}>
           <BarChart2 size={24} className={navIcon("students_progress")} />
           <p className={navText("students_progress")}>Student Progress</p>

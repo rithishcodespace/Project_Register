@@ -19,6 +19,9 @@ function Login() {
   const [showpassword, setshowpassword] = useState(false);
   const [showStudentPopup, setShowStudentPopup] = useState(false);
   const [studentUserData, setStudentUserData] = useState(null);
+  const [showCompanyPopup, setShowCompanyPopup] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState("");
+  const [selectedProjectType, setSelectedProjectType] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -29,7 +32,7 @@ function Login() {
         emailId,
         password,
       }, {
-       withCredentials:true
+        withCredentials: true
       });
 
       if (response.status === 200) {
@@ -40,7 +43,6 @@ function Login() {
         dispatch(addUser(response.data));
 
         if (role === "student") {
-          // Check if project_type exists
           const projectTypeRes = await axios.get(`http://localhost:1234/student/get_project_type/${reg_num}`);
           const projectType = projectTypeRes.data?.project_type;
 
@@ -49,12 +51,10 @@ function Login() {
           } else if (projectType === "EXTERNAL") {
             navigate("/ext_student");
           } else {
-            // No project_type set
             setStudentUserData(response.data);
             setShowStudentPopup(true);
           }
         } else {
-          // Other roles
           if (role === "admin") navigate("/admin");
           else if (role === "teacher") navigate("/teacher");
           else if (role === "guide") navigate("/guide");
@@ -70,15 +70,29 @@ function Login() {
 
   const handleStudentChoice = async (type) => {
     if (!studentUserData) return;
-    const reg_num = studentUserData.reg_num;
     const projectType = type === "internal" ? "INTERNAL" : "EXTERNAL";
+
+    setSelectedProjectType(projectType);
+
+    if (projectType === "EXTERNAL") {
+      setShowStudentPopup(false);
+      setShowCompanyPopup(true);
+    } else {
+      await updateProjectTypeAndNavigate(projectType);
+    }
+  };
+
+  const updateProjectTypeAndNavigate = async (projectType, companyName = "") => {
+    const reg_num = studentUserData?.reg_num;
+    if (!reg_num) return;
 
     try {
       await axios.patch(
-        `http://localhost:1234/student/alter_project_status/${reg_num}/${projectType}`
+        `http://localhost:1234/student/alter_project_status/${reg_num}/${projectType}`,
+        { company: companyName }
       );
 
-      setShowStudentPopup(false);
+      setShowCompanyPopup(false);
 
       if (projectType === "INTERNAL") {
         navigate("/student");
@@ -96,8 +110,6 @@ function Login() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       const idToken = await user.getIdToken();
-
-      console.log("Firebase ID Token:", idToken);
 
       const res = await axios.post("http://localhost:1234/auth/google-login", {
         token: idToken,
@@ -120,60 +132,62 @@ function Login() {
 
   return (
     <>
-      <div className="login_div"><form action="" className="bg-white">
-        <img src={college_img} style={{ width: "50%", marginTop: "-6%", marginLeft: "25%", backgroundColor: "white", zIndex: 1 }} alt="" />
-        <p className="Login">Hi, Welcome back</p><br />
+      <div className="login_div">
+        <form action="" className="bg-white">
+          <img src={college_img} style={{ width: "50%", marginTop: "-6%", marginLeft: "25%", backgroundColor: "white", zIndex: 1 }} alt="" />
+          <p className="Login">Hi, Welcome back</p><br />
 
-        <div className="lnamediv bg-white">
-          <p className="symbol">@</p>
-          <input
-            onChange={(e) => { setemailId(e.target.value) }}
-            className="lname"
-            type="email"
-            name="username"
-            placeholder="E-mail"
-            required
-          />
-        </div>
+          <div className="lnamediv bg-white">
+            <p className="symbol">@</p>
+            <input
+              onChange={(e) => { setemailId(e.target.value) }}
+              className="lname"
+              type="email"
+              name="username"
+              placeholder="E-mail"
+              required
+            />
+          </div>
 
-        <div className="lpassdiv" style={{ position: "relative" }}>
-          <LockIcon className="lock" />
-          <input
-            onChange={(e) => { setpassword(e.target.value) }}
-            type={showpassword ? "text" : "password"}
-            className="lpass"
-            name="password"
-            placeholder="Password"
-            required
-          />
-          <span
-            onClick={() => setshowpassword(!showpassword)}
-            style={{
-              position: "absolute",
-              right: "10px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              cursor: "pointer",
-              color: "#555",
-              fontSize: "18px",
-              backgroundColor: "white"
-            }}
-          >
-            {showpassword ? <FaEye style={{ backgroundColor: 'white', fontSize: "120%" }} /> : <FaEyeSlash style={{ backgroundColor: 'white', fontSize: "120%" }} />}
-          </span><><p style={{ fontSize: "000" }}>.</p></>
-        </div>
+          <div className="lpassdiv" style={{ position: "relative" }}>
+            <LockIcon className="lock" />
+            <input
+              onChange={(e) => { setpassword(e.target.value) }}
+              type={showpassword ? "text" : "password"}
+              className="lpass"
+              name="password"
+              placeholder="Password"
+              required
+            />
+            <span
+              onClick={() => setshowpassword(!showpassword)}
+              style={{
+                position: "absolute",
+                right: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                cursor: "pointer",
+                color: "#555",
+                fontSize: "18px",
+                backgroundColor: "white"
+              }}
+            >
+              {showpassword ? <FaEye style={{ backgroundColor: 'white', fontSize: "120%" }} /> : <FaEyeSlash style={{ backgroundColor: 'white', fontSize: "120%" }} />}
+            </span>
+          </div>
 
-        <button onClick={handleLogin} className="lbutton">Submit</button>
+          <button onClick={handleLogin} className="lbutton">Submit</button>
 
-        <div className="divider">
-          <hr />
-          <span>or</span>
-        </div>
+          <div className="divider">
+            <hr />
+            <span>or</span>
+          </div>
 
-        <div className="gdiv" onClick={handleGoogleLogin}>
-          <img src={Google} className="google-logo" alt="Google logo" />
-          <button className="glogin">Continue with Google</button>
-        </div></form>
+          <div className="gdiv" onClick={handleGoogleLogin}>
+            <img src={Google} className="google-logo" alt="Google logo" />
+            <button className="glogin">Continue with Google</button>
+          </div>
+        </form>
       </div>
 
       {/* Student internal/external popup */}
@@ -193,14 +207,14 @@ function Login() {
             textAlign: "center",
             minWidth: "300px"
           }}>
-            <div className="flex flex-col items-center justify-center sm:w-[20px] md:w-[357px] bg-white ">
-              <h1 className=" text-md bg-white md:text-xl font-semibold text-gray-800 mb-4">
+            <div className="flex flex-col items-center justify-center sm:w-[20px] md:w-[357px] bg-white">
+              <h1 className="text-md bg-white md:text-xl font-semibold text-gray-800 mb-4">
                 Are you an internal or external student?
               </h1>
               <div className="flex flex-col gap-4 bg-white">
                 <button
                   onClick={() => handleStudentChoice("internal")}
-                  className="px-6 py-3  md:w-96 bg-purple-500 text-white rounded-xl shadow hover:bg-purple-700 transition-all duration-200"
+                  className="px-6 py-3 md:w-96 bg-purple-500 text-white rounded-xl shadow hover:bg-purple-700 transition-all duration-200"
                 >
                   Internal
                 </button>
@@ -212,7 +226,41 @@ function Login() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
 
+      {/* Company name popup */}
+      {showCompanyPopup && (
+        <div style={{
+          position: "fixed",
+          top: 0, left: 0,
+          width: "100%", height: "100%",
+          backgroundColor: "rgba(0,0,0,0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 9999
+        }}>
+          <div style={{
+            background: "white",
+            padding: "30px",
+            borderRadius: "8px",
+            textAlign: "center",
+            minWidth: "300px"
+          }}>
+            <h1 className="text-lg font-semibold mb-4 text-gray-800">Select Your Company</h1>
+            <input
+              type="text"
+              placeholder="Enter company name"
+              className="w-full p-2 border rounded mb-4"
+              value={selectedCompany}
+              onChange={(e) => setSelectedCompany(e.target.value)}
+            />
+            <button
+              onClick={() => updateProjectTypeAndNavigate(selectedProjectType, selectedCompany)}
+              className="w-full px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            >
+              Submit
+            </button>
           </div>
         </div>
       )}

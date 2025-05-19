@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import CreateForm from './CreateForm';
+// import CreateForm from './CreateForm';
 import InviteForm from './InviteForm';
 import TeamDetails from './TeamDetails';
 import axios from 'axios';
@@ -10,24 +10,18 @@ import { useNavigate ,Link  } from 'react-router-dom';
 import { addTeamStatus } from '../../utils/teamStatus';
 
 function Student_Dashboard() {
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [teamConformationPending,setteamConformationPending] = useState(false);
-  const [createForm, setCreateForm] = useState({
-    name: '',
-    email: '',
-    registerNumber: '',
-    department: '',
-  });
+  const [teamStatus, setTeamStatus] = useState(null); // 0 or 1
+  const [teamMembers, setTeamMembers] = useState([]); // Accepted members
+  const [pendingInvitations, setPendingInvitations] = useState([]);
   const [inviteForm, setInviteForm] = useState({
     name: '',
     email: '',
     registerNumber: '',
     department: '',
   });
-  const [teamStatus, setTeamStatus] = useState(null); // 0 or 1
-  const [teamMembers, setTeamMembers] = useState([]); // Accepted members
-  const [pendingInvitations, setPendingInvitations] = useState([]);
+  
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -38,30 +32,6 @@ function Student_Dashboard() {
   ];
 
   const totalMembersAllowed = 4;
-
-  const isValidEmail = (email) => email.endsWith('@bitsathy.ac.in');
-
-  const handleCreateChange = (e) => {
-    const { name, value } = e.target;
-    setCreateForm((f) => ({ ...f, [name]: value }));
-  };
-
-  const handleCreateSubmit = (e) => {
-    e.preventDefault();
-    if (!isValidEmail(createForm.email)) {
-      alert('Email must be a valid @bitsathy.ac.in address.');
-      return;
-    }
-
-    dispatch(addUser({
-      name: createForm.name,
-      email: createForm.email,
-      registerNumber: createForm.registerNumber,
-      department: createForm.department,
-    }));
-
-    setIsCreateOpen(false);
-  };
 
   const handleInviteChange = (e) => {
     const { name, value } = e.target;
