@@ -55,8 +55,7 @@ router.delete("/admin/delete_project/:project_id",(req,res,next) => {
   }
 })
 
-/// Assuming you have: const express = require('express');
-// and db is your MySQL connection pool or client.
+// edits the posted projects
 
 router.patch("/admin/edit_project/:old_project_id", (req, res, next) => {
   try {
