@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
 
 const Project_Details = () => {
   const [page, setPage] = useState(0);
@@ -22,17 +21,18 @@ const Project_Details = () => {
   const [expertsList, setExpertsList] = useState([]);
   const [guidesList, setGuidesList] = useState([]);
 
-  const toggleExpertSelection = (expertName) => {
-    setSelectedExperts((prev) =>
-      prev.includes(expertName) ? prev.filter((e) => e !== expertName) : [...prev, expertName]
-    );
-  };
+  const toggleExpertSelection = (expertRegNum) => {
+  setSelectedExperts((prev) =>
+    prev.includes(expertRegNum) ? prev.filter((e) => e !== expertRegNum) : [...prev, expertRegNum]
+  );
+};
 
-  const toggleGuideSelection = (guideName) => {
-    setSelectedGuides((prev) =>
-      prev.includes(guideName) ? prev.filter((g) => g !== guideName) : [...prev, guideName]
-    );
-  };
+const toggleGuideSelection = (guideRegNum) => {
+  setSelectedGuides((prev) =>
+    prev.includes(guideRegNum) ? prev.filter((g) => g !== guideRegNum) : [...prev, guideRegNum]
+  );
+};
+
 
   const startIndex = page * rowsPerPage;
   const pageCount = Math.ceil(projectData.length / rowsPerPage);
@@ -95,51 +95,6 @@ const Project_Details = () => {
 
   async function fetchExpertsAndGuides() {
     try {
-      const response = await axios.post(
-        `http://localhost:1234/guide/sent_request_to_guide`,
-        { 
-          "from_team_id":teamMembers.team_id,
-          "project_id":id,
-          "project_name":name,
-          "to_guide_reg_num":guides
-        },
-        { withCredentials: true }
-      );
-
-      if (response.status === 200) {
-        const response1 = await axios.post(
-        `http://localhost:1234/sub_expert/sent_request_to_expert`,
-        { 
-          "from_team_id":teamMembers.team_id,
-          "project_id":id,
-          "project_name":name,
-          "to_guide_reg_num":experts
-        },
-        { withCredentials: true }
-      );
-       if(response1.status === 200)
-       {
-          alert('Project chosen successfully!');
-          setProjectData((prev) =>
-            prev.filter((proj) => proj.project_name !== name)
-          );
-          setSelectedProject(null);
-          setUserStatus('has_project');
-          setMyProject(selectedProject);
-          setSelectedExperts([]);
-          setSelectedGuides([]);
-      }
-       }
-
-      const newresponse = await axios.patch(
-        `http://localhost:1234/student/assign_project_id/${id}/${selector.reg_num}`,
-        { expert: experts, guide: guides },
-        { withCredentials: true }
-      );
-
-      if (newresponse.status === 200) {
-        console.log('project_id successfully inserted into db!');
-      }
       const [expertRes, guideRes] = await Promise.all([
         axios.get('http://localhost:1234/student/fetch_guide_or_expert/sub_expert'),
         axios.get('http://localhost:1234/student/fetch_guide_or_expert/guide'),
@@ -153,16 +108,35 @@ const Project_Details = () => {
     }
   }
 
- async function handleTakeProject(name, id, experts, guides) {
+async function handleTakeProject(name, id, experts, guides) {
   console.log("Selected Experts:", experts);
   console.log("Selected Guides:", guides);
 
-  // if (!experts || !guides || experts.length < 3 || guides.length < 3) {
-  //   alert('Please select at least 3 experts and 3 guides');
-  //   return;
-  // }
+  if (experts.length <= 0 || guides.length <= 0) {
+    return alert("Please select at least 1 experts and 1 guides.");
+  }
+
+  if (!teamMembers.length) {
+    return alert("No team found. Please form a team first.");
+  }
 
   try {
+    const [guideReq, expertReq] = await Promise.all([
+      axios.post("http://localhost:1234/guide/sent_request_to_guide", {
+        "from_team_id": teamMembers[0].team_id,
+        "project_id": id,
+        "project_name": name,
+        "to_guide_reg_num": guides
+      }, { withCredentials: true }),
+
+      axios.post("http://localhost:1234/sub_expert/sent_request_to_expert", {
+        "from_team_id": teamMembers[0].team_id,
+        "project_id": id,
+        "project_name": name,
+        "to_expert_reg_num": experts
+      }, { withCredentials: true })
+    ]);
+
     const response = await axios.patch(
       `http://localhost:1234/student/ongoing/${name}`,
       { expert: experts, guide: guides },
@@ -176,25 +150,26 @@ const Project_Details = () => {
       );
       setSelectedProject(null);
       setUserStatus('has_project');
-      setMyProject(selectedProject);
+      setMyProject({ project_name: name, id, experts, guides });
       setSelectedExperts([]);
       setSelectedGuides([]);
     }
 
-    const newresponse = await axios.patch(
+    const newResponse = await axios.patch(
       `http://localhost:1234/student/assign_project_id/${id}/${selector.reg_num}`,
       { expert: experts, guide: guides },
       { withCredentials: true }
     );
 
-    if (newresponse.status === 200) {
+    if (newResponse.status === 200) {
       console.log('project_id successfully inserted into db!');
     }
   } catch (error) {
     console.error('Error choosing project:', error);
-    alert('Something went wrong while choosing project');
+    alert('Something went wrong while choosing the project');
   }
 }
+
 
 
   async function fetchMyProject() {
@@ -248,20 +223,20 @@ const Project_Details = () => {
   if (userStatus === 'has_project' && myProject) {
     return (
       <div className="p-6 w-full max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold text-center text-black mb-6">
+        <h2 className="text-2xl font-bold text-center text-green-700 mb-6">
           Your Assigned Project
         </h2>
 
         <div className="bg-white p-6 rounded-xl shadow-xl">
-          <p className="bg-white"><strong className="bg-white">Name:</strong> {myProject.project_name}</p>
-          <p className="bg-white"><strong className="bg-white">Cluster:</strong> {myProject.cluster}</p>
-          <p className="bg-white"><strong className="bg-white">Description:</strong> {myProject.description}</p>
+          <p><strong>Name:</strong> {myProject.project_name}</p>
+          <p><strong>Cluster:</strong> {myProject.cluster}</p>
+          <p><strong>Description:</strong> {myProject.description}</p>
 
-          <div className="mt-4 bg-white">
-            <h4 className="text-lg font-bold bg-white text-purple-600 mb-2">Project Phases :</h4>
-            <div className="space-y-2 bg-white text-sm">
+          <div className="mt-4">
+            <h4 className="text-lg font-bold text-purple-600 mb-2">Project Phases</h4>
+            <div className="space-y-2 text-sm">
               {[1, 2, 3, 4, 5].map((phase) => (
-                <p key={phase} className="bg-white">
+                <p key={phase}>
                   Phase {phase}: {myProject[`phase${phase}`] || 'Not updated'}
                 </p>
               ))}
@@ -340,9 +315,6 @@ const Project_Details = () => {
             >
               <FaChevronRight color={page >= pageCount - 1 ? '#A0A0A0' : '#000000'} />
             </button>
-            <Link to="/upload-project-files" className="text-blue-600 hover:underline">
-  Go to Project File Upload
-</Link>
           </div>
         </div>
       </div>
@@ -376,18 +348,18 @@ const Project_Details = () => {
               <h3 className="text-lg font-semibold mb-2">Select at least 3 Experts:</h3>
               <div className="flex flex-wrap gap-3">
                 {expertsList.map((expert) => (
-                  <button
-                    key={expert.reg_num}
-                    onClick={() => toggleExpertSelection(expert.name)}
-                    className={`px-3 py-1 rounded-full border ${
-                      selectedExperts.includes(expert.name)
-                        ? 'bg-purple-500 text-white border-purple-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
-                    }`}
-                  >
-                    {expert.name}
-                  </button>
-                ))}
+                <button
+                  key={expert.reg_num}
+                  onClick={() => toggleExpertSelection(expert.reg_num)}
+                  className={`px-3 py-1 rounded-full border ${
+                    selectedExperts.includes(expert.reg_num)
+                      ? 'bg-purple-500 text-white border-purple-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
+                  }`}
+                >
+                  {expert.name}
+                </button>
+              ))}
               </div>
             </div>
 
@@ -395,18 +367,18 @@ const Project_Details = () => {
               <h3 className="text-lg font-semibold mb-2">Select at least 3 Guides:</h3>
               <div className="flex flex-wrap gap-3">
                 {guidesList.map((guide) => (
-                  <button
-                    key={guide.reg_num}
-                    onClick={() => toggleGuideSelection(guide.name)}
-                    className={`px-3 py-1 rounded-full border ${
-                      selectedGuides.includes(guide.name)
-                        ? 'bg-green-600 text-white border-green-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
-                    }`}
-                  >
-                    {guide.name}
-                  </button>
-                ))}
+                <button
+                  key={guide.reg_num}
+                  onClick={() => toggleGuideSelection(guide.reg_num)}
+                  className={`px-3 py-1 rounded-full border ${
+                    selectedGuides.includes(guide.reg_num)
+                      ? 'bg-green-600 text-white border-green-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
+                  }`}
+                >
+                  {guide.name}
+                </button>
+              ))}
               </div>
             </div>
 
@@ -423,7 +395,6 @@ const Project_Details = () => {
             >
               Take Project
             </button>
-            
           </div>
         </div>
       )}
