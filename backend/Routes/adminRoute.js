@@ -39,9 +39,9 @@ router.delete("/admin/removeuser/:emailId/:reg_num/:role",(req,res,next) => {
 })
 
 // delete projects
-router.delete("admin/delete_project/:project_id",(req,res,next) => {
+router.delete("/admin/delete_project/:project_id",(req,res,next) => {
   try{
-    const{project_id} = req.body;
+    const{project_id} = req.params;
     if(!project_id)return next(error);
     let sql = "delete from projects where project_id = ?"
     db.query(sql,[project_id],(error,result) => {

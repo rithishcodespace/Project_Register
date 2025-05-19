@@ -8,18 +8,10 @@ const Posted_project = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(0);
 
-  const handleEdit = (id) => setEditId(id);
-  const handleSave = () => setEditId(null);
-  const handleDelete = (id) => setProjectData(projectData.filter(row => row.project_id !== id));
+  // Form state for edited data
+  const [formData, setFormData] = useState({});
 
-  const handleInputChange = (id, field, value) => {
-    setProjectData(prevData =>
-      prevData.map(row =>
-        row.project_id === id ? { ...row, [field]: value } : row
-      )
-    );
-  };
-
+  // Fetch projects
   async function getProjects() {
     try {
       const accessToken = localStorage.getItem("accessToken");
@@ -31,13 +23,12 @@ const Posted_project = () => {
       });
 
       if (response.status === 200) {
-        console.log("Received projects:", response.data);
         setProjectData(response.data);
       } else {
-        alert("Sorry, no data");
+        alert("No projects found.");
       }
     } catch (error) {
-      console.log("Error fetching projects:", error.message);
+      console.error("Fetch error:", error.message);
     }
   }
 
@@ -45,6 +36,76 @@ const Posted_project = () => {
     getProjects();
   }, []);
 
+  // Edit handler
+  const handleEdit = (id) => {
+    const selectedProject = projectData.find(p => p.project_id === id);
+    setFormData({ ...selectedProject }); // Clone project row
+    setEditId(id);
+  };
+
+  // Save edited project
+  const handleSave = async () => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const { project_id, project_name, cluster, description } = formData;
+
+      await axios.patch(`http://localhost:1234/admin/edit_project/${project_id}`, {
+        project: project_name,
+        cluster,
+        description,
+        // Pass empty/default values for now since phase fields aren't edited here
+        phase_1_requirement: "", phase_1_deadline: "",
+        phase_2_requirement: "", phase_2_deadline: "",
+        phase_3_requirement: "", phase_3_deadline: "",
+        phase_4_requirement: "", phase_4_deadline: "",
+        phase_5_requirement: "", phase_5_deadline: "",
+      }, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken?.trim()}`
+        }
+      });
+
+      alert("Project updated successfully!");
+      setEditId(null);
+      getProjects(); // Refresh
+    } catch (error) {
+      console.error("Update error:", error.message);
+    }
+  };
+
+  // Delete project
+  const handleDelete = async (id) => {
+    const confirm = window.confirm("Are you sure you want to delete this project?");
+    if (!confirm) return;
+
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      await axios.delete(`http://localhost:1234/admin/delete_project/${id}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken?.trim()}`
+        },
+        data: {
+          project_id: id
+        }
+      });
+
+      alert("Project deleted!");
+      getProjects(); // Refresh list
+    } catch (error) {
+      console.error("Delete error:", error.message);
+    }
+  };
+
+  // Handle input changes
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Pagination logic
   const startIndex = currentPage * rowsPerPage;
   const currentData = projectData.slice(startIndex, startIndex + rowsPerPage);
   const pageCount = Math.ceil(projectData.length / rowsPerPage);
@@ -67,11 +128,11 @@ const Posted_project = () => {
               <tr key={row.project_id} className="text-center">
                 {['project_id', 'project_name', 'cluster', 'description'].map((field) => (
                   <td key={field} className="p-2 bg-white h-[48px] align-middle">
-                    {editId === row.project_id ? (
+                    {editId === row.project_id && field !== 'project_id' ? (
                       <div className="flex justify-center items-center h-full">
                         <input
-                          value={row[field]}
-                          onChange={(e) => handleInputChange(row.project_id, field, e.target.value)}
+                          value={formData[field]}
+                          onChange={(e) => handleInputChange(field, e.target.value)}
                           className="w-full text-center bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 rounded h-[36px]"
                         />
                       </div>
