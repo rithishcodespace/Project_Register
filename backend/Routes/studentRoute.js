@@ -734,8 +734,22 @@ router.get("students/get_current_week/:team_id",(req,res,next) => {
 
 // -> use teachers add project api for this also by modify the project type
 
-// router.post("/ext_student/:reg_num",(req,res,next) => {
-//   try
-// })
-
+router.patch("/ext_student/insert_into_team_requests/:project_id/:reg_num",(req,res,next) => {
+  try{
+    const{project_id,reg_num} = req.params;
+    if(!project_id || !reg_num)return next(createError.BadRequest("project_id is not defined!"));
+    let sql = "update users set project_id = ? where reg_num = ?";
+    db.query(sql,[project_id,reg_num],(error,result) => {
+      if(error)return next(error);
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Student with the provided reg_num not found." });
+      }
+      res.send(`project_id:- ${project_id} successfully inserted into users table!`);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 module.exports = router;
