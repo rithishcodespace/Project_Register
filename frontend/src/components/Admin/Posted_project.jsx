@@ -109,7 +109,7 @@ const Posted_project = () => {
     <div className="ml-10 mr-10 justify-center mt-10">
       <div className="w-full bg-white shadow-md rounded-lg p-5">
         <table className="w-full border-none bg-white min-w-[700px]" style={{ tableLayout: 'fixed' }}>
-          <thead className='bg-white m-5'>
+          <thead className='bg-white m-5 border-b'>
             <tr className=" bg-white m-5">
               <th className="p-2 w-[13%] bg-white">Project ID</th>
               <th className="p-2 w-[22%] bg-white">Project Name</th>
@@ -120,7 +120,7 @@ const Posted_project = () => {
           </thead>
           <tbody>
             {currentData.map((row) => (
-              <tr key={row.project_id} className="text-center">
+              <tr key={row.project_id} className="text-center border-t">
                 {['project_id', 'project_name', 'cluster', 'description'].map((field) => (
                   <td key={field} className="p-2 bg-white h-[48px] align-middle">
                     {editId === row.project_id  ? (
@@ -162,7 +162,7 @@ const Posted_project = () => {
         </table>
       </div>
 
-      <div className="flex justify-between mr-24 mt-4 items-center p-4">
+      <div className="flex justify-between mr-0 mt-4 items-center p-4">
         <div>
           Rows per page:
           <select
