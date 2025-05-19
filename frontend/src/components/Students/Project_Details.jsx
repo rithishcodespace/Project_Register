@@ -21,17 +21,18 @@ const Project_Details = () => {
   const [expertsList, setExpertsList] = useState([]);
   const [guidesList, setGuidesList] = useState([]);
 
-  const toggleExpertSelection = (expertName) => {
-    setSelectedExperts((prev) =>
-      prev.includes(expertName) ? prev.filter((e) => e !== expertName) : [...prev, expertName]
-    );
-  };
+  const toggleExpertSelection = (expertRegNum) => {
+  setSelectedExperts((prev) =>
+    prev.includes(expertRegNum) ? prev.filter((e) => e !== expertRegNum) : [...prev, expertRegNum]
+  );
+};
 
-  const toggleGuideSelection = (guideName) => {
-    setSelectedGuides((prev) =>
-      prev.includes(guideName) ? prev.filter((g) => g !== guideName) : [...prev, guideName]
-    );
-  };
+const toggleGuideSelection = (guideRegNum) => {
+  setSelectedGuides((prev) =>
+    prev.includes(guideRegNum) ? prev.filter((g) => g !== guideRegNum) : [...prev, guideRegNum]
+  );
+};
+
 
   const startIndex = page * rowsPerPage;
   const pageCount = Math.ceil(projectData.length / rowsPerPage);
@@ -111,9 +112,35 @@ async function handleTakeProject(name, id, experts, guides) {
   console.log("Selected Experts:", experts);
   console.log("Selected Guides:", guides);
 
+<<<<<<< HEAD
  
+=======
+  if (experts.length <= 0 || guides.length <= 0) {
+    return alert("Please select at least 1 experts and 1 guides.");
+  }
+
+  if (!teamMembers.length) {
+    return alert("No team found. Please form a team first.");
+  }
+>>>>>>> 04eed14fee5ff3bdcd4ebe938f342d541ea931c5
 
   try {
+    const [guideReq, expertReq] = await Promise.all([
+      axios.post("http://localhost:1234/guide/sent_request_to_guide", {
+        "from_team_id": teamMembers[0].team_id,
+        "project_id": id,
+        "project_name": name,
+        "to_guide_reg_num": guides
+      }, { withCredentials: true }),
+
+      axios.post("http://localhost:1234/sub_expert/sent_request_to_expert", {
+        "from_team_id": teamMembers[0].team_id,
+        "project_id": id,
+        "project_name": name,
+        "to_expert_reg_num": experts
+      }, { withCredentials: true })
+    ]);
+
     const response = await axios.patch(
       `http://localhost:1234/student/ongoing/${name}`,
       { expert: experts, guide: guides },
@@ -127,25 +154,26 @@ async function handleTakeProject(name, id, experts, guides) {
       );
       setSelectedProject(null);
       setUserStatus('has_project');
-      setMyProject(selectedProject);
+      setMyProject({ project_name: name, id, experts, guides });
       setSelectedExperts([]);
       setSelectedGuides([]);
     }
 
-    const newresponse = await axios.patch(
+    const newResponse = await axios.patch(
       `http://localhost:1234/student/assign_project_id/${id}/${selector.reg_num}`,
       { expert: experts, guide: guides },
       { withCredentials: true }
     );
 
-    if (newresponse.status === 200) {
+    if (newResponse.status === 200) {
       console.log('project_id successfully inserted into db!');
     }
   } catch (error) {
     console.error('Error choosing project:', error);
-    alert('Something went wrong while choosing project');
+    alert('Something went wrong while choosing the project');
   }
 }
+
 
 
   async function fetchMyProject() {
@@ -324,6 +352,7 @@ async function handleTakeProject(name, id, experts, guides) {
               <h3 className="text-lg font-semibold mb-2">Select at least 3 Experts:</h3>
               <div className="flex flex-wrap gap-3">
                 {expertsList.map((expert) => (
+<<<<<<< HEAD
                   <button
                     key={expert.reg_num}
                     onClick={() => toggleExpertSelection(expert.name)}
@@ -336,6 +365,20 @@ async function handleTakeProject(name, id, experts, guides) {
                     {expert.name}
                   </button>
                 ))}
+=======
+                <button
+                  key={expert.reg_num}
+                  onClick={() => toggleExpertSelection(expert.reg_num)}
+                  className={`px-3 py-1 rounded-full border ${
+                    selectedExperts.includes(expert.reg_num)
+                      ? 'bg-purple-500 text-white border-purple-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
+                  }`}
+                >
+                  {expert.name}
+                </button>
+              ))}
+>>>>>>> 04eed14fee5ff3bdcd4ebe938f342d541ea931c5
               </div>
             </div>
 
@@ -343,6 +386,7 @@ async function handleTakeProject(name, id, experts, guides) {
               <h3 className="text-lg font-semibold mb-2">Select at least 3 Guides:</h3>
               <div className="flex flex-wrap gap-3">
                 {guidesList.map((guide) => (
+<<<<<<< HEAD
                   <button
                     key={guide.reg_num}
                     onClick={() => toggleGuideSelection(guide.name)}
@@ -355,6 +399,20 @@ async function handleTakeProject(name, id, experts, guides) {
                     {guide.name}
                   </button>
                 ))}
+=======
+                <button
+                  key={guide.reg_num}
+                  onClick={() => toggleGuideSelection(guide.reg_num)}
+                  className={`px-3 py-1 rounded-full border ${
+                    selectedGuides.includes(guide.reg_num)
+                      ? 'bg-green-600 text-white border-green-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
+                  }`}
+                >
+                  {guide.name}
+                </button>
+              ))}
+>>>>>>> 04eed14fee5ff3bdcd4ebe938f342d541ea931c5
               </div>
             </div>
 

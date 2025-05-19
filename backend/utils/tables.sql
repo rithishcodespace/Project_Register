@@ -155,6 +155,8 @@ CREATE TABLE `users` (
   `reg_num` VARCHAR(200) DEFAULT NULL,
   `name` VARCHAR(200) DEFAULT NULL,
   `dept` VARCHAR(200) DEFAULT NULL,
+  `company` VARCHAR(300) DEFAULT NULL,
+  `ext_project` VARCHAR(300) DEFAULT NULL,
   `project_type` VARCHAR(200) DEFAULT NULL,
   `phone_number` VARCHAR(20) DEFAULT NULL,
   `available` TINYINT(1) DEFAULT 1,

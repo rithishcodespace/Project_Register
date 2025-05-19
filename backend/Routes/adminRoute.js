@@ -142,5 +142,57 @@ router.get("/teacher/student_progress/:cluster", (req, res, next) => {
   }
 });
 
+// fetches the timelines
+
+router.get("/admin/get_timelines",(req,res,next) => {
+  try{
+   let sql = "select * from timeline";
+   db.query(sql,(error,result) => {
+    if(error)return next(error);
+    res.send(result);
+   })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+// deletes the timeline
+
+router.delete("/admin/remove_timeline/:id",(req,res,next) => {
+  try{
+    const{id} = req.params;
+    if(!id)return next(createError.BadRequest("id not found!"));
+    let sql = "delete from timeline where id = ?";
+    db.query(sql,[id],(error,result) => {
+      if(error)return next(createError);
+      res.send(`${id}st timeline successfully deleted from timelines!`);
+    })
+  }
+  catch(error)
+  {
+    next(error)
+  }
+})
+
+// updates the timeline
+
+router.patch("/admin/update_timeline_id/:id",(req,res,next) => {
+  try{
+     const{id} = req.params;
+     const{name,start_date,end_date} = req.body;
+     if(!id)return next(error);
+     let sql = "UPDATE timeline SET name = ?, start_date = ?, end_date = ? WHERE id = ?";
+     db.query(sql,[start_date,end_date,id],(error,result) => {
+      if(error)return next(error);
+      res.send(`${id} successfully updated to ${start_date} and ${end_date}`);
+     })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 module.exports = router;

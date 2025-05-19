@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+=======
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+>>>>>>> 04eed14fee5ff3bdcd4ebe938f342d541ea931c5
 
 import CSE from '../../assets/CSE.jpeg';
 import AIDS from '../../assets/AIDS.jpeg';
@@ -17,34 +22,28 @@ import FD from '../../assets/FD.jpeg';
 
 export default function Student_Progress() {
   const navigate = useNavigate();
-  const [departments, setDepartments] = useState([]);
 
-  // Static image mapping
+  // Hardcoded departments array
+  const departmentNames = [
+    "CSE", "AIDS", "IT", "AIML", "CT", "AGRI",
+    "ECE", "EIE", "EEE", "MECH", "FT", "FD"
+  ];
+
+  // Image mapping
   const departmentImages = {
     CSE, AIDS, IT, AIML, CT, AGRI,
     ECE, EIE, EEE, MECH, FT, FD,
   };
 
-  const fetchDepartments = async () => {
-    try {
-      const res = await axios.get("http://localhost:1234/api/departments");
-      const departmentsData = res.data.map((dept) => ({
-        name: dept,
-        image: departmentImages[dept] || CSE, // fallback image
-      }));
-      setDepartments(departmentsData);
-    } catch (err) {
-      console.error("Failed to fetch departments:", err);
-    }
-  };
+  // Prepare departments data with name + image
+  const departments = departmentNames.map((dept) => ({
+    name: dept,
+    image: departmentImages[dept] || CSE, // fallback to CSE image if missing
+  }));
 
-  useEffect(() => {
-    fetchDepartments();
-  }, []);
-
-  const handleNavigate = (cluster) => {
-    navigate(`/teacher/student_progress/${cluster}`);
-  };
+const handleNavigate = (dept) => {
+  navigate(`/admin/team_list/${dept}`);
+};
 
   return (
     <div className="p-6 min-h-screen">
@@ -59,7 +58,7 @@ export default function Student_Progress() {
             <div className="bg-blue-100 rounded-full mb-4">
               <img src={dept.image} alt={dept.name} className="rounded-full w-24 h-24 object-cover" />
             </div>
-            <h2 className="text-lg font-semibold">{dept.name}</h2>
+            <h2 className="text-lg bg-white font-semibold">{dept.name}</h2>
           </div>
         ))}
       </div>
