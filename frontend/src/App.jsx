@@ -34,13 +34,13 @@ import Guide_dashboard from "./components/guide/Guide_dashboard";
 import Guide_queries from "./components/guide/Guide_queries";
 import Guide_team_progress from "./components/guide/Guide_team_progress";
 import Queries from "./components/Students/Queries";
-// import TeamDetails from "./components/extstudents/TeamDetails";
 import {getProfile} from "./services/authService";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import Proj_Details from "./components/Students/Proj_Details";
 import ProjectFileUpload from "./components/Students/ProjectFileUpload";
 import Admin_project_details from "./components/Admin/Admin_project_details";
+import TimeLine from "./components/Admin/Timeline";
 import TeamListByDepartment from "./components/Admin/TeamListByDepartment";
 
 
@@ -89,11 +89,14 @@ function App() {
           </Route>
 
           <Route path="/admin" element={<Admin />}>
-            <Route index element={<Admin_Dashboard />} />
+            <Route index element={<Admin_Dashboard />} /> 
             <Route path="add_users" element={<Add_Users />} />
             <Route path="add_Project" element={<Add_Project />} />
             <Route path="posted_projects" element={<Posted_project />} />
             <Route path="students_progress" element={<Students_Progress />} />
+            <Route path="/admin/posted_projects/:project_id" element={<Admin_project_details />} />
+            <Route path="student_progress/:cluster" element={<Admin_project_details />} />
+            <Route path="TimeLine" element={<TimeLine/>}/>
             <Route path="team_list/:department" element={<TeamListByDepartment />} />
             <Route path="/admin/team_progress/:project_id" element={<Admin_project_details />} />
           </Route>

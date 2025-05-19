@@ -377,38 +377,46 @@ router.get("/student/getTeamDetails/:reg_num", (req, res, next) => {
 
 // updates the progress
 
-router.post("/student/update_progress/:phase/:reg_num", (req, res, next) => {
+const nodemailer = require("nodemailer");
+const { getMaxListeners } = require("nodemailer/lib/xoauth2");
+
+router.post("/student/update_progress/:week/:reg_num", (req, res, next) => {
   try {
-    const { phase, reg_num } = req.params;
-    const { contribution, progress } = req.body;
+    const { week, reg_num } = req.params;
+    const { progress } = req.body;
 
-   const validPhases = [
-    "phase1", "phase2", "phase3", "phase4", "phase5", "phase6",
-    "phase7", "phase8", "phase9", "phase10", "phase11", "phase12"];
+    const validPhases = [
+      "week1", "week2", "week3", "week4", "week5", "week6",
+      "week7", "week8", "week9", "week10", "week11", "week12"
+    ];
 
-    if (!validPhases.includes(phase) || reg_num) {
-      return res.status(400).json({ message: "Invalid phase name or reg_num missing" });
+    // Validation Check
+    if (!validPhases.includes(week) || !reg_num) {
+      return res.status(400).json({ message: "Invalid week name or reg_num missing" });
     }
 
-    const sql = `UPDATE team_requests SET ${phase}_contribution = ?, ${phase}_progress = ? WHERE reg_num = ?`;
+    const sql = `UPDATE team_requests SET ${week}_progress = ? WHERE reg_num = ?`;
 
-    db.query(sql, [contribution, progress, reg_num], (err, result) => {
+    db.query(sql, [progress, reg_num], (err, result) => {
       if (err) return next(err);
 
-      // Email setup
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "No record found for the provided reg_num." });
+      }
+
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
-          user: "rithishvkv@gmail.com",
+          user: "rithishvkv@gmail.com", 
           pass: process.env.EMAIL_PASS,
         },
       });
 
       const mailOptions = {
-        from: '"No Reply" <rithishvkv@gmail.com>',
+        from: '"No Reply" <' + process.env.EMAIL_USER + '>',
         to: "rithishs.cs24@bitsathy.ac.in",
         subject: "Progress update by your mentee",
-        text: `Student with reg_num ${reg_num} has updated progress for ${phase}. Please check the Project Register.`,
+        text: `Student with reg_num ${reg_num} has updated progress for ${week}. Please check the Project Register.`,
       };
 
       transporter.sendMail(mailOptions, (error, info) => {
@@ -443,72 +451,6 @@ router.get("/student/get_project_details/:project_id",(req,res,next) => {
     next(error);
   }
 })
-
-// fetches the team_progress of a single phase
-
-router.get("/student/team_progress/:team_id/:phase", (req, res) => {
-  const { phase,team_id } = req.params;
-
-  if(!phase || !team_id)return next(createError.BadRequest("team_id or phase is missing!!"));
-
-  // Validate input to prevent SQL injection
-  const allowedPhases = ['phase1', 'phase2', 'phase3', 'phase4', 'phase5', 'phase6', 'phase7', 'phase8', 'phase9', 'phase10', 'phase11', 'phase12',];
-  if (!allowedPhases.includes(phase)) {
-    return res.status(400).send("Invalid phase");
-  }
-
-  const sql = `SELECT name, ${phase}_progress AS progress, ${phase}_contribution AS contribution FROM team_requests WHERE team_id = ? AND ${phase}_progress IS NOT NULL
-`;
-
-  db.query(sql,[team_id],(err, results) => {
-    if (err) return res.status(500).send("DB error");
-    res.json(results); // [{ name, value }, ...]
-  });
-});
-
-// fetches the progress of all phases -> team_id
-
-router.get("/student/fetch_team_progress/:team_id", (req, res, next) => {
-  try {
-    const { team_id } = req.params;
-    if (!team_id) return next(createError.BadRequest("team_id is null!!"));
-
-    const columns = []; 
-    // add column names
-    for (let i = 1; i <= 12; i++) {
-      columns.push(`phase${i}_contribution`, `phase${i}_progress`);
-    }
-
-    // making column names comma seperated
-    const sql = `SELECT ${columns.join(", ")} FROM team_requests WHERE team_id = ?`;
-
-    db.query(sql, [team_id], (error, result) => {
-      if (error) return next(error);
-      if (result.length === 0) return res.status(404).send("No team data found!");
-
-      res.json(result[0]); // only one row expected for team_id
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.get("/student/get_progress_by_project_id/:project_id",(req,res,next) => {
-  try{
-    const{project_id} = req.params;
-    if(!project_id) return next(createError.BadRequest("project_id not found!!"));
-    let sql = "select * from team_requests where project_id = ?";
-    db.query(sql,[project_id],(error,result) => {
-      if(error)return next(error);
-      res.send(result);
-    })
-  }
-  catch(error)
-  {
-    next(error)
-  }
-})
-
 
 // updates the project type
 
@@ -779,5 +721,12 @@ router.get("students/get_current_week/:team_id",(req,res,next) => {
   }
 })
 
+// EXTERNAL STUDENTS
+
+// -> use teachers add project api for this also by modify the project type
+
+// router.post("/ext_student/:reg_num",(req,res,next) => {
+//   try
+// })
 
 module.exports = router;

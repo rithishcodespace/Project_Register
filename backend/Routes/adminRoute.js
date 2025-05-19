@@ -99,6 +99,27 @@ router.get("/fetchUsers/:role",(req,res,next) => {
   }
 })
 
+// Add this in your router file, e.g., routes/projects.js
+router.get("/teacher/student_progress/:cluster", (req, res, next) => {
+  try {
+    const { cluster } = req.params;
+    if (!cluster) return res.status(400).json({ message: "Cluster is required" });
+
+    const sql = `
+      SELECT name, reg_num, phase, progress
+      FROM student_progress
+      WHERE cluster = ?
+    `;
+
+    db.query(sql, [cluster], (error, results) => {
+      if (error) return next(error);
+      res.json(results);
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // adds timeline to the timeline table
 
 router.post("/admin/addTimeLine",(req,res,next) => {
@@ -120,27 +141,77 @@ router.post("/admin/addTimeLine",(req,res,next) => {
   }
 })
 
-// Add this in your router file, e.g., routes/projects.js
 
-router.get("/teacher/student_progress/:cluster", (req, res, next) => {
-  try {
-    const { cluster } = req.params;
-    if (!cluster) return res.status(400).json({ message: "Cluster is required" });
+// fetches the timelines
 
-    const sql = `
-      SELECT name, reg_num, phase, progress
-      FROM student_progress
-      WHERE cluster = ?
-    `;
-
-    db.query(sql, [cluster], (error, results) => {
-      if (error) return next(error);
-      res.json(results);
-    });
-  } catch (error) {
+router.get("/admin/get_timelines",(req,res,next) => {
+  try{
+   let sql = "select * from timeline";
+   db.query(sql,(error,result) => {
+    if(error)return next(error);
+    res.send(result);
+   })
+  }
+  catch(error)
+  {
     next(error);
   }
-});
+})
 
+// deletes the timeline
+
+router.delete("/admin/remove_timeline/:id",(req,res,next) => {
+  try{
+    const{id} = req.params;
+    if(!id)return next(createError.BadRequest("id not found!"));
+    let sql = "delete from timeline where id = ?";
+    db.query(sql,[id],(error,result) => {
+      if(error)return next(createError);
+      res.send(`${id}st timeline successfully deleted from timelines!`);
+    })
+  }
+  catch(error)
+  {
+    next(error)
+  }
+})
+
+// updates the timeline
+
+router.patch("/admin/update_timeline_id/:id",(req,res,next) => {
+  try{
+     const{id} = req.params;
+     const{name,start_date,end_date} = req.body;
+     if(!name || !start_date || !end_date)return next(createError.BadRequest("req.body is missing!"))
+     if(!id)return next(error);
+     let sql = "UPDATE timeline SET name = ?, start_date = ?, end_date = ? WHERE id = ?";
+     db.query(sql,[name,start_date,end_date,id],(error,result) => {
+      if(error)return next(error);
+      res.send(`${id} successfully updated to ${start_date} and ${end_date}`);
+     })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+// fetches the team_progress based on the project_id
+
+router.get("/admin/fetch_progress_by_project_id/:project_id",(req,res,next) => {
+  try{
+    const{project_id} = req.params;
+    if(!project_id)return next(createError.BadRequest("project_id not found!"));
+    let sql = "select * from team_requests where project_id = ?";
+    db.query(sql,[project_id],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 module.exports = router;

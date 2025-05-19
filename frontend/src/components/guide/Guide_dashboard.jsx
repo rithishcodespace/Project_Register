@@ -61,6 +61,7 @@ function Guide_dashboard() {
     if(response.status === 200)
     {
       setinvitations(response.data);
+      console.log(response.data);
     }
   }
 

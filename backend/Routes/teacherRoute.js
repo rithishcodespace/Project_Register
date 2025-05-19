@@ -1,26 +1,39 @@
 const express = require("express");
 const router = express.Router();
 const createError = require("http-errors");
-const verifyAccessToken = require("../utils/verifyAccessToken");
 const db = require("../db");
 
-router.post("/teacher/addproject",(req,res,next) => {
-    try{
-      const {project_id,project,cluster,description,phase_1_requirement,phase_2_requirement,phase_3_requirement,phase_4_requirement,phase_5_requirement,phase_6_requirement,phase_7_requirement,phase_8_requirement,phase_9_requirement,phase_10_requirement,phase_11_requirement,phase_12_requirement} = req.body;
-      if (!project_id || !project || !cluster || !description || !phase_1_requirement || !phase_2_requirement || !phase_3_requirement || !phase_4_requirement || !phase_5_requirement || !phase_6_requirement || !phase_7_requirement || !phase_8_requirement || !phase_9_requirement || !phase_10_requirement || !phase_11_requirement|| !phase_12_requirement) {
-        return res.status(400).json({ message: "Required fields are missing." });
-      }
-      let sql = "INSERT INTO projects (project_id,project,cluster,description,phase_1_requirement,phase_2_requirement,phase_3_requirement,phase_4_requirement,phase_5_requirement,phase_6_requirement,phase_7_requirement,phase_8_requirement,phase_9_requirement,phase_10_requirement,phase_11_requirement,phase_12_requirement) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-      const values = [project_id,project,cluster,description,phase_1_requirement,phase_2_requirement,phase_3_requirement,phase_4_requirement,phase_5_requirement,phase_6_requirement,phase_7_requirement,phase_8_requirement,phase_9_requirement,phase_10_requirement,phase_11_requirement,phase_12_requirement];
-      db.query(sql,values,(error,result) => {
-        if(error) return next(error);
-        res.send("project added successfully!");
-      }) 
+router.post("/teacher/addproject/:project_type", (req, res, next) => {
+  try {
+    const { project_type } = req.params;
+    const { project_name, cluster, description } = req.body;
+
+    if (!project_type || !project_name || !cluster || !description) {
+      return res.status(400).json({ message: "Required fields are missing." });
     }
-    catch(error){
-      next(error.message);
-    }
-})
+
+    if(project_type!= 'INTERNAL' && project_type != 'EXTERNAL')return next(createError.BadRequest("invalid project_type"))
+
+    const sql = "SELECT COUNT(*) AS count FROM projects";
+    db.query(sql, (error, result) => {
+      if (error) return next(error);
+
+      const project_length = result[0].count + 1;
+      const project_id = `P${String(project_length).padStart(4, "0")}`;
+
+      const sql1 = `
+        INSERT INTO projects (project_id, project_name, cluster, description, project_type) VALUES (?, ?, ?, ?, ?)`;
+      const values = [project_id, project_name, cluster, description, project_type];
+
+      db.query(sql1, values, (error, result) => {
+        if (error) return next(error);
+        res.send("Project added successfully!");
+      });
+    });
+  } catch (error) {
+    next(error.message);
+  }
+});
 
 router.get("/teacher/fetch_all_projects",(req,res,next) => {
   try{

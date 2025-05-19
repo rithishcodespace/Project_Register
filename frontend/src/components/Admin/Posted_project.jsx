@@ -3,19 +3,19 @@ import axios from 'axios';
 import { FaEdit, FaTrash, FaSave, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 const Posted_project = () => {
-  const [projectData, setProjectData] = useState([]); // this holds your original data
+  const [projectData, setProjectData] = useState([]);
   const [editId, setEditId] = useState(null);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(0);
 
   const handleEdit = (id) => setEditId(id);
   const handleSave = () => setEditId(null);
-  const handleDelete = (id) => setProjectData(projectData.filter(row => row.id !== id));
+  const handleDelete = (id) => setProjectData(projectData.filter(row => row.project_id !== id));
 
   const handleInputChange = (id, field, value) => {
     setProjectData(prevData =>
       prevData.map(row =>
-        row.id === id ? { ...row, [field]: value } : row
+        row.project_id === id ? { ...row, [field]: value } : row
       )
     );
   };
@@ -64,14 +64,14 @@ const Posted_project = () => {
           </thead>
           <tbody>
             {currentData.map((row) => (
-              <tr key={row.id} className="text-center">
+              <tr key={row.project_id} className="text-center">
                 {['project_id', 'project_name', 'cluster', 'description'].map((field) => (
                   <td key={field} className="p-2 bg-white h-[48px] align-middle">
-                    {editId === row.id ? (
+                    {editId === row.project_id ? (
                       <div className="flex justify-center items-center h-full">
                         <input
                           value={row[field]}
-                          onChange={(e) => handleInputChange(row.id, field, e.target.value)}
+                          onChange={(e) => handleInputChange(row.project_id, field, e.target.value)}
                           className="w-full text-center bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 rounded h-[36px]"
                         />
                       </div>
@@ -83,14 +83,16 @@ const Posted_project = () => {
                 <td className="p-2 bg-white h-[48px]">
                   <div className="flex justify-center bg-white items-center space-x-4 h-full">
                     <button
-                      onClick={() => (editId === row.id ? handleSave() : handleEdit(row.id))}
-                      className={`text-xl bg-white ${editId === row.id ? 'text-green-600' : 'text-blue-600'}`}
-                      title={editId === row.id ? 'Save' : 'Edit'}
+                      onClick={() =>
+                        editId === row.project_id ? handleSave() : handleEdit(row.project_id)
+                      }
+                      className={`text-xl bg-white ${editId === row.project_id ? 'text-green-600' : 'text-blue-600'}`}
+                      title={editId === row.project_id ? 'Save' : 'Edit'}
                     >
-                      {editId === row.id ? <FaSave className='bg-white' /> : <FaEdit className='bg-white' />}
+                      {editId === row.project_id ? <FaSave className='bg-white' /> : <FaEdit className='bg-white' />}
                     </button>
                     <button
-                      onClick={() => handleDelete(row.id)}
+                      onClick={() => handleDelete(row.project_id)}
                       className="text-red-600 text-xl"
                       title="Delete"
                     >
@@ -103,6 +105,7 @@ const Posted_project = () => {
           </tbody>
         </table>
       </div>
+
       <div className="flex justify-between mr-24 mt-4 items-center p-4">
         <div>
           Rows per page:

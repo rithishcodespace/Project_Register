@@ -51,9 +51,9 @@ const Proj_Details = () => {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="bg-white p-6 rounded-xl shadow-xl">
-        <h3 className="text-2xl font-semibold text-purple-700 mb-4">Project Details</h3>
+        <h3 className="text-2xl bg-white font-semibold text-purple-700 mb-4">Project Details</h3>
 
-        <p><strong>Name:</strong> {project.project_name}</p>
+        <p className='bg-white'><strong className='bg-white'>Name:</strong> {project.project_name}</p>
         <p><strong>Cluster:</strong> {project.cluster}</p>
         <p><strong>Description:</strong> {project.description}</p>
 
