@@ -33,26 +33,18 @@ import Guide from "./components/guide/guide";
 import Guide_dashboard from "./components/guide/Guide_dashboard";
 import Guide_queries from "./components/guide/Guide_queries";
 import Guide_team_progress from "./components/guide/Guide_team_progress";
-import Extstudent from "./components/extstudents/Extstudents";
-import Extstudents_dashboard from "./components/extstudents/Extstudents_dashboard";
-import Extstudents_add_project from "./components/extstudents/Extstudents_add_project";
-import Extstudents_team from "./components/extstudents/Extstudents_team";
-import Extstudents_progress_update from "./components/extstudents/Extstudents_progress_update";
 import Admin_projectDetails from "./components/Admin/Admin_project_details";
 import Queries from "./components/Students/Queries";
-import TeamDetails from "./components/extstudents/TeamDetails";
+// import TeamDetails from "./components/extstudents/TeamDetails";
 import {getProfile} from "./services/authService";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import Proj_Details from "./components/Students/Proj_Details";
 import ProjectFileUpload from "./components/Students/ProjectFileUpload";
 import Admin_project_details from "./components/Admin/Admin_project_details";
-<<<<<<< HEAD
 import TimeLine from "./components/Admin/Timeline";
-=======
 import TeamListByDepartment from "./components/Admin/TeamListByDepartment";
 
->>>>>>> 04eed14fee5ff3bdcd4ebe938f342d541ea931c5
 
 
 const Loader = () => {
@@ -104,14 +96,11 @@ function App() {
             <Route path="add_Project" element={<Add_Project />} />
             <Route path="posted_projects" element={<Posted_project />} />
             <Route path="students_progress" element={<Students_Progress />} />
-<<<<<<< HEAD
             <Route path="/admin/posted_projects/:project_id" element={<Admin_projectDetails />} />
             <Route path="student_progress/:cluster" element={<Admin_project_details />} />
             <Route path="TimeLine" element={<TimeLine/>}/>
-=======
             <Route path="team_list/:department" element={<TeamListByDepartment />} />
             <Route path="/admin/team_progress/:project_id" element={<Admin_project_details />} />
->>>>>>> 04eed14fee5ff3bdcd4ebe938f342d541ea931c5
           </Route>
 
           <Route path="/subject_expert" element={<Subject_expert />}>
@@ -125,15 +114,9 @@ function App() {
             <Route index element={<Guide_dashboard />} />
             <Route path="queries" element={<Guide_queries />} />
             <Route path="team_progress" element={<Guide_team_progress />} />
-            <Route path="/guide/team_progress/:id" element={<TeamDetails/>} />
+            {/* <Route path="/guide/team_progress/:id" element={<TeamDetails/>} /> */}
           </Route>
 
-          <Route path="/ext_student" element={<Extstudent />}>
-            <Route index element={<Extstudents_dashboard />} />
-            <Route path="project_detail" element={<Extstudents_add_project />} />
-            <Route path="team" element={<Extstudents_team />} />            
-            <Route path="Progress_update" element={<Extstudents_progress_update />} />
-          </Route>
         </Routes>
 
       </BrowserRouter>

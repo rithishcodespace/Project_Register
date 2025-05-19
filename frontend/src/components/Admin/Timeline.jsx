@@ -99,7 +99,7 @@ const TimeLine = () => {
               <td colSpan="5" className="p-4 text-center text-gray-500">
                 No timeline added yet.
               </td>
-            </tr>
+              </tr>
           ) : (
             timelines.map((item, index) => (
               <tr key={index} className="hover:bg-gray-50">
