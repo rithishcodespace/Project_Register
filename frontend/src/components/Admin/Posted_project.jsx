@@ -106,7 +106,8 @@ const Posted_project = () => {
   const pageCount = Math.ceil(projectData.length / rowsPerPage);
 
   return (
-    <div className="ml-10 mr-10 justify-center mt-10">
+    <div className="ml-10 mr-10 justify-center mt-5">
+      <h2 className="text-3xl font-bold flex justify-center  mb-8">Posted Projects</h2>
       <div className="w-full bg-white shadow-md rounded-lg p-5">
         <table className="w-full border-none bg-white min-w-[700px]" style={{ tableLayout: 'fixed' }}>
           <thead className='bg-white m-5 border-b'>

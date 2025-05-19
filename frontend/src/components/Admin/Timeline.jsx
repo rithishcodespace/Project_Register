@@ -32,79 +32,81 @@ const TimeLine = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto mt-10 p-6 bg-white shadow-xl rounded-2xl">
-      <h2 className="text-2xl font-bold mb-6 text-center">Timeline Manager</h2>
+    <>
+      <h2 className="text-3xl font-bold text-center mt-6 mb-6">Timeline Management</h2>
+    <div className="max-w-5xl mx-auto mt-2 p-6 bg- rounded-2xl">
 
       <form
         onSubmit={handleAdd}
-        className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-6"
+        className="grid grid-cols-1 p-4 rounded-lg md:grid-cols-4 bg-white gap-4 items-end mb-6"
       >
-        <div>
-          <label className="block font-medium mb-1">Name</label>
+        <div className="bg-white">
+          <label className="block bg-white font-medium mb-1">Name</label>
           <input
             type="text"
             value={newTimeline.name}
             onChange={(e) =>
               setNewTimeline({ ...newTimeline, name: e.target.value })
             }
-            className="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 bg-white py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
-        <div>
-          <label className="block font-medium mb-1">Start Time</label>
+        <div className=" bg-white ">
+          <label className="block bg-white  font-medium mb-1">Start Time</label>
           <input
             type="datetime-local"
             value={newTimeline.startTime}
             onChange={(e) =>
               setNewTimeline({ ...newTimeline, startTime: e.target.value })
             }
-            className="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border bg-white  rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
-        <div>
-          <label className="block font-medium mb-1">End Time</label>
+        <div className=" bg-white ">
+          <label className="block font-medium bg-white  mb-1">End Time</label>
           <input
             type="datetime-local"
             value={newTimeline.endTime}
             onChange={(e) =>
               setNewTimeline({ ...newTimeline, endTime: e.target.value })
             }
-            className="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
         <button
           type="submit"
-          className="bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 font-semibold"
+          className="bg-purple-500 text-white py-2 rounded-md hover:bg-purple-600 font-semibold"
         >
           Add
         </button>
       </form>
 
-      <table className="w-full table-auto border-collapse border">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="p-3 border">#</th>
-            <th className="p-3 border">Name</th>
-            <th className="p-3 border">Start Time</th>
-            <th className="p-3 border">End Time</th>
-            <th className="p-3 border">Actions</th>
+      <div className="rounded-xl">
+      <table className="w-full border-none bg-white rounded-lg min-w-[700px]">
+        <thead className="bg-white m-5 border-b rounded-xl">
+          <tr className="bg-white m-5">
+            <th className="p-3 bg-white border-b">S.No</th>
+            <th className="p-3 bg-white border-b">Name</th>
+            <th className="p-3 bg-white border-b">Start Time</th>
+            <th className="p-3 bg-white border-b">End Time</th>
+            <th className="p-3 bg-white border-b">Actions</th>
           </tr>
         </thead>
         <tbody>
           {timelines.length === 0 ? (
             <tr>
-              <td colSpan="5" className="p-4 text-center text-gray-500">
+              <td colSpan="5" className="p-4 bg-white text-center text-gray-500">
                 No timeline added yet.
               </td>
               </tr>
           ) : (
             timelines.map((item, index) => (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="p-3 border">{index + 1}</td>
-                <td className="p-3 border">
+              <tr key={index} className="hover:bg-gray-50 bg-white">
+                <td className="p-3 border bg-white">{index + 1}</td>
+                <td className="p-3 border bg-white">
                   {editIndex === index ? (
                     <input
                       type="text"
@@ -115,13 +117,13 @@ const TimeLine = () => {
                           name: e.target.value,
                         })
                       }
-                      className="px-2 py-1 border rounded-md w-full"
+                      className="px-2 py-1 bg-white border rounded-md w-full"
                     />
                   ) : (
                     item.name
                   )}
                 </td>
-                <td className="p-3 border">
+                <td className="p-3 border bg-white">
                   {editIndex === index ? (
                     <input
                       type="datetime-local"
@@ -132,7 +134,7 @@ const TimeLine = () => {
                           startTime: e.target.value,
                         })
                       }
-                      className="px-2 py-1 border rounded-md"
+                      className="px-2 py-1 border bg-white rounded-md"
                     />
                   ) : (
                     new Date(item.startTime).toLocaleString()
@@ -182,8 +184,8 @@ const TimeLine = () => {
             ))
           )}
         </tbody>
-      </table>
-    </div>
+      </table></div>
+    </div></>
   );
 };
 

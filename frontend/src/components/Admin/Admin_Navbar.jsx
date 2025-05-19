@@ -113,10 +113,12 @@ function Admin_Navbar({ isOpen, toggleSidebar }) {
           <p className={navText("TimeLine")}>TimeLine</p>
         </Link>
 
-        <Link to="students_progress" className={`${navDiv("students_progress")} group`}>
-          <BarChart2 size={24} className={navIcon("students_progress")} />
-          <p className={navText("students_progress")}>Student Progress</p>
+        <Link to="students_progress" className={`${navDiv(["students_progress", "team_list"])} group`}>
+          <BarChart2 size={24} className={navIcon(["students_progress", "team_list"])} />
+          <p className={navText(["students_progress", "team_list"])}>Student Progress</p>
         </Link>
+
+
 
 
         {/* Logout */}

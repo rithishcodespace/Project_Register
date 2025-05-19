@@ -33,16 +33,6 @@ function TeacherAdd() {
       project: projectName,
       cluster: clusterName,
       description,
-      phase_1_requirement: phases[0].requirements,
-      phase_1_deadline: parseInt(phases[0].days),
-      phase_2_requirement: phases[1].requirements,
-      phase_2_deadline: parseInt(phases[1].days),
-      phase_3_requirement: phases[2].requirements,
-      phase_3_deadline: parseInt(phases[2].days),
-      phase_4_requirement: phases[3].requirements,
-      phase_4_deadline: parseInt(phases[3].days),
-      phase_5_requirement: phases[4].requirements,
-      phase_5_deadline: parseInt(phases[4].days),
     };
 
     try {
@@ -68,7 +58,7 @@ function TeacherAdd() {
   };
 
   return (
-    <div className="min-h-screen flex  items-center justify-center bg-white-50 p-6">
+    <div className="min-h- flex  items- justify-center bg-white-50 p-6">
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-8">
         <h2 className="text-2xl font-semibold mb-6 text-center bg-white text-gray-800">Post New Project</h2>
         <form className="space-y-6 bg-white" onSubmit={handleSubmit}>
@@ -127,33 +117,7 @@ function TeacherAdd() {
           </div>
 
           {/* Phases */}
-          {phases.map((phase, index) => (
-            <div key={index} className="grid bg-white grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="col-span-2 bg-white">
-                <label className="block text-sm font-medium bg-white text-gray-700">Phase {index + 1} Requirements</label>
-                <input
-                  type="text"
-                  required
-                  value={phase.requirements}
-                  onChange={(e) => handlePhaseChange(index, 'requirements', e.target.value)}
-                  placeholder="Requirements"
-                  className="mt-1 bg-white w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-              <div className="col-span-2 bg-white">
-                <label className="block text-sm font-medium bg-white text-gray-700">Phase {index + 1} Duration (Days)</label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  value={phase.days}
-                  onChange={(e) => handlePhaseChange(index, 'days', e.target.value)}
-                  placeholder="No. of days"
-                  className="mt-1 w-full border bg-white border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-            </div>
-          ))}
+          
 
           {/* Submit Button */}
           <div className="text-center bg-white">
