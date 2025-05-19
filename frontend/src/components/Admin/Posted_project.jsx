@@ -45,34 +45,29 @@ const Posted_project = () => {
 
   // Save edited project
   const handleSave = async () => {
-    try {
-      const accessToken = localStorage.getItem("accessToken");
-      const { project_id, project_name, cluster, description } = formData;
+  const oldProjectId = editId;
+  const { project_id: newProjectId, project_name, cluster, description } = formData;
 
-      await axios.patch(`http://localhost:1234/admin/edit_project/${project_id}`, {
-        project: project_name,
+  try {
+    await axios.patch(
+      `http://localhost:1234/admin/edit_project/${oldProjectId}`,
+      {
+        new_project_id: newProjectId,
+        project_name,
         cluster,
-        description,
-        // Pass empty/default values for now since phase fields aren't edited here
-        phase_1_requirement: "", phase_1_deadline: "",
-        phase_2_requirement: "", phase_2_deadline: "",
-        phase_3_requirement: "", phase_3_deadline: "",
-        phase_4_requirement: "", phase_4_deadline: "",
-        phase_5_requirement: "", phase_5_deadline: "",
-      }, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken?.trim()}`
-        }
-      });
+        description
+      }
+    );
+    alert("Project updated successfully!");
+    setEditId(null);
+    getProjects(); // Refresh
+  } catch (error) {
+    console.error("Update error:", error);
+    alert("Update failed!");
+  }
+};
+  
 
-      alert("Project updated successfully!");
-      setEditId(null);
-      getProjects(); // Refresh
-    } catch (error) {
-      console.error("Update error:", error.message);
-    }
-  };
 
   // Delete project
   const handleDelete = async (id) => {
@@ -128,7 +123,7 @@ const Posted_project = () => {
               <tr key={row.project_id} className="text-center">
                 {['project_id', 'project_name', 'cluster', 'description'].map((field) => (
                   <td key={field} className="p-2 bg-white h-[48px] align-middle">
-                    {editId === row.project_id && field !== 'project_id' ? (
+                    {editId === row.project_id  ? (
                       <div className="flex justify-center items-center h-full">
                         <input
                           value={formData[field]}
