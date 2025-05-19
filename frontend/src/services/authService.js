@@ -48,7 +48,7 @@ const routeUserByRole = (role, navigate) => {
       navigate("/subject_expert");
       break;
     case "ext_student":
-        navigate("/ext_student")
+        navigate("/student")
     default:
       console.error("Invalid user role. Redirecting to login...");
       navigate("/login");

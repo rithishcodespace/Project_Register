@@ -47,7 +47,7 @@ function Login() {
           if (projectType === "INTERNAL") {
             navigate("/student");
           } else if (projectType === "EXTERNAL") {
-            navigate("/ext_student");
+            navigate("/student");
           } else {
             // No project_type set
             setStudentUserData(response.data);
@@ -80,11 +80,12 @@ function Login() {
 
       setShowStudentPopup(false);
 
-      if (projectType === "INTERNAL") {
-        navigate("/student");
-      } else {
-        navigate("/ext_student");
-      }
+      // if (projectType === "INTERNAL") {
+      //   navigate("/student");
+      // } else {
+      //   navigate("/ext_student");
+      // }
+      navigate("/student");
     } catch (err) {
       console.error("Failed to update project type", err);
       alert("Failed to set project type");

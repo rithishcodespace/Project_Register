@@ -236,6 +236,18 @@ router.get("/guide/fetch_mentoring_teams/:guide_id",(req,res,next) => {
     }
 })
 
+// verify weekly logs
+
+router.patch("/guide/verify_weekly_logs/:guide_id/:team_id",(req,res,next) => {
+  try{
+
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 
 
 module.exports = router;

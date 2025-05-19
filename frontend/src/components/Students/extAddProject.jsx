@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-function TeacherAdd() {
+function extAddProject() {
   const [projectName, setProjectName] = useState('');
   const [clusterName, setClusterName] = useState('');
   const [description, setDescription] = useState('');
@@ -47,7 +47,7 @@ function TeacherAdd() {
 
     try {
       const accessToken = localStorage.getItem("accessToken");
-      const response = await axios.post('http://localhost:1234/teacher/addproject/INTERNAL', projectData, {
+      const response = await axios.post('http://localhost:1234/teacher/addproject', projectData, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
@@ -170,4 +170,4 @@ function TeacherAdd() {
   );
 }
 
-export default TeacherAdd;
+export default extAddProject;
