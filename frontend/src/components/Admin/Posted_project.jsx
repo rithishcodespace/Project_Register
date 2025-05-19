@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaEdit, FaTrash, FaSave, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 const Posted_project = () => {
   const [projectData, setProjectData] = useState([]);
@@ -107,7 +108,11 @@ const Posted_project = () => {
 
   return (
     <div className="ml-10 mr-10 justify-center mt-5">
-      <h2 className="text-3xl font-bold flex justify-center  mb-8">Posted Projects</h2>
+     <div className="relative mb-8 px-10">
+       <h2 className="text-3xl font-bold text-center">Posted Projects</h2>
+       <Link to="add_project"><button className="absolute right-0 top-0 px-4 py-2 bg-purple-500 text-white rounded">Add New Project</button></Link>
+     </div>
+
       <div className="w-full bg-white shadow-md rounded-lg p-5">
         <table className="w-full border-none bg-white min-w-[700px]" style={{ tableLayout: 'fixed' }}>
           <thead className='bg-white m-5 border-b'>
