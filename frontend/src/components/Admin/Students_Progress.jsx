@@ -1,11 +1,5 @@
-<<<<<<< HEAD
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-=======
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
->>>>>>> 04eed14fee5ff3bdcd4ebe938f342d541ea931c5
 
 import CSE from '../../assets/CSE.jpeg';
 import AIDS from '../../assets/AIDS.jpeg';

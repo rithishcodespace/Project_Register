@@ -112,9 +112,6 @@ async function handleTakeProject(name, id, experts, guides) {
   console.log("Selected Experts:", experts);
   console.log("Selected Guides:", guides);
 
-<<<<<<< HEAD
- 
-=======
   if (experts.length <= 0 || guides.length <= 0) {
     return alert("Please select at least 1 experts and 1 guides.");
   }
@@ -122,7 +119,6 @@ async function handleTakeProject(name, id, experts, guides) {
   if (!teamMembers.length) {
     return alert("No team found. Please form a team first.");
   }
->>>>>>> 04eed14fee5ff3bdcd4ebe938f342d541ea931c5
 
   try {
     const [guideReq, expertReq] = await Promise.all([
@@ -352,20 +348,6 @@ async function handleTakeProject(name, id, experts, guides) {
               <h3 className="text-lg font-semibold mb-2">Select at least 3 Experts:</h3>
               <div className="flex flex-wrap gap-3">
                 {expertsList.map((expert) => (
-<<<<<<< HEAD
-                  <button
-                    key={expert.reg_num}
-                    onClick={() => toggleExpertSelection(expert.name)}
-                    className={`px-3 py-1 rounded-full border ${
-                      selectedExperts.includes(expert.name)
-                        ? 'bg-purple-500 text-white border-purple-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
-                    }`}
-                  >
-                    {expert.name}
-                  </button>
-                ))}
-=======
                 <button
                   key={expert.reg_num}
                   onClick={() => toggleExpertSelection(expert.reg_num)}
@@ -378,7 +360,6 @@ async function handleTakeProject(name, id, experts, guides) {
                   {expert.name}
                 </button>
               ))}
->>>>>>> 04eed14fee5ff3bdcd4ebe938f342d541ea931c5
               </div>
             </div>
 
@@ -386,20 +367,6 @@ async function handleTakeProject(name, id, experts, guides) {
               <h3 className="text-lg font-semibold mb-2">Select at least 3 Guides:</h3>
               <div className="flex flex-wrap gap-3">
                 {guidesList.map((guide) => (
-<<<<<<< HEAD
-                  <button
-                    key={guide.reg_num}
-                    onClick={() => toggleGuideSelection(guide.name)}
-                    className={`px-3 py-1 rounded-full border ${
-                      selectedGuides.includes(guide.name)
-                        ? 'bg-green-600 text-white border-green-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
-                    }`}
-                  >
-                    {guide.name}
-                  </button>
-                ))}
-=======
                 <button
                   key={guide.reg_num}
                   onClick={() => toggleGuideSelection(guide.reg_num)}
@@ -412,7 +379,6 @@ async function handleTakeProject(name, id, experts, guides) {
                   {guide.name}
                 </button>
               ))}
->>>>>>> 04eed14fee5ff3bdcd4ebe938f342d541ea931c5
               </div>
             </div>
 
