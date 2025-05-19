@@ -196,4 +196,22 @@ router.patch("/admin/update_timeline_id/:id",(req,res,next) => {
   }
 })
 
+// fetches the team_progress based on the project_id
+
+router.get("/admin/fetch_progress_by_project_id/:project_id",(req,res,next) => {
+  try{
+    const{project_id} = req.params;
+    if(!project_id)return next(createError.BadRequest("project_id not found!"));
+    let sql = "select * from team_requests where project_id = ?";
+    db.query(sql,[project_id],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 module.exports = router;

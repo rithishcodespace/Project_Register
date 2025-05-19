@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import extAddProject from './extAddProject';
 
 const Project_Details = () => {
   const [page, setPage] = useState(0);
@@ -10,6 +11,7 @@ const Project_Details = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [userStatus, setUserStatus] = useState('loading');
   const [myProject, setMyProject] = useState(null);
+  const [projectType,setprojectType] = useState(null);
 
   const selector = useSelector((Store) => Store.userSlice);
   const teamMembers = useSelector((Store) => Store.teamSlice);
@@ -47,6 +49,17 @@ const toggleGuideSelection = (guideRegNum) => {
   };
 
   const paginatedProjects = projectData.slice(startIndex, startIndex + rowsPerPage);
+
+  async function check_project_type()
+  {
+    const response = await axios.get(`http://localhost:1234/student/get_project_type/${selector.reg_num}`,{
+      withCredentials: true
+    })
+    if(response.status === 200)
+    {
+      setprojectType(response.data.project_type);
+    }
+  }
 
   function checkUserStatus() {
     try {
@@ -165,9 +178,14 @@ async function handleTakeProject(name, id, experts, guides) {
       console.log('project_id successfully inserted into db!');
     }
   } catch (error) {
-    console.error('Error choosing project:', error);
-    alert('Something went wrong while choosing the project');
-  }
+      console.error('Error choosing project:', error);
+      if (error.response) {
+        console.error('Server Response:', error.response.data);
+        alert('Error: ' + error.response.data.message);
+      } else {
+        alert('Something went wrong while choosing the project');
+      }
+   }
 }
 
 
@@ -195,6 +213,7 @@ async function handleTakeProject(name, id, experts, guides) {
   }
 
   useEffect(() => {
+    check_project_type();
     checkUserStatus();
   }, []);
 
@@ -247,7 +266,8 @@ async function handleTakeProject(name, id, experts, guides) {
     );
   }
 
-  return (
+  projectType === "EXTERNAL" ? <extAddProject/> :
+   (
     <div className="max-w-6xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6 text-center text-black">Available Projects</h1>
 

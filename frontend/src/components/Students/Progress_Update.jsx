@@ -139,3 +139,66 @@ const ProjectProgress = () => {
 };
 
 export default ProjectProgress;
+
+// [
+//   {
+//     "id": 1,
+//     "title": "Problem Statement Definition",
+//     "description": "Clearly define the problem your project aims to solve, including the background, objectives, and scope."
+//   },
+//   {
+//     "id": 2,
+//     "title": "Feasibility Analysis",
+//     "description": "Conduct a feasibility study to assess the technical, financial, and operational viability of the project."
+//   },
+//   {
+//     "id": 3,
+//     "title": "System Design & Architecture",
+//     "description": "Create a high-level design diagram (flowchart, UML, ERD) that outlines the project architecture."
+//   },
+//   {
+//     "id": 4,
+//     "title": "Technical Specifications",
+//     "description": "List the technologies, tools, frameworks, and hardware/software requirements."
+//   },
+//   {
+//     "id": 5,
+//     "title": "Project Timeline & Milestones",
+//     "description": "Set up a timeline with key milestones (e.g., Phase 1 completion, Mid-Evaluation, Final Submission)."
+//   },
+//   {
+//     "id": 6,
+//     "title": "Resource Allocation",
+//     "description": "Identify the team members, their roles, and the resources required for the project."
+//   },
+//   {
+//     "id": 7,
+//     "title": "Database Design",
+//     "description": "Design the database schema, including tables, fields, relationships, and data types."
+//   },
+//   {
+//     "id": 8,
+//     "title": "Frontend Development",
+//     "description": "Develop the user interface (UI/UX) and ensure cross-platform compatibility."
+//   },
+//   {
+//     "id": 9,
+//     "title": "Backend Development",
+//     "description": "Implement the core logic, server-side APIs, and integrate with the database."
+//   },
+//   {
+//     "id": 10,
+//     "title": "Testing & Quality Assurance",
+//     "description": "Perform unit testing, integration testing, and user acceptance testing (UAT)."
+//   },
+//   {
+//     "id": 11,
+//     "title": "Documentation",
+//     "description": "Maintain comprehensive documentation for system design, user guide, and technical references."
+//   },
+//   {
+//     "id": 12,
+//     "title": "Final Presentation & Report Submission",
+//     "description": "Prepare a final project report (outcome, report, PPT) and present the project to the evaluation panel."
+//   }
+// ]
