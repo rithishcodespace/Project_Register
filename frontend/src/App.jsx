@@ -33,14 +33,8 @@ import Guide from "./components/guide/guide";
 import Guide_dashboard from "./components/guide/Guide_dashboard";
 import Guide_queries from "./components/guide/Guide_queries";
 import Guide_team_progress from "./components/guide/Guide_team_progress";
-import Extstudent from "./components/extstudents/Extstudents";
-import Extstudents_dashboard from "./components/extstudents/Extstudents_dashboard";
-import Extstudents_add_project from "./components/extstudents/Extstudents_add_project";
-import Extstudents_team from "./components/extstudents/Extstudents_team";
-import Extstudents_progress_update from "./components/extstudents/Extstudents_progress_update";
-import Admin_projectDetails from "./components/Admin/Admin_project_details";
 import Queries from "./components/Students/Queries";
-import TeamDetails from "./components/extstudents/TeamDetails";
+// import TeamDetails from "./components/extstudents/TeamDetails";
 import {getProfile} from "./services/authService";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
@@ -115,15 +109,9 @@ function App() {
             <Route index element={<Guide_dashboard />} />
             <Route path="queries" element={<Guide_queries />} />
             <Route path="team_progress" element={<Guide_team_progress />} />
-            <Route path="/guide/team_progress/:id" element={<TeamDetails/>} />
+            {/* <Route path="/guide/team_progress/:id" element={<TeamDetails/>} /> */}
           </Route>
 
-          <Route path="/ext_student" element={<Extstudent />}>
-            <Route index element={<Extstudents_dashboard />} />
-            <Route path="project_detail" element={<Extstudents_add_project />} />
-            <Route path="team" element={<Extstudents_team />} />            
-            <Route path="Progress_update" element={<Extstudents_progress_update />} />
-          </Route>
         </Routes>
 
       </BrowserRouter>
