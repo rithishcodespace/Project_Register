@@ -7,6 +7,7 @@ const generateWeeklyDeadlines = require("../utils/generateWeeklyDeadlines");
 const db = require("../db");
 const userAuth = require("../middlewares/userAuth")
 const checkTimeline = require("../middlewares/timeLine");
+const nodemailer = require("nodemailer")
 
 // common to all route -> for jwt auth
 router.get("/profile/view", userAuth, (req, res, next) => {
@@ -377,12 +378,9 @@ router.get("/student/getTeamDetails/:reg_num", (req, res, next) => {
 
 // updates the progress
 
-const nodemailer = require("nodemailer");
-const { getMaxListeners } = require("nodemailer/lib/xoauth2");
-
-router.post("/student/update_progress/:week/:reg_num", (req, res, next) => {
+router.post("/student/update_progress/:week/:reg_num/:team_id", (req, res, next) => {
   try {
-    const { week, reg_num } = req.params;
+    const { week, reg_num, team_id } = req.params;
     const { progress } = req.body;
 
     const validPhases = [
@@ -391,7 +389,7 @@ router.post("/student/update_progress/:week/:reg_num", (req, res, next) => {
     ];
 
     // Validation Check
-    if (!validPhases.includes(week) || !reg_num) {
+    if (!validPhases.includes(week) || !reg_num || !team_id) {
       return res.status(400).json({ message: "Invalid week name or reg_num missing" });
     }
 
@@ -403,31 +401,42 @@ router.post("/student/update_progress/:week/:reg_num", (req, res, next) => {
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: "No record found for the provided reg_num." });
       }
+      let sql1 = `select ${week}_progress from team_requests where team_id = ?`;
+      db.query(sql1,[team_id],(error,result) => {
+        if(error)return next(error);
 
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: "rithishvkv@gmail.com", 
-          pass: process.env.EMAIL_PASS,
-        },
-      });
+        const allMembersUpdated = result.every((member) => member[`${week}_progress`] !== null); // every checks whether every element satisfies the given condition, optimised instead of forEach // . -> [] alternative for . notation
+        if(allMembersUpdated)
+        {
+            const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+              user: "rithishvkv@gmail.com", 
+              pass: process.env.EMAIL_PASS,
+            },
+            });
 
-      const mailOptions = {
-        from: '"No Reply" <' + process.env.EMAIL_USER + '>',
-        to: "rithishs.cs24@bitsathy.ac.in",
-        subject: "Progress update by your mentee",
-        text: `Student with reg_num ${reg_num} has updated progress for ${week}. Please check the Project Register.`,
-      };
+            const mailOptions = {
+            from: `"No Reply" <${process.env.EMAIL_USER}>`,
+            to: "rithishs.cs24@bitsathy.ac.in",
+            subject: "Progress update by your mentee team",
+            text: `All team members have updated their progress for ${week}. Please check the Project Register.`
+          };
 
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error("Email Error:", error);
-          return res.status(500).send("Progress updated, but failed to send email.");
-        } else {
-          console.log("Email sent:", info.response);
-          return res.send("Progress updated and email sent successfully!");
+            transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+              console.error("Email Error:", error);
+              return res.status(500).send("Progress updated, but failed to send email.");
+            } else {
+              console.log("Email sent:", info.response);
+              return res.send("Progress updated and email sent successfully!");
+            }
+          }); 
         }
-      });
+        else {
+          res.send("Progress updated successfully for this member!");
+        }
+      })
     });
   } catch (error) {
     next(error);
