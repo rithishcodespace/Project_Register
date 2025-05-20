@@ -55,7 +55,7 @@ const TimeLine = () => {
         <div className=" bg-white ">
           <label className="block bg-white  font-medium mb-1">Start Time</label>
           <input
-            type="datetime-local"
+            type="date"
             value={newTimeline.startTime}
             onChange={(e) =>
               setNewTimeline({ ...newTimeline, startTime: e.target.value })
@@ -67,7 +67,7 @@ const TimeLine = () => {
         <div className=" bg-white ">
           <label className="block font-medium bg-white  mb-1">End Time</label>
           <input
-            type="datetime-local"
+            type="date"
             value={newTimeline.endTime}
             onChange={(e) =>
               setNewTimeline({ ...newTimeline, endTime: e.target.value })
