@@ -38,7 +38,7 @@ function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen, departmen
   }
 
   return (
-    <div className="fixed absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50 px-4">
+    <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50 px-4">
       <div className="bg-white rounded-lg p-6 w-full max-w-xl">
         <h2 className="text-xl font-semibold mb-4 bg-white">Invite a Member</h2>
         <form onSubmit={handleInviteSubmit} className="space-y-4 bg-white">
