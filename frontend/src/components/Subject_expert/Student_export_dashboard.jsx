@@ -1,34 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, Store } from 'lucide-react';
+import {useSelector} from "react-redux";
+import axios from "axios";
 
 const SubjectExpertDashboard = () => {
   const [invitations, setInvitations] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
+  const selector = useSelector((Store) => Store.userSlice);
+
+
+  async function fetchInvitations()
+  {
+    const response = await axios.get(`http://localhost:1234/expert/getrequests/${selector.reg_num}`,{withCredentials:true});
+    if(response.status === 200)setInvitations(response.data);
+    else alert("ERROR:- occured while fetching the invitations!");
+  }
 
   useEffect(() => {
-    // Simulated API response
-    setTimeout(() => {
-      setInvitations([
-        {
-          from_team_id: 'Team Alpha',
-          project_name: 'AI Chatbot',
-        },
-        {
-          from_team_id: 'Team Beta',
-          project_name: 'Smart Traffic System',
-        },
-      ]);
-    }, 1000);
-  }, []);
+    fetchInvitations()
+  },[]);
 
-  const handleAccept = (teamId) => {
-    console.log(`Accepted: ${teamId}`);
-    setInvitations(prev => prev.filter(invite => invite.from_team_id !== teamId));
+  const handleAccept = async(teamId) => {
+    let status = 'accept';
+    let response = await axios.patch(`http://localhost:1234/sub_expert/accept_reject/${status}/${teamId}/${selector.reg_num}`,{withCredentials: true});
+    if(response.status === 200){
+      alert(`${teamId} accepted!`);
+      setInvitations(prev => prev.filter(invite => invite.from_team_id !== teamId));
+    }
   };
 
-  const handleReject = (teamId) => {
-    console.log(`Rejected: ${teamId}`);
-    setInvitations(prev => prev.filter(invite => invite.from_team_id !== teamId));
+  const handleReject = async(teamId) => {
+   let status = 'reject';
+   let response = await axios.patch(`http://localhost:1234/sub_expert/accept_reject/${status}/${teamId}/${selector.reg_num}`,{withCredentials: true})
+   if(response.status === 200){
+      alert(`${teamId} accepted!`);
+      setInvitations(prev => prev.filter(invite => invite.from_team_id !== teamId));
+    }
   };
 
   const handleClose = () => {

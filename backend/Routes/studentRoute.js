@@ -121,7 +121,7 @@ router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",(req,res,
       const from_reg_num = req.params.from_reg_num;
       const to_reg_num = req.params.to_reg_num;
       const status = req.params.status;            // to will be logged in user
-      if(!from_reg_num || !to_reg_num)next(createError.BadRequest("userId not found!"))        
+      if(!from_reg_num || !to_reg_num)return next(createError.BadRequest("userId not found!"))        
       let sql = `UPDATE team_requests SET status = ? WHERE to_reg_num = ? AND from_reg_num = ? AND status = 'interested'`;
       db.query(sql,[status, to_reg_num, from_reg_num],(error,result) => {
         if(error) return next(error);
@@ -136,6 +136,7 @@ router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",(req,res,
               res.send(`status updated to ${status}`);
             })
           }
+          else res.send(`${status} updated successfully!`);
         })
       })
     }

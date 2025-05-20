@@ -75,14 +75,11 @@ const InvitationPage = () => {
   const handleAction = async (invite, status) => {
     try {
       setLoadingId(invite.reg_num);
-      let token = localStorage.getItem('accessToken');
       await axios.patch(
         `http://localhost:1234/student/team_request/${status}/${invite.to_reg_num}/${invite.from_reg_num}`,
         {},
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          withCredentials: true
         }
       );
 
