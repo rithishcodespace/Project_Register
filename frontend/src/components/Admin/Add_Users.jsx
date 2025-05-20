@@ -74,12 +74,11 @@ function Add_Users() {
               onChange={(e) => setRole(e.target.value)}
               className="w-full px-4 py-2 border bg-white  border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="" disabled>-- Select Role --</option>
-              <option value="admin">Admin</option>
-              <option value="student">Student</option>
-              <option value="teacher">Staff</option>
-              <option value="guide">Guide</option>
-              <option value="sub_expert">Subject Expert</option>
+              <option className='bg-white' value="admin">Admin</option>
+              <option className='bg-white' value="student">Student</option>
+              <option className='bg-white' value="teacher">Staff</option>
+              <option className='bg-white' value="guide">Guide</option>
+              <option className='bg-white' value="sub_expert">Subject Expert</option>
             </select>
           </div>
 
@@ -144,19 +143,18 @@ function Add_Users() {
                 onChange={(e) => setSubject(e.target.value)}
                 className="mt-1 bg-white  w-full border border-gray-300 rounded-md px-3 py-2"
               >
-                <option value="" disabled>Select Cluster Name</option>
-                <option value="CSE">CSE</option>
-                <option value="AIDS">AIDS</option>
-                <option value="IT">IT</option>
-                <option value="AIML">AIML</option>
-                <option value="CT">CT</option>
-                <option value="AGRI">AGRI</option>
-                <option value="ECE">ECE</option>
-                <option value="EIE">EIE</option>
-                <option value="EEE">EEE</option>
-                <option value="MECH">MECH</option>
-                <option value="FT">FT</option>
-                <option value="FD">FD</option>
+                <option className='bg-white' value="CSE">CSE</option>
+                <option className='bg-white' value="AIDS">AIDS</option>
+                <option className='bg-white' value="IT">IT</option>
+                <option className='bg-white' value="AIML">AIML</option>
+                <option className='bg-white' value="CT">CT</option>
+                <option className='bg-white' value="AGRI">AGRI</option>
+                <option className='bg-white' value="ECE">ECE</option>
+                <option className='bg-white' value="EIE">EIE</option>
+                <option className='bg-white' value="EEE">EEE</option>
+                <option className='bg-white' value="MECH">MECH</option>
+                <option className='bg-white' value="FT">FT</option>
+                <option className='bg-white' value="FD">FD</option>
               </select>
             </div>
           )}

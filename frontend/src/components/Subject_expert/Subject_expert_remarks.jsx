@@ -6,7 +6,7 @@ const sampleProjects = [
     name: "Smart Attendance System",
     teamLead: "Keerthana M",
     phases: [
-      { phase: "Phase 1", scheduledDate: "2025-05-15T10:00:00", mark: null },
+      { phase: "Phase 1", scheduledDate: "2025-05-20T09:00:00", mark: null },
       { phase: "Phase 2", scheduledDate: "2025-05-10T10:00:00", mark: null },
       { phase: "Phase 3", scheduledDate: "2025-05-14T10:00:00", mark: null },
     ],

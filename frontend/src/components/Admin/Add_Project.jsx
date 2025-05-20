@@ -66,21 +66,21 @@ function Add_Project() {
                     onChange={(e) => setClusterName(e.target.value)}
                     className="mt-1 bg-white w-full border border-gray-300 rounded-md px-3 py-2"
   >                 
-                    <option value="" disabled>
+                    <option value=""className='bg-white' disabled>
                       Select Cluster Name
-                    </option>
-                    <option value="CSE">CSE</option>
-                    <option value="AIDS">AIDS</option>
-                    <option value="IT">IT</option>
-                    <option value="AIML">AIML</option>
-                    <option value="CT">CT</option>
-                    <option value="AGRI">AGRI</option>
-                    <option value="ECE">ECE</option>
-                    <option value="EIE">EIE</option>
-                    <option value="EEE">EEE</option>
-                    <option value="MECH">MECH</option>
-                    <option value="FT">FT</option>
-                    <option value="FD">FD</option>
+                    </option >
+                    <option className='bg-white' value="CSE">CSE</option>
+                    <option className='bg-white' value="AIDS">AIDS</option>
+                    <option className='bg-white' value="IT">IT</option>
+                    <option className='bg-white' value="AIML">AIML</option>
+                    <option className='bg-white' value="CT">CT</option>
+                    <option className='bg-white' value="AGRI">AGRI</option>
+                    <option className='bg-white' value="ECE">ECE</option>
+                    <option className='bg-white' value="EIE">EIE</option>
+                    <option className='bg-white' value="EEE">EEE</option>
+                    <option className='bg-white' value="MECH">MECH</option>
+                    <option className='bg-white' value="FT">FT</option>
+                    <option className='bg-white' value="FD">FD</option>
                     {/* Add more options as needed */}
                   </select>
               </div>
