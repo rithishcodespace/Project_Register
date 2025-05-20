@@ -19,8 +19,8 @@ function TeacherAdd() {
     e.preventDefault();
 
     const isProjectDataValid = () => {
-      if (!projectName || !clusterName || !description || phases.length !== 5) return false;
-      return phases.every(phase => phase.requirements && phase.days);
+      if (!projectName || !clusterName || !description ) return false;
+      return true;
     };
 
     if (!isProjectDataValid()) {
@@ -29,7 +29,7 @@ function TeacherAdd() {
     }
 
     const projectData = {
-      project_id: "EXT-CS-P11", // mathan will make it dynamic
+      project_id: "EXT-CS-P22", // mathan will make it dynamic
       project: projectName,
       cluster: clusterName,
       description,
