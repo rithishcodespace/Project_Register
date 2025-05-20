@@ -37,6 +37,7 @@ router.patch("/sub_expert/accept_reject/:status/:team_id/:my_id", (req, res, nex
     let sql1 = "UPDATE sub_expert_requests SET status = ? WHERE to_expert_reg_num = ? AND from_team_id = ? AND status = 'interested'";
     db.query(sql1, [status, my_id, team_id], (error, result) => {
       if (error) return next(error);
+      if(result.affectedRows === 0)return res.status(500).send("no rows affected!")
       else {
         if (status === "accept") {
           // Check the number of accepted mentoring projects
@@ -50,15 +51,17 @@ router.patch("/sub_expert/accept_reject/:status/:team_id/:my_id", (req, res, nex
                 let sql3 = "UPDATE team_requests SET sub_expert_reg_num = ? WHERE team_id = ?";
                 db.query(sql3, [my_id, team_id], (error, result) => {
                   if (error) return next(error);
+                  if(result.affectedRows === 0)return res.status(500).send("no rows affected!")
                   else {
                     res.send("Status updated successfully and guide assigned!");
                   }
                 });
               } else {
-                // If the expert already has 4 projects, delete their request and associated data
-                let sql4 = "DELETE FROM users WHERE reg_num = ?";
+                // If the expert already has 4 projects,  delete pending request and make him unavilable
+                let sql4 = "update users set available = false where reg_num = ?";
                 db.query(sql4, [my_id], (error, result) => {
                   if (error) return next(error);
+                  if(result.affectedRows === 0)return res.status(500).send("no rows affected!")
                   else {
                     let sql5 = "DELETE FROM sub_expert_requests WHERE to_expert_reg_num = ? AND status = 'interested'";
                     db.query(sql5, [my_id], (error, result) => {
@@ -73,14 +76,8 @@ router.patch("/sub_expert/accept_reject/:status/:team_id/:my_id", (req, res, nex
             }
           });
         } else if (status === "reject") {
-          // Handle rejection: update status to 'rejected' in guide_requests
-          let sql3 = "UPDATE sub_expert_requests SET status = 'rejected' WHERE to_expert_reg_num = ? AND from_team_id = ?";
-          db.query(sql3, [my_id, team_id], (error, result) => {
-            if (error) return next(error);
-            else {
-              res.send("Request rejected successfully!");
-            }
-          });
+          // Handle rejection: status already updated in sub_expert_requests
+          res.send(`${team_id} rejected successfully!`)
         }
       }
     });
@@ -192,6 +189,7 @@ router.post("/sub_expert/add_review_details",(req,res,next) => {
       let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time) values(?,?,?,?,?)";
       db.query(sql,[project_id,project_name,team_lead,review_date,start_time],(error,result) => {
         if(error) return next(error);
+        if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
         res.send("review details added successfully!");
       })
     }
@@ -209,6 +207,7 @@ router.patch("/sub_expert/mark_attendance/:team_id",(req,res,send) => {
       let sql = "update scheduled_reviews set attendance = 'present' where team_id = ?";
       db.query(sql,[team_id],(error,result) => {
         if(error) return next(error);
+        if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
         res.send("attendance marked successfully!");
       })
     }
@@ -219,16 +218,18 @@ router.patch("/sub_expert/mark_attendance/:team_id",(req,res,send) => {
 })
 
 // add marks and remarks
-router.post("sub_expert/add_marks_remarks",(req,res,send) => {
+router.post("sub_expert/add_marks_remarks/:team_id",(req,res,send) => {
   try{
     const{mark,remark} = req.body;
-    if(!mark || !remark)
+    const{team_id} = req.params;
+    if(!mark || !remark || !team_id)
     {
-      return next(createError.BadRequest("mark or remark missing!"));
+      return next(createError.BadRequest("mark or remark or team_id missing!"));
     }
-    let sql = "insert into scheduled_reviews(mark,remark) values(?,?)";
-    db.query(sql,[mark,remark],(error,result,next) => {
+    let sql = "insert into scheduled_reviews(mark,remark) values(?,?) where team_id = ?";
+    db.query(sql,[mark,remark,team_id],(error,result,next) => {
       if(error)return next(error);
+      if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
       res.send("marks and remarks added successfully!");
     })
   }

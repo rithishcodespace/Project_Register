@@ -43,14 +43,6 @@ router.post("/student/join_request", (req, res, next) => {
       return next(createError.BadRequest());
     }
 
-    // if(from_reg_num === to_reg_num){ // one member in the team
-    //   let query1 = "select * from team_requests where from_reg_num = ? and status = 'accept'";
-    //   db.query(query1,[from_reg_num],(error,result) => {
-    //     if(error)return next(error);
-    //     if(result.length > 0)return res.status(400).json({"message":"Invalid Request you can't be a team_member of yourself!"})
-    //   })
-    // }
-
     // checks for already a connection request exists or not for me and him
     let sql = "SELECT * FROM team_requests WHERE from_reg_num = ? AND to_reg_num = ?";
     db.query(sql, [from_reg_num, to_reg_num], (error, result) => {
@@ -258,34 +250,6 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
   }
 });
 
-//226  499 
-// it gets all the projects available -> filters by the dept of team members
-router.post("/student/projects",(req,res,next) => {
-  try{
-    const departments = req.body.departments;
-    console.log(departments);  // corrected logging
-    
-    if (!Array.isArray(departments)) {
-      return res.status(400).json({ error: 'departments must be an array' });
-    }
-
-    if (departments.length === 0) {
-      return res.status(400).json({ error: 'departments array cannot be empty' });
-    }
-
-    const placeholders = departments.map(() => "?").join(", ");
-    const sql = `SELECT * FROM projects WHERE status = 'available' AND cluster IN (${placeholders})`;
-    db.query(sql,departments,(error,result) => {
-      if(error) return next(error);
-      res.send(result);console.log(res.data)
-    })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-});
-
 //make the team status -> 1 and assings team id to the team
 
 // if it should be solo team both reg_num should be sent same
@@ -351,72 +315,12 @@ router.patch("/student/team_request/conform_team", (req, res, next) => {
   });
 });
 
-
-// make project status -> ongoing
-router.patch("/student/:status/:project_name",(req,res,next) => {
-    try{
-      let status = req.params.status; // ongoing || completed 
-      let project_name = req.params.project_name;
-      if(!status || !project_name)next(createError.BadRequest("status or project_name not found!"))
-      let sql = "UPDATE projects SET status = ? WHERE project_name = ?"
-      db.query(sql,[status,project_name],(error,result) => {
-        if(error) return next(error);
-        res.send("project status updated successfully!");
-      })
-    }
-    catch(error)
-    {
-       next(error);
-    }
-})
-
-// assigns the project_id to the team_mates and inserts the deadlines in the weekly log table
-router.patch("/student/assign_project_id/:project_id/:from_reg_num", (req, res, next) => {
-  try {
-    const { project_id, from_reg_num } = req.params;
-    if(!project_id || !from_reg_num)return next(createError.BadRequest("project_id or from_reg_num is not present!!"))
-
-    const updateSQL = "UPDATE team_requests SET project_id = ?,  project_picked_date = CURRENT_TIMESTAMP  WHERE from_reg_num = ? AND status = 'accept'";
-    db.query(updateSQL, [project_id, from_reg_num], (error, updateResult) => {
-      if (error) return next(error);
-
-      const selectSQL = "SELECT project_picked_date, team_id FROM team_requests WHERE project_id = ?";
-      db.query(selectSQL, [project_id], (error, result) => {
-        if (error) return next(error);
-        if (result.length === 0 || !result[0].project_picked_date) {
-          return res.send("Picked date not found!");
-        }
-
-        const pickedDate = new Date(result[0].project_picked_date);
-        const teamId = result[0].team_id;
-        const deadlines = generateWeeklyDeadlines(pickedDate); // returns 12 weeks
-
-        const insertSQL = "INSERT INTO weekly_logs_deadlines (team_id, project_id, week_1, week_2, week_3, week_4, week_5, week_6, week_7, week_8, week_9, week_10, week_11, week_12) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        const values = [teamId, project_id, ...deadlines];
-
-        db.query(insertSQL,values,(error,result) => {
-          if(error)return next(error);
-         res.json({
-          message: "Project assigned and weekly deadlines set.",
-          project_id,
-          teamId,
-          deadlines
-        });
-        })
-
-      });
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
 // fetches team members
 router.get("/student/getTeamDetails/:reg_num", (req, res, next) => {
   const{reg_num} = req.params;
   if(!reg_num)return next(createError.BadRequest("reg_num not found!"));
-  let sql = "select * from team_requests where from_reg_num = ? and status = 'accept'";
-  db.query(sql,[reg_num],(error,result) => {
+  let sql = `SELECT * FROM team_requests WHERE (from_reg_num = ? OR to_reg_num = ?) AND team_conformed = true`;
+  db.query(sql,[reg_num,reg_num,],(error,result) => {
     if(error)return next(error);
     res.send(result);
   })
@@ -451,7 +355,7 @@ router.post("/student/update_progress/:week/:reg_num/:team_id", (req, res, next)
       db.query(sql1,[team_id],(error,result) => {
         if(error)return next(error);
 
-        const allMembersUpdated = result.every((member) => member[`${week}_progress`] !== null); // every checks whether every element satisfies the given condition, optimised instead of forEach // . -> [] alternative for . notation
+        const allMembersUpdated = result.every((member) => member[`${week}_progress`] !== null); // every -> checks whether every element satisfies the given condition, optimised instead of forEach // . -> [] alternative for . notation
         if(allMembersUpdated)
         {
             const transporter = nodemailer.createTransport({
@@ -506,6 +410,47 @@ router.get("/student/get_project_details/:project_id",(req,res,next) => {
     next(error);
   }
 })
+
+// // assigns the project_id to the team_mates and inserts the deadlines in the weekly log table
+// router.patch("/student/assign_project_id/:project_id/:from_reg_num", (req, res, next) => {
+//   try {
+//     const { project_id, from_reg_num } = req.params;
+//     if(!project_id || !from_reg_num)return next(createError.BadRequest("project_id or from_reg_num is not present!!"))
+
+//     const updateSQL = "UPDATE team_requests SET project_id = ?,  project_picked_date = CURRENT_TIMESTAMP  WHERE from_reg_num = ? AND status = 'accept'";
+//     db.query(updateSQL, [project_id, from_reg_num], (error, updateResult) => {
+//       if (error) return next(error);
+
+//       const selectSQL = "SELECT project_picked_date, team_id FROM team_requests WHERE project_id = ?";
+//       db.query(selectSQL, [project_id], (error, result) => {
+//         if (error) return next(error);
+//         if (result.length === 0 || !result[0].project_picked_date) {
+//           return res.send("Picked date not found!");
+//         }
+
+//         const pickedDate = new Date(result[0].project_picked_date);
+//         const teamId = result[0].team_id;
+//         const deadlines = generateWeeklyDeadlines(pickedDate); // returns 12 weeks
+
+//         const insertSQL = "INSERT INTO weekly_logs_deadlines (team_id, project_id, week_1, week_2, week_3, week_4, week_5, week_6, week_7, week_8, week_9, week_10, week_11, week_12) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+//         const values = [teamId, project_id, ...deadlines];
+
+//         db.query(insertSQL,values,(error,result) => {
+//           if(error)return next(error);
+//          res.json({
+//           message: "Project assigned and weekly deadlines set.",
+//           project_id,
+//           teamId,
+//           deadlines
+//         });
+//         })
+
+//       });
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 // updates the project type
 
@@ -607,25 +552,6 @@ router.post("/student/add_query/:team_member/:guide_reg_num", (req, res, next) =
   }
 });
 
-
-// fetches the details of guide and expert
-
-router.get("/student/fetch_guide_or_expert/:role",(req,res,next) => {
-  try{
-    const{role} = req.params;
-    if(role !== "guide" && role != "sub_expert") return next(createError.BadRequest("invalid role!!"));
-    let sql = "select * from users where role = ?";
-    db.query(sql,[role],(error,result) => {
-      if(error)return next(error);
-      res.send(result);
-    })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
-
 // gets student details by reg_num
 
 router.get("/student/get_student_details_by_regnum/:reg_num",(req,res,next) => {
@@ -715,49 +641,6 @@ router.get("/student/fetchDeadlines/:team_id",(req,res,next) => {
   }
 })
 
-// by mathan
-
-router.get("/student/check_phase_eligibility/:reg_num", (req, res, next) => {
-  const reg_num = req.params.reg_num;
-  if (!reg_num) return res.status(400).send("reg_num is required");
-
-  const today = new Date();
-  const dayOfWeek = today.getDay(); // 6 = Saturday
-  const isSaturday = dayOfWeek === 6;
-
-  // Step 1: Find team_id and project_picked_date
-  const teamQuery = `SELECT team_id, project_id, project_picked_date FROM team_requests WHERE reg_num = ? LIMIT 1`;
-  db.query(teamQuery, [reg_num], (err1, teamRes) => {
-    if (err1) return next(err1);
-    if (!teamRes.length) return res.status(404).send("Team info not found");
-
-    const { team_id, project_id, project_picked_date } = teamRes[0];
-    const pickedDate = new Date(project_picked_date);
-    const timeDiff = today - pickedDate;
-    const weekNumber = Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 7));
-
-    // Step 2: Find current phase from weekNumber
-    const phaseNum = Math.min(Math.floor((weekNumber - 1) / 2) + 1, 6);
-    const currentPhase = `phase${phaseNum}_progress`;
-
-    // Step 3: Check if update already done in this phase
-    const checkPhaseQuery = `SELECT ${currentPhase} FROM team_requests WHERE reg_num = ?`;
-    db.query(checkPhaseQuery, [reg_num], (err2, phaseRes) => {
-      if (err2) return next(err2);
-
-      const phaseProgress = phaseRes[0]?.[currentPhase] || "";
-      const alreadyUpdated = parseInt(phaseProgress) > 0;
-
-      res.json({
-        allowedPhase: currentPhase,
-        weekNumber,
-        canUpdate: isSaturday && !alreadyUpdated,
-        alreadyUpdated,
-        isSaturday
-      });
-    });
-  });
-});
 
 // gives the weekly deadlines for the specific team -> we can filter the current phase
 router.get("students/get_current_week/:team_id",(req,res,next) => {
@@ -825,7 +708,16 @@ router.post("/student/addproject/:project_type/:reg_num", (req, res, next) => {
           db.query(sql1,values,(error,result) => {
             if(error)return next(error);
             if(result.affectedRows === 0)return next(createError.BadRequest("an error occured silently!"));
-            return res.send(`${project_name} added successfully!`);
+
+            // inserts the project_id to the whole team in team_requests table
+            let insertQuery = "update team_requests set project_id = ? where from_reg_num = ? and team_conformed = true";
+            db.query(insertQuery,[project_id,reg_num],(error,result) => {
+              if(error)return next(error);
+              if(result.affectedRows === 0)return next(createError.BadRequest("no rows affected!"));
+              return res.send(`${project_name} added successfully!`);  
+
+              // weekly logs date insertion pending
+            })
           })
       });
       })
