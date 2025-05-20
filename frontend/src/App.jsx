@@ -94,7 +94,7 @@ function App() {
             <Route path="add_Project" element={<Add_Project />} />
             <Route path="posted_projects" element={<Posted_project />} />
             <Route path="students_progress" element={<Students_Progress />} />
-            <Route path="/admin/posted_projects/:project_id" element={<Admin_projectDetails />} />
+            {/* <Route path="/admin/posted_projects/:project_id" element={<Admin_projectDetails />} /> */}
             <Route path="student_progress/:cluster" element={<Admin_project_details />} />
             <Route path="TimeLine" element={<TimeLine/>}/>
             <Route path="team_list/:department" element={<TeamListByDepartment />} />
