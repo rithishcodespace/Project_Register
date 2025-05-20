@@ -18,30 +18,13 @@ function Add_Project() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const isProjectDataValid = () => {
-      if (!projectName || !clusterName || !description ) return false;
-      return phases.every(phase => phase.requirements && phase.days);
-    };
-
-    if (!isProjectDataValid()) {
-      alert("Please fill in all fields!");
-      return;
-    }
-
-    const projectData = {
-      project_id: "EXT-CS-P11", // mathan will make it dynamic
-      project: projectName,
-      cluster: clusterName,
-      description,
-    };
-
     try {
       const accessToken = localStorage.getItem("accessToken");
-      const response = await axios.post('http://localhost:1234/teacher/addproject/INTERNAL', projectData, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
+      const response = await axios.post('http://localhost:1234/teacher/addproject/INTERNAL', {
+        "project_name":projectName,
+        "cluster":clusterName,
+        "description":description
+      }, {
         withCredentials: true,
       });
 
