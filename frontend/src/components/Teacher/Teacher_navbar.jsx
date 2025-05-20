@@ -111,10 +111,6 @@ function Teacher_navbar({ isOpen, toggleSidebar }) {
           <p className={navText("posted_projects")}>Posted Projects</p>
         </Link>
 
-        <Link to="student_progress" className={`${navDiv("student_progress")} group`}>
-          <BarChart2 size={24} className={navIcon("student_progress")} />
-          <p className={navText("student_progress")}>Student Progress</p>
-        </Link>
 
         {/* Logout */}
         <button

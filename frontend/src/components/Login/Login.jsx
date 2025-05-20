@@ -163,7 +163,7 @@ function Login() {
                 transform: "translateY(-50%)", cursor: "pointer", color: "#555", fontSize: "18px"
               }}
             >
-              {showpassword ? <FaEye /> : <FaEyeSlash />}
+              {showpassword ? <FaEye className="bg-white"/> : <FaEyeSlash className="bg-white"/>}
             </span>
           </div>
 

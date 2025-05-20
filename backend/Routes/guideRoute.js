@@ -215,7 +215,7 @@ router.get("/guide/get_queries/:guide_reg_num",(req,res,next) => {
     }
 })
 
-// fetches team details mentored by me -> 
+// fetches team details mentored by me -> 1st
 router.get("/guide/fetch_mentoring_teams/:guide_id",(req,res,next) => {
     try{
       const{guide_id} = req.params;
@@ -236,11 +236,42 @@ router.get("/guide/fetch_mentoring_teams/:guide_id",(req,res,next) => {
     }
 })
 
-// verify weekly logs
+// fetches the team progress through project_id -> 2nd
 
-router.patch("/guide/verify_weekly_logs/:guide_id/:team_id",(req,res,next) => {
+router.get("/guide/fetch_progress_by_project_id/:project_id",(req,res,next) => {
   try{
+    const{project_id} = req.params;
+    if(!project_id)return next(createError.BadRequest("project_id not found!"));
+    let sql = "select * from team_requests where project_id = ?";
+    db.query(sql,[project_id],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
+// verify weekly logs -> 3rd
+
+router.patch("/guide/verify_weekly_logs/:guide_reg_num/:team_id",(req,res,next) => {
+  try{
+    const{guide_reg_num,team_id} = req.params;
+    if(!guide_reg_num || !team_id)return next(createError.BadRequest("guide_reg_num or team_id is missing!"));
+    // verifying whether he is the correct guide by logged_in_guide_reg_num === guide_reg_num in the db
+    let sql = "select guide_reg_num from team_requests where team_id = ?";
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound("guide not found in team_requests table"));
+      if(result[0].guide_reg_num !== guide_reg_num)return res.status(403).json({"message":"guide register is invalid or not same"});
+      let sql1 = "update team_requests set guide_verified = true where team_id = ?";
+      db.query(sql1,[team_id],(error,result) => {
+        if(error)return next(error);
+        res.send("team_progress successfully verified by mentor!");
+      })
+    })
   }
   catch(error)
   {

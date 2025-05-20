@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaEdit, FaTrash, FaSave, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 const Posted_project = () => {
   const [projectData, setProjectData] = useState([]);
@@ -8,18 +9,10 @@ const Posted_project = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(0);
 
-  const handleEdit = (id) => setEditId(id);
-  const handleSave = () => setEditId(null);
-  const handleDelete = (id) => setProjectData(projectData.filter(row => row.project_id !== id));
+  // Form state for edited data
+  const [formData, setFormData] = useState({});
 
-  const handleInputChange = (id, field, value) => {
-    setProjectData(prevData =>
-      prevData.map(row =>
-        row.project_id === id ? { ...row, [field]: value } : row
-      )
-    );
-  };
-
+  // Fetch projects
   async function getProjects() {
     try {
       const accessToken = localStorage.getItem("accessToken");
@@ -31,13 +24,12 @@ const Posted_project = () => {
       });
 
       if (response.status === 200) {
-        console.log("Received projects:", response.data);
         setProjectData(response.data);
       } else {
-        alert("Sorry, no data");
+        alert("No projects found.");
       }
     } catch (error) {
-      console.log("Error fetching projects:", error.message);
+      console.error("Fetch error:", error.message);
     }
   }
 
@@ -45,15 +37,85 @@ const Posted_project = () => {
     getProjects();
   }, []);
 
+  // Edit handler
+  const handleEdit = (id) => {
+    const selectedProject = projectData.find(p => p.project_id === id);
+    setFormData({ ...selectedProject }); // Clone project row
+    setEditId(id);
+  };
+
+  // Save edited project
+  const handleSave = async () => {
+  const oldProjectId = editId;
+  const { project_id: newProjectId, project_name, cluster, description } = formData;
+
+  try {
+    await axios.patch(
+      `http://localhost:1234/admin/edit_project/${oldProjectId}`,
+      {
+        new_project_id: newProjectId,
+        project_name,
+        cluster,
+        description
+      }
+    );
+    alert("Project updated successfully!");
+    setEditId(null);
+    getProjects(); // Refresh
+  } catch (error) {
+    console.error("Update error:", error);
+    alert("Update failed!");
+  }
+};
+  
+
+
+  // Delete project
+  const handleDelete = async (id) => {
+    const confirm = window.confirm("Are you sure you want to delete this project?");
+    if (!confirm) return;
+
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      await axios.delete(`http://localhost:1234/admin/delete_project/${id}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken?.trim()}`
+        },
+        data: {
+          project_id: id
+        }
+      });
+
+      alert("Project deleted!");
+      getProjects(); // Refresh list
+    } catch (error) {
+      console.error("Delete error:", error.message);
+    }
+  };
+
+  // Handle input changes
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Pagination logic
   const startIndex = currentPage * rowsPerPage;
   const currentData = projectData.slice(startIndex, startIndex + rowsPerPage);
   const pageCount = Math.ceil(projectData.length / rowsPerPage);
 
   return (
-    <div className="ml-10 mr-10 justify-center mt-10">
+    <div className="ml-10 mr-10 justify-center mt-5">
+     <div className="relative mb-8 px-10">
+       <h2 className="text-3xl font-bold text-center">Posted Projects</h2>
+       <Link to="add_project"><button className="absolute right-0 top-0 px-4 py-2 bg-purple-500 text-white rounded">Add New Project</button></Link>
+     </div>
+
       <div className="w-full bg-white shadow-md rounded-lg p-5">
         <table className="w-full border-none bg-white min-w-[700px]" style={{ tableLayout: 'fixed' }}>
-          <thead className='bg-white m-5'>
+          <thead className='bg-white m-5 border-b'>
             <tr className=" bg-white m-5">
               <th className="p-2 w-[13%] bg-white">Project ID</th>
               <th className="p-2 w-[22%] bg-white">Project Name</th>
@@ -64,14 +126,14 @@ const Posted_project = () => {
           </thead>
           <tbody>
             {currentData.map((row) => (
-              <tr key={row.project_id} className="text-center">
+              <tr key={row.project_id} className="text-center border-t">
                 {['project_id', 'project_name', 'cluster', 'description'].map((field) => (
                   <td key={field} className="p-2 bg-white h-[48px] align-middle">
-                    {editId === row.project_id ? (
+                    {editId === row.project_id  ? (
                       <div className="flex justify-center items-center h-full">
                         <input
-                          value={row[field]}
-                          onChange={(e) => handleInputChange(row.project_id, field, e.target.value)}
+                          value={formData[field]}
+                          onChange={(e) => handleInputChange(field, e.target.value)}
                           className="w-full text-center bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 rounded h-[36px]"
                         />
                       </div>
@@ -106,7 +168,7 @@ const Posted_project = () => {
         </table>
       </div>
 
-      <div className="flex justify-between mr-24 mt-4 items-center p-4">
+      <div className="flex justify-between mr-0 mt-4 items-center p-4">
         <div>
           Rows per page:
           <select

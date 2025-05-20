@@ -7,6 +7,7 @@ const generateWeeklyDeadlines = require("../utils/generateWeeklyDeadlines");
 const db = require("../db");
 const userAuth = require("../middlewares/userAuth")
 const checkTimeline = require("../middlewares/timeLine");
+const nodemailer = require("nodemailer")
 
 // common to all route -> for jwt auth
 router.get("/profile/view", userAuth, (req, res, next) => {
@@ -59,6 +60,7 @@ router.post("/student/join_request", (req, res, next) => {
         }
         const type1 = result[0].project_type;
         const type2 = result[1].project_type;
+        if(type1 === null || type2 === null)return next(createError.BadRequest("User haven't entered his project_type yet!"));
         if(type1 != type2)return res.send("BOTH MEMBERS SHOULD BE EITHER INTERNAL OR EXTERNAL!!");
 
         // inserts the request in the request db (only if no existing request)
@@ -377,12 +379,9 @@ router.get("/student/getTeamDetails/:reg_num", (req, res, next) => {
 
 // updates the progress
 
-const nodemailer = require("nodemailer");
-const { getMaxListeners } = require("nodemailer/lib/xoauth2");
-
-router.post("/student/update_progress/:week/:reg_num", (req, res, next) => {
+router.post("/student/update_progress/:week/:reg_num/:team_id", (req, res, next) => {
   try {
-    const { week, reg_num } = req.params;
+    const { week, reg_num, team_id } = req.params;
     const { progress } = req.body;
 
     const validPhases = [
@@ -391,7 +390,7 @@ router.post("/student/update_progress/:week/:reg_num", (req, res, next) => {
     ];
 
     // Validation Check
-    if (!validPhases.includes(week) || !reg_num) {
+    if (!validPhases.includes(week) || !reg_num || !team_id) {
       return res.status(400).json({ message: "Invalid week name or reg_num missing" });
     }
 
@@ -403,31 +402,42 @@ router.post("/student/update_progress/:week/:reg_num", (req, res, next) => {
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: "No record found for the provided reg_num." });
       }
+      let sql1 = `select ${week}_progress from team_requests where team_id = ?`;
+      db.query(sql1,[team_id],(error,result) => {
+        if(error)return next(error);
 
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: "rithishvkv@gmail.com", 
-          pass: process.env.EMAIL_PASS,
-        },
-      });
+        const allMembersUpdated = result.every((member) => member[`${week}_progress`] !== null); // every checks whether every element satisfies the given condition, optimised instead of forEach // . -> [] alternative for . notation
+        if(allMembersUpdated)
+        {
+            const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+              user: "rithishvkv@gmail.com", 
+              pass: process.env.EMAIL_PASS,
+            },
+            });
 
-      const mailOptions = {
-        from: '"No Reply" <' + process.env.EMAIL_USER + '>',
-        to: "rithishs.cs24@bitsathy.ac.in",
-        subject: "Progress update by your mentee",
-        text: `Student with reg_num ${reg_num} has updated progress for ${week}. Please check the Project Register.`,
-      };
+            const mailOptions = {
+            from: `"No Reply" <${process.env.EMAIL_USER}>`,
+            to: "rithishs.cs24@bitsathy.ac.in",
+            subject: "Progress update by your mentee team",
+            text: `All team members have updated their progress for ${week}. Please check the Project Register.`
+          };
 
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error("Email Error:", error);
-          return res.status(500).send("Progress updated, but failed to send email.");
-        } else {
-          console.log("Email sent:", info.response);
-          return res.send("Progress updated and email sent successfully!");
+            transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+              console.error("Email Error:", error);
+              return res.status(500).send("Progress updated, but failed to send email.");
+            } else {
+              console.log("Email sent:", info.response);
+              return res.send("Progress updated and email sent successfully!");
+            }
+          }); 
         }
-      });
+        else {
+          res.send("Progress updated successfully for this member!");
+        }
+      })
     });
   } catch (error) {
     next(error);
@@ -723,10 +733,45 @@ router.get("students/get_current_week/:team_id",(req,res,next) => {
 
 // EXTERNAL STUDENTS
 
-// -> use teachers add project api for this also by modify the project type
+// inserts the project in the project table and inserts the project id into the users table
 
-// router.post("/ext_student/:reg_num",(req,res,next) => {
-//   try
-// })
+router.post("/ext_student/addproject/:project_type/:reg_num", (req, res, next) => {
+  try {
+    const { project_type,reg_num } = req.params;
+    const { project_name, cluster, description } = req.body;
+
+    if (!project_type || !project_name || !cluster || !description || !reg_num) {
+      return res.status(400).json({ message: "Required fields are missing." });
+    }
+
+    if(project_type!= 'INTERNAL' && project_type != 'EXTERNAL')return next(createError.BadRequest("invalid project_type"))
+
+    const sql = "SELECT COUNT(*) AS count FROM projects";
+    db.query(sql, (error, result) => {
+      if (error) return next(error);
+
+      const project_length = result[0].count + 1;
+      const project_id = `P${String(project_length).padStart(4, "0")}`;
+
+      const sql1 = `
+        INSERT INTO projects (project_id, project_name, cluster, description, project_type) VALUES (?, ?, ?, ?, ?)`;
+      const values = [project_id, project_name, cluster, description, project_type];
+
+      db.query(sql1, values, (error, result) => {
+        if (error) return next(error);
+        let sql2 = "update users set ext_project = ? where reg_num = ?";
+        db.query(sql2,[project_id,reg_num],(error,result) => {
+        if(error)return next(error);
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ message: "Student with the provided reg_num not found." });
+        }
+        res.send(`project_id:- ${project_id} successfully inserted into users table! and project added as external in the project table`);
+    })
+      });
+    });
+  } catch (error) {
+    next(error.message);
+  }
+});
 
 module.exports = router;

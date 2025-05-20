@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import Login from "./components/Login/Login";
 import TeacherDashBoard from "./components/Teacher/TeacherDashBoard";
 import TeacherAdd from "./components/Teacher/TeacherAdd";
-import StudentProgress from "./components/Teacher/StudentProgress";
 import PostedProjects from "./components/Teacher/PostedProjects";
 import Student from "./components/Students/Student";
 import Teacher from "./components/Teacher/Teacher";
@@ -18,7 +17,6 @@ import Add_Project from "./components/Admin/Add_Project";
 import Posted_project from "./components/Admin/Posted_project";
 import Admin_Dashboard from "./components/Admin/Admin_Dashboard";
 import Create_team from "./components/Teacher/Create_team";
-import Cluster from "./components/Teacher/Cluster";
 import { Provider } from "react-redux";
 import ProjDetails from "./components/Teacher/ProjDetails";
 import { Store } from "./utils/Store";
@@ -82,19 +80,20 @@ function App() {
             <Route index element={<TeacherDashBoard />} />
             <Route path="add" element={<TeacherAdd />} />
             <Route path="posted_projects" element={<PostedProjects />} />
-            <Route path="student_progress" element={<StudentProgress />} />
-            <Route path="student_progress/:cluster" element={<Cluster />} />
-            <Route path="student_progress/project_details/:id" element={<Cluster />} />
             <Route path="student_progress/project_details/:cluster/:id" element={<ProjDetails />} />
           </Route>
 
           <Route path="/admin" element={<Admin />}>
             <Route index element={<Admin_Dashboard />} /> 
             <Route path="add_users" element={<Add_Users />} />
-            <Route path="add_Project" element={<Add_Project />} />
+            <Route path="/admin/posted_projects/add_project" element={<Add_Project />} />
             <Route path="posted_projects" element={<Posted_project />} />
             <Route path="students_progress" element={<Students_Progress />} />
+<<<<<<< HEAD
             {/* <Route path="/admin/posted_projects/:project_id" element={<Admin_projectDetails />} /> */}
+=======
+            <Route path="/admin/posted_projects/:project_id" element={<Admin_project_details />} />
+>>>>>>> aa9b08c159fc685c0572e8a720e12cb684618367
             <Route path="student_progress/:cluster" element={<Admin_project_details />} />
             <Route path="TimeLine" element={<TimeLine/>}/>
             <Route path="team_list/:department" element={<TeamListByDepartment />} />
