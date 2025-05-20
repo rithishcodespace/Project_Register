@@ -60,6 +60,7 @@ router.post("/student/join_request", (req, res, next) => {
         }
         const type1 = result[0].project_type;
         const type2 = result[1].project_type;
+        if(type1 === null || type2 === null)return next(createError.BadRequest("User haven't entered his project_type yet!"));
         if(type1 != type2)return res.send("BOTH MEMBERS SHOULD BE EITHER INTERNAL OR EXTERNAL!!");
 
         // inserts the request in the request db (only if no existing request)
@@ -732,24 +733,45 @@ router.get("students/get_current_week/:team_id",(req,res,next) => {
 
 // EXTERNAL STUDENTS
 
-// -> use teachers add project api for this also by modify the project type
+// inserts the project in the project table and inserts the project id into the users table
 
-router.patch("/ext_student/insert_into_team_requests/:project_id/:reg_num",(req,res,next) => {
-  try{
-    const{project_id,reg_num} = req.params;
-    if(!project_id || !reg_num)return next(createError.BadRequest("project_id is not defined!"));
-    let sql = "update users set project_id = ? where reg_num = ?";
-    db.query(sql,[project_id,reg_num],(error,result) => {
-      if(error)return next(error);
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ message: "Student with the provided reg_num not found." });
-      }
-      res.send(`project_id:- ${project_id} successfully inserted into users table!`);
+router.post("/ext_student/addproject/:project_type/:reg_num", (req, res, next) => {
+  try {
+    const { project_type,reg_num } = req.params;
+    const { project_name, cluster, description } = req.body;
+
+    if (!project_type || !project_name || !cluster || !description || !reg_num) {
+      return res.status(400).json({ message: "Required fields are missing." });
+    }
+
+    if(project_type!= 'INTERNAL' && project_type != 'EXTERNAL')return next(createError.BadRequest("invalid project_type"))
+
+    const sql = "SELECT COUNT(*) AS count FROM projects";
+    db.query(sql, (error, result) => {
+      if (error) return next(error);
+
+      const project_length = result[0].count + 1;
+      const project_id = `P${String(project_length).padStart(4, "0")}`;
+
+      const sql1 = `
+        INSERT INTO projects (project_id, project_name, cluster, description, project_type) VALUES (?, ?, ?, ?, ?)`;
+      const values = [project_id, project_name, cluster, description, project_type];
+
+      db.query(sql1, values, (error, result) => {
+        if (error) return next(error);
+        let sql2 = "update users set ext_project = ? where reg_num = ?";
+        db.query(sql2,[project_id,reg_num],(error,result) => {
+        if(error)return next(error);
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ message: "Student with the provided reg_num not found." });
+        }
+        res.send(`project_id:- ${project_id} successfully inserted into users table! and project added as external in the project table`);
     })
+      });
+    });
+  } catch (error) {
+    next(error.message);
   }
-  catch(error)
-  {
-    next(error);
-  }
-})
+});
+
 module.exports = router;
