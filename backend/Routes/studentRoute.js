@@ -43,6 +43,14 @@ router.post("/student/join_request", (req, res, next) => {
       return next(createError.BadRequest());
     }
 
+    // if(from_reg_num === to_reg_num){ // one member in the team
+    //   let query1 = "select * from team_requests where from_reg_num = ? and status = 'accept'";
+    //   db.query(query1,[from_reg_num],(error,result) => {
+    //     if(error)return next(error);
+    //     if(result.length > 0)return res.status(400).json({"message":"Invalid Request you can't be a team_member of yourself!"})
+    //   })
+    // }
+
     // checks for already a connection request exists or not for me and him
     let sql = "SELECT * FROM team_requests WHERE from_reg_num = ? AND to_reg_num = ?";
     db.query(sql, [from_reg_num, to_reg_num], (error, result) => {
@@ -58,16 +66,22 @@ router.post("/student/join_request", (req, res, next) => {
         if(error)return next(error);
         if(result.length > 0)return next(createError.BadRequest("He is already a member of some other team!"));
 
-        let query = "SELECT project_type FROM users WHERE reg_num IN (?,?)";
+        // validating project_type
+        let query = "SELECT project_type,company FROM users WHERE reg_num IN (?,?)";
         db.query(query,[from_reg_num,to_reg_num],(error,result) => {
           if(error)return next(error);
-          if (result.length !== 2) {
+          if (result.length != 2) {
             return res.status(400).send("One or both students not found.");
           }
         const type1 = result[0].project_type;
         const type2 = result[1].project_type;
+        const company1 = result[0].company;
+        const company2 = result[1].company;
         if(type1 === null || type2 === null)return next(createError.BadRequest("User haven't entered his project_type yet!"));
-        if(type1 != type2)return res.send("BOTH MEMBERS SHOULD BE EITHER INTERNAL OR EXTERNAL!!");
+        else if(type1 != type2)return res.status(500).send("BOTH MEMBERS SHOULD BE EITHER INTERNAL OR EXTERNAL!!");
+        else if(type1 === 'external' && type2 === 'external'){
+          if(company1 != company2)return res.status(500).send("BOTH MEMBERS SHOULD BE OF SAME COMPANY!");
+        }
 
         // inserts the request in the request db (only if no existing request)
         let sql1 = "INSERT INTO team_requests (name, emailId, reg_num, dept, from_reg_num, to_reg_num) VALUES (?,?,?,?,?,?)";
@@ -132,6 +146,7 @@ router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",(req,res,
       let sql = `UPDATE team_requests SET status = ? WHERE to_reg_num = ? AND from_reg_num = ? AND status = 'interested'`;
       db.query(sql,[status, to_reg_num, from_reg_num],(error,result) => {
         if(error) return next(error);
+        if(result.affectedRows === 0)return next(createError.BadRequest("an error occured silently!"));
         let sql1 = "select * from team_requests where from_reg_num = ? and status = 'accept'";
         db.query(sql1,[from_reg_num],(error1,result1) => {
           if(error1)return next(error1);
@@ -140,10 +155,10 @@ router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",(req,res,
             let sql2 = "DELETE FROM team_requests WHERE from_reg_num = ? AND status <> 'accept'";
             db.query(sql2,[from_reg_num],(error2,result2) => {
               if(error2)return next(error2);
-              res.send(`status updated to ${status}`);
+              return res.send(`status updated to ${status}`);
             })
           }
-          else res.send(`${status} updated successfully!!`);
+          else return res.send(`${status} updated successfully!!`);
         })
       })
     }
@@ -273,6 +288,8 @@ router.post("/student/projects",(req,res,next) => {
 
 //make the team status -> 1 and assings team id to the team
 
+// if it should be solo team both reg_num should be sent same
+
 router.patch("/student/team_request/conform_team", (req, res, next) => {
   let { name, emailId, reg_num, dept, from_reg_num, to_reg_num } = req.body;
 
@@ -288,15 +305,33 @@ router.patch("/student/team_request/conform_team", (req, res, next) => {
     const teamNumber = result[0].count + 1;
     const team_id = `TEAM-${String(teamNumber).padStart(4, "0")}`;
 
+    if(from_reg_num === to_reg_num){ // one member in the team -> directly inserting in team_requests as conformed
+      let query1 = "select * from team_requests where from_reg_num = ? and status = 'accept'";
+      db.query(query1,[from_reg_num],(error,result) => {
+        if(error)return next(error);
+        if(result.length > 0)return res.status(400).json({"message":"Invalid Request you can't be a team_member of yourself!"})
+        let query2 = "insert into team_requests (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status, team_conformed) values(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        db.query(query2,[team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num,'accept',true],(error,result) => {
+          if(error)return next(error);
+          return res.send(`${from_reg_num} is the only team_member in his team!`);
+        })
+      })
+      return;
+    }
+
     //Set team as confirmed
     let sql1 = "UPDATE team_requests SET team_conformed = true WHERE from_reg_num = ? AND status = 'accept'";
     db.query(sql1, [from_reg_num], (error1, result1) => {
       if (error1) return next(error1);
 
+      if(result1.affectedRows === 0)return res.status(500).send("some error occured silently!");
+
       // Assign team ID
       let sql2 = "UPDATE team_requests SET team_id = ? WHERE from_reg_num = ? AND status = 'accept'";
       db.query(sql2, [team_id, from_reg_num], (error2, result2) => {
         if (error2) return next(error2);
+
+        if(result2.affectedRows === 0)return res.status(500).send("some error occured silently!");
 
         // Insert the team request (Executed Last)
         let sql3 = `
@@ -305,6 +340,8 @@ router.patch("/student/team_request/conform_team", (req, res, next) => {
         `;
         db.query(sql3, [team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num], (error3, result3) => {
           if (error3) return next(error3);
+
+          if(result3.affectedRows === 0)return res.status(500).send("some error occured silently!");
 
           // Response to Client
           res.send("Team status changed from false to true, and team request added.");
@@ -739,44 +776,61 @@ router.get("students/get_current_week/:team_id",(req,res,next) => {
   }
 })
 
-// EXTERNAL STUDENTS
+// inserts the project into project table
+// project_type should come frontend -> redux -> userSlice
+// only team_member can post the project
+// -> send the project_type from redux not input tag
 
-// inserts the project in the project table and inserts the project id into the users table
-
-router.post("/ext_student/addproject/:project_type/:reg_num", (req, res, next) => {
+router.post("/student/addproject/:project_type/:reg_num", (req, res, next) => {
   try {
     const { project_type,reg_num } = req.params;
-    const { project_name, cluster, description } = req.body;
+    const { project_name, cluster, description, outcome, hard_soft } = req.body;
 
-    if (!project_type || !project_name || !cluster || !description || !reg_num) {
+    const validTypes = ['internal','external','hardware','software'];
+
+    if (!project_type.trim() || !project_name.trim() || !cluster.trim() || !description.trim() || !reg_num.trim()) {
       return res.status(400).json({ message: "Required fields are missing." });
     }
 
-    if(project_type!= 'INTERNAL' && project_type != 'EXTERNAL')return next(createError.BadRequest("invalid project_type"))
+    if(!validTypes.includes(project_type) || !validTypes.includes(hard_soft))return next(createError.BadRequest("invalid project_type"))
 
-    const sql = "SELECT COUNT(*) AS count FROM projects";
-    db.query(sql, (error, result) => {
-      if (error) return next(error);
+    // checks whether he is a team_leader -> to post project
 
-      const project_length = result[0].count + 1;
-      const project_id = `P${String(project_length).padStart(4, "0")}`;
+    let query = "select team_id from team_requests where from_reg_num = ? and team_conformed = true";
+    db.query(query,[reg_num],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.BadRequest("You are not a TEAM LEADER!"));
+      if(result.length > 1)return next(createError.BadRequest("You have more than one team!"));
 
-      const sql1 = `
-        INSERT INTO projects (project_id, project_name, cluster, description, project_type) VALUES (?, ?, ?, ?, ?)`;
-      const values = [project_id, project_name, cluster, description, project_type];
+      // checks whether he already posted projects
 
-      db.query(sql1, values, (error, result) => {
-        if (error) return next(error);
-        let sql2 = "update users set ext_project = ? where reg_num = ?";
-        db.query(sql2,[project_id,reg_num],(error,result) => {
+      let query1 = "select * from projects where tl_reg_num = ?";
+      db.query(query1,[reg_num],(error,result) => {
         if(error)return next(error);
-        if (result.affectedRows === 0) {
-          return res.status(404).json({ message: "Student with the provided reg_num not found." });
-        }
-        res.send(`project_id:- ${project_id} successfully inserted into users table! and project added as external in the project table`);
-    })
+        if(result.length > 0)return next(createError.BadRequest("The team already posted a project!"));
+
+        // geneating project_id
+
+        const sql = "SELECT COUNT(*) AS count FROM projects";
+        db.query(sql, (error, result) => {
+          if (error) return next(error);
+  
+          const project_length = result[0].count + 1;
+          const project_id = `P${String(project_length).padStart(4, "0")}`;
+
+          // inserting
+  
+          const sql1 = ` INSERT INTO projects (project_id,project_name,project_type,cluster,description,outcome,hard_soft,tl_reg_num) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+          const values = [project_id,project_name,project_type,cluster,description,outcome,hard_soft,reg_num];
+          db.query(sql1,values,(error,result) => {
+            if(error)return next(error);
+            if(result.affectedRows === 0)return next(createError.BadRequest("an error occured silently!"));
+            return res.send(`${project_name} added successfully!`);
+          })
       });
-    });
+      })
+
+    })
   } catch (error) {
     next(error.message);
   }

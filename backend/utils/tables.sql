@@ -27,14 +27,15 @@ CREATE TABLE `projects` (
   `project_name` varchar(500) DEFAULT NULL,
   `cluster` varchar(100) DEFAULT NULL,
   `description` text,
-  `status` varchar(100) DEFAULT 'available',
-  `project_type` varchar(50) null,
-  `guide_reg_num` varchar(5000) DEFAULT NULL,
+  `outcome` text,
+  `hard_soft` varchar(50) NOT NULL,
+  `project_type` varchar(50) DEFAULT NULL,
+  `student_reg_num` tl_reg_num VARCHAR(20) DEFAULT NULL
   `posted_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`),
-  UNIQUE KEY `unique_project_name` (`project_name`),
-  INDEX `idx_status` (`status`)
+  UNIQUE KEY `unique_project_name` (`project_name`)
 );
+
 
 
 CREATE TABLE team_requests (

@@ -116,7 +116,12 @@ router.post("/sub_expert/sent_request_to_expert", (req, res, next) => {
                 if (dbError) {
                     console.error(`DATABASE ERROR: ${dbError}`);
                     errorOccured = true;
-                } else {
+                }
+                else if(!result || result.affectedRows === 0){
+                  console.error(`No rows inserted for guide ${to_expert_reg_num[i]}`);
+                  errorOccured = true;
+                }
+                else {
                     // Define email options
                     const mailOptions = {
                         from: 'rithishvkv@gmail.com',

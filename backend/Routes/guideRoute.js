@@ -139,6 +139,10 @@ router.post("/guide/sent_request_to_guide", (req, res, next) => {
                     console.error(`DATABASE ERROR: ${error}`);
                     errorOccured = true;
                 }
+                else if(!result || result.affectedRows === 0){
+                  console.error(`No rows inserted for guide ${to_guide_reg_num[i]}`);
+                  errorOccured = true;
+                }
 
                 // Define email options
                 const mailOptions = {
