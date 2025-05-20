@@ -266,7 +266,7 @@ router.patch("/guide/verify_weekly_logs/:guide_reg_num/:team_id",(req,res,next) 
       if(error)return next(error);
       if(result.length === 0)return next(createError.NotFound("guide not found in team_requests table"));
       if(result[0].guide_reg_num !== guide_reg_num)return res.status(403).json({"message":"guide register is invalid or not same"});
-      let sql1 = "update team_requests set guide_verified = true where team_id = ?";
+      let sql1 = "update team_requests set guide_verified = guide_verified + 1 where team_id = ?";
       db.query(sql1,[team_id],(error,result) => {
         if(error)return next(error);
         res.send("team_progress successfully verified by mentor!");

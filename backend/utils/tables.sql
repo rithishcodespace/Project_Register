@@ -51,7 +51,7 @@ CREATE TABLE team_requests (
   guide_reg_num varchar(500) DEFAULT NULL,
   sub_expert_reg_num varchar(500) DEFAULT NULL,
   project_picked_date datetime DEFAULT CURRENT_TIMESTAMP,
-  guide_verified BOOLEAN DEFAULT false,
+  guide_verified INT DEFAULT 0,
   week1_progress varchar(200) DEFAULT NULL,
   week2_progress varchar(200) DEFAULT NULL,
   week3_progress varchar(200) DEFAULT NULL,

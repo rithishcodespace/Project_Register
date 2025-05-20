@@ -125,9 +125,6 @@ router.patch("/admin/edit_project/:old_project_id", (req, res, next) => {
   }
 });
 
-
-
-
 // fetches the users based on the given role
 
 router.get("/fetchUsers/:role",(req,res,next) => {
@@ -172,11 +169,14 @@ router.get("/teacher/student_progress/:cluster", (req, res, next) => {
 router.post("/admin/addTimeLine",(req,res,next) => {
   try{
     const{name,start_date,end_date} = req.body;
-    if(!name.trim() || !start_date || end_date)
+    if(!name.trim() || !start_date || !end_date)
     {
       return next(createError.BadRequest("name or start_date or end_date is undefined!"));
     }
-    let sql = "insert into timeline values (?,?,?)";
+    let time1 = new Date(start_date);
+    let time2 = new Date(end_date);
+    if(time1 > time2)return next(createError.BadRequest("Invalid time range!"));
+    let sql = "INSERT INTO timeline (name, start_date, end_date) VALUES (?, ?, ?)";
     db.query(sql,[name,start_date,end_date],(error,result) => {
       if(error)return next(error);
       res.send("Timeline added successfully to the timeline table!!");

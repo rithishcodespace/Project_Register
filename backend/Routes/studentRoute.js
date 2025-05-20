@@ -39,11 +39,11 @@ router.post("/student/join_request", (req, res, next) => {
   try {
     let { name, emailId, reg_num, dept, from_reg_num, to_reg_num } = req.body;
     
-    if (!name.trim() || !emailId.trim() || !reg_num.trim() || !dept.trim() || !from_reg_num.trim() || !to_reg_num.trim()) {
+    if (!name.trim() || !emailId.trim() || !reg_num.trim() || !dept.trim() || !from_reg_num.trim() || !to_reg_num.trim() || from_reg_num === to_reg_num) {
       return next(createError.BadRequest());
     }
 
-    // checks for already a connection request exists or not
+    // checks for already a connection request exists or not for me and him
     let sql = "SELECT * FROM team_requests WHERE from_reg_num = ? AND to_reg_num = ?";
     db.query(sql, [from_reg_num, to_reg_num], (error, result) => {
       if (error) return next(error);
@@ -52,26 +52,33 @@ router.post("/student/join_request", (req, res, next) => {
         return res.send(`Connection request already exists with status: ${result[0].status}`);
       }
 
-      let query = "SELECT project_type FROM users WHERE reg_num IN (?,?)";
-      db.query(query,[from_reg_num,to_reg_num],(error,result) => {
+      // checks wheter he is in another team
+      let checkConnection = "select * from team_requests where to_reg_num = ? and status = 'accept'";
+      db.query(checkConnection,[to_reg_num],(error,result) => {
         if(error)return next(error);
-        if (result.length !== 2) {
-          return res.status(400).send("One or both students not found.");
-        }
+        if(result.length > 0)return next(createError.BadRequest("He is already a member of some other team!"));
+
+        let query = "SELECT project_type FROM users WHERE reg_num IN (?,?)";
+        db.query(query,[from_reg_num,to_reg_num],(error,result) => {
+          if(error)return next(error);
+          if (result.length !== 2) {
+            return res.status(400).send("One or both students not found.");
+          }
         const type1 = result[0].project_type;
         const type2 = result[1].project_type;
         if(type1 === null || type2 === null)return next(createError.BadRequest("User haven't entered his project_type yet!"));
         if(type1 != type2)return res.send("BOTH MEMBERS SHOULD BE EITHER INTERNAL OR EXTERNAL!!");
 
         // inserts the request in the request db (only if no existing request)
-      let sql1 = "INSERT INTO team_requests (name, emailId, reg_num, dept, from_reg_num, to_reg_num) VALUES (?,?,?,?,?,?)";
-      let values = [name, emailId, reg_num, dept, from_reg_num, to_reg_num];
+        let sql1 = "INSERT INTO team_requests (name, emailId, reg_num, dept, from_reg_num, to_reg_num) VALUES (?,?,?,?,?,?)";
+        let values = [name, emailId, reg_num, dept, from_reg_num, to_reg_num];
       
-      db.query(sql1, values, (error, result) => {
-        if (error) return next(error);  // Use return here to prevent further code execution
-        
-        return res.send("Request added successfully!");
-      });
+        db.query(sql1, values, (error, result) => {
+          if (error) return next(error);  // Use return here to prevent further code execution
+          
+          return res.send("Request added successfully!");
+        });
+      })
       })
 
     });
