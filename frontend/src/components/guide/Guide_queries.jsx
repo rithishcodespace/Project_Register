@@ -92,9 +92,10 @@ const Guide_queries = () => {
 
             {q.reply ? (
               <div className="mt-4 p-3 bg-green-100 text-green-800 rounded-lg">
-                <strong>Your Answer:</strong> {q.reply}
+                <strong className='bg-green-100'>Your Answer:</strong> {q.reply}
               </div>
             ) : (
+              <form className='rounded-lg'>
               <div className="mt-4 flex rounded-lg bg-white flex-col sm:flex-row items-center gap-2">
                 <input
                   type="text"
@@ -109,7 +110,7 @@ const Guide_queries = () => {
                 >
                   <SendHorizonal className='bg-purple-500' size={18} /> Send
                 </button>
-              </div>
+              </div></form>
             )}
           </div>
         ))

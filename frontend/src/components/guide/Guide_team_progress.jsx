@@ -85,7 +85,7 @@ function Guide_team_progress() {
 
   return (
     <div className="p-6 min-h-screen ">
-      <h1 className="text-4xl font-bold text-center text-black mb-10">Student Progress</h1>
+      <h1 className="text-4xl font-bold text-center text-black mb-10">Student irogress</h1>
 
       {teams.length === 0 ? (
         <p className="text-center text-gray-500  text-lg">No teams found.</p>
@@ -94,7 +94,7 @@ function Guide_team_progress() {
           {teams.map((team, idx) => (
             <div key={idx} className="bg-white rounded-2xl  shadow-md border border-purple-200 overflow-hidden hover:shadow-xl transition">
               <div className="bg-white px-4 py-3">
-                <h2 className="text-xl bg-white font-bold text-purple-800">{team.projectTitle}</h2>
+                <h2 className="text-xl bg-white font-bold text-black-800">{team.projectTitle}</h2>
                 <p className="text-sm bg-white mt-2 text-purple-600">Team ID: {team.id}</p>
               </div>
 
