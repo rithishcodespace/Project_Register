@@ -136,7 +136,7 @@ router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",(req,res,
               res.send(`status updated to ${status}`);
             })
           }
-          else res.send(`${status} updated successfully!`);
+          else res.send(`${status} updated successfully!!`);
         })
       })
     }
