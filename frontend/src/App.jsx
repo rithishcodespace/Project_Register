@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import Login from "./components/Login/Login";
 import TeacherDashBoard from "./components/Teacher/TeacherDashBoard";
 import TeacherAdd from "./components/Teacher/TeacherAdd";
-import StudentProgress from "./components/Teacher/StudentProgress";
 import PostedProjects from "./components/Teacher/PostedProjects";
 import Student from "./components/Students/Student";
 import Teacher from "./components/Teacher/Teacher";
@@ -18,7 +17,6 @@ import Add_Project from "./components/Admin/Add_Project";
 import Posted_project from "./components/Admin/Posted_project";
 import Admin_Dashboard from "./components/Admin/Admin_Dashboard";
 import Create_team from "./components/Teacher/Create_team";
-import Cluster from "./components/Teacher/Cluster";
 import { Provider } from "react-redux";
 import ProjDetails from "./components/Teacher/ProjDetails";
 import { Store } from "./utils/Store";
@@ -82,9 +80,6 @@ function App() {
             <Route index element={<TeacherDashBoard />} />
             <Route path="add" element={<TeacherAdd />} />
             <Route path="posted_projects" element={<PostedProjects />} />
-            <Route path="student_progress" element={<StudentProgress />} />
-            <Route path="student_progress/:cluster" element={<Cluster />} />
-            <Route path="student_progress/project_details/:id" element={<Cluster />} />
             <Route path="student_progress/project_details/:cluster/:id" element={<ProjDetails />} />
           </Route>
 
