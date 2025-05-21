@@ -68,7 +68,8 @@ router.post("/auth/login",(req,res,next) => {
             "project_id" : result[0].project_id,
             "reg_num" : result[0].reg_num,
             "name" : result[0].name,
-            "dept" : result[0].dept
+            "dept" : result[0].dept,
+            "project_type":result[0].project_type
           })
         }
         catch(redisError)

@@ -643,8 +643,8 @@ router.get("students/get_current_week/:team_id",(req,res,next) => {
 
 router.post("/student/addproject/:project_type/:reg_num", (req, res, next) => {
   try {
-    const { project_type,reg_num } = req.params;
-    const { project_name, cluster, description, outcome, hard_soft } = req.body;
+    let { project_type,reg_num } = req.params;
+    let { project_name, cluster, description, outcome, hard_soft } = req.body;
 
     project_type = project_type.toLowerCase();
     hard_soft = hard_soft.toLowerCase();
@@ -694,7 +694,7 @@ router.post("/student/addproject/:project_type/:reg_num", (req, res, next) => {
             db.query(insertQuery,[project_id,reg_num],(error,result) => {
               if(error)return next(error);
               if(result.affectedRows === 0)return next(createError.BadRequest("no rows affected!"));
-              return res.send(`${project_name} added successfully!`);  
+              return res.status(200).json({"message":`${project_name} added successfully!`,"project_id":project_id});  
 
               // weekly logs date insertion pending
             })

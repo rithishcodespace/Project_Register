@@ -3,7 +3,8 @@ import axios from 'axios';
 import { useSelector } from 'react-redux';
 
 const Project_Details = () => {
-  const selector = useSelector((State) => State.teamSlice);
+  const userselector = useSelector((State) => State.userSlice);
+  const teamselector = useSelector((State) => State.teamSlice);
   const [projectName, setProjectName] = useState('');
   const [clusterName, setClusterName] = useState('');
   const [core, setCore] = useState('');
@@ -15,7 +16,6 @@ const Project_Details = () => {
   const [selectedExperts, setSelectedExperts] = useState([]);
   const [selectedGuides, setSelectedGuides] = useState([]);
   const [loading, setLoading] = useState(true);
-  const selector1=useSelector((Store)=>Store.teamStatusSlice.teamLeader)
 
   useEffect(() => {
     async function fetchExpertsAndGuides() {  
@@ -57,47 +57,19 @@ const Project_Details = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const reg_num = selector[0].reg_num;
-    const team_id = selector[0]?.team_id;
-    console.log(reg_num);
-    console.log(team_id);
-
-    if (!reg_num || !team_id) {
-      alert('Missing registration or team ID.');
-      return;
-    }
-
-    if (
-      !projectName.trim() ||
-      !clusterName.trim() ||
-      !core.trim() ||
-      !description.trim() ||
-      !outcome.trim()
-    ) {
-      alert('Please fill all fields.');
-      return;
-    }
-
-    if (selectedExperts.length < 3 || selectedGuides.length < 3) {
-      alert('Select at least 3 experts and 3 guides.');
-      return;
-    }
-
-    const project_type = selector1.project_type.toLowerCase();
-    const payload = {
-      project_name: projectName.trim(),
-      cluster: clusterName.trim(),
-      description: description.trim(),
-      outcome: outcome.trim(),
-      hard_soft: core.trim(),
-    };
-
     try {
       // Step 1: Submit project
       const response = await axios.post(
-        `http://localhost:1234/student/addproject/${project_type}/${reg_num}`,
-        payload
+        `http://localhost:1234/student/addproject/${userselector.project_type}/${userselector.reg_num}`,
+        {
+          "project_name":projectName,
+          "cluster":clusterName,
+          "description":description,
+          "outcome":outcome,
+          "hard_soft":core
+        }
       );
+      console.log(response.data); 
 
       const { message, project_id } = response.data;
 
@@ -107,18 +79,18 @@ const Project_Details = () => {
 
       // Step 2: Send guide requests
       await axios.post('http://localhost:1234/guide/sent_request_to_guide', {
-        from_team_id: team_id,
-        project_id,
-        project_name: projectName.trim(),
-        to_guide_reg_num: selectedGuides,
+        "from_team_id": teamselector[0].team_id,
+        "project_id":project_id,
+        "project_name": projectName.trim(),
+        "to_guide_reg_num": selectedGuides,
       });
 
       // Step 3: Send expert requests
       await axios.post('http://localhost:1234/sub_expert/sent_request_to_expert', {
-        from_team_id: team_id,
-        project_id,
-        project_name: projectName.trim(),
-        to_expert_reg_num: selectedExperts,
+        "from_team_id": teamselector[0].team_id,
+        "project_id":project_id,
+        "project_name": projectName.trim(),
+        "to_expert_reg_num": selectedExperts,
       });
 
       alert('All requests sent successfully.');
