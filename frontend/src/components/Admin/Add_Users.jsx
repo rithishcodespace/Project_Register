@@ -36,7 +36,7 @@ function Add_Users() {
       userData.subject = subject;
     }
 
-    let response = await axios.post("http://localhost:1234/admin/adduser", userData);
+    let response = await axios.post("http://localhost:1234/admin/adduser", userData, {withCredentials:true});
     if (response.status === 200) {
       setName("");
       setEmail("");

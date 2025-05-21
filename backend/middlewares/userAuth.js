@@ -7,7 +7,7 @@ const userAuth = (req, res, next) => {
     console.log("Cookies Received:", req.cookies); // Debugging Line
     
     const token = req.cookies.token; // Directly access the cookie
-    if (!token) return next(createError.BadRequest("token is missing!!"));
+    if (!token) return res.status(401).json({ success: false, message: "TokenMissing" });
 
     const decodedMessage = jwt.verify(token, process.env.TOKEN_SECRET);
 
@@ -28,6 +28,7 @@ const userAuth = (req, res, next) => {
       return next(createError.Unauthorized("Invalid token!"));
     }
     if (error.name === "TokenExpiredError") {
+      res.clearCookie("token");
       return next(createError.Unauthorized("Token has expired!"));
     }
     next(error);

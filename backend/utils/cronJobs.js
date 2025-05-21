@@ -1,47 +1,46 @@
 const cron = require("node-cron");
 const db = require("../db");
 const generateWeeklyDeadlines = require("../utils/generateWeeklyDeadlines");
+const nodemailer = require("nodemailer");
+require("dotenv").config()
 
-cron.schedule("0 0 * * *", () => { // runs every day on midnight 00:00 AM -> to create deadlines for weekly logs
-  console.log("Checking if project start date has reached...");
+cron.schedule("0 0 * * *", () => {// runs every day on midnight 00:00 AM -> to create deadlines for weekly logs
+  console.log("Checking timelines for all teams...");
 
-  const timelineQuery = `SELECT start_date FROM timeline WHERE name = 'project timeline' AND cron_executed = false LIMIT 1;`;
+  //fetches the team with with not null as project_id  and in timeline cron_executed is false
+  const timelineQuery = `
+    SELECT t.team_id, t.start_date, t.project_id
+    FROM timeline t
+    WHERE t.name = 'project timeline' AND t.cron_executed = false
+  `;
 
-  db.query(timelineQuery, (err, result) => {
-    if (err) return console.error("Timeline query error:", err);
-    if (result.length === 0) return console.log("No 'project timeline' date set or already executed");
+  db.query(timelineQuery, (err, timelines) => {
+    if (err) return console.error("Timeline fetch error:", err);
+    if (timelines.length === 0) return console.log("No pending timelines.");
 
-    const startDate = new Date(result[0].start_date);
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // removes the time part
 
-    startDate.setHours(0, 0, 0, 0); // it removes the time part and need to be used only while compaing
-    today.setHours(0, 0, 0, 0);
+    timelines.forEach(({ team_id, start_date, project_id }) => {
+      const start = new Date(start_date);
+      start.setHours(0, 0, 0, 0); // remove the time part
 
-    if (today >= startDate) {
-      console.log("Project start date reached. Generating deadlines...");
+      if (today >= start) {
+        console.log(`Generating deadlines for team ${team_id}...`);
 
-      // fetches the conformed and project_inserted teams from team_request that do not appear in the weekly_deadlines_logs
-      const teamQuery = `
-                     SELECT DISTINCT tr.team_id, tr.project_id
-                     FROM team_requests tr
-                     WHERE tr.team_conformed = true 
-                     AND tr.project_id IS NOT NULL
-                     AND NOT EXISTS (
-                     SELECT 1 
-                     FROM weekly_logs_deadlines wld 
-                     WHERE wld.team_id = tr.team_id AND wld.project_id = tr.project_id
-                   );
+        const sql = `SELECT guide_reg_num, sub_expert_reg_num FROM team_requests WHERE team_id = ? AND project_id = ?`;
+        db.query(sql, [team_id, project_id], (err, result) => {
+          if (err) return console.error(`Error checking guide/expert for team ${team_id}:`, err);
 
-      `;
+          const { guide_reg_num, sub_expert_reg_num } = result[0] || {};
+          if (!guide_reg_num || !sub_expert_reg_num) {
+            // Send mail
+            sendReminderToTeam(team_id);
+            return;
+          }
 
-      db.query(teamQuery, (err, teams) => {
-        if (err) return console.error("Team fetch error:", err);
-        if (teams.length === 0) return console.log("No confirmed teams found");
-
-        teams.forEach(({ team_id, project_id }) => {
-          const deadlines = generateWeeklyDeadlines(startDate); // already formatted
-
-          // it inserts the deadlines into the deadlines table ,if it already exists it updates that row
+          // fetches the conformed and project_inserted teams from team_request that do not appear in the weekly_deadlines_logs
+          const deadlines = generateWeeklyDeadlines(start); // week_1 to week_12
           const insertSQL = `
             INSERT INTO weekly_logs_deadlines
               (team_id, project_id, week_1, week_2, week_3, week_4, week_5, week_6,
@@ -53,27 +52,59 @@ cron.schedule("0 0 * * *", () => { // runs every day on midnight 00:00 AM -> to 
               week_7 = VALUES(week_7), week_8 = VALUES(week_8), week_9 = VALUES(week_9),
               week_10 = VALUES(week_10), week_11 = VALUES(week_11), week_12 = VALUES(week_12)
           `;
+          db.query(insertSQL, [team_id, project_id, ...deadlines], (err) => {
+            if (err) return console.error(`Error inserting deadlines for team ${team_id}:`, err);
+            console.log(`Deadlines inserted for team ${team_id}`);
 
-          const values = [team_id, project_id, ...deadlines];
-
-          db.query(insertSQL, values, (err) => {
-            if (err) return console.error(`Insert error for team ${team_id}:`, err);
-            console.log(`Deadlines set for team ${team_id}`);
+            // Mark timeline as executed
+            const updateSQL = `UPDATE timeline SET cron_executed = true WHERE team_id = ? AND name = 'project timeline'`;
+            db.query(updateSQL, [team_id], (err) => {
+              if (err) console.error(`Error updating timeline for team ${team_id}:`, err);
+              else console.log(`Timeline marked executed for team ${team_id}`);
+            });
           });
         });
-
-        // make sure this matches the SELECT name
-        const updateTimeline = `UPDATE timeline SET cron_executed = true WHERE name = 'project timeline'`;
-        db.query(updateTimeline, (err) => {
-          if (err) console.error("Error updating timeline:", err);
-          else console.log("Timeline marked as executed.");
-        });
-      });
-    } else {
-      console.log("Project start date not reached yet.");
-    }
+      } else {
+        console.log(`Start date not reached for team ${team_id}`);
+      }
+    });
   });
 });
+
+
+function sendReminderToTeam(team_id) {
+  const studentQuery = `SELECT email FROM team_members WHERE team_id = ?`;
+
+  db.query(studentQuery, [team_id], (err, members) => {
+    if (err) return console.error(`Error fetching emails for team ${team_id}:`, err);
+    if (members.length === 0) return console.log(`No members found for team ${team_id}`);
+
+    const recipientEmails = members.map(m => m.email).join(",");
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'your_email@gmail.com',
+        pass: 'your_app_password'
+      }
+    });
+
+    const mailOptions = {
+      from: 'your_email@gmail.com',
+      to: recipientEmails,
+      subject: 'Action Required: Guide/Expert Not Assigned',
+      text: `Dear Team,
+      Your team has not been assigned a guide or subject expert yet. Please contact the project coordinator to complete the assignment so weekly log deadlines can be generated.
+      Thank you.`
+    };
+
+    transporter.sendMail(mailOptions, (err, info) => {
+      if (err) return console.error(`Error sending email to team ${team_id}:`, err);
+      console.log(`Reminder sent to team ${team_id}:`, info.response);
+    });
+  });
+}
+
+
 
 // cron to mark attendence as absent
 // runs at 10:00 PM every day
@@ -90,4 +121,3 @@ cron.schedule('0 22 * * *', () => {
     }
   });
 });
-

@@ -13,9 +13,7 @@ const Guide_queries = () => {
     try {
       const token = localStorage.getItem("accessToken");
       const response = await axios.get(`http://localhost:1234/guide/get_queries/${selector.reg_num}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        withCredentials:true
       });
 
       if (response.status === 200) {
@@ -53,9 +51,7 @@ const Guide_queries = () => {
         `http://localhost:1234/guide/add_reply/${queryId}`,
         { reply },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          withCredentials:true
         }
       );
 

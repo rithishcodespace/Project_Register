@@ -70,7 +70,9 @@ router.post("/student/join_request", (req, res, next) => {
         const company1 = result[0].company;
         const company2 = result[1].company;
         if(type1 === null || type2 === null)return next(createError.BadRequest("User haven't entered his project_type yet!"));
-        else if(type1 != type2)return res.status(500).send("BOTH MEMBERS SHOULD BE EITHER INTERNAL OR EXTERNAL!!");
+        else if(type1.toLowerCase() !== type2.toLowerCase()) {
+         return res.status(500).send("BOTH MEMBERS SHOULD BE EITHER INTERNAL OR EXTERNAL!!");
+        }
         else if(type1 === 'external' && type2 === 'external'){
           if(company1 != company2)return res.status(500).send("BOTH MEMBERS SHOULD BE OF SAME COMPANY!");
         }
@@ -641,8 +643,11 @@ router.get("students/get_current_week/:team_id",(req,res,next) => {
 
 router.post("/student/addproject/:project_type/:reg_num", (req, res, next) => {
   try {
-    const { project_type,reg_num } = req.params;
-    const { project_name, cluster, description, outcome, hard_soft } = req.body;
+    let { project_type,reg_num } = req.params;
+    let { project_name, cluster, description, outcome, hard_soft } = req.body;
+
+    project_type = project_type.toLowerCase();
+    hard_soft = hard_soft.toLowerCase();
 
     const validTypes = ['internal','external','hardware','software'];
 
@@ -689,7 +694,7 @@ router.post("/student/addproject/:project_type/:reg_num", (req, res, next) => {
             db.query(insertQuery,[project_id,reg_num],(error,result) => {
               if(error)return next(error);
               if(result.affectedRows === 0)return next(createError.BadRequest("no rows affected!"));
-              return res.send(`${project_name} added successfully!`);  
+              return res.status(200).json({"message":`${project_name} added successfully!`,"project_id":project_id});  
 
               // weekly logs date insertion pending
             })

@@ -49,9 +49,7 @@ function Student_navbar({ isOpen, toggleSidebar }) {
       const response = await axios.get(
         `http://localhost:1234/student/getTeamDetails/${reg_num}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          withCredentials:true
         }
       );
 

@@ -15,7 +15,7 @@ const Proj_Details = () => {
       const token = localStorage.getItem("accessToken");
 
       const response = await axios.patch(`http://localhost:1234/student/ongoing/${project.project_name}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
+        withCredentials:true
       });
 
       if (response.status === 200) {
@@ -25,7 +25,7 @@ const Proj_Details = () => {
           `http://localhost:1234/student/assgin_project_id/${project.project_id}/${selector.reg_num}`,
           {},
           {
-            headers: { Authorization: `Bearer ${token}` }
+            withCredentials:true
           }
         );
 

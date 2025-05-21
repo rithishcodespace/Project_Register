@@ -13,10 +13,7 @@ const Posted_project = () => {
     try {
       const accessToken = localStorage.getItem("accessToken");
       const response = await axios.get("http://localhost:1234/teacher/getprojects", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken?.trim()}`
-        }
+        withCredentials: true
       });
 
       if (response.status === 200) {

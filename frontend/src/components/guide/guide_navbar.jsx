@@ -22,7 +22,8 @@ function Guide_navbar({ isOpen, toggleSidebar }) {
       let token = localStorage.getItem("refreshToken");
       await axios.delete("http://localhost:1234/auth/logout", {
         data: { refreshToken: token },
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials:true
       });
       dispatch(removeUser());
       dispatch(removeTeamMembers());

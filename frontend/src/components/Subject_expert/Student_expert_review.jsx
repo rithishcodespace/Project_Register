@@ -17,7 +17,7 @@ function Student_expert_review() {
   const fetchReviewRequests = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:1234/sub_expert/fetch_upcoming_reviews/${selector.reg_num}`
+        `http://localhost:1234/sub_expert/fetch_review_requests/${selector.reg_num}`,{withCredentials:true}
       );
       setProjects(res.data);
       console.log(res.data)
@@ -67,7 +67,7 @@ function Student_expert_review() {
   const markAttendance = async (teamId) => {
     try {
       await axios.patch(
-        `http://localhost:1234/sub_expert/mark_attendance/${teamId}`
+        `http://localhost:1234/sub_expert/mark_attendance/${teamId}`,{withCredentials:true}
       );
       setAttendanceMarked((prev) => ({
         ...prev,

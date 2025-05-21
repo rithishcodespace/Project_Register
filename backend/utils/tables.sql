@@ -150,6 +150,7 @@ CREATE TABLE timeline (
     name VARCHAR(100) NOT NULL,
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
+    team_id INT 
     cron_executed boolean default false,
     INDEX index_start_date (start_date),
     INDEX index_end_date (end_date),
