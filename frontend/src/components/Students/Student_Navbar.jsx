@@ -132,11 +132,11 @@ function Student_navbar({ isOpen, toggleSidebar }) {
 
         {/* Student Team */}
         <Link
-          to="Students_team"
-          className={`${navDiv("Students_team")} group ${!isTeamAvailable ? disabledClass : ""}`}
+          to="review"
+          className={`${navDiv("review")} group ${!isTeamAvailable ? disabledClass : ""}`}
         >
-          <Users size={24} className={navIcon("Students_team")} />
-          <p className={navText("Students_team")}>Student Team</p>
+          <Users size={24} className={navIcon("review")} />
+          <p className={navText("review")}>Schedule Review</p>
         </Link>
 
         {/* Progress Update */}

@@ -9,7 +9,7 @@ import './index.css';
 import Student_Dashboard from "./components/Students/Student_Dashboard";
 import Progress_Update from "./components/Students/Progress_Update";
 import Project_Details from "./components/Students/Project_Details";
-import Student_Team from "./components/Students/Student_Team";
+import Student_Team from "./components/Students/Schedule_review";
 import Admin from "./components/Admin/Admin";
 import Add_Users from "./components/Admin/Add_Users";
 import Students_Progress from "./components/Admin/Students_Progress";
@@ -21,7 +21,6 @@ import ProjDetails from "./components/Teacher/ProjDetails";
 import { Store } from "./utils/Store";
 import InvitationPage from "./components/Students/InvitationPage";
 import ProtectedRoute from "./utils/ProtectedRoute"; 
-import Student_expert_review from "./components/Subject_expert/Student_expert_review";
 import SubjectExpertDashboard from "./components/Subject_expert/Student_export_dashboard";
 import Subject_expert_remarks from "./components/Subject_expert/Subject_expert_remarks";
 import Subject_expert from "./components/Subject_expert/Subject_expert";
@@ -39,6 +38,8 @@ import Admin_project_details from "./components/Admin/Admin_project_details";
 import TimeLine from "./components/Admin/Timeline";
 import TeamListByDepartment from "./components/Admin/TeamListByDepartment";
 import NotFound from "./NotFound";
+import Student_expert_review from "./components/Subject_expert/Student_expert_review";
+import Schedule_review from "./components/Students/Schedule_review";
 
 
 
@@ -68,7 +69,7 @@ function App() {
             <Route index element={<Student_Dashboard />} />
             <Route path="Progress_update" element={<Progress_Update />} />
             <Route path="Project_Details" element={<Project_Details />} />
-            <Route path="Students_team" element={<Student_Team />} />
+            <Route path="review" element={<Schedule_review/>} />
             <Route path="invitations" element={<InvitationPage />} />
             <Route path="queries" element={<Queries />} />
            <Route path="Project_Details/proj_details/:id" element={<Proj_Details/>} />
