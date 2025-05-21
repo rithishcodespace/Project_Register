@@ -22,7 +22,6 @@ import ProjDetails from "./components/Teacher/ProjDetails";
 import { Store } from "./utils/Store";
 import InvitationPage from "./components/Students/InvitationPage";
 import ProtectedRoute from "./utils/ProtectedRoute"; 
-import Student_expert_mark_attendence from "./components/Subject_expert/Student_expert_mark_attendence";
 import Student_expert_review from "./components/Subject_expert/Student_expert_review";
 import SubjectExpertDashboard from "./components/Subject_expert/Student_export_dashboard";
 import Subject_expert_remarks from "./components/Subject_expert/Subject_expert_remarks";
@@ -40,6 +39,7 @@ import ProjectFileUpload from "./components/Students/ProjectFileUpload";
 import Admin_project_details from "./components/Admin/Admin_project_details";
 import TimeLine from "./components/Admin/Timeline";
 import TeamListByDepartment from "./components/Admin/TeamListByDepartment";
+import NotFound from "./NotFound";
 
 
 
@@ -98,7 +98,6 @@ function App() {
 
           <Route path="/subject_expert" element={<Subject_expert />}>
             <Route index element={<SubjectExpertDashboard />} />
-            <Route path="schedule_review" element={<Student_expert_mark_attendence />} />
             <Route path="review" element={<Student_expert_review />} />
             <Route path="remarks" element={<Subject_expert_remarks />} />
           </Route>
@@ -110,6 +109,8 @@ function App() {
             {/* <Route path="/guide/team_progress/:id" element={<TeamDetails/>} /> */}
           </Route>
 
+          <Route path="*" element={<NotFound/>} />
+          
         </Routes>
 
       </BrowserRouter>
