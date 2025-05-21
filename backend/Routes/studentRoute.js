@@ -43,7 +43,7 @@ router.post("/student/join_request", (req, res, next) => {
       return next(createError.BadRequest(`reg_number are not defined!`));
     }
 
-    let query1 = "select (name, emailId, reg_num, dept) from users where reg_num = ?";
+    let query1 = "select name, emailId, reg_num, dept from users where reg_num = ?";
     db.query(query1,[to_reg_num],(error,result) => {
       if(error)return next(error);
       if(result.length === 0)return next(createError.NotFound("User not Found!"));
