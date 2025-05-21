@@ -101,7 +101,47 @@ router.patch("/guide/accept_reject/:status/:team_id/:my_id", (req, res, next) =>
 });
 
 // sends request to guide
-ud the email
+router.post("/guide/sent_request_to_guide", (req, res, next) => {
+    try {
+        const { from_team_id, project_id, project_name, to_guide_reg_num } = req.body;
+        if (!from_team_id || !project_id || !project_name || !Array.isArray(to_guide_reg_num) || to_guide_reg_num.length == 0) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
+
+        // Create a transporter
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'rithishvkv@gmail.com', // -> temporary
+                pass: process.env.EMAIL_PASS
+            },
+        });
+
+        let errorOccured = false;
+        let completedRequests = 0;
+
+        // Loop for each guide
+        for (let i = 0; i < to_guide_reg_num.length; i++) {
+            let sql = "INSERT INTO guide_requests (from_team_id, project_id, project_name, to_guide_reg_num) VALUES (?,?,?,?)";
+            db.query(sql, [from_team_id, project_id, project_name, to_guide_reg_num[i]], (error, result) => {
+                if (error) {
+                    console.error(`DATABASE ERROR: ${error}`);
+                    errorOccured = true;
+                }
+                else if(!result || result.affectedRows === 0){
+                  console.error(`No rows inserted for guide ${to_guide_reg_num[i]}`);
+                  errorOccured = true;
+                }
+
+                // Define email options
+                const mailOptions = {
+                    from: 'rithishvkv@gmail.com',
+                    to: "rithishcodespace@gmail.com", // guide id -> temporary
+                    subject: 'Request To Accept Invite',
+                    text: `Dear Guide,\n\n${from_team_id} team has requested you to be their guide. Please login to the system to accept or reject the request.\n\nThank you.`,
+                };
+
+                // Send the email
                 transporter.sendMail(mailOptions, (error, info) => {
                     if (error) {
                         console.error('Email Error:', error);
