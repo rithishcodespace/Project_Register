@@ -103,7 +103,8 @@ function Student_Dashboard() {
 
       const response = await instance.post(
         '/student/fetch_team_status_and_invitations',
-        { "from_reg_num": reg_num }
+        { "from_reg_num": reg_num },
+        { withCredentials: true }
       );
 
       if (response.status === 200) {

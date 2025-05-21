@@ -35,7 +35,7 @@ const SubjectExpertDashboard = () => {
 
   const handleAccept = async(teamId) => {
     let status = 'accept';
-    let response = awaitinstance.patch(`/sub_expert/accept_reject/${status}/${teamId}/${selector.reg_num}`);
+    let response = await instance.patch(`/sub_expert/accept_reject/${status}/${teamId}/${selector.reg_num}`);
     if(response.status === 200){
       alert(`${teamId} accepted!`);
       setInvitations(prev => prev.filter(invite => invite.from_team_id !== teamId));
