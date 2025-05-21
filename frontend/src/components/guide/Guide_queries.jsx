@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SendHorizonal, Store } from 'lucide-react';
-import axios from "axios";
+import instance from '../../utils/axiosInstance';
 import {useSelector} from "react-redux"
 
 const Guide_queries = () => {
@@ -12,9 +12,7 @@ const Guide_queries = () => {
   async function fetchQueries() {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get(`http://localhost:1234/guide/get_queries/${selector.reg_num}`, {
-        withCredentials:true
-      });
+      const response = await instance.get(`/guide/get_queries/${selector.reg_num}`);
 
       if (response.status === 200) {
         setQueries(response.data); // Assuming response.data is an array of queries
@@ -47,12 +45,9 @@ const Guide_queries = () => {
 
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.patch(
-        `http://localhost:1234/guide/add_reply/${queryId}`,
-        { reply },
-        {
-          withCredentials:true
-        }
+      const response = await instance.patch(
+        `/guide/add_reply/${queryId}`,
+        { reply }
       );
 
       if (response.status === 200) {

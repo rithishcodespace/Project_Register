@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import instance from '../../utils/axiosInstance';
 import {  FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
@@ -12,9 +12,7 @@ const Posted_project = () => {
   async function getProjects() {
     try {
       const accessToken = localStorage.getItem("accessToken");
-      const response = await axios.get("http://localhost:1234/teacher/getprojects", {
-        withCredentials: true
-      });
+      const response = await instance.get("/teacher/getprojects");
 
       if (response.status === 200) {
         setProjectData(response.data);

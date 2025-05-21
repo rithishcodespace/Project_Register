@@ -4,7 +4,7 @@ import { Home, UploadCloud, FileText, BarChart2, LogOut } from 'lucide-react';
 import college_img from "../../assets/college_img.png";
 import menu from "../../assets/menu.png";
 import wrong from "../../assets/wrong.png";
-import axios from 'axios';
+import instance from '../../utils/axiosInstance';
 import { useDispatch } from 'react-redux';
 import { removeUser} from '../../utils/userSlice';
 import { removeTeamMembers } from '../../utils/teamSlice';
@@ -19,10 +19,7 @@ function Admin_Navbar({ isOpen, toggleSidebar }) {
     try {
       let token = localStorage.getItem("refreshToken");
 
-      await axios.delete("http://localhost:1234/auth/logout", {
-        withCredentials: true
-        
-      });
+      await instance.delete("/auth/logout");
 
       localStorage.clear();
       dispatch(removeUser());
