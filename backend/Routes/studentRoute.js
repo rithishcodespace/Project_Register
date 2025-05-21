@@ -59,40 +59,53 @@ router.post("/student/join_request", (req, res, next) => {
         }
   
         // checks wheter he is in another team or team_leader  
-        let checkConnection = "select * from team_requests where (to_reg_num = ? or from_reg_num) and status = 'accept'";
+        let checkConnection = "select * from team_requests where (to_reg_num = ? or from_reg_num = ?) and status = 'accept'";
         db.query(checkConnection,[to_reg_num,to_reg_num],(error,result) => {
           if(error)return next(error);
           if(result.length > 0)return next(createError.BadRequest("He is already a member of some other team!"));
-  
-          // validating project_type
+
+          // checks sender is in another team or team_leader
+
+          let checkConnectionSender = "select * from team_requests where (to_reg_num = ? or from_reg_num = ?) and status = 'accept'";
+          db.query(checkConnection,[from_reg_num,from_reg_num],(error,result) => {
+            if(error)return next(error);
+            if(result.length > 0)return next(createError.BadRequest("sender is already a member of some other team!"));
+
+            let size = "select * from team_requests where from_reg_num = ? and status = 'accept'";
+            db.query(size,[from_reg_num],(error,result) => {
+              if(error)return next(error);
+              if(result.length >= 3)return next(createError.BadRequest("You can't form a team more than 4 members1"));
+               // validating project_type
           let query = "SELECT project_type,company FROM users WHERE reg_num IN (?,?)";
           db.query(query,[from_reg_num,to_reg_num],(error,result) => {
             if(error)return next(error);
             if (result.length != 2) {
               return res.status(400).send("One or both students not found.");
             }
-          const type1 = result[0].project_type;
-          const type2 = result[1].project_type;
-          const company1 = result[0].company;
-          const company2 = result[1].company;
-          if(type1 === null || type2 === null)return next(createError.BadRequest("User haven't entered his project_type yet!"));
-          else if(type1.toLowerCase() !== type2.toLowerCase()) {
-           return res.status(500).send("BOTH MEMBERS SHOULD BE EITHER INTERNAL OR EXTERNAL!!");
-          }
-          else if(type1 === 'external' && type2 === 'external'){
-            if(company1 != company2)return res.status(500).send("BOTH MEMBERS SHOULD BE OF SAME COMPANY!");
-          }
-  
-          // inserts the request in the request db (only if no existing request)
-          let sql1 = "INSERT INTO team_requests (name, emailId, reg_num, dept, from_reg_num, to_reg_num) VALUES (?,?,?,?,?,?)";
-          let values = [name, emailId, reg_num, dept, from_reg_num, to_reg_num];
-        
-          db.query(sql1, values, (error, result) => {
-            if (error) return next(error);  // Use return here to prevent further code execution
-            
-            return res.send("Request added successfully!");
-          });
+            const type1 = result[0].project_type;
+            const type2 = result[1].project_type;
+            const company1 = result[0].company;
+            const company2 = result[1].company;
+            if(type1 === null || type2 === null)return next(createError.BadRequest("User haven't entered his project_type yet!"));
+            else if(type1.toLowerCase() !== type2.toLowerCase()) {
+             return res.status(500).send("BOTH MEMBERS SHOULD BE EITHER INTERNAL OR EXTERNAL!!");
+            }
+            else if(type1 === 'external' && type2 === 'external'){
+              if(company1 != company2)return res.status(500).send("BOTH MEMBERS SHOULD BE OF SAME COMPANY!");
+            }
+    
+            // inserts the request in the request db (only if no existing request)
+            let sql1 = "INSERT INTO team_requests (name, emailId, reg_num, dept, from_reg_num, to_reg_num) VALUES (?,?,?,?,?,?)";
+            let values = [name, emailId, reg_num, dept, from_reg_num, to_reg_num];
+          
+            db.query(sql1, values, (error, result) => {
+              if (error) return next(error);  // Use return here to prevent further code execution
+              
+              return res.send("Request added successfully!");
+            });
         })
+            })
+          })
         })
   
       });
@@ -299,7 +312,6 @@ router.patch("/student/team_request/conform_team", (req, res, next) => {
       let query1 = "SELECT * FROM team_requests WHERE (from_reg_num = ? OR to_reg_num = ?) AND status = 'accept'";
       db.query(query1,[from_reg_num,from_reg_num],(error,result) => {
         if(error)return next(error);
-        if(result.length > 0)return res.status(400).json({"message":"Invalid Request you can't be a team_member of yourself!"})
         if(result.length == 0){
           let query2 = "insert into team_requests (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status, team_conformed) values(?, ?, ?, ?, ?, ?, ?, ?, ?)";
           db.query(query2,[team_id, name, emailId, reg_num, dept, from_reg_num, from_reg_num,'accept',true],(error,result) => {
@@ -338,15 +350,16 @@ router.patch("/student/team_request/conform_team", (req, res, next) => {
                 db.query(sql4,[team_id],(error,result) => {
                   if(error)return next(error);
                   if(result.length === 0)return next(createError.NotFound("reg_num not found!"));
-                  result.forEach((reg_num) => {
+                  let pending = result.length;
+                  result.forEach(({reg_num}) => {
                     let sql5 = "delete from team_requests where (from_reg_num = ? or to_reg_num = ?) and team_conformed = false and status <> 'accept' and team_id is null";
                     db.query(sql5,[reg_num,reg_num],(error,result) => {
                       if(error)return next(error);
                       if(result.affectedRows === 0)return res.status(500).send("some rows got not affected!");
+                      else pending --;
+                      if(pending === 0)return res.send("Team status changed from false to true, and team request added.");
                     })
                   })
-                  // final response
-                  res.send("Team status changed from false to true, and team request added.");
                 })
               });
             });

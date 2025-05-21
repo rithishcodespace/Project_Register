@@ -41,7 +41,7 @@ function Student_Dashboard() {
 
   const fetchTimeline = async () => {
     try {
-      const response = await axios.get('http://localhost:1234/admin/get_timelines');
+      const response = await instance.get('/admin/get_timelines');
       if (response.status === 200 && response.data.length > 0) {
         const current = new Date();
         const active = response.data.find(t => {
@@ -74,13 +74,12 @@ function Student_Dashboard() {
     }
 
     try {
-      const response = await axios.post(
-        'http://localhost:1234/student/invite_member',
+      const response = await instance.post(
+        '/student/invite_member',
         {
           ...inviteForm,
           from_reg_num: selector.reg_num,
-        },
-        { withCredentials: true }
+        }
       );
 
       if (response.status === 200) {
@@ -102,10 +101,9 @@ function Student_Dashboard() {
         return;
       }
 
-      const response = await axios.post(
-        'http://localhost:1234/student/fetch_team_status_and_invitations',
-        { "from_reg_num": reg_num },
-        { withCredentials: true }
+      const response = await instance.post(
+        '/student/fetch_team_status_and_invitations',
+        { "from_reg_num": reg_num }
       );
 
       if (response.status === 200) {
@@ -115,7 +113,7 @@ function Student_Dashboard() {
         setPendingInvitations(pendingInvitations || []);
 
         if (teamMembers.length === 0) {
-          let res = await axios.get(`http://localhost:1234/student/check_accepted_status/${reg_num}`, {
+          let res = await instance.get(`/student/check_accepted_status/${reg_num}`, {
             withCredentials: true
           });
           if (res.status === 200 && res.data.length > 0) {
@@ -138,8 +136,8 @@ function Student_Dashboard() {
     try {
       const regNum = selector.reg_num;
 
-      const response = await axios.patch(
-        'http://localhost:1234/student/team_request/conform_team',
+      const response = await instance.patch(
+        '/student/team_request/conform_team',
         {
           name: selector.name,
           emailId: selector.emailId,
