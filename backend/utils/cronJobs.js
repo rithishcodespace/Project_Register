@@ -2,7 +2,7 @@ const cron = require("node-cron");
 const db = require("../db");
 const generateWeeklyDeadlines = require("../utils/generateWeeklyDeadlines");
 
-cron.schedule("0 0 * * *", () => { // runs every day on midnight 00:00 AM
+cron.schedule("0 0 * * *", () => { // runs every day on midnight 00:00 AM -> to create deadlines for weekly logs
   console.log("Checking if project start date has reached...");
 
   const timelineQuery = `SELECT start_date FROM timeline WHERE name = 'project timeline' AND cron_executed = false LIMIT 1;`;
@@ -74,3 +74,20 @@ cron.schedule("0 0 * * *", () => { // runs every day on midnight 00:00 AM
     }
   });
 });
+
+// cron to mark attendence as absent
+// runs at 10:00 PM every day
+cron.schedule('0 22 * * *', () => {
+  const sql = `
+    UPDATE scheduled_reviews SET attendance = 'absent' WHERE attendance IS NULL AND review_date = CURDATE() AND TIMESTAMP(review_date, start_time) < NOW()
+  `;
+
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error("Failed to mark absentees:", err.message);
+    } else if (result.affectedRows > 0) {
+      console.log(`Marked ${result.affectedRows} teams as absent.`);
+    }
+  });
+});
+

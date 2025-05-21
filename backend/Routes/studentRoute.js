@@ -112,14 +112,21 @@ router.get("/student/request_recived/:regnum",(req,res,next) => {
 
 // fetch all the invitations the loggedIn user received
 
-router.get("/student/team_request/:emailId",(req,res,next) => {
+router.get("/student/team_request/:reg_num",(req,res,next) => {
   try{
-    const emailId = req.params.emailId;
-    if(!emailId)next(createError.BadRequest("emailId not found!"));
-    let sql = "select * from team_requests where emailId = ? and status = 'interested'"
-    db.query(sql,[emailId],(error,result) => {
-      if(error) next(error);
-      res.send(result);
+    const {reg_num} = req.params;
+    if(!reg_num)return next(createError.BadRequest("reg_num not found!"));
+    let sql1 = "SELECT * FROM team_requests WHERE (to_reg_num = ? OR from_reg_num = ?) AND status = 'accept'";
+    db.query(sql1,[reg_num,reg_num],(error,result) => {
+      if(error)return next(error);
+      if(result.length > 0){
+        return res.send("YOU ALREADY A TEAM MEMBER SO YOU CANT SEE THE REQUESTS SENT TO YOU!");
+      }
+      let sql = "select * from team_requests where to_reg_num = ? and status = 'interested'"
+      db.query(sql,[reg_num],(error,result) => {
+        if(error)return next(error);
+        return res.send(result);
+    })
     })
   }
   catch(error)
@@ -129,36 +136,45 @@ router.get("/student/team_request/:emailId",(req,res,next) => {
 })
 
 // accept or reject request -> inside notification
-router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",(req,res,next) => {
-    try{
-      const from_reg_num = req.params.from_reg_num;
-      const to_reg_num = req.params.to_reg_num;
-      const status = req.params.status;            // to will be logged in user
-      if(!from_reg_num || !to_reg_num)return next(createError.BadRequest("userId not found!"))        
-      let sql = `UPDATE team_requests SET status = ? WHERE to_reg_num = ? AND from_reg_num = ? AND status = 'interested'`;
-      db.query(sql,[status, to_reg_num, from_reg_num],(error,result) => {
-        if(error) return next(error);
-        if(result.affectedRows === 0)return next(createError.BadRequest("an error occured silently!"));
-        let sql1 = "select * from team_requests where from_reg_num = ? and status = 'accept'";
-        db.query(sql1,[from_reg_num],(error1,result1) => {
-          if(error1)return next(error1);
-          if(result1.length >= 3)
-          {
-            let sql2 = "DELETE FROM team_requests WHERE from_reg_num = ? AND status <> 'accept'";
-            db.query(sql2,[from_reg_num],(error2,result2) => {
-              if(error2)return next(error2);
-              return res.send(`status updated to ${status}`);
-            })
+router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num", (req, res, next) => {
+  try {
+    const { from_reg_num, to_reg_num, status } = req.params;
+
+    if (!from_reg_num || !to_reg_num || !status)
+      return next(createError.BadRequest("Missing required parameters."));
+
+    //  Update the request if it exists and is still 'interested'
+    const updateSQL = `UPDATE team_requests SET status = ? WHERE to_reg_num = ? AND from_reg_num = ? AND status = 'interested'`;
+
+    db.query(updateSQL, [status, to_reg_num, from_reg_num], (err, result) => {
+      if (err) return next(err);
+      if (result.affectedRows === 0)
+        return next(createError.BadRequest("No matching pending request found or already processed."));
+
+      // If accepted, check team size
+      if (status.toLowerCase() === 'accept') {
+        const countSQL = `SELECT COUNT(*) AS count FROM team_requests WHERE from_reg_num = ? AND status = 'accept'`;
+        db.query(countSQL, [from_reg_num], (err1, result1) => {
+          if (err1) return next(err1);
+          const acceptedCount = result1[0].count;
+          if (acceptedCount >= 3) {
+            const cleanupSQL = `DELETE FROM team_requests WHERE from_reg_num = ? AND status <> 'accept'`;
+            db.query(cleanupSQL, [from_reg_num], (err2) => {
+              if (err2) return next(err2);
+              return res.send(`Request accepted. Team is now full. Remaining pending requests were removed.`);
+            });
+          } else {
+            return res.send(`Request accepted successfully. Current team size: ${acceptedCount}`);
           }
-          else return res.send(`${status} updated successfully!!`);
-        })
-      })
-    }
-    catch(error)
-    {
-       next(error);
-    }
-})
+        });
+      } else {
+        return res.send(`Request ${status}ed successfully.`);
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // it checks whether he sent invitations and if sent it is conformed
 router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
@@ -686,5 +702,24 @@ router.post("/student/addproject/:project_type/:reg_num", (req, res, next) => {
     next(error.message);
   }
 });
+
+// sends the review request to the expert => once in a month
+router.post("/student/send_review_request/:team_id/:project_id",(req,res,next) => {
+  try{
+    const{team_id,project_id} = req.params;
+    const{project_name,team_lead,review_date,start_time,expert_reg_num} = req.body;
+    if(!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time || !expert_reg_num)return next(createError.BadRequest("some parameters are missing!"));
+    
+    let sql = "insert into review_requests (team_id,project_id,project_name,team_lead,review_date,start_time,expert_reg_num) values (?, ?, ?, ?, ?, ?, ?)";
+    db.query(sql,[team_id,project_id,project_name,team_lead,review_date,start_time,expert_reg_num],(error,result) => {
+      if(error)return next(error);
+      res.send(`${review_date}:-${start_time} request inserted successfully`)
+    })
+  }
+  catch(error)
+  {
+
+  }
+})
 
 module.exports = router;

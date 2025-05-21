@@ -91,6 +91,7 @@ CREATE TABLE `scheduled_reviews` (
   `team_lead` VARCHAR(300) DEFAULT NULL,
   `review_date` DATE DEFAULT NULL,
   `start_time` TIME DEFAULT NULL,
+  `venue` varchar(200) DEFAULT NULL,
   `attendance` VARCHAR(255) DEFAULT 'absent',
   `marks` VARCHAR(20) DEFAULT NULL,
   `remarks` VARCHAR(5000) DEFAULT NULL,
@@ -164,6 +165,23 @@ CREATE TABLE weekly_logs_verification (
 
     PRIMARY KEY (team_id, week_number)
 );
+
+CREATE TABLE review_requests (
+  request_id INT AUTO_INCREMENT PRIMARY KEY,
+  team_id VARCHAR(50) NOT NULL,
+  project_id VARCHAR(50) NOT NULL,
+  project_name VARCHAR(100) NOT NULL,
+  team_lead VARCHAR(50) NOT NULL,
+  review_date DATE DEFAULT NULL,
+  start_time TIME DEFAULT NULL,
+  status varchar(100) DEFAULT 'interested',
+  expert_reg_num varchar(100) NOT NULL
+  
+  INDEX idx_team_id (team_id),
+  INDEX idx_project_id (project_id),
+  INDEX idx_review_date (review_date)
+);
+
 
 
 

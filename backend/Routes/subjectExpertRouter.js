@@ -177,20 +177,58 @@ router.get("/sub_expert/fetch_teams/:expert_id",(req,res,next) => {
     }
 })
 
-// adding review details in scheduled reviews
+// fetching the review requests sent by the student teams
 
-router.post("/sub_expert/add_review_details",(req,res,next) => {
+router.get("/sub_expert/fetch_review_requests/:expert_reg_num",(req,res,next) => {
+  try{
+    const{expert_reg_num} = req.params;
+    if(!expert_reg_num)return next(createError.BadRequest("expert reg num missing!"));
+    let sql = "SELECT * FROM scheduled_reviews WHERE expert_reg_num = ? AND review_date >= CURRENT_DATE AND attendence IS NULL";
+    db.query(sql,[expert_reg_num],(error,result) => {
+      if(error)return next(error);
+      return res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+// conforming the review request by student
+
+router.post("/sub_expert/add_review_details/:request_id/:status",(req,res,next) => {
     try{
-      const{project_id,project_name,team_lead,review_date,start_time} = req.body;
-      if(!project_id || !project_name || !team_lead || !review_date || !start_time)
+      const{project_id,project_name,team_lead,review_date,start_time,venue} = req.body;
+      const{request_id,status} = req.params;
+      if(!project_id || !project_name || !team_lead || !review_date || !start_time || !venue || !request_id || !status)
       {
         return next(createError.BadRequest("data is missing!"));
       }
-      let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time) values(?,?,?,?,?)";
-      db.query(sql,[project_id,project_name,team_lead,review_date,start_time],(error,result) => {
-        if(error) return next(error);
-        if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
-        res.send("review details added successfully!");
+      // updating status
+      let updatequery = "UPDATE review_requests SET status = ? WHERE request_id = ?";
+      db.query(updatequery,[status,request_id],(error,result) => {
+        if(error)return next(error);
+        if(result.affectedRows === 0)return next(createError.BadRequest("some rows not affected!"));
+        if(status === 'accept')
+        {
+          // inserting into scheduled reivews
+          let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,venue) values(?,?,?,?,?,?)";
+          db.query(sql,[project_id,project_name,team_lead,review_date,start_time,venue],(error,result) => {
+            if(error) return next(error);
+            if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
+            // removing request from the review requests
+            let sql1 = "delete from review_requests where request_id = ?";
+            db.query(sql1,[request_id],(error,result)=>{
+              if(error)return next(error);
+              return res.send(`${request_id} :- ${status}ed successfully and inserted into the scheduled reviews`);
+            })
+          })
+        }
+        else if(status == 'reject')
+        {
+          return res.send(`${request_id} :- ${status}ed successfully`)
+        }
       })
     }
     catch(error)
