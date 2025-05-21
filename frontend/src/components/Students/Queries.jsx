@@ -71,7 +71,7 @@ function Queries() {
     <div className="min-h-screen w-full bg-gray-50">
       <div className="w-full mx-auto flex flex-col min-h-screen">
         {/* Header */}
-        <div className="text-black absolute top-24 left-[850px] text-2xl text-center font-semibold px-4 py-3">
+        <div className="text-black  top-24 left-[850px] text-2xl text-center font-semibold px-4 py-3">
           Guide Chat
         </div>
 

@@ -222,9 +222,7 @@ function Student_Dashboard() {
               <button
                 onClick={handleConfirmTeam}
                 className="px-4 py-2 bg-green-600 text-white rounded"
-              ><Link to="/student" className='bg-green-600' >Confirm Team</Link>
-                
-              </button>
+              ><Link to="/student"  onClick={() => {window.location.href = "/student"; }}  className='bg-green-600' >Confirm Team</Link></button>
             )}
           </div>
         )}

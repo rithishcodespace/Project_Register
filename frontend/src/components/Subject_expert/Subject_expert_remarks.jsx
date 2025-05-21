@@ -93,7 +93,7 @@ function Subject_expert_remarks() {
 
                 {phase.mark !== null ? (
                   <p className="mt-2 text-green-600 bg-white  font-semibold">
-                    ✅ Marks Entered: {phase.mark}/10
+                     Marks Entered: {phase.mark}/10
                   </p>
                 ) : canEnter ? (<>
                   <div className="mt-2 flex mb-5 items-center bg-white gap-2">
@@ -121,8 +121,8 @@ function Subject_expert_remarks() {
                 ) : (
                   <p className="mt-2 text-red-500 bg-white  font-semibold">
                     {reviewStarted
-                      ? "❌ Mark entry window expired (after 2 days)"
-                      : "⏳ Review time has not started yet"}
+                      ? "Mark entry window expired (after 2 days)"
+                      : "Review time has not started yet"}
                   </p>
                 )}
               </div>

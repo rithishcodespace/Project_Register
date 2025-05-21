@@ -27,14 +27,15 @@ CREATE TABLE `projects` (
   `project_name` varchar(500) DEFAULT NULL,
   `cluster` varchar(100) DEFAULT NULL,
   `description` text,
-  `status` varchar(100) DEFAULT 'available',
-  `project_type` varchar(50) null,
-  `guide_reg_num` varchar(5000) DEFAULT NULL,
+  `outcome` text,
+  `hard_soft` varchar(50) NOT NULL,
+  `project_type` varchar(50) DEFAULT NULL,
+  `student_reg_num` tl_reg_num VARCHAR(20) DEFAULT NULL
   `posted_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`),
-  UNIQUE KEY `unique_project_name` (`project_name`),
-  INDEX `idx_status` (`status`)
+  UNIQUE KEY `unique_project_name` (`project_name`)
 );
+
 
 
 CREATE TABLE team_requests (
@@ -51,7 +52,7 @@ CREATE TABLE team_requests (
   guide_reg_num varchar(500) DEFAULT NULL,
   sub_expert_reg_num varchar(500) DEFAULT NULL,
   project_picked_date datetime DEFAULT CURRENT_TIMESTAMP,
-  guide_verified BOOLEAN DEFAULT false,
+  guide_verified INT DEFAULT 0,
   week1_progress varchar(200) DEFAULT NULL,
   week2_progress varchar(200) DEFAULT NULL,
   week3_progress varchar(200) DEFAULT NULL,
@@ -110,19 +111,19 @@ CREATE TABLE `sub_expert_requests` (
 CREATE TABLE `weekly_logs_deadlines` (
   `team_id` varchar(50) NOT NULL,
   `project_id` varchar(100) DEFAULT NULL,
-  `week_1` date DEFAULT NULL,
-  `week_2` date DEFAULT NULL,
-  `week_3` date DEFAULT NULL,
-  `week_4` date DEFAULT NULL,
-  `week_5` date DEFAULT NULL,
-  `week_6` date DEFAULT NULL,
-  `week_7` date DEFAULT NULL,
-  `week_8` date DEFAULT NULL,
-  `week_9` date DEFAULT NULL,
-  `week_10` date DEFAULT NULL,
-  `week_11` date DEFAULT NULL,
-  `week_12` date DEFAULT NULL,
-  PRIMARY KEY (`team_id`)
+  `week1` date DEFAULT NULL,
+  `week2` date DEFAULT NULL,
+  `week3` date DEFAULT NULL,
+  `week4` date DEFAULT NULL,
+  `week5` date DEFAULT NULL,
+  `week6` date DEFAULT NULL,
+  `week7` date DEFAULT NULL,
+  `week8` date DEFAULT NULL,
+  `week9` date DEFAULT NULL,
+  `week10` date DEFAULT NULL,
+  `week11` date DEFAULT NULL,
+  `week12` date DEFAULT NULL,
+  PRIMARY KEY (team_id, project_id);
 ) 
 
 CREATE TABLE `users` (
@@ -147,9 +148,22 @@ CREATE TABLE timeline (
     name VARCHAR(100) NOT NULL,
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
+    cron_executed boolean default false,
     INDEX index_start_date (start_date),
     INDEX index_end_date (end_date),
     INDEX index_date_range (start_date, end_date)
 );
+
+CREATE TABLE weekly_logs_verification (
+    team_id INT NOT NULL,
+    week_number INT NOT NULL CHECK (week_number BETWEEN 1 AND 12),
+    is_verified BOOLEAN DEFAULT FALSE,
+    verified_by VARCHAR(100), -- e.g., guide's email or user ID
+    verified_at DATETIME DEFAULT NULL,
+    remarks TEXT,
+
+    PRIMARY KEY (team_id, week_number)
+);
+
 
 

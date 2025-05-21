@@ -4,7 +4,7 @@ const sampleProjects = [
   {
     id: 1,
     projectName: "Smart Attendance System",
-    teamLead: "Keerthana M",
+    teamLead: "Keerthana fsssssssss",
     scheduledDate: "2025-05-16T13:13", // For testing: May 8, 2025, 2 PM
   },
   {
