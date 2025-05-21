@@ -60,7 +60,7 @@ function Guide_dashboard() {
   // Fetch mentored teams
   const fetchMentoredTeams = async () => {
     try {
-      const res = awaitinstance.get(
+      const res = await instance.get(
         `/guide/fetch_mentoring_teams/${selector.reg_num}`
       );
       if (Array.isArray(res.data)) {
