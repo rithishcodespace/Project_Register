@@ -7,7 +7,7 @@ const Project_Details = () => {
   const userselector = useSelector((State) => State.userSlice);
   const teamselector = useSelector((State) => State.teamSlice);
 
-  const { project_id } = useParams(); // Get project_id from URL
+  const  project_id  = teamselector.project_id; // Get project_id from URL
 
   // Form state
   const [projectName, setProjectName] = useState('');
