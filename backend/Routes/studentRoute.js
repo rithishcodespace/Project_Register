@@ -50,17 +50,17 @@ router.post("/student/join_request", (req, res, next) => {
       let {name,emailId,reg_num,dept} = result[0];
       if (!name.trim() || !emailId.trim() || !reg_num.trim() || !dept.trim())return next(createError.BadRequest("User details not found!"));
       // checks for already a connection request exists or not for me and him
-      let sql = "SELECT * FROM team_requests WHERE from_reg_num = ? AND to_reg_num = ?";
-      db.query(sql, [from_reg_num, to_reg_num], (error, result) => {
+      let sql = "SELECT * FROM team_requests WHERE (from_reg_num = ? AND to_reg_num = ?) or (to_reg_num = ? and from_reg_num = ?)";
+      db.query(sql, [from_reg_num, to_reg_num,from_reg_num,to_reg_num], (error, result) => {
         if (error) return next(error);
   
         if (result.length > 0) {
           return res.send(`Connection request already exists with status: ${result[0].status}`);
         }
   
-        // checks wheter he is in another team
-        let checkConnection = "select * from team_requests where to_reg_num = ? and status = 'accept'";
-        db.query(checkConnection,[to_reg_num],(error,result) => {
+        // checks wheter he is in another team or team_leader  
+        let checkConnection = "select * from team_requests where (to_reg_num = ? or from_reg_num) and status = 'accept'";
+        db.query(checkConnection,[to_reg_num,to_reg_num],(error,result) => {
           if(error)return next(error);
           if(result.length > 0)return next(createError.BadRequest("He is already a member of some other team!"));
   
@@ -323,7 +323,7 @@ router.patch("/student/team_request/conform_team", (req, res, next) => {
 
         if(result2.affectedRows === 0)return res.status(500).send("some error occured silently!");
 
-        // Insert the team request (Executed Last)
+        // Insert the team request (Executed Last) -> team leader
         let sql3 = `
           INSERT INTO team_requests (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status,team_conformed) 
           VALUES (?, ?, ?, ?, ?, ?, ?, 'accept',1)
@@ -333,8 +333,21 @@ router.patch("/student/team_request/conform_team", (req, res, next) => {
 
           if(result3.affectedRows === 0)return res.status(500).send("some error occured silently!");
 
-          // Response to Client
-          res.send("Team status changed from false to true, and team request added.");
+          // remove the requests recieved the conformed team members
+          let sql4 = "select to_reg_num from team_requests where team_id = ?";
+          db.query(sql4,[team_id],(error,result) => {
+            if(error)return next(error);
+            if(result.length === 0)return next(createError.NotFound("reg_num not found!"));
+            result.forEach((reg_num) => {
+              let sql5 = "delete from team_requests where (from_reg_num = ? or to_reg_num = ?) and team_conformed = false and status <> 'accept' and team_id is null";
+              db.query(sql5,[reg_num,reg_num],(error,result) => {
+                if(error)return next(error);
+                if(result.affectedRows === 0)return res.status(500).send("some rows got not affected!");
+              })
+            })
+            // final response
+            res.send("Team status changed from false to true, and team request added.");
+          })
         });
       });
     });

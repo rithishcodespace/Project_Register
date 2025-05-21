@@ -4,7 +4,7 @@ import { Home, Users, FileText, BarChart2, LogOut, MessagesSquare } from 'lucide
 import college_img from "../../assets/college_img.png";
 import menu from "../../assets/menu.png";
 import wrong from "../../assets/wrong.png";
-import axios from 'axios';
+import instance from '../../utils/axiosInstance';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeUser } from '../../utils/userSlice';
 import { removeTeamMembers } from '../../utils/teamSlice';
@@ -20,9 +20,7 @@ function Student_navbar({ isOpen, toggleSidebar }) {
 
   const handleLogout = async () => {
     try {
-      await axios.delete("http://localhost:1234/auth/logout", {
-        withCredentials: true
-      });
+      await instance.delete("/auth/logout");
 
       dispatch(removeUser());
       dispatch(removeTeamMembers());
@@ -46,12 +44,8 @@ function Student_navbar({ isOpen, toggleSidebar }) {
 
       const reg_num = selector[0].reg_num;
 
-      const response = await axios.get(
-        `http://localhost:1234/student/getTeamDetails/${reg_num}`,
-        {
-          withCredentials:true
-        }
-      );
+      const response = await instance.get(
+        `/student/getTeamDetails/${reg_num}`);
 
       if (response.status === 200) {
         setTeam(response.data || []);

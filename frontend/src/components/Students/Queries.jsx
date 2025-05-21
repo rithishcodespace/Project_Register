@@ -38,7 +38,7 @@ function Queries() {
   const fetchQueries = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get(
+      const response = await instance.get(
         `/student/get_queries_sent_by_my_team/${selector[0].team_id}`,
       );
       if (Array.isArray(response.data)) {

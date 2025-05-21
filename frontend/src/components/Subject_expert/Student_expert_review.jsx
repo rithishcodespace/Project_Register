@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import instance from "../../utils/axiosInstance";
 import { useSelector } from "react-redux";
 
 function Student_expert_review() {
@@ -16,8 +16,8 @@ function Student_expert_review() {
 
   const fetchReviewRequests = async () => {
     try {
-      const res = await axios.get(
-        `http://localhost:1234/sub_expert/fetch_review_requests/${selector.reg_num}`,{withCredentials:true}
+      const res = await instance.get(
+        `/sub_expert/fetch_review_requests/${selector.reg_num}`
       );
       setProjects(res.data);
       console.log(res.data)
@@ -66,8 +66,8 @@ function Student_expert_review() {
 
   const markAttendance = async (teamId) => {
     try {
-      await axios.patch(
-        `http://localhost:1234/sub_expert/mark_attendance/${teamId}`,{withCredentials:true}
+      await instance.patch(
+        `/sub_expert/mark_attendance/${teamId}`
       );
       setAttendanceMarked((prev) => ({
         ...prev,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import instance from '../../utils/axiosInstance';
 import { useSelector } from 'react-redux';
 
 function Student_expert_mark_attendence() {
@@ -10,9 +10,8 @@ function Student_expert_mark_attendence() {
 
   async function fetchMentoringProjects() {
     try {
-      let response = await axios.get(
-        `http://localhost:1234/sub_expert/fetch_teams/${selector.reg_num}`,
-        { withCredentials: true }
+      let response = await instance.get(
+        `/sub_expert/fetch_teams/${selector.reg_num}`
       );
 
       if (response.status === 200) {

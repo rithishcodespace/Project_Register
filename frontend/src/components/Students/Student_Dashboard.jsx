@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 // import CreateForm from './CreateForm';
 import InviteForm from './InviteForm';
 import TeamDetails from './TeamDetails';
-import axios from 'axios';
+import instance from '../../utils/axiosInstance';
 import { useSelector, useDispatch } from 'react-redux';
 import { addUser } from '../../utils/userSlice';
 import { addTeamMembers,removeTeamMembers } from '../../utils/teamSlice';
@@ -27,7 +27,7 @@ function Student_Dashboard() {
 
 const fetchTimeline = async () => {
   try {
-    const response = await axios.get('http://localhost:1234/admin/get_timelines');
+    const response = await instance.get('/admin/get_timelines');
     if (response.status === 200 && response.data.length > 0) {
       const current = new Date();
       const active = response.data.find(t => {
@@ -80,11 +80,8 @@ useEffect(() => {
         console.error("Access token is missing");
         return;
       }
-      const response = await axios.post('http://localhost:1234/student/fetch_team_status_and_invitations', 
-        { "from_reg_num": reg_num },
-        {
-         withCredentials:true
-        }
+      const response = await instance.post('/student/fetch_team_status_and_invitations', 
+        { "from_reg_num": reg_num }
       );
 
       if (response.status === 200) {
@@ -96,9 +93,7 @@ useEffect(() => {
         if(teamMembers.length == 0)
         { 
           // checks whether he is a team member of another team without conformed
-          let res = await axios.get(`http://localhost:1234/student/check_accepted_status/${reg_num}`,{
-            withCredentials:true
-          })
+          let res = await instance.get(`/student/check_accepted_status/${reg_num}`)
           if(res.status === 200 && res.data.length > 0)
           {
             console.log("second api: ",res.data);
@@ -124,8 +119,8 @@ useEffect(() => {
       const token = localStorage.getItem('accessToken');
       const regNum = selector.reg_num;
 
-      const response = await axios.patch(
-        'http://localhost:1234/student/team_request/conform_team',
+      const response = await instance.patch(
+        '/student/team_request/conform_team',
         { 
           name: selector.name,
           emailId: selector.emailId,
@@ -133,9 +128,6 @@ useEffect(() => {
           dept: selector.dept,
           from_reg_num: regNum,
           to_reg_num: selector.reg_num 
-        },
-        {
-         withCredentials:true
         }
       );
 

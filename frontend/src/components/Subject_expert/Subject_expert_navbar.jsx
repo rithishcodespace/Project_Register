@@ -4,7 +4,7 @@ import { Home, CheckSquare, FileText, Calendar, BarChart2, Users, LogOut } from 
 import college_img from "../../assets/college_img.png";
 import menu from "../../assets/menu.png";
 import wrong from "../../assets/wrong.png";
-import axios from 'axios';
+import instance from '../../utils/axiosInstance';
 import { useDispatch } from 'react-redux';
 import { removeUser} from '../../utils/userSlice';
 import { removeTeamMembers } from '../../utils/teamSlice';
@@ -20,10 +20,7 @@ function Subject_expert_navbar({ isOpen, toggleSidebar }) {
       localStorage.clear();
       console.log("cleared all");
       let token = localStorage.getItem("refreshToken");
-      await axios.delete("http://localhost:1234/auth/logout", {
-        data: { refreshToken: token },
-        withCredentials:true
-      });
+      await instance.delete("/auth/logout")
       dispatch(removeTeamMembers());
       dispatch(removeUser());
       dispatch(removeTeamStatus());

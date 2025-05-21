@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Store } from 'lucide-react';
 import {useSelector} from "react-redux";
-import axios from "axios";
+import instance from '../../utils/axiosInstance';
 
 const SubjectExpertDashboard = () => {
   const [invitations, setInvitations] = useState([]);
@@ -11,9 +11,7 @@ const SubjectExpertDashboard = () => {
 
   async function fetchInvitations() {
   try {
-    const response = await axios.get(`http://localhost:1234/expert/getrequests/${selector.reg_num}`, {
-      withCredentials: true,
-    });
+    const response = await instance.get(`/expert/getrequests/${selector.reg_num}`);
 
     console.log("Response data:", response.data); // <-- Debug line
 
@@ -37,7 +35,7 @@ const SubjectExpertDashboard = () => {
 
   const handleAccept = async(teamId) => {
     let status = 'accept';
-    let response = await axios.patch(`http://localhost:1234/sub_expert/accept_reject/${status}/${teamId}/${selector.reg_num}`,{withCredentials: true});
+    let response = awaitinstance.patch(`/sub_expert/accept_reject/${status}/${teamId}/${selector.reg_num}`);
     if(response.status === 200){
       alert(`${teamId} accepted!`);
       setInvitations(prev => prev.filter(invite => invite.from_team_id !== teamId));
@@ -46,7 +44,7 @@ const SubjectExpertDashboard = () => {
 
   const handleReject = async(teamId) => {
    let status = 'reject';
-   let response = await axios.patch(`http://localhost:1234/sub_expert/accept_reject/${status}/${teamId}/${selector.reg_num}`,{withCredentials: true})
+   let response = await instance.patch(`/sub_expert/accept_reject/${status}/${teamId}/${selector.reg_num}`)
    if(response.status === 200){
       alert(`${teamId} accepted!`);
       setInvitations(prev => prev.filter(invite => invite.from_team_id !== teamId));

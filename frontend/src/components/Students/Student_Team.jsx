@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import instance from '../../utils/axiosInstance';
 import {useSelector} from "react-redux";
 
 function Student_Team() {
@@ -13,9 +13,7 @@ function Student_Team() {
       let reg_num = selector.reg_num;
       let response;
       if (reg_num) {
-         response = await axios.get(`http://localhost:1234/student/getTeamDetails/${reg_num}`, {
-         withCredentials:true
-        });
+         response = await instance.get(`/student/getTeamDetails/${reg_num}`);
       } else {
         console.error("No reg_num available!");
       }
