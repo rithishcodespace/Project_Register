@@ -101,12 +101,12 @@ function Subject_expert_remarks() {
                     <input
                       type="number"
                       min="0"
-                      max="10"
+                      max="50"
                       value={inputMarks[key] || ""}
                       onChange={(e) =>
                         handleMarkChange(project.id, index, e.target.value)
                       }
-                      placeholder="Enter mark (0–10)"
+                      placeholder="Enter mark (0-50)"
                       className="border p-2 min-w-48 bg-white rounded w-32"
                     />
                     <button
