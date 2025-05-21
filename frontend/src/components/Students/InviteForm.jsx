@@ -13,6 +13,8 @@ function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen }) {
 
     try {
       const response = await axios.post(
+        console.log(selector.reg_num),
+        console.log(inviteForm.registerNumber),
         "http://localhost:1234/student/join_request",
         {
           from_reg_num: selector.reg_num,           // sender
