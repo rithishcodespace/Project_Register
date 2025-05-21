@@ -13,7 +13,6 @@ import Student_Team from "./components/Students/Student_Team";
 import Admin from "./components/Admin/Admin";
 import Add_Users from "./components/Admin/Add_Users";
 import Students_Progress from "./components/Admin/Students_Progress";
-import Add_Project from "./components/Admin/Add_Project";
 import Posted_project from "./components/Admin/Posted_project";
 import Admin_Dashboard from "./components/Admin/Admin_Dashboard";
 import Create_team from "./components/Teacher/Create_team";
@@ -86,7 +85,6 @@ function App() {
           <Route path="/admin" element={<Admin />}>
             <Route index element={<Admin_Dashboard />} /> 
             <Route path="add_users" element={<Add_Users />} />
-            <Route path="/admin/posted_projects/add_project" element={<Add_Project />} />
             <Route path="posted_projects" element={<Posted_project />} />
             <Route path="students_progress" element={<Students_Progress />} />
             <Route path="/admin/posted_projects/:project_id" element={<Admin_project_details />} />

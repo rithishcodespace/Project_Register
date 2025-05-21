@@ -2,7 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 
-function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen, departments }) {
+function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen,  }) {
 
   const selector = useSelector((Store) => Store.userSlice);
 
@@ -16,10 +16,7 @@ function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen, departmen
       const response = await axios.post(
         "http://localhost:1234/student/join_request",
         {
-          "name": inviteForm.name,
-          "emailId": inviteForm.email,
           "reg_num": inviteForm.registerNumber,
-          "dept": inviteForm.department,
           "from_reg_num": selector.reg_num,
           "to_reg_num": inviteForm.registerNumber
         },
@@ -43,30 +40,6 @@ function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen, departmen
         <h2 className="text-xl font-semibold mb-4 bg-white">Invite a Member</h2>
         <form onSubmit={handleInviteSubmit} className="space-y-4 bg-white">
           <div className="bg-white">
-            <label className="block text-sm font-medium text-gray-700 bg-white">Name</label>
-            <input
-              name="name"
-              value={inviteForm.name}
-              onChange={handleInviteChange}
-              type="text"
-              required
-              placeholder="Enter Name"
-              className="mt-1 bg-white block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-indigo-300"
-            />
-          </div>
-          <div className="bg-white">
-            <label className="block text-sm font-medium text-gray-700 bg-white">Email</label>
-            <input
-              name="email"
-              value={inviteForm.email}
-              onChange={handleInviteChange}
-              type="email"
-              required
-              placeholder="Enter Email"
-              className="mt-1 bg-white block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-indigo-300"
-            />
-          </div>
-          <div className="bg-white">
             <label className="block text-sm font-medium text-gray-700 bg-white">Register Number</label>
             <input
               name="registerNumber"
@@ -77,21 +50,6 @@ function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen, departmen
               placeholder="Enter Register Number"
               className="mt-1 bg-white block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-indigo-300"
             />
-          </div>
-          <div className="bg-white">
-            <label className="block text-sm font-medium text-gray-700 bg-white">Department</label>
-            <select
-              name="department"
-              value={inviteForm.department}
-              onChange={handleInviteChange}
-              required
-              className="mt-1 bg-white block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-indigo-300"
-            >
-              <option value="">Select Department</option>
-              {departments.map((dept) => (
-                <option key={dept} value={dept}>{dept}</option>
-              ))}
-            </select>
           </div>
           <div className="mt-6 flex bg-white justify-between space-x-2">
             <button

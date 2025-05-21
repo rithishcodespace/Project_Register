@@ -21,6 +21,8 @@ router.post("/admin/adduser",(req,res,next) => {
    }
 })
 
+// get project through project_id
+
 router.get("/admin/getproject_by_team_id/:project_id",(req,res,next) => {
   try{
    const{project_id} = req.params;
@@ -139,7 +141,7 @@ router.delete("/admin/remove_timeline/:id",(req,res,next) => {
   }
 })
 
-// updates the timeline 
+// updates the timeline -> whole timeline (not team_specific)
 
 router.patch("/admin/update_timeline_id/:id",(req,res,next) => {
   try{
@@ -169,6 +171,55 @@ router.patch("/admin/update_timeline_id/:id",(req,res,next) => {
     next(error);
   }
 })
+
+// updates timeline team-specific -> either guide or expert not accepted
+
+router.patch("/admin/update_team_timeline/:team_id", (req, res, next) => {
+  try {
+    const { team_id } = req.params;
+    const { start_date, end_date } = req.body;
+
+    if (!start_date || !end_date) {
+      return next(createError.BadRequest("Start and end dates are required."));
+    }
+
+    const date1 = new Date(start_date);
+    const date2 = new Date(end_date);
+    date1.setHours(0, 0, 0, 0);
+    date2.setHours(0, 0, 0, 0);
+
+    if (date1 > date2) {
+      return next(createError.BadRequest("Start date cannot be after end date."));
+    }
+
+    const sql = `
+      UPDATE timeline 
+      SET start_date = ?, end_date = ?, cron_executed = false 
+      WHERE team_id = ? AND name = 'project timeline'
+    `;
+
+    db.query(sql, [start_date, end_date, team_id], (error, result) => {
+      if (error) return next(error);
+      if (result.affectedRows === 0) {
+        return next(createError.BadRequest("No timeline found for the team."));
+      }
+
+      res.status(200).json({
+        message: "Team-specific timeline updated successfully.",
+        team_id,
+        start_date,
+        end_date
+      });
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// updates the deadline only for specific week -> not updated weekly log
+
+// router.patch()
+
 
 // fetches the team_progress based on the project_id
 

@@ -1,110 +1,108 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 
-function TeacherAdd() {
+function Project_Details() {
   const [projectName, setProjectName] = useState('');
   const [clusterName, setClusterName] = useState('');
   const [description, setDescription] = useState('');
-  const [phases, setPhases] = useState(
-    Array(5).fill({ requirements: '', days: '' })
-  );
+  const [objective, setObjective] = useState('');
+  const [outcome, setOutcome] = useState('');
 
-  const handlePhaseChange = (index, field, value) => {
-    const newPhases = [...phases];
-    newPhases[index] = { ...newPhases[index], [field]: value };
-    setPhases(newPhases);
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
-    try {
-      const accessToken = localStorage.getItem("accessToken");
-      const response = await axios.post('http://localhost:1234/teacher/addproject/INTERNAL', {
-        "project_name":projectName,
-        "cluster":clusterName,
-        "description":description
-      }, {
-        
-        withCredentials: true,
-      });
+    const projectData = {
+      projectName,
+      clusterName,
+      description,
+      objective,
+      outcome
+    };
 
-      if (response.status === 200) {
-        alert('Project added successfully!');
-        // Optionally reset form here
-      } else {
-        alert('Failed to add project');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('An error occurred while adding the project.');
-    }
+    console.log("Project Data:", projectData);
+    alert('Project submitted successfully (not saved to backend).');
   };
 
-  return (<>  
-        <h2 className="text-3xl font-semibold mb-2 text-center mt-5 text-black">Post New Project</h2>
-          <div className="min-h- flex  items- justify-center bg-white-50 p-6">
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-8">
+  return (
+    <>
+      <h2 className="text-3xl font-semibold mb-2 text-center mt-5 text-black">Post New Project</h2>
+      <div className="min-h-screen flex justify-center bg-white-50 p-6">
+        <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-8">
           <form className="space-y-6 bg-white" onSubmit={handleSubmit}>
-            {/* Project and Cluster Name */}
-            <div className="grid grid-cols-1 bg-white md:grid-cols-2 gap-6">
-              <div className='bg-white'>
-                <label className="block bg-white text-sm font-medium text-gray-700">Project Name</label>
+            {/* Project Name and Cluster */}
+            
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Project Name</label>
                 <input
                   type="text"
                   required
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   placeholder="Enter Project Name"
-                  className="mt-1 bg-white w-full border border-gray-300 rounded-md px-3 py-2"
+                  className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
                 />
               </div>
-              <div className='bg-white'>
-                <label className="block bg-white text-sm font-medium text-gray-700">Cluster Name</label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Cluster Name</label>
                 <select
-                    required
-                    value={clusterName}
-                    onChange={(e) => setClusterName(e.target.value)}
-                    className="mt-1 bg-white w-full border border-gray-300 rounded-md px-3 py-2"
-  >                 
-                    <option value="" disabled>
-                      Select Cluster Name
-                    </option>
-                    <option value="CSE">CSE</option>
-                    <option value="AIDS">AIDS</option>
-                    <option value="IT">IT</option>
-                    <option value="AIML">AIML</option>
-                    <option value="CT">CT</option>
-                    <option value="AGRI">AGRI</option>
-                    <option value="ECE">ECE</option>
-                    <option value="EIE">EIE</option>
-                    <option value="EEE">EEE</option>
-                    <option value="MECH">MECH</option>
-                    <option value="FT">FT</option>
-                    <option value="FD">FD</option>
-                    {/* Add more options as needed */}
-                  </select>
+                  required
+                  value={clusterName}
+                  onChange={(e) => setClusterName(e.target.value)}
+                  className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
+                >
+                  <option value="" disabled>Select Cluster Name</option>
+                  <option value="CSE">CSE</option>
+                  <option value="AIDS">AIDS</option>
+                  <option value="IT">IT</option>
+                  <option value="AIML">AIML</option>
+                  <option value="CT">CT</option>
+                  <option value="AGRI">AGRI</option>
+                  <option value="ECE">ECE</option>
+                  <option value="EIE">EIE</option>
+                  <option value="EEE">EEE</option>
+                  <option value="MECH">MECH</option>
+                  <option value="FT">FT</option>
+                  <option value="FD">FD</option>
+                </select>
               </div>
-            </div>
 
             {/* Description */}
-            <div className='bg-white'>
-              <label className="block text-sm bg-white font-medium text-gray-700">Description</label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
               <textarea
-                type="text"
                 required
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Enter Description"
-                className="mt-1 w-full min-h-40 bg-white border border-gray-300 rounded-md px-3 py-2"
+                className="mt-1 w-full min-h-32 border border-gray-300 rounded-md px-3 py-2"
               />
             </div>
 
-            {/* Phases */}
-            
+            {/* Objective */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Objective</label>
+              <textarea
+                required
+                value={objective}
+                onChange={(e) => setObjective(e.target.value)}
+                placeholder="Enter Objective"
+                className="mt-1 w-full min-h-24 border border-gray-300 rounded-md px-3 py-2"
+              />
+            </div>
+
+            {/* Outcome */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Outcome</label>
+              <textarea
+                required
+                value={outcome}
+                onChange={(e) => setOutcome(e.target.value)}
+                placeholder="Enter Outcome"
+                className="mt-1 w-full min-h-24 border border-gray-300 rounded-md px-3 py-2"
+              />
+            </div>
 
             {/* Submit Button */}
-            <div className="text-center bg-white">
+            <div className="text-center">
               <button
                 type="submit"
                 className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-6 rounded-md shadow-md transition duration-200"
@@ -113,10 +111,10 @@ function TeacherAdd() {
               </button>
             </div>
           </form>
+        </div>
       </div>
-    </div></>
-
+    </>
   );
 }
 
-export default TeacherAdd;
+export default Project_Details;
