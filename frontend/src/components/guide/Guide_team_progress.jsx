@@ -16,17 +16,13 @@ function Guide_team_progress() {
 
   const fetchTeams = async () => {
     try {
-      const res = await instance.get(`http://localhost:1234/guide/fetch_mentoring_teams/${selector.reg_num}`, {
-        withCredentials: true,
-      });
-
+      const res = await instance.get(`/guide/fetch_mentoring_teams/${selector.reg_num}`);
       const mentoringTeams = res.data;
 
       const allTeamData = await Promise.all(
         mentoringTeams.map(async (team) => {
-          const progressRes = await axios.get(
-            `http://localhost:1234/guide/fetch_progress_by_project_id/${team.project_id}`,
-            { withCredentials: true }
+          const progressRes = await instance.get(
+            `/guide/fetch_progress_by_project_id/${team.project_id}`
           );
           const members = progressRes.data;
 
@@ -74,10 +70,9 @@ function Guide_team_progress() {
     if (!remarks) return alert("Remarks are required to verify!");
 
     try {
-      await axios.patch(
-        `http://localhost:1234/guide/verify_weekly_logs/${selector.reg_num}/${team.currentWeek}/${team.id}`,
-        { remarks },
-        { withCredentials: true }
+      await instance.patch(
+        `/guide/verify_weekly_logs/${selector.reg_num}/${team.currentWeek}/${team.id}`,
+        { remarks }
       );
       alert(`Week ${team.currentWeek} Verified Successfully!`);
       fetchTeams();

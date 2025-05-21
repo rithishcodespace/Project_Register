@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import instance from '../../utils/axiosInstance';
 import { useSelector } from 'react-redux';
 
 const ProjectProgress = () => {
@@ -32,13 +32,13 @@ const ProjectProgress = () => {
   const fetchEligibility = async () => {
     try {
       // 1. Get current phase and status
-      const res = await axios.get(`http://localhost:1234/student/check_phase_eligibility/${selector.reg_num}`,{withCredentials:true});
+      const res = await instance.get(`/student/check_phase_eligibility/${selector.reg_num}`);
       let currentPhase = res.data.allowedPhase;
       const weekNumber = res.data.weekNumber;
       const isMonday = res.data.isMonday;
 
       // 2. Check all team member progress
-      const teamRes = await axios.get(`http://localhost:1234/student/team_progress/${team_id}/${currentPhase.replace('_progress', '')}`,{withCredentials:true});
+      const teamRes = await instance.get(`/student/team_progress/${team_id}/${currentPhase.replace('_progress', '')}`);
       const allMembers = teamRes.data;
 
       const allCompleted = allMembers.every(member => parseInt(member.progress) === 100);
@@ -67,10 +67,9 @@ const ProjectProgress = () => {
     if (!canUpdate) return;
 
     try {
-      const res = await axios.post(
-        `http://localhost:1234/student/update_progress/${phase}/${selector.reg_num}`,
-        { contribution, progress },
-        { withCredentials: true }
+      const res = await instance.post(
+        `/student/update_progress/${phase}/${selector.reg_num}`,
+        { contribution, progress }
       );
       setMessage(res.data);
       fetchEligibility(); // Refresh the page state after update

@@ -6,7 +6,7 @@ import college_img from "../../assets/college_img.png";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import LockIcon from '@mui/icons-material/Lock';
-import axios from "axios";
+import instance from "../../utils/axiosInstance";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../../utils/firebase";
 import { useDispatch } from "react-redux";
@@ -27,10 +27,10 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:1234/auth/login", {
+      const response = await instance.post("/auth/login", {
         emailId,
         password,
-      }, { withCredentials: true });
+      });
 
       if (response.status === 200) {
         const { accessToken, refreshToken, role, reg_num } = response.data;
@@ -39,7 +39,7 @@ function Login() {
         dispatch(addUser(response.data));
 
         if (role === "student") {
-          const projectTypeRes = await axios.get(`http://localhost:1234/student/get_project_type/${reg_num}`,{withCredentials:true});
+          const projectTypeRes = await instance.get(`/student/get_project_type/${reg_num}`);
           const projectType = projectTypeRes.data?.project_type;
 
           if (projectType === "INTERNAL") {
@@ -69,9 +69,9 @@ function Login() {
     const reg_num = studentUserData.reg_num;
 
     try {
-      await axios.patch(
-        `http://localhost:1234/student/alter_project_status/${reg_num}/${projectType}`,
-        { company: companyName, project_name: projName },{withCredentials:true}
+      await instance.patch(
+        `/student/alter_project_status/${reg_num}/${projectType}`,
+        { company: companyName, project_name: projName }
       );
 
       setShowStudentPopup(false);
@@ -103,10 +103,8 @@ function Login() {
       const user = result.user;
       const idToken = await user.getIdToken();
 
-      const res = await axios.post("http://localhost:1234/auth/google-login", {
+      const res = await instance.post("/auth/google-login", {
         token: idToken,
-      }, {
-        withCredentials:true
       });
 
       localStorage.setItem("accessToken", res.data.accessToken);

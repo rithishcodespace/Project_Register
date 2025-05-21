@@ -115,9 +115,6 @@ function Admin_Navbar({ isOpen, toggleSidebar }) {
           <p className={navText(["students_progress", "team_list"])}>Student Progress</p>
         </Link>
 
-
-
-
         {/* Logout */}
         <button
           onClick={handleLogout}

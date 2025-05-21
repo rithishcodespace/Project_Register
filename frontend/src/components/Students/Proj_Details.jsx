@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import instance from '../../utils/axiosInstance';
 import { useSelector } from 'react-redux';
 
 const Proj_Details = () => {
@@ -14,19 +14,13 @@ const Proj_Details = () => {
     try {
       const token = localStorage.getItem("accessToken");
 
-      const response = await axios.patch(`http://localhost:1234/student/ongoing/${project.project_name}`, {}, {
-        withCredentials:true
-      });
+      const response = await instance.patch(`/student/ongoing/${project.project_name}`);
 
       if (response.status === 200) {
         alert("Project chosen successfully!");
 
-        const newResponse = await axios.patch(
-          `http://localhost:1234/student/assgin_project_id/${project.project_id}/${selector.reg_num}`,
-          {},
-          {
-            withCredentials:true
-          }
+        const newResponse = await instance.patch(
+          `/student/assgin_project_id/${project.project_id}/${selector.reg_num}`
         );
 
         if (newResponse.status === 200) {
