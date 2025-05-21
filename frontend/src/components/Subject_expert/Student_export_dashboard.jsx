@@ -9,12 +9,27 @@ const SubjectExpertDashboard = () => {
   const selector = useSelector((Store) => Store.userSlice);
 
 
-  async function fetchInvitations()
-  {
-    const response = await axios.get(`http://localhost:1234/expert/getrequests/${selector.reg_num}`,{withCredentials:true});
-    if(response.status === 200)setInvitations(response.data);
-    else alert("ERROR:- occured while fetching the invitations!");
+  async function fetchInvitations() {
+  try {
+    const response = await axios.get(`http://localhost:1234/expert/getrequests/${selector.reg_num}`, {
+      withCredentials: true,
+    });
+
+    console.log("Response data:", response.data); // <-- Debug line
+
+    if (response.status === 200 && Array.isArray(response.data)) {
+      setInvitations(response.data);
+    } else {
+      setInvitations([]); // fallback to empty array
+      console.warn("Expected array but got:", response.data);
+    }
+  } catch (error) {
+    alert("ERROR occurred while fetching the invitations!");
+    console.error(error);
+    setInvitations([]); // ensure fallback
   }
+}
+
 
   useEffect(() => {
     fetchInvitations()
@@ -52,9 +67,9 @@ const SubjectExpertDashboard = () => {
         <div className="relative ml-auto">
           <button
             onClick={() => setShowPopup(true)}
-            className="p-2 rounded-full hover:bg-gray-100 transition"
+            className="p-2 rounded-full  transition"
           >
-            <Bell className="w-6 h-6 text-gray-700" />
+            <Bell className="w-6 h-6 text-black" />
             {invitations.length > 0 && (
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             )}
@@ -72,39 +87,38 @@ const SubjectExpertDashboard = () => {
             >
               &times;
             </button>
-            <h2 className="text-2xl font-bold text-center mb-4">Team Invitations</h2>
+            <h2 className="text-2xl font-bold text-center bg-white mb-4">Team Invitations</h2>
 
-            {invitations.length === 0 ? (
-              <p className="text-gray-600 text-center">No invitations yet.</p>
+            {Array.isArray(invitations) && invitations.length === 0 ? (
+              <p className="text-gray-600 text-center bg-white">No invitations yet.</p>
             ) : (
-              <ul className="space-y-4">
-                {invitations.map((invite) => (
-                  <li
-                    key={invite.from_team_id}
-                    className="border rounded-lg p-4 shadow"
-                  >
-                    <p className="font-semibold">Team: {invite.from_team_id}</p>
-                    <p className="font-medium text-gray-600">
-                      Project: {invite.project_name}
-                    </p>
-                    <div className="flex justify-end gap-2 mt-3">
-                      <button
-                        onClick={() => handleAccept(invite.from_team_id)}
-                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded"
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={() => handleReject(invite.from_team_id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  </li>
-                ))}
+              <ul className="space-y-4 bg-white">
+                {Array.isArray(invitations) &&
+                  invitations.map((invite) => (
+                    <li key={invite.from_team_id} className="-b rounded-lg bg-white p-4">
+                      <p className="font-semibold bg-white">Team: {invite.from_team_id}</p>
+                      <p className="font-medium bg-white text-gray-600">
+                        Project: {invite.project_name}
+                      </p>
+                      <div className="flex bg-white justify-end gap-2 mt-3">
+                        <button
+                          onClick={() => handleAccept(invite.from_team_id)}
+                          className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-1 rounded"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          onClick={() => handleReject(invite.from_team_id)}
+                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </li>
+                  ))}
               </ul>
-            )}
+            )}            
+
           </div>
         </div>
       )}

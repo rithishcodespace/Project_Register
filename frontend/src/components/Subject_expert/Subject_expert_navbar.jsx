@@ -84,11 +84,7 @@ function Subject_expert_navbar({ isOpen, toggleSidebar }) {
           <p className={navText("")}>Dashboard</p>
         </Link>
 
-        {/* Mark Attendance Link */}
-        <Link to="schedule_review" className={`${navDiv("schedule_review")} group`}>
-          <CheckSquare size={24} className={navIcon("schedule_review")} />
-          <p className={navText("schedule_review")}>Schedule Review</p>
-        </Link>
+        
 
         {/* Review Projects Link */}
         <Link to="review" className={`${navDiv("review")} group`}>

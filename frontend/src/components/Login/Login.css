@@ -26,7 +26,7 @@
   .Login {
     font-weight: bold;
     font-size: 180%;
-    color: rgb(127, 21, 233);
+    color: rgb(136, 47, 224);
     background-color: white;
     margin-top: -6%;
     z-index: 12;
@@ -171,4 +171,12 @@
   font-size: 1rem;
   color: #555;
   font-size: 140%;
+}
+
+/* Prevent user selection for the entire login page */
+.login_div{
+  user-select: none;           /* Standard */
+  -webkit-user-select: none;   /* Safari */
+  -moz-user-select: none;      /* Firefox */
+  -ms-user-select: none;       /* IE/Edge */
 }
