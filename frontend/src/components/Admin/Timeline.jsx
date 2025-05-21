@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import instance from "../../utils/axiosInstance";
 import { FaEdit, FaTrash, FaSave, FaTimes } from "react-icons/fa";
 
 const TimeLine = () => {
@@ -14,7 +14,7 @@ const TimeLine = () => {
 
   const fetchTimelines = async () => {
     try {
-      const res = await axios.get("http://localhost:1234/admin/get_timelines",{withCredentials:true});
+      const res = await instance.get("/admin/get_timelines");
       if (res.status !== 200 || res.data.length === 0) return alert("Error fetching timeline!");
       setTimelines(
         res.data.map((t) => ({
@@ -42,11 +42,11 @@ const TimeLine = () => {
     if (!name || !startTime || !endTime) return;
 
     try {
-      await axios.post("http://localhost:1234/admin/addTimeLine", {
+      await instance.post("/admin/addTimeLine", {
         name,
         start_date: startTime,
         end_date: endTime,
-      },{withCredentials:true});
+      });
       setNewTimeline({ name: "", startTime: "", endTime: "" });
       fetchTimelines();
     } catch (error) {
@@ -56,7 +56,7 @@ const TimeLine = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:1234/admin/remove_timeline/${id}`,{withCredentials:true});
+      await instance.delete(`/admin/remove_timeline/${id}`);
       fetchTimelines();
     } catch (error) {
       console.error("Delete error:", error);
@@ -77,11 +77,11 @@ const TimeLine = () => {
   const handleEditSave = async () => {
     const { id, name, startTime, endTime } = editTimeline;
     try {
-      await axios.patch(`http://localhost:1234/admin/update_timeline_id/${id}`, {
+      await instance.patch(`/admin/update_timeline_id/${id}`, {
         name,
         start_date: startTime,
         end_date: endTime,
-      },{withCredentials:true});
+      });
       setEditIndex(null);
       fetchTimelines();
     } catch (error) {

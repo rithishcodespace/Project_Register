@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import instance from '../../utils/axiosInstance';
 
 function Add_Users() {
   const [name, setName] = useState('');
@@ -36,7 +36,7 @@ function Add_Users() {
       userData.subject = subject;
     }
 
-    let response = await axios.post("http://localhost:1234/admin/adduser", userData, {withCredentials:true});
+    let response = await instance.post("/admin/adduser", userData);
     if (response.status === 200) {
       setName("");
       setEmail("");

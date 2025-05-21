@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Check, ClipboardList, MessageCircle, Bell } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import InvitationCenterPopup from './InvitationCenterPopup';
-import axios from "axios";
+import instance from '../../utils/axiosInstance';
 import { useSelector } from "react-redux";
 
 const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'];
@@ -16,11 +16,7 @@ function Guide_dashboard() {
   // Accept invitation
   const handleAccept = async (team_id) => {
     try {
-      const response = await axios.patch(
-        `http://localhost:1234/guide/accept_reject/accept/${team_id}/${selector.reg_num}`,
-        {},
-        { withCredentials: true }
-      );
+      const response = await instance.patch(`/guide/accept_reject/accept/${team_id}/${selector.reg_num}`);
       if (response.status === 200) {
         alert(`Accepted invitation from team ID ${team_id}`);
         fetchMentoredTeams(); // Refresh data
@@ -34,10 +30,8 @@ function Guide_dashboard() {
   // Reject invitation
   const handleReject = async (team_id) => {
     try {
-      const response = await axios.patch(
-        `http://localhost:1234/guide/accept_reject/reject/${team_id}/${selector.reg_num}`,
-        {},
-        { withCredentials: true }
+      const response = await instance.patch(
+        `/guide/accept_reject/reject/${team_id}/${selector.reg_num}`
       );
       if (response.status === 200) {
         alert(`Rejected invitation from team ID ${team_id}`);
@@ -52,9 +46,8 @@ function Guide_dashboard() {
   // Fetch invitations
   const fetchInvitations = async () => {
     try {
-      const response = await axios.get(
-        `http://localhost:1234/guide/getrequests/${selector.reg_num}`,
-        { withCredentials: true }
+      const response = await instance.get(
+        `/guide/getrequests/${selector.reg_num}`,
       );
       if (response.status === 200) {
         setInvitations(response.data);
@@ -67,8 +60,8 @@ function Guide_dashboard() {
   // Fetch mentored teams
   const fetchMentoredTeams = async () => {
     try {
-      const res = await axios.get(
-        `http://localhost:1234/guide/fetch_mentoring_teams/${selector.reg_num}`,{withCredentials:true}
+      const res = awaitinstance.get(
+        `/guide/fetch_mentoring_teams/${selector.reg_num}`
       );
       if (Array.isArray(res.data)) {
         setMentoredTeams(res.data);

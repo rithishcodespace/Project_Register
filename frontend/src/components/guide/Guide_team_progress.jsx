@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import instance from '../../utils/axiosInstance';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { useSelector } from 'react-redux';
 
@@ -15,7 +15,7 @@ function Guide_team_progress() {
 
   const fetchTeams = async () => {
     try {
-      const res = await axios.get(`http://localhost:1234/guide/fetch_mentoring_teams/${selector.reg_num}`, {
+      const res = await instance.get(`http://localhost:1234/guide/fetch_mentoring_teams/${selector.reg_num}`, {
         withCredentials: true,
       });
       const mentoringTeams = res.data;
