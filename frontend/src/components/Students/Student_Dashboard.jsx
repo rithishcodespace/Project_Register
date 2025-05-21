@@ -23,26 +23,6 @@ function Student_Dashboard() {
   });
   const [timeline, setTimeline] = useState(null);
 
-const fetchTimeline = async () => {
-  try {
-    const response = await instance.get('/admin/get_timelines');
-    if (response.status === 200 && response.data.length > 0) {
-      const current = new Date();
-      const active = response.data.find(t => {
-        const start = new Date(t.start_date);
-        const end = new Date(t.end_date);
-        return current >= start && current <= end;
-      });
-      setTimeline(active || null);
-    }
-  } catch (err) {
-    console.error('Failed to fetch timeline:', err);
-  }
-};
-
-useEffect(() => {
-  fetchTimeline();
-}, []);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -71,7 +51,8 @@ useEffect(() => {
         });
         setTimeline(active || null);
       }
-    } catch (err) {
+    }
+     catch (err) {
       console.error('Failed to fetch timeline:', err);
     }
   };
