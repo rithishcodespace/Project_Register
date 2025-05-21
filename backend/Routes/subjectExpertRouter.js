@@ -177,9 +177,20 @@ router.get("/sub_expert/fetch_teams/:expert_id",(req,res,next) => {
     }
 })
 
-// fetching the review requests sent by the student teams
+// fetching the review requests sent by teams
 
-router.get("/sub_expert/fetch_review_requests/:expert_reg_num",(req,res,next) => {
+router.get("/sub_expert/fetch_review_requests/:expert_id",(req,res,next) => {
+  try{
+
+  }
+  catch(error){
+    next(error);
+  }
+})
+
+// fetching the upcoming reviews -> mark attendence page
+
+router.get("/sub_expert/fetch_upcoming_reviews/:expert_reg_num",(req,res,next) => {
   try{
     const{expert_reg_num} = req.params;
     if(!expert_reg_num)return next(createError.BadRequest("expert reg num missing!"));

@@ -96,6 +96,7 @@ CREATE TABLE `scheduled_reviews` (
   `marks` VARCHAR(20) DEFAULT NULL,
   `remarks` VARCHAR(5000) DEFAULT NULL,
   `team_id` VARCHAR(300) DEFAULT NULL,
+  expert_reg_num varchar(100) not null,
   PRIMARY KEY (`review_id`)
 ) 
 
