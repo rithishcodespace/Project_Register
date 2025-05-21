@@ -22,6 +22,29 @@ function Student_Dashboard() {
     department: '',
   });
   
+  
+  const [timeline, setTimeline] = useState(null);
+
+const fetchTimeline = async () => {
+  try {
+    const response = await axios.get('http://localhost:1234/admin/get_timelines');
+    if (response.status === 200 && response.data.length > 0) {
+      const current = new Date();
+      const active = response.data.find(t => {
+        const start = new Date(t.start_date);
+        const end = new Date(t.end_date);
+        return current >= start && current <= end;
+      });
+      setTimeline(active || null);
+    }
+  } catch (err) {
+    console.error('Failed to fetch timeline:', err);
+  }
+};
+
+useEffect(() => {
+  fetchTimeline();
+}, []);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -176,7 +199,7 @@ function Student_Dashboard() {
       <div className="w-[95%] max-w-[60rem] rounded-xl bg- flex flex-col items-center gap-4 p-3 overflow-y-auto">
 
         <div className="border w-full p-4  bg-white rounded-xl ">
-          <p className=" bg-white "><strong className="bg-white">Leader:</strong> YOU</p>
+          <p className=" bg-white "><strong className="bg-white">Leader:</strong> {selector.name}</p>
           <p className=" bg-white "><strong className="bg-white">Email:</strong> {selector.emailId}</p>
           <p className=" bg-white "><strong className="bg-white">Register Number:</strong> {selector.reg_num}</p>
           <p className="text-green-600 bg-white font-semibold">Status: Accepted</p>
@@ -210,20 +233,24 @@ function Student_Dashboard() {
 
         {(remainingInvites > 0 || acceptedMembers.length + 1 >= 3) && (
           <div className="mt-6 flex flex-col sm:flex-row gap-4">
-            {remainingInvites > 0 && (
+            {remainingInvites > 0 && timeline && (
               <button
                 onClick={() => setIsInviteOpen(true)}
-                className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition"
+                className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
               >
                 Invite Member
               </button>
-            )}
-            {acceptedMembers.length + 1 >= 1 && !selector.teamConfirmationStatus && (
+            )}            
+
+            {acceptedMembers.length + 1 >= 1 && !selector.teamConfirmationStatus && timeline && (
               <button
                 onClick={handleConfirmTeam}
                 className="px-4 py-2 bg-green-600 text-white rounded"
-              ><Link to="/student"  onClick={() => {window.location.href = "/student"; }}    className='bg-green-600' >Confirm Team</Link></button>
-            )}
+              >
+                Confirm Team
+              </button>
+            )}            
+
           </div>
         )}
       </div>
@@ -233,6 +260,12 @@ function Student_Dashboard() {
           {...{ inviteForm, handleInviteChange, handleInviteSubmit, departments, setIsInviteOpen }}
         />
       )}
+      {!timeline && (
+        <p className="text-red-500 font-medium mt-4">
+          Team creation is currently disabled. Please wait for the official schedule.
+        </p>
+      )}
+
     </div>
   );
 }

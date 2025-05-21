@@ -194,7 +194,7 @@ router.get("/sub_expert/fetch_upcoming_reviews/:expert_reg_num",(req,res,next) =
   try{
     const{expert_reg_num} = req.params;
     if(!expert_reg_num)return next(createError.BadRequest("expert reg num missing!"));
-    let sql = "SELECT * FROM scheduled_reviews WHERE expert_reg_num = ? AND review_date >= CURRENT_DATE AND attendence IS NULL";
+    let sql = "SELECT * FROM scheduled_reviews WHERE expert_reg_num = ? AND review_date >= CURRENT_DATE AND attendance IS NULL";
     db.query(sql,[expert_reg_num],(error,result) => {
       if(error)return next(error);
       return res.send(result);

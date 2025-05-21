@@ -17,9 +17,10 @@ function Student_expert_review() {
   const fetchReviewRequests = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:1234/sub_expert/fetch_review_requests/${selector.reg_num}`
+        `http://localhost:1234/sub_expert/fetch_upcoming_reviews/${selector.reg_num}`
       );
       setProjects(res.data);
+      console.log(res.data)
     } catch (error) {
       console.error("Failed to fetch review requests:", error);
     }
