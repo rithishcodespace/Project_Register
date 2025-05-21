@@ -411,47 +411,6 @@ router.get("/student/get_project_details/:project_id",(req,res,next) => {
   }
 })
 
-// // assigns the project_id to the team_mates and inserts the deadlines in the weekly log table
-// router.patch("/student/assign_project_id/:project_id/:from_reg_num", (req, res, next) => {
-//   try {
-//     const { project_id, from_reg_num } = req.params;
-//     if(!project_id || !from_reg_num)return next(createError.BadRequest("project_id or from_reg_num is not present!!"))
-
-//     const updateSQL = "UPDATE team_requests SET project_id = ?,  project_picked_date = CURRENT_TIMESTAMP  WHERE from_reg_num = ? AND status = 'accept'";
-//     db.query(updateSQL, [project_id, from_reg_num], (error, updateResult) => {
-//       if (error) return next(error);
-
-//       const selectSQL = "SELECT project_picked_date, team_id FROM team_requests WHERE project_id = ?";
-//       db.query(selectSQL, [project_id], (error, result) => {
-//         if (error) return next(error);
-//         if (result.length === 0 || !result[0].project_picked_date) {
-//           return res.send("Picked date not found!");
-//         }
-
-//         const pickedDate = new Date(result[0].project_picked_date);
-//         const teamId = result[0].team_id;
-//         const deadlines = generateWeeklyDeadlines(pickedDate); // returns 12 weeks
-
-//         const insertSQL = "INSERT INTO weekly_logs_deadlines (team_id, project_id, week_1, week_2, week_3, week_4, week_5, week_6, week_7, week_8, week_9, week_10, week_11, week_12) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-//         const values = [teamId, project_id, ...deadlines];
-
-//         db.query(insertSQL,values,(error,result) => {
-//           if(error)return next(error);
-//          res.json({
-//           message: "Project assigned and weekly deadlines set.",
-//           project_id,
-//           teamId,
-//           deadlines
-//         });
-//         })
-
-//       });
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// });
-
 // updates the project type
 
 router.patch("/student/alter_project_status/:reg_num/:type",(req,res,next) => {

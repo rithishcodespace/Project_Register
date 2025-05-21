@@ -123,7 +123,7 @@ CREATE TABLE `weekly_logs_deadlines` (
   `week10` date DEFAULT NULL,
   `week11` date DEFAULT NULL,
   `week12` date DEFAULT NULL,
-  PRIMARY KEY (`team_id`)
+  PRIMARY KEY (team_id, project_id);
 ) 
 
 CREATE TABLE `users` (
