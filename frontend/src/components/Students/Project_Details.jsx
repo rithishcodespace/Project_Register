@@ -1,425 +1,120 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { useSelector } from 'react-redux';
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import extAddProject from './extAddProject';
+import React, { useState } from 'react';
 
-const Project_Details = () => {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [projectData, setProjectData] = useState([]);
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [userStatus, setUserStatus] = useState('loading');
-  const [myProject, setMyProject] = useState(null);
-  const [projectType,setprojectType] = useState(null);
+function Project_Details() {
+  const [projectName, setProjectName] = useState('');
+  const [clusterName, setClusterName] = useState('');
+  const [description, setDescription] = useState('');
+  const [objective, setObjective] = useState('');
+  const [outcome, setOutcome] = useState('');
 
-  const selector = useSelector((Store) => Store.userSlice);
-  const teamMembers = useSelector((Store) => Store.teamSlice);
-  const teamStatus = useSelector((Store) => Store.teamStatusSlice);
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-  const [selectedExperts, setSelectedExperts] = useState([]);
-  const [selectedGuides, setSelectedGuides] = useState([]);
+    const projectData = {
+      projectName,
+      clusterName,
+      description,
+      objective,
+      outcome
+    };
 
-  const [expertsList, setExpertsList] = useState([]);
-  const [guidesList, setGuidesList] = useState([]);
-
-  const toggleExpertSelection = (expertRegNum) => {
-  setSelectedExperts((prev) =>
-    prev.includes(expertRegNum) ? prev.filter((e) => e !== expertRegNum) : [...prev, expertRegNum]
-  );
-};
-
-const toggleGuideSelection = (guideRegNum) => {
-  setSelectedGuides((prev) =>
-    prev.includes(guideRegNum) ? prev.filter((g) => g !== guideRegNum) : [...prev, guideRegNum]
-  );
-};
-
-
-  const startIndex = page * rowsPerPage;
-  const pageCount = Math.ceil(projectData.length / rowsPerPage);
-
-  const handleChangeRowsPerPage = (e) => {
-    setRowsPerPage(parseInt(e.target.value));
-    setPage(0);
+    console.log("Project Data:", projectData);
+    alert('Project submitted successfully (not saved to backend).');
   };
 
-  const handleChangePage = (_, newPage) => {
-    setPage(newPage);
-  };
+  return (
+    <>
+      <h2 className="text-3xl font-semibold mb-2 text-center mt-5 text-black">Post New Project</h2>
+      <div className="min-h-screen flex justify-center bg-white-50 p-6">
+        <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-8">
+          <form className="space-y-6 bg-white" onSubmit={handleSubmit}>
+            {/* Project Name and Cluster */}
+            
+              <div className='bg-white'>
+                <label className="block text-sm bg-white font-medium text-gray-700">Project Name</label>
+                <input
+                  type="text"
+                  required
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  placeholder="Enter Project Name"
+                  className="mt-1 w-full border bg-white border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600"
+                />
+              </div>
+              <div className='bg-white'>
+                <label className="block text-sm bg-white font-medium text-gray-700">Cluster Name</label>
+                <select
+                  required
+                  value={clusterName}
+                  onChange={(e) => setClusterName(e.target.value)}
+                  className="mt-1 w-full border bg-white border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600"
+                >
+                  <option value="" disabled>Select Cluster Name</option>
+                  <option value="CSE">CSE</option>
+                  <option value="AIDS">AIDS</option>
+                  <option value="IT">IT</option>
+                  <option value="AIML">AIML</option>
+                  <option value="CT">CT</option>
+                  <option value="AGRI">AGRI</option>
+                  <option value="ECE">ECE</option>
+                  <option value="EIE">EIE</option>
+                  <option value="EEE">EEE</option>
+                  <option value="MECH">MECH</option>
+                  <option value="FT">FT</option>
+                  <option value="FD">FD</option>
+                </select>
+              </div>
 
-  const paginatedProjects = projectData.slice(startIndex, startIndex + rowsPerPage);
-
-  async function check_project_type()
-  {
-    const response = await axios.get(`http://localhost:1234/student/get_project_type/${selector.reg_num}`,{
-      withCredentials: true
-    })
-    if(response.status === 200)
-    {
-      setprojectType(response.data.project_type);
-    }
-  }
-
-  function checkUserStatus() {
-    try {
-      if (!teamStatus.teamConformationStatus) {
-        setUserStatus('no_team');
-      } else {
-        const member = teamStatus?.teamMembers?.[0];
-        if (member?.project_id) {
-          setUserStatus('has_project');
-        } else {
-          setUserStatus('no_project');
-        }
-      }
-    } catch (e) {
-      console.error('Invalid teamStatus in store', e);
-      setUserStatus('no_team');
-    }
-  }
-
-  async function fetchProjects() {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const departments = [
-        ...new Set([
-          ...teamMembers.map((member) => member.dept),
-          teamStatus.teamLeader.dept,
-        ]),
-      ];
-
-      const response = await axios.post(
-        'http://localhost:1234/student/projects',
-        { departments },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (response.status === 200) {
-        setProjectData(response.data);
-      } else {
-        alert('Error fetching projects');
-      }
-    } catch (error) {
-      console.error('Fetch error:', error);
-      alert('Something went wrong');
-    }
-  }
-
-  async function fetchExpertsAndGuides() {
-    try {
-      const [expertRes, guideRes] = await Promise.all([
-        axios.get('http://localhost:1234/student/fetch_guide_or_expert/sub_expert'),
-        axios.get('http://localhost:1234/student/fetch_guide_or_expert/guide'),
-      ]);
-
-      if (expertRes.status === 200) setExpertsList(expertRes.data);
-      if (guideRes.status === 200) setGuidesList(guideRes.data);
-    } catch (error) {
-      console.error('Error fetching experts/guides:', error);
-      alert('Failed to load experts and guides');
-    }
-  }
-
-async function handleTakeProject(name, id, experts, guides) {
-  console.log("Selected Experts:", experts);
-  console.log("Selected Guides:", guides);
-
-  if (experts.length <= 0 || guides.length <= 0) {
-    return alert("Please select at least 1 experts and 1 guides.");
-  }
-
-  if (!teamMembers.length) {
-    return alert("No team found. Please form a team first.");
-  }
-
-  try {
-    const [guideReq, expertReq] = await Promise.all([
-      axios.post("http://localhost:1234/guide/sent_request_to_guide", {
-        "from_team_id": teamMembers[0].team_id,
-        "project_id": id,
-        "project_name": name,
-        "to_guide_reg_num": guides
-      }, { withCredentials: true }),
-
-      axios.post("http://localhost:1234/sub_expert/sent_request_to_expert", {
-        "from_team_id": teamMembers[0].team_id,
-        "project_id": id,
-        "project_name": name,
-        "to_expert_reg_num": experts
-      }, { withCredentials: true })
-    ]);
-
-    const response = await axios.patch(
-      `http://localhost:1234/student/ongoing/${name}`,
-      { expert: experts, guide: guides },
-      { withCredentials: true }
-    );
-
-    if (response.status === 200) {
-      alert('Project chosen successfully!');
-      setProjectData((prev) =>
-        prev.filter((proj) => proj.project_name !== name)
-      );
-      setSelectedProject(null);
-      setUserStatus('has_project');
-      setMyProject({ project_name: name, id, experts, guides });
-      setSelectedExperts([]);
-      setSelectedGuides([]);
-    }
-
-    const newResponse = await axios.patch(
-      `http://localhost:1234/student/assign_project_id/${id}/${selector.reg_num}`,
-      { expert: experts, guide: guides },
-      { withCredentials: true }
-    );
-
-    if (newResponse.status === 200) {
-      console.log('project_id successfully inserted into db!');
-    }
-  } catch (error) {
-      console.error('Error choosing project:', error);
-      if (error.response) {
-        console.error('Server Response:', error.response.data);
-        alert('Error: ' + error.response.data.message);
-      } else {
-        alert('Something went wrong while choosing the project');
-      }
-   }
-}
-
-
-
-  async function fetchMyProject() {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const member = teamStatus?.teamMembers?.[0];
-
-      if (member?.project_id) {
-        const response = await axios.get(
-          `http://localhost:1234/student/get_project_details/${member.project_id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        if (response.status === 200) {
-          setMyProject(response.data[0]);
-        } else {
-          alert('Error fetching your project details');
-        }
-      }
-    } catch (error) {
-      console.error('Error in fetchMyProject:', error);
-    }
-  }
-
-  useEffect(() => {
-    check_project_type();
-    checkUserStatus();
-  }, []);
-
-  useEffect(() => {
-    if (userStatus === 'no_project') {
-      fetchProjects();
-    } else if (userStatus === 'has_project') {
-      fetchMyProject();
-    }
-    fetchExpertsAndGuides();
-  }, [userStatus]);
-
-  const handleRowClick = (projectId) => {
-    const selected = projectData.find((proj) => proj.project_id === projectId);
-    setSelectedProject(selected);
-  };
-
-  if (userStatus === 'no_team') {
-    return (
-      <div className="flex justify-center items-center mt-20">
-        <h1 className="text-2xl font-bold text-red-500">First Form a Team!!</h1>
-      </div>
-    );
-  }
-
-  if (userStatus === 'has_project' && myProject) {
-    return (
-      <div className="p-6 w-full max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold text-center text-green-700 mb-6">
-          Your Assigned Project
-        </h2>
-
-        <div className="bg-white p-6 rounded-xl shadow-xl">
-          <p><strong>Name:</strong> {myProject.project_name}</p>
-          <p><strong>Cluster:</strong> {myProject.cluster}</p>
-          <p><strong>Description:</strong> {myProject.description}</p>
-
-          <div className="mt-4">
-            <h4 className="text-lg font-bold text-purple-600 mb-2">Project Phases</h4>
-            <div className="space-y-2 text-sm">
-              {[1, 2, 3, 4, 5].map((phase) => (
-                <p key={phase}>
-                  Phase {phase}: {myProject[`phase${phase}`] || 'Not updated'}
-                </p>
-              ))}
+            {/* Description */}
+            <div className='bg-white'>
+              <label className="block text-sm bg-white font-medium text-gray-700">Description</label>
+              <textarea
+                required
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter Description"
+                className="mt-1 w-full min-h-32 bg-white border border-gray-300 rounded-md px-3 py-2  focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600"
+              />
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
-  projectType === "EXTERNAL" ? <extAddProject/> :
-   (
-    <div className="max-w-6xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6 text-center text-black">Available Projects</h1>
+            {/* Objective */}
+            <div className='bg-white'>
+              <label className="block text-sm bg-white font-medium text-gray-700">Objective</label>
+              <textarea
+                required
+                value={objective}
+                onChange={(e) => setObjective(e.target.value)}
+                placeholder="Enter Objective"
+                className="mt-1 w-full min-h-24 border bg-white border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600"
+              />
+            </div>
 
-      {/* Project Table */}
-      <div className="overflow-x-auto border rounded-lg shadow-md">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gradient-to-r from-purple-700 to-pink-600 text-white">
-            <tr>
-              <th className="px-6 py-3 text-left bg-white text-black">Project ID</th>
-              <th className="px-6 py-3 text-left bg-white text-black">Project Name</th>
-              <th className="px-6 py-3 text-left bg-white text-black">Cluster</th>
-              <th className="px-6 py-3 text-left bg-white text-black">Description</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {paginatedProjects.map((proj) => (
-              <tr
-                key={proj.project_id}
-                className="hover:bg-purple-100 cursor-pointer"
-                onClick={() => handleRowClick(proj.project_id)}
+            {/* Outcome */}
+            <div className='bg-white'>
+              <label className="block text-sm bg-white font-medium text-gray-700">Outcome</label>
+              <textarea
+                required
+                value={outcome}
+                onChange={(e) => setOutcome(e.target.value)}
+                placeholder="Enter Outcome"
+                className="mt-1 w-full min-h-24 bg-white border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <div className="text-center bg-white">
+              <button
+                type="submit"
+                className="bg-purple-500  hover:bg-purple-600 text-white font-medium py-2 px-6 rounded-md shadow-md transition duration-200"
               >
-                <td className="px-6 py-4 bg-white">{proj.project_id}</td>
-                <td className="px-6 py-4 bg-white">{proj.project_name}</td>
-                <td className="px-6 py-4 bg-white">{proj.cluster}</td>
-                <td className="px-6 py-4 bg-white">{proj.description}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex justify-between items-center mt-4">
-        <div>
-          Rows per page:
-          <select
-            className="ml-2 rounded px-2 py-1 shadow focus:outline-none "
-            value={rowsPerPage}
-            onChange={handleChangeRowsPerPage}
-          >
-            {[5, 10, 25].map((rows) => (
-              <option key={rows} value={rows}>{rows}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex items-center justify-between mt-4 px-4">
-          <span className="text-sm text-gray-700">
-            {startIndex + 1}–{Math.min(startIndex + rowsPerPage, projectData.length)} of {projectData.length}
-          </span>
-        
-          <div className="flex items-center">
-            <button
-              onClick={() => handleChangePage(null, page - 1)}
-              disabled={page === 0}
-              className="px-2 py-1 rounded mr-2"
-            >
-              <FaChevronLeft color={page === 0 ? '#A0A0A0' : '#000000'} />
-            </button>
-
-            <button
-              onClick={() => handleChangePage(null, page + 1)}
-              disabled={page >= pageCount - 1}
-              className="px-2 py-1 rounded"
-            >
-              <FaChevronRight color={page >= pageCount - 1 ? '#A0A0A0' : '#000000'} />
-            </button>
-          </div>
+                Submit
+              </button>
+            </div>
+          </form>
         </div>
       </div>
-
-      {/* Modal */}
-      {selectedProject && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-7 max-w-3xl w-full relative">
-            <button
-              onClick={() => {
-                setSelectedProject(null);
-                setSelectedExperts([]);
-                setSelectedGuides([]);
-              }}
-              className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
-            >
-              &#10005;
-            </button>
-
-            <h2 className="text-2xl font-semibold mb-4 text-center text-gray-800">
-              Select Project: {selectedProject.project_name}
-            </h2>
-
-            <div className="mb-4">
-              <p><strong>Project ID:</strong> {selectedProject.project_id}</p>
-              <p><strong>Cluster:</strong> {selectedProject.cluster}</p>
-              <p><strong>Description:</strong> {selectedProject.description}</p>
-            </div>
-
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold mb-2">Select at least 3 Experts:</h3>
-              <div className="flex flex-wrap gap-3">
-                {expertsList.map((expert) => (
-                <button
-                  key={expert.reg_num}
-                  onClick={() => toggleExpertSelection(expert.reg_num)}
-                  className={`px-3 py-1 rounded-full border ${
-                    selectedExperts.includes(expert.reg_num)
-                      ? 'bg-purple-500 text-white border-purple-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
-                  }`}
-                >
-                  {expert.name}
-                </button>
-              ))}
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Select at least 3 Guides:</h3>
-              <div className="flex flex-wrap gap-3">
-                {guidesList.map((guide) => (
-                <button
-                  key={guide.reg_num}
-                  onClick={() => toggleGuideSelection(guide.reg_num)}
-                  className={`px-3 py-1 rounded-full border ${
-                    selectedGuides.includes(guide.reg_num)
-                      ? 'bg-green-600 text-white border-green-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
-                  }`}
-                >
-                  {guide.name}
-                </button>
-              ))}
-              </div>
-            </div>
-
-            <button
-              onClick={() =>
-                handleTakeProject(
-                  selectedProject.project_name,
-                  selectedProject.project_id,
-                  selectedExperts,
-                  selectedGuides
-                )
-              }
-              className="w-full bg-gradient-to-r from-purple-500 to-purple-900 text-white py-3 rounded-md font-semibold hover:opacity-90 transition-opacity"
-            >
-              Take Project
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
-};
+}
 
 export default Project_Details;

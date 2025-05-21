@@ -172,11 +172,11 @@ router.get("/teacher/student_progress/:cluster", (req, res, next) => {
 router.post("/admin/addTimeLine",(req,res,next) => {
   try{
     const{name,start_date,end_date} = req.body;
-    if(!name.trim() || !start_date || end_date)
+    if(!name.trim() || !start_date.trim() || !end_date.trim())
     {
       return next(createError.BadRequest("name or start_date or end_date is undefined!"));
     }
-    let sql = "insert into timeline values (?,?,?)";
+    let sql = "INSERT INTO timeline (name, start_date, end_date) VALUES (?, ?, ?)";
     db.query(sql,[name,start_date,end_date],(error,result) => {
       if(error)return next(error);
       res.send("Timeline added successfully to the timeline table!!");

@@ -101,10 +101,11 @@ function Queries() {
           )}
           <div ref={chatEndRef} />
         </div>
+        </div>
 
         {/* Send Query Form */}
-        <div className="top-20 mb-[-16px] sticky bottom-0 w-full">
-          <form onSubmit={submitQuery} className="flex p-3 bg-white gap-2">
+        <div className="mb-[-16px] bg-red sticky bottom-0 w-full">
+          <form onSubmit={submitQuery} className="flex p-3 w-full bg-white gap-2">
             <input
               type="text"
               value={newQuery}
@@ -120,7 +121,7 @@ function Queries() {
             </button>
           </form>
         </div>
-      </div>
+      
     </div>
   );
 }
