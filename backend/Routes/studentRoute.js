@@ -703,4 +703,23 @@ router.post("/student/addproject/:project_type/:reg_num", (req, res, next) => {
   }
 });
 
+// sends the review request to the expert => once in a month
+router.post("/student/send_review_request/:team_id/:project_id",(req,res,next) => {
+  try{
+    const{team_id,project_id} = req.params;
+    const{project_name,team_lead,review_date,start_time,expert_reg_num} = req.body;
+    if(!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time || !expert_reg_num)return next(createError.BadRequest("some parameters are missing!"));
+    
+    let sql = "insert into review_requests (team_id,project_id,project_name,team_lead,review_date,start_time,expert_reg_num) values (?, ?, ?, ?, ?, ?, ?)";
+    db.query(sql,[team_id,project_id,project_name,team_lead,review_date,start_time,expert_reg_num],(error,result) => {
+      if(error)return next(error);
+      res.send(`${review_date}:-${start_time} request inserted successfully`)
+    })
+  }
+  catch(error)
+  {
+
+  }
+})
+
 module.exports = router;

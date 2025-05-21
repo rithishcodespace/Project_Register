@@ -183,15 +183,15 @@ router.get("/sub_expert/fetch_review_requests/:expert_reg_num",(req,res,next) =>
   try{
     const{expert_reg_num} = req.params;
     if(!expert_reg_num)return next(createError.BadRequest("expert reg num missing!"));
-    let sql = "select * from review_requests where expert_reg_num = ? and status = 'accept";
+    let sql = "SELECT * FROM scheduled_reviews WHERE expert_reg_num = ? AND review_date >= CURRENT_DATE AND attendence IS NULL";
     db.query(sql,[expert_reg_num],(error,result) => {
       if(error)return next(error);
-      let now = new Date();
+      return res.send(result);
     })
   }
   catch(error)
   {
-
+    next(error);
   }
 })
 
@@ -205,17 +205,24 @@ router.post("/sub_expert/add_review_details/:request_id/:status",(req,res,next) 
       {
         return next(createError.BadRequest("data is missing!"));
       }
+      // updating status
       let updatequery = "UPDATE review_requests SET status = ? WHERE request_id = ?";
       db.query(updatequery,[status,request_id],(error,result) => {
         if(error)return next(error);
         if(result.affectedRows === 0)return next(createError.BadRequest("some rows not affected!"));
         if(status === 'accept')
         {
+          // inserting into scheduled reivews
           let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,venue) values(?,?,?,?,?,?)";
           db.query(sql,[project_id,project_name,team_lead,review_date,start_time,venue],(error,result) => {
             if(error) return next(error);
             if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
-            return res.send(`${request_id} :- ${status}ed successfully and inserted into the scheduled reviews`);
+            // removing request from the review requests
+            let sql1 = "delete from review_requests where request_id = ?";
+            db.query(sql1,[request_id],(error,result)=>{
+              if(error)return next(error);
+              return res.send(`${request_id} :- ${status}ed successfully and inserted into the scheduled reviews`);
+            })
           })
         }
         else if(status == 'reject')

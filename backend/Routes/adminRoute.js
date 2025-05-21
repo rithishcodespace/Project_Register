@@ -21,6 +21,27 @@ router.post("/admin/adduser",(req,res,next) => {
    }
 })
 
+// fetch users based on role
+
+router.get("/admin/get_users/:role",(req,res,next) => {
+  try{
+    const{role} = req.params;
+    const validRoles = ['student','admin','sub_expert','guide','teacher'];
+    if (!role || !validRoles.includes(role)) {
+      return next(createError.BadRequest("Invalid or missing user role!"));
+    }
+    let sql = "select * from users where role = ? and available = true";
+    db.query(sql,[role],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 // remove users
 
 router.delete("/admin/removeuser/:emailId/:reg_num/:role",(req,res,next) => {
