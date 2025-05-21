@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import instance from '../../utils/axiosInstance';
 import { useSelector } from 'react-redux';
 
 const InvitationPage = () => {
@@ -25,11 +25,8 @@ const InvitationPage = () => {
         }
         let token = localStorage.getItem('accessToken');
         console.log(selector.reg_num)
-        const response = await axios.get(
-          `http://localhost:1234/student/request_recived/${selector.reg_num}`,
-          {
-            withCredentials:true
-          }
+        const response = await instance.get(
+          `http://localhost:1234/student/request_recived/${selector.reg_num}`
         );
 
         if (response.status === 200 && response.data.length > 0) {
@@ -37,11 +34,8 @@ const InvitationPage = () => {
           let fromUserId = response.data[0].from_reg_num;
 
           if (fromUserId) {
-            let res = await axios.get(
-              `http://localhost:1234/student/get_student_details_by_regnum/${fromUserId}`,
-              {
-                withCredentials:true
-              }
+            let res = await instance.get(
+              `/student/get_student_details_by_regnum/${fromUserId}`
             );
 
             if (res.status === 200) {
@@ -71,12 +65,8 @@ const InvitationPage = () => {
   const handleAction = async (invite, status) => {
     try {
       setLoadingId(invite.reg_num);
-      await axios.patch(
-        `http://localhost:1234/student/team_request/${status}/${invite.to_reg_num}/${invite.from_reg_num}`,
-        {},
-        {
-          withCredentials: true
-        }
+      await instance.patch(
+        `/student/team_request/${status}/${invite.to_reg_num}/${invite.from_reg_num}`,
       );
 
       const updated = invitations.map((i) =>

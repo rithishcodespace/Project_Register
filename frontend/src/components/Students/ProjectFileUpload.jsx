@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import instance from "../../utils/axiosInstance";
 
 const ProjectFileUpload = () => {
   const [teamId, setTeamId] = useState("");
@@ -25,7 +25,7 @@ const ProjectFileUpload = () => {
     formData.append(fileType, file);
 
     try {
-      const response = await axios.post("/upload-files", formData, {
+      const response = await instance.post("/upload-files", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       alert(response.data.message);

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
+import instance from '../../utils/axiosInstance';
 import { useSelector } from 'react-redux';
 
 function Queries() {
@@ -18,15 +18,12 @@ function Queries() {
 
     try {
       const token = localStorage.getItem("accessToken");
-      await axios.post(
-        `http://localhost:1234/student/add_query/${name.name}/${selector[0].guide_reg_num}`,
+      await instance.post(
+        `/student/add_query/${name.name}/${selector[0].guide_reg_num}`,
         {
           team_id: selector[0].team_id,
           project_id: selector[0].project_id,
           query: newQuery,
-        },
-        {
-          withCredentials:true
         }
       );
 
@@ -42,10 +39,7 @@ function Queries() {
     try {
       const token = localStorage.getItem("accessToken");
       const response = await axios.get(
-        `http://localhost:1234/student/get_queries_sent_by_my_team/${selector[0].team_id}`,
-        {
-          withCredentials:true
-        }
+        `/student/get_queries_sent_by_my_team/${selector[0].team_id}`,
       );
       if (Array.isArray(response.data)) {
         setQueries(response.data);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import instance from '../../utils/axiosInstance';
 import { useSelector } from 'react-redux';
 
 const Project_Details = () => {
@@ -21,8 +21,8 @@ const Project_Details = () => {
     async function fetchExpertsAndGuides() {  
       try {
         const [expertRes, guideRes] = await Promise.all([
-          axios.get('http://localhost:1234/admin/get_users/sub_expert',{withCredentials:true}),
-          axios.get('http://localhost:1234/admin/get_users/guide',{withCredentials:true}),
+          instance.get('http://localhost:1234/admin/get_users/sub_expert',{withCredentials:true}),
+          instance.get('http://localhost:1234/admin/get_users/guide',{withCredentials:true}),
         ]);
 
         if (expertRes.status === 200) setExpertsList(expertRes.data);
@@ -59,7 +59,7 @@ const Project_Details = () => {
 
     try {
       // Step 1: Submit project
-      const response = await axios.post(
+      const response = await instance.post(
         `http://localhost:1234/student/addproject/${userselector.project_type}/${userselector.reg_num}`,
         {
           "project_name":projectName,
@@ -67,9 +67,6 @@ const Project_Details = () => {
           "description":description,
           "outcome":outcome,
           "hard_soft":core
-        },
-        {
-          withCredentials:true
         }
       );
       console.log(response.data); 
@@ -81,20 +78,20 @@ const Project_Details = () => {
       alert(message || 'Project added.');
 
       // Step 2: Send guide requests
-      await axios.post('http://localhost:1234/guide/sent_request_to_guide', {
+      await instance.post('/guide/sent_request_to_guide', {
         "from_team_id": teamselector[0].team_id,
         "project_id":project_id,
         "project_name": projectName.trim(),
         "to_guide_reg_num": selectedGuides,
-      },{withCredentials:true});
+      });
 
       // Step 3: Send expert requests
-      await axios.post('http://localhost:1234/sub_expert/sent_request_to_expert', {
+      await instance.post('/sub_expert/sent_request_to_expert', {
         "from_team_id": teamselector[0].team_id,
         "project_id":project_id,
         "project_name": projectName.trim(),
         "to_expert_reg_num": selectedExperts,
-      },{withCredentials:true});
+      });
 
       alert('All requests sent successfully.');
 

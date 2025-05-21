@@ -1,5 +1,5 @@
 import React from 'react';
-import axios from 'axios';
+import instance from '../../utils/axiosInstance';
 import { useSelector } from 'react-redux';
 
 function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen,  }) {
@@ -13,15 +13,12 @@ function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen,  }) {
     const accessToken = localStorage.getItem("accessToken");
 
     try {
-      const response = await axios.post(
-        "http://localhost:1234/student/join_request",
+      const response = await instance.post(
+        "/student/join_request",
         {
           "reg_num": inviteForm.registerNumber,
           "from_reg_num": selector.reg_num,
           "to_reg_num": inviteForm.registerNumber
-        },
-        {
-          withCredentials:true
         }
       );
 

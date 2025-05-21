@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import instance from '../../utils/axiosInstance';
 
 function extAddProject() {
   const [projectName, setProjectName] = useState('');
@@ -47,9 +47,7 @@ function extAddProject() {
 
     try {
       const accessToken = localStorage.getItem("accessToken");
-      const response = await axios.post('http://localhost:1234/teacher/addproject', projectData, {
-        withCredentials: true,
-      });
+      const response = await instance.post('http://localhost:1234/teacher/addproject', projectData);
 
       if (response.status === 200) {
         alert('Project added successfully!');
