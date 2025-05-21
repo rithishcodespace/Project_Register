@@ -1,113 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
 
-function Project_Details() {
+const Project_Details = () => {
+  const selector = useSelector((State) => State.teamSlice);
   const [projectName, setProjectName] = useState('');
   const [clusterName, setClusterName] = useState('');
   const [core, setCore] = useState('');
   const [description, setDescription] = useState('');
   const [outcome, setOutcome] = useState('');
 
-  const [selectedExperts, setSelectedExperts] = useState([]);
-  const [selectedGuides, setSelectedGuides] = useState([]);
-
   const [expertsList, setExpertsList] = useState([]);
   const [guidesList, setGuidesList] = useState([]);
+  const [selectedExperts, setSelectedExperts] = useState([]);
+  const [selectedGuides, setSelectedGuides] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const team_id = localStorage.getItem("team_id"); // Or get from props/context
-  const [projectId, setProjectId] = useState(null); // will get after project post
-
-  const toggleExpertSelection = (expert) => {
-    setSelectedExperts((prev) =>
-      prev.includes(expert.reg_num)
-        ? prev.filter((e) => e !== expert.reg_num)
-        : [...prev, expert.reg_num]
-    );
-  };
-
-  const toggleGuideSelection = (guide) => {
-    setSelectedGuides((prev) =>
-      prev.includes(guide.reg_num)
-        ? prev.filter((g) => g !== guide.reg_num)
-        : [...prev, guide.reg_num]
-    );
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      // Step 1: Post Project
-      const res = await axios.post('http://localhost:1234/project/add', {
-        projectName,
-        clusterName,
-        core,
-        description,
-        outcome,
-        team_id,
-      });
-
-      if (res.status === 200 || res.status === 201) {
-        const createdProjectId = res.data.project_id || res.data.insertId;
-        setProjectId(createdProjectId);
-        console.log("Project created:", createdProjectId);
-
-        // Step 2: Send Guide Requests
-        const guideRes = await axios.post('http://localhost:1234/guide/sent_request_to_guide', {
-          from_team_id: team_id,
-          project_id: createdProjectId,
-          project_name: projectName,
-          to_guide_reg_num: selectedGuides,
-        });
-
-        console.log("Guide response:", guideRes.data);
-
-        // Step 3: Send Expert Requests
-        const expertRes = await axios.post('http://localhost:1234/sub_expert/sent_request_to_expert', {
-          from_team_id: team_id,
-          project_id: createdProjectId,
-          project_name: projectName,
-          to_expert_reg_num: selectedExperts,
-        });
-
-        console.log("Expert response:", expertRes.data);
-
-        alert("Project submitted and requests sent successfully!");
-
-        // Reset form
-        setProjectName('');
-        setClusterName('');
-        setCore('');
-        setDescription('');
-        setOutcome('');
-        setSelectedExperts([]);
-        setSelectedGuides([]);
-      }
-    } catch (error) {
-      console.error("Submission Error:", error);
-      alert("Error occurred during submission. Check console for details.");
-    }
-  };
+  const selector1=useSelector((Store)=>Store.teamStatusSlice.teamLeader)
 
   useEffect(() => {
-    async function fetchExpertsAndGuides() {
+    async function fetchExpertsAndGuides() {  
       try {
         const [expertRes, guideRes] = await Promise.all([
           axios.get('http://localhost:1234/admin/get_users/sub_expert'),
           axios.get('http://localhost:1234/admin/get_users/guide'),
         ]);
 
-        if (expertRes.status === 200) {
-          setExpertsList(expertRes.data); // [{ name, reg_num }]
-        }
-
-        if (guideRes.status === 200) {
-          setGuidesList(guideRes.data); // [{ name, reg_num }]
-        }
-      } catch (error) {
-        console.error('Error fetching experts/guides:', error);
-        alert('Failed to load experts and guides');
+        if (expertRes.status === 200) setExpertsList(expertRes.data);
+        if (guideRes.status === 200) setGuidesList(guideRes.data);
+      } catch (err) {
+        console.error('Fetch Error:', err);
+        alert('Failed to load experts and guides.');
       } finally {
         setLoading(false);
       }
@@ -116,139 +38,226 @@ function Project_Details() {
     fetchExpertsAndGuides();
   }, []);
 
+  const toggleExpertSelection = (reg_num) => {
+    setSelectedExperts((prev) =>
+      prev.includes(reg_num)
+        ? prev.filter((e) => e !== reg_num)
+        : [...prev, reg_num]
+    );
+  };
+
+  const toggleGuideSelection = (reg_num) => {
+    setSelectedGuides((prev) =>
+      prev.includes(reg_num)
+        ? prev.filter((g) => g !== reg_num)
+        : [...prev, reg_num]
+    );
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const reg_num = selector[0].reg_num;
+    const team_id = selector[0]?.team_id;
+    console.log(reg_num);
+    console.log(team_id);
+
+    if (!reg_num || !team_id) {
+      alert('Missing registration or team ID.');
+      return;
+    }
+
+    if (
+      !projectName.trim() ||
+      !clusterName.trim() ||
+      !core.trim() ||
+      !description.trim() ||
+      !outcome.trim()
+    ) {
+      alert('Please fill all fields.');
+      return;
+    }
+
+    if (selectedExperts.length < 3 || selectedGuides.length < 3) {
+      alert('Select at least 3 experts and 3 guides.');
+      return;
+    }
+
+    const project_type = selector1.project_type.toLowerCase();
+    const payload = {
+      project_name: projectName.trim(),
+      cluster: clusterName.trim(),
+      description: description.trim(),
+      outcome: outcome.trim(),
+      hard_soft: core.trim(),
+    };
+
+    try {
+      // Step 1: Submit project
+      const response = await axios.post(
+        `http://localhost:1234/student/addproject/${project_type}/${reg_num}`,
+        payload
+      );
+
+      const { message, project_id } = response.data;
+
+      if (!project_id) throw new Error('Project ID not returned.');
+
+      alert(message || 'Project added.');
+
+      // Step 2: Send guide requests
+      await axios.post('http://localhost:1234/guide/sent_request_to_guide', {
+        from_team_id: team_id,
+        project_id,
+        project_name: projectName.trim(),
+        to_guide_reg_num: selectedGuides,
+      });
+
+      // Step 3: Send expert requests
+      await axios.post('http://localhost:1234/sub_expert/sent_request_to_expert', {
+        from_team_id: team_id,
+        project_id,
+        project_name: projectName.trim(),
+        to_expert_reg_num: selectedExperts,
+      });
+
+      alert('All requests sent successfully.');
+
+      // Reset form
+      setProjectName('');
+      setClusterName('');
+      setCore('');
+      setDescription('');
+      setOutcome('');
+      setSelectedExperts([]);
+      setSelectedGuides([]);
+    } catch (error) {
+      console.error('Submit Error:', error);
+      alert(error?.response?.data?.message || 'Failed to submit project.');
+    }
+  };
+
+  if (loading) return <div className="p-4">Loading...</div>;
+
   return (
-    <>
-      <h2 className="text-3xl font-semibold mb-2 text-center mt-5 text-black">Post New Project</h2>
-      <div className="min-h-screen flex justify-center p-6">
-        <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-8">
-          {loading ? (
-            <p className="text-center text-lg text-gray-600">Loading experts and guides...</p>
-          ) : (
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Project Name</label>
-                <input
-                  type="text"
-                  required
-                  value={projectName}
-                  onChange={(e) => setProjectName(e.target.value)}
-                  className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
+    <form onSubmit={handleSubmit} className="max-w-3xl mx-auto p-6 bg-white rounded shadow">
+      <h2 className="text-2xl font-bold mb-6">Project Submission</h2>
 
-              <div className="grid grid-cols-2 gap-8">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Cluster Name</label>
-                  <select
-                    required
-                    value={clusterName}
-                    onChange={(e) => setClusterName(e.target.value)}
-                    className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
-                  >
-                    <option value="" disabled>Select Cluster Name</option>
-                    <option value="CSE">CSE</option>
-                    <option value="AIDS">AIDS</option>
-                    <option value="IT">IT</option>
-                    <option value="AIML">AIML</option>
-                    <option value="CT">CT</option>
-                    <option value="AGRI">AGRI</option>
-                    <option value="ECE">ECE</option>
-                    <option value="EIE">EIE</option>
-                    <option value="EEE">EEE</option>
-                    <option value="MECH">MECH</option>
-                    <option value="FT">FT</option>
-                    <option value="FD">FD</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Core</label>
-                  <select
-                    required
-                    value={core}
-                    onChange={(e) => setCore(e.target.value)}
-                    className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
-                  >
-                    <option value="" disabled>Select</option>
-                    <option value="Hardware">Hardware</option>
-                    <option value="Software">Software</option>
-                  </select>
-                </div>
-              </div>
+      <div className="mb-4">
+        <label className="block mb-1 font-medium">Project Name</label>
+        <input
+          type="text"
+          value={projectName}
+          onChange={(e) => setProjectName(e.target.value)}
+          className="w-full border px-3 py-2 rounded"
+          required
+        />
+      </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Description</label>
-                <textarea
-                  required
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="mt-1 w-full min-h-32 border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
+      <div className="mb-4">
+        <label className="block mb-1 font-medium">Cluster Name</label>
+         <select
+          value={clusterName}
+          onChange={(e) =>setClusterName(e.target.value)}
+          className="w-full border px-3 py-2 rounded"
+          required
+        >
+          <option value="">Select cluster</option>
+          <option value="CSE">CSE</option>
+          <option value="AIML">AIML</option>
+          <option value="AIDS">AIDS</option>
+          <option value="IT">IT</option>
+        </select>
+      </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Outcome</label>
-                <textarea
-                  required
-                  value={outcome}
-                  onChange={(e) => setOutcome(e.target.value)}
-                  className="mt-1 w-full min-h-24 border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
+      <div className="mb-4">
+        <label className="block mb-1 font-medim">Hard-Soft</label>
+        <select
+          value={core}
+          onChange={(e) => setCore(e.target.value)}
+          className="w-full border px-3 py-2 rounded"
+          required
+        >
+          <option value="">Select</option>
+          <option value="hardware">Hardware</option>
+          <option value="software">Software</option>
+        </select>
+      </div>
 
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Select at Experts:</h3>
-                <div className="flex flex-wrap gap-3">
-                  {expertsList.map((expert, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => toggleExpertSelection(expert)}
-                      className={`px-3 py-1 rounded-full border ${
-                        selectedExperts.includes(expert.reg_num)
-                          ? 'bg-purple-500 text-white border-purple-600'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
-                      }`}
-                    >
-                      {expert.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
+      <div className="mb-4">
+        <label className="block mb-1 font-medium">Project Description</label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full border px-3 py-2 rounded"
+          rows={4}
+          required
+        />
+      </div>
 
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Select at Guides:</h3>
-                <div className="flex flex-wrap gap-3">
-                  {guidesList.map((guide, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => toggleGuideSelection(guide)}
-                      className={`px-3 py-1 rounded-full border ${
-                        selectedGuides.includes(guide.reg_num)
-                          ? 'bg-green-600 text-white border-green-600'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-green-100'
-                      }`}
-                    >
-                      {guide.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
+      <div className="mb-6">
+        <label className="block mb-1 font-medium">Expected Outcome</label>
+        <textarea
+          value={outcome}
+          onChange={(e) => setOutcome(e.target.value)}
+          className="w-full border px-3 py-2 rounded"
+          rows={3}
+          required
+        />
+      </div>
 
-              <div className="text-center">
-                <button
-                  type="submit"
-                  className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-6 rounded-md"
-                >
-                  Submit
-                </button>
-              </div>
-            </form>
-          )}
+      {/* Expert Selection */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-2">Select at least 3 Experts:</h3>
+        <div className="flex flex-wrap gap-2">
+          {expertsList.map((expert) => (
+            <button
+              key={expert.reg_num}
+              type="button"
+              onClick={() => toggleExpertSelection(expert.reg_num)}
+              className={`px-3 py-1 rounded-full border ${
+                selectedExperts.includes(expert.reg_num)
+                  ? 'bg-purple-500 text-white border-purple-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
+              }`}
+            >
+              {expert.name}
+            </button>
+          ))}
         </div>
       </div>
-    </>
+
+      {/* Guide Selection */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-2">Select at least 3 Guides:</h3>
+        <div className="flex flex-wrap gap-2">
+          {guidesList.map((guide) => (
+            <button
+              key={guide.reg_num}
+              type="button"
+              onClick={() => toggleGuideSelection(guide.reg_num)}
+              className={`px-3 py-1 rounded-full border ${
+                selectedGuides.includes(guide.reg_num)
+                  ? 'bg-green-600 text-white border-green-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-green-100'
+              }`}
+            >
+              {guide.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="text-center">
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+        >
+          Submit Project
+        </button>
+      </div>
+    </form>
   );
-}
+};
 
 export default Project_Details;

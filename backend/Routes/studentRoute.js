@@ -646,6 +646,9 @@ router.post("/student/addproject/:project_type/:reg_num", (req, res, next) => {
     const { project_type,reg_num } = req.params;
     const { project_name, cluster, description, outcome, hard_soft } = req.body;
 
+    project_type = project_type.toLowerCase();
+    hard_soft = hard_soft.toLowerCase();
+
     const validTypes = ['internal','external','hardware','software'];
 
     if (!project_type.trim() || !project_name.trim() || !cluster.trim() || !description.trim() || !reg_num.trim()) {
