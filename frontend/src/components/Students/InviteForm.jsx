@@ -2,8 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 
-function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen,  }) {
-
+function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen }) {
   const selector = useSelector((Store) => Store.userSlice);
 
   async function handleInviteSubmit(e) {
@@ -16,29 +15,36 @@ function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen,  }) {
       const response = await axios.post(
         "http://localhost:1234/student/join_request",
         {
-          "reg_num": inviteForm.registerNumber,
-          "from_reg_num": selector.reg_num,
-          "to_reg_num": inviteForm.registerNumber
+          from_reg_num: selector.reg_num,           // sender
+          to_reg_num: inviteForm.registerNumber     // receiver
         },
         {
-          withCredentials:true
+          withCredentials: true
         }
       );
 
-      if(response.data == 200)alert("Invite sent successfully!");
-      setIsInviteOpen(false); // close modal if success
+      //  Show success message
+      alert(response.data || "Invite sent successfully!");
+      setIsInviteOpen(false);
     } catch (err) {
       console.error("Error sending invite", err);
+
+      // Show error message from backend if available
+      if (err.response && err.response.data) {
+        alert(err.response.data.message || "Failed to send invite");
+      } else {
+        alert("Network error occurred while sending invite.");
+      }
     }
   }
 
   return (
     <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50 px-4">
       <div className="bg-white rounded-lg p-6 w-full max-w-xl">
-        <h2 className="text-xl font-semibold mb-4 bg-white">Invite a Member</h2>
-        <form onSubmit={handleInviteSubmit} className="space-y-4 bg-white">
-          <div className="bg-white">
-            <label className="block text-sm font-medium text-gray-700 bg-white">Register Number</label>
+        <h2 className="text-xl font-semibold bg-white mb-4">Invite a Member</h2>
+        <form onSubmit={handleInviteSubmit} className=" bg-white space-y-4">
+          <div className=' bg-white '>
+            <label className="block text-sm font-medium bg-white  text-gray-700">Register Number</label>
             <input
               name="registerNumber"
               value={inviteForm.registerNumber}
@@ -46,10 +52,10 @@ function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen,  }) {
               type="text"
               required
               placeholder="Enter Register Number"
-              className="mt-1 bg-white block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-indigo-300"
+              className="mt-1 block w-full border bg-white  border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-indigo-300"
             />
           </div>
-          <div className="mt-6 flex bg-white justify-between space-x-2">
+          <div className="mt-6 flex bg-white  justify-between space-x-2">
             <button
               type="button"
               onClick={() => setIsInviteOpen(false)}
