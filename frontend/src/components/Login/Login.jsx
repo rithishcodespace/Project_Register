@@ -94,7 +94,7 @@ function Login() {
       alert("Please enter both company name and project name.");
       return;
     }
-    await updateProjectTypeAndNavigate("EXTERNAL", selectedCompany, projectName);
+    await updateProjectTypeAndNavigate("external", selectedCompany, projectName);
   };
 
   async function handleGoogleLogin() {
@@ -211,7 +211,7 @@ function Login() {
               </>
             )}
 
-            {selectedProjectType === "EXTERNAL" && (
+            {selectedProjectType === "external" && (
               <>
                 <h1 className="text-md md:text-xl bg-white font-semibold text-gray-800 mb-4">Enter Company & Project Details</h1>
                 <form onSubmit={handleExternalSubmit} className="bg-white">

@@ -173,7 +173,7 @@ router.post("/guide/sent_request_to_guide", (req, res, next) => {
 
 // adds reply to the query
 
-router.patch("/guide/add_reply/:query_id",(req,res,next) => { // after 100 deletes old one
+router.patch("/add_reply/:query_id",(req,res,next) => { // after 100 deletes old one
     try{
       const{reply} = req.body;
       const{query_id} = req.params;
