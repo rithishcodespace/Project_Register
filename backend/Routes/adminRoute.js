@@ -21,6 +21,22 @@ router.post("/admin/adduser",(req,res,next) => {
    }
 })
 
+router.get("/admin/getproject_by_team_id/:project_id",(req,res,next) => {
+  try{
+   const{project_id} = req.params;
+   if(!project_id)return next("team_id not found");
+   let sql = "select * from projects where project_id = ?";
+   db.query(sql,[project_id],(error,result) => {
+    if(error)return next(error);
+    return res.send(result);
+   })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 // fetch users based on role
 
 router.get("/admin/get_users/:role",(req,res,next) => {
@@ -123,19 +139,29 @@ router.delete("/admin/remove_timeline/:id",(req,res,next) => {
   }
 })
 
-// updates the timeline -> doubt with cron job
+// updates the timeline 
 
 router.patch("/admin/update_timeline_id/:id",(req,res,next) => {
   try{
      const{id} = req.params;
-     const{name,start_date,end_date} = req.body;
-     if(!name || !start_date || !end_date)return next(createError.BadRequest("req.body is missing!"))
-     if(!id)return next(error);
-     let sql = "UPDATE timeline SET name = ?, start_date = ?, end_date = ? WHERE id = ?";
-     db.query(sql,[name,start_date,end_date,id],(error,result) => {
+     const{start_date,end_date} = req.body;
+     if(!start_date || !end_date)return next(createError.BadRequest("req.body is missing!"))
+     let date1 = new Date(start_date);
+     let date2 = new Date(end_date);
+     date1.setHours(0,0,0,0);
+     date2.setHours(0,0,0,0);
+     if(date1 > date2)return next(createError.BadRequest("Invalid date"))
+     if(!id)return next(createError.BadRequest("Timeline ID is missing in URL.")); 
+     let sql = "UPDATE timeline SET start_date = ?, end_date = ?, cron_executed = false WHERE id = ?";
+     db.query(sql,[start_date,end_date,id],(error,result) => {
       if(error)return next(error);
       if(result.affectedRows === 0)return next(createError.BadRequest("rows are not affected!"));
-      res.send(`${id} successfully updated to ${start_date} and ${end_date}`);
+      res.status(200).json({
+        message: "Timeline updated successfully.",
+        id,
+        start_date,
+        end_date
+      });
      })
   }
   catch(error)
@@ -161,6 +187,8 @@ router.get("/admin/fetch_progress_by_project_id/:project_id",(req,res,next) => {
     next(error);
   }
 })
+
+// updates the weekly
 
 
 module.exports = router;

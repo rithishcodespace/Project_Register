@@ -39,27 +39,70 @@ cron.schedule("0 0 * * *", () => { // runs every day on midnight 00:00 AM -> to 
         if (teams.length === 0) return console.log("No confirmed teams found");
 
         teams.forEach(({ team_id, project_id }) => {
-          const deadlines = generateWeeklyDeadlines(startDate); // already formatted
+          let sql1 = "select guide_reg_num,sub_expert_reg_num from team_requests where team_id = ? and project_id = ?";
+          db.query(sql1,[team_id,project_id],(error,result) => {
+            if(error)return console.log("error fetching guide_reg_num and expert_reg_num not found!");
+            if(result[0].guide_reg_num === null || result[0].expert_reg_num === null){
 
-          // it inserts the deadlines into the deadlines table ,if it already exists it updates that row
-          const insertSQL = `
-            INSERT INTO weekly_logs_deadlines
-              (team_id, project_id, week_1, week_2, week_3, week_4, week_5, week_6,
-               week_7, week_8, week_9, week_10, week_11, week_12)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-              week_1 = VALUES(week_1), week_2 = VALUES(week_2), week_3 = VALUES(week_3),
-              week_4 = VALUES(week_4), week_5 = VALUES(week_5), week_6 = VALUES(week_6),
-              week_7 = VALUES(week_7), week_8 = VALUES(week_8), week_9 = VALUES(week_9),
-              week_10 = VALUES(week_10), week_11 = VALUES(week_11), week_12 = VALUES(week_12)
-          `;
+              const transporter = nodemailer.createTransport({
+                service: 'gmail', // or use 'smtp.ethereal.email' for testing
+                auth: {
+                  user: 'your_email@gmail.com',
+                  pass: 'your_app_password' // Not your Gmail password — use an App Password if using Gmail
+                }
+              });
 
-          const values = [team_id, project_id, ...deadlines];
+              // Fetch student emails of the team
+              let studentQuery = `SELECT email FROM team_members WHERE team_id = ?`;
 
-          db.query(insertSQL, values, (err) => {
-            if (err) return console.error(`Insert error for team ${team_id}:`, err);
-            console.log(`Deadlines set for team ${team_id}`);
-          });
+              db.query(studentQuery, [team_id], (err, members) => {
+                if (err) return console.error("Error fetching team member emails:", err);
+                if (members.length === 0) return console.log(`No members found for team ${team_id}`);
+
+                const recipientEmails = members.map(m => m.email).join(","); // comma-separated for multiple recipients
+
+                const mailOptions = {
+                  from: 'your_email@gmail.com',
+                  to: recipientEmails,
+                  subject: 'Action Required: Guide/Expert Not Assigned',
+                  text: `Dear Team,
+                  Your team has not been assigned a guide or subject expert yet. Please contact the project coordinator to complete the assignment so weekly log deadlines can be generated.
+                  Thank you.`
+                };
+
+                transporter.sendMail(mailOptions, (error, info) => {
+                  if (error) {
+                    return console.error("Error sending email:", error);
+                  }
+                  console.log(`Email sent to team ${team_id}:`, info.response);
+                });
+              });
+
+            }
+            else{
+              const deadlines = generateWeeklyDeadlines(startDate); // already formatted
+
+             // it inserts the deadlines into the deadlines table ,if it already exists it updates that row
+             const insertSQL = `
+               INSERT INTO weekly_logs_deadlines
+                 (team_id, project_id, week_1, week_2, week_3, week_4, week_5, week_6,
+                  week_7, week_8, week_9, week_10, week_11, week_12)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+               ON DUPLICATE KEY UPDATE
+                 week_1 = VALUES(week_1), week_2 = VALUES(week_2), week_3 = VALUES(week_3),
+                 week_4 = VALUES(week_4), week_5 = VALUES(week_5), week_6 = VALUES(week_6),
+                 week_7 = VALUES(week_7), week_8 = VALUES(week_8), week_9 = VALUES(week_9),
+                 week_10 = VALUES(week_10), week_11 = VALUES(week_11), week_12 = VALUES(week_12)
+             `;
+   
+             const values = [team_id, project_id, ...deadlines];
+   
+             db.query(insertSQL, values, (err) => {
+               if (err) return console.error(`Insert error for team ${team_id}:`, err);
+               console.log(`Deadlines set for team ${team_id}`);
+             });
+            }
+          })
         });
 
         // make sure this matches the SELECT name

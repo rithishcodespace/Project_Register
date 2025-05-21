@@ -70,7 +70,9 @@ router.post("/student/join_request", (req, res, next) => {
         const company1 = result[0].company;
         const company2 = result[1].company;
         if(type1 === null || type2 === null)return next(createError.BadRequest("User haven't entered his project_type yet!"));
-        else if(type1 != type2)return res.status(500).send("BOTH MEMBERS SHOULD BE EITHER INTERNAL OR EXTERNAL!!");
+        else if(type1.toLowerCase() !== type2.toLowerCase()) {
+         return res.status(500).send("BOTH MEMBERS SHOULD BE EITHER INTERNAL OR EXTERNAL!!");
+        }
         else if(type1 === 'external' && type2 === 'external'){
           if(company1 != company2)return res.status(500).send("BOTH MEMBERS SHOULD BE OF SAME COMPANY!");
         }
