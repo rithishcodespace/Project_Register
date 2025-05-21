@@ -34,15 +34,7 @@ function Project_Details() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (selectedExperts.length < 3) {
-      alert("Please select at least 3 experts.");
-      return;
-    }
-
-    if (selectedGuides.length < 3) {
-      alert("Please select at least 3 guides.");
-      return;
-    }
+   
 
     const projectData = {
       projectName,
@@ -51,7 +43,7 @@ function Project_Details() {
       description,
       outcome,
       selectedExperts,
-      selectedGuides
+      selectedGuides,
     };
 
     console.log("Project Data:", projectData);
@@ -62,12 +54,19 @@ function Project_Details() {
     async function fetchExpertsAndGuides() {
       try {
         const [expertRes, guideRes] = await Promise.all([
-          axios.get('http://localhost:1234/student/fetch_guide_or_expert/sub_expert'),
-          axios.get('http://localhost:1234/student/fetch_guide_or_expert/guide'),
+          axios.get('http://localhost:1234/admin/get_users/sub_expert'),
+          axios.get('http://localhost:1234/admin/get_users/guide'),
         ]);
 
-        if (expertRes.status === 200) setExpertsList(expertRes.data);
-        if (guideRes.status === 200) setGuidesList(guideRes.data);
+        if (expertRes.status === 200) {
+          const expertNames = expertRes.data.map((expert) => expert.name); // Assuming 'name' is the field
+          setExpertsList(expertNames);
+        }
+
+        if (guideRes.status === 200) {
+          const guideNames = guideRes.data.map((guide) => guide.name); // Assuming 'name' is the field
+          setGuidesList(guideNames);
+        }
       } catch (error) {
         console.error('Error fetching experts/guides:', error);
         alert('Failed to load experts and guides');
@@ -82,7 +81,7 @@ function Project_Details() {
   return (
     <>
       <h2 className="text-3xl font-semibold mb-2 text-center mt-5 text-black">Post New Project</h2>
-      <div className="min-h-screen flex justify-center bg-white p-6">
+      <div className="min-h-screen flex justify-center p-6">
         <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-8">
           {loading ? (
             <p className="text-center text-lg text-gray-600">Loading experts and guides...</p>
