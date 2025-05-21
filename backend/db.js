@@ -11,6 +11,26 @@ const pool = mysql.createPool({
     queueLimit:0
 })
 
+// const pool = mysql.createPool({
+//     host:"localhost",
+//     user:"root",
+//     password:"Mathan@2007",
+//     database:"project_registor",
+//     waitForConnections:true,
+//     connectionLimit:10, 
+//     queueLimit:0
+// })
+
+// const pool = mysql.createPool({
+//     host:"localhost",
+//     user:"root",
+//     password:"prakashbit",
+//     database:"project_registor",
+//     waitForConnections:true,
+//     connectionLimit:10, 
+//     queueLimit:0
+// })
+
 pool.getConnection((error,connection)=>{
     if(error) console.log("Error connecting to db",error.message);
     else{

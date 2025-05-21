@@ -83,19 +83,19 @@ const InvitationPage = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-4">Invitations</h1>
-      <table className="min-w-full table-auto border-collapse border border-gray-300">
+      <h1 className="text-3xl flex justify-center font-bold mb-4">Invitations</h1>
+      <table className="min-w-full table-auto rounded-lg  border-gray-300">
         <thead>
           <tr>
-            <th className="px-4 py-2 border border-gray-300">Name</th>
-            <th className="px-4 py-2 border border-gray-300">Email</th>
-            <th className="px-4 py-2 border border-gray-300">Register Number</th>
-            <th className="px-4 py-2 border border-gray-300">Department</th>
-            <th className="px-4 py-2 border border-gray-300">Action</th>
+            <th className="  p-3 border bg-white border-gray-300">Name</th>
+            <th className="  p-3 border bg-white border-gray-300">Email</th>
+            <th className="  p-3 border bg-white border-gray-300">Register Number</th>
+            <th className="  p-3 border bg-white border-gray-300">Department</th>
+            <th className="  p-3 border bg-white border-gray-300">Action</th>
           </tr>
         </thead>
-        <tbody>
-          {invitations.map((invite) => (
+        <tbody className='border border-black'>
+          { invitations.map((invite) => (
             <tr key={invite.reg_num}>
               <td className="px-4 py-2 border border-gray-300">{invite.name}</td>
               <td className="px-4 py-2 border border-gray-300">{invite.emailId}</td>
@@ -132,6 +132,7 @@ const InvitationPage = () => {
             </tr>
           ))}
         </tbody>
+        
       </table>
     </div>
   );

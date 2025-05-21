@@ -20,6 +20,7 @@ function Student_expert_review() {
         `http://localhost:1234/sub_expert/fetch_review_requests/${selector.reg_num}`,{withCredentials:true}
       );
       setProjects(res.data);
+      console.log(res.data)
     } catch (error) {
       console.error("Failed to fetch review requests:", error);
     }
