@@ -39,7 +39,7 @@ function Login() {
         dispatch(addUser(response.data));
 
         if (role === "student") {
-          const projectTypeRes = await axios.get(`http://localhost:1234/student/get_project_type/${reg_num}`);
+          const projectTypeRes = await axios.get(`http://localhost:1234/student/get_project_type/${reg_num}`,{withCredentials:true});
           const projectType = projectTypeRes.data?.project_type;
 
           if (projectType === "INTERNAL") {
@@ -71,7 +71,7 @@ function Login() {
     try {
       await axios.patch(
         `http://localhost:1234/student/alter_project_status/${reg_num}/${projectType}`,
-        { company: companyName, project_name: projName }
+        { company: companyName, project_name: projName },{withCredentials:true}
       );
 
       setShowStudentPopup(false);
@@ -106,7 +106,7 @@ function Login() {
       const res = await axios.post("http://localhost:1234/auth/google-login", {
         token: idToken,
       }, {
-        headers: { "Content-Type": "application/json" }
+        withCredentials:true
       });
 
       localStorage.setItem("accessToken", res.data.accessToken);

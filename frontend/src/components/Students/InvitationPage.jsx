@@ -28,9 +28,7 @@ const InvitationPage = () => {
         const response = await axios.get(
           `http://localhost:1234/student/request_recived/${selector.reg_num}`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            withCredentials:true
           }
         );
 
@@ -42,9 +40,7 @@ const InvitationPage = () => {
             let res = await axios.get(
               `http://localhost:1234/student/get_student_details_by_regnum/${fromUserId}`,
               {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
+                withCredentials:true
               }
             );
 

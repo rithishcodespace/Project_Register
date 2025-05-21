@@ -48,10 +48,6 @@ function extAddProject() {
     try {
       const accessToken = localStorage.getItem("accessToken");
       const response = await axios.post('http://localhost:1234/teacher/addproject', projectData, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
         withCredentials: true,
       });
 

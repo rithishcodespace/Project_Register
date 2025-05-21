@@ -14,7 +14,7 @@ const TimeLine = () => {
 
   const fetchTimelines = async () => {
     try {
-      const res = await axios.get("http://localhost:1234/admin/get_timelines");
+      const res = await axios.get("http://localhost:1234/admin/get_timelines",{withCredentials:true});
       if (res.status !== 200 || res.data.length === 0) return alert("Error fetching timeline!");
       setTimelines(
         res.data.map((t) => ({
@@ -46,7 +46,7 @@ const TimeLine = () => {
         name,
         start_date: startTime,
         end_date: endTime,
-      });
+      },{withCredentials:true});
       setNewTimeline({ name: "", startTime: "", endTime: "" });
       fetchTimelines();
     } catch (error) {
@@ -56,7 +56,7 @@ const TimeLine = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:1234/admin/remove_timeline/${id}`);
+      await axios.delete(`http://localhost:1234/admin/remove_timeline/${id}`,{withCredentials:true});
       fetchTimelines();
     } catch (error) {
       console.error("Delete error:", error);
@@ -81,7 +81,7 @@ const TimeLine = () => {
         name,
         start_date: startTime,
         end_date: endTime,
-      });
+      },{withCredentials:true});
       setEditIndex(null);
       fetchTimelines();
     } catch (error) {
@@ -92,7 +92,7 @@ const TimeLine = () => {
   return (
     <>
       <h2 className="text-3xl font-bold text-center mt-6 mb-6">Timeline Management</h2>
-      <div className="max-w-5xl bg-white mx-auto mt-2 p-6 bg-white rounded-2xl shadow">
+      <div className="max-w-5xl mx-auto mt-2 p-6 bg-white rounded-2xl shadow">
         <form onSubmit={handleAdd} className="grid grid-cols-1 bg-white md:grid-cols-4 gap-4 items-end mb-6">
           <div className="bg-white">
             <label className="block font-medium bg-white mb-1">Name</label>

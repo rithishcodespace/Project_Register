@@ -92,6 +92,8 @@ router.post("/admin/addTimeLine",(req,res,next) => {
     let time2 = new Date(end_date);
     if(time1 > time2)return next(createError.BadRequest("Invalid time range!"));
     let sql = "INSERT INTO timeline (name, start_date, end_date) VALUES (?, ?, ?)";
+    start_date = time1.toISOString().split('T')[0];
+    end_date = time2.toISOString().split('T')[0];
     db.query(sql,[name,start_date,end_date],(error,result) => {
       if(error)return next(error);
       if(result.affectedRows === 0)return next(createError.BadRequest("rows are not affected!"));
@@ -146,13 +148,15 @@ router.delete("/admin/remove_timeline/:id",(req,res,next) => {
 router.patch("/admin/update_timeline_id/:id",(req,res,next) => {
   try{
      const{id} = req.params;
-     const{start_date,end_date} = req.body;
+     let{start_date,end_date} = req.body;
      if(!start_date || !end_date)return next(createError.BadRequest("req.body is missing!"))
      let date1 = new Date(start_date);
      let date2 = new Date(end_date);
      date1.setHours(0,0,0,0);
      date2.setHours(0,0,0,0);
      if(date1 > date2)return next(createError.BadRequest("Invalid date"))
+     start_date = date1.toISOString().split('T')[0];
+     end_date = date2.toISOString().split('T')[0];
      if(!id)return next(createError.BadRequest("Timeline ID is missing in URL.")); 
      let sql = "UPDATE timeline SET start_date = ?, end_date = ?, cron_executed = false WHERE id = ?";
      db.query(sql,[start_date,end_date,id],(error,result) => {
@@ -177,20 +181,23 @@ router.patch("/admin/update_timeline_id/:id",(req,res,next) => {
 router.patch("/admin/update_team_timeline/:team_id", (req, res, next) => {
   try {
     const { team_id } = req.params;
-    const { start_date, end_date } = req.body;
+    let { start_date, end_date } = req.body;
 
     if (!start_date || !end_date) {
       return next(createError.BadRequest("Start and end dates are required."));
     }
 
-    const date1 = new Date(start_date);
-    const date2 = new Date(end_date);
-    date1.setHours(0, 0, 0, 0);
-    date2.setHours(0, 0, 0, 0);
+    start_date = new Date(start_date);
+    end_date = new Date(end_date);
+    start_date.setHours(0, 0, 0, 0);
+    end_date.setHours(0, 0, 0, 0);
 
-    if (date1 > date2) {
+    if (start_date > end_date) {
       return next(createError.BadRequest("Start date cannot be after end date."));
     }
+
+    start_date = start_date.toISOString().split('T')[0];
+    end_date = end_date.toISOString().split('T')[0];
 
     const sql = `
       UPDATE timeline 
@@ -239,7 +246,46 @@ router.get("/admin/fetch_progress_by_project_id/:project_id",(req,res,next) => {
   }
 })
 
-// updates the weekly
+// updates the weekly deadlines for a specific team -> for a single week ->  did'not updated weekly logs
+router.patch("/admin/update_deadline/:week/:team_id",(req,res,next) => {
+  try{
+    const{week,team_id} = req.params;
+    let{newDeadline} = req.body;
+    if(!week || !team_id || !newDeadline)return next(createError.BadGateway("week or team_id or newDeadline not found!"));
+    // validating date and week
+    newDeadline = new Date(newDeadline);
+    let today = new Date();
+    today.setHours(0,0,0,0) //removes the time
+    newDeadline.setHours(0,0,0,0);
+     const allowedWeeks = [
+      "week_1", "week_2", "week_3", "week_4", "week_5",
+      "week_6", "week_7", "week_8", "week_9", "week_10",
+      "week_11", "week_12"
+    ];
+    if (!allowedWeeks.includes(week)) {
+      return next(createError.BadRequest("Invalid week column name!"));
+    }
+    if(today > newDeadline)return next(createError.BadRequest("Invalid date!"));
+    newDeadline = newDeadline.toISOString().split('T')[0];
+
+    // checks if deadlines exists - both guide and expert should accepte request
+    let sql1 = "select * from weekly_logs_deadlines where team_id = ?";
+    db.query(sql1,[team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.BadRequest(`deadlines not exist!`)); 
+      let sql = `update weekly_logs_deadlines set \`${week}\` = ? where team_id = ?`;
+      db.query(sql,[newDeadline,team_id],(error,result) => {
+        if(error)return next(error);
+        if(result.affectedRows === 0)return next(createError.BadRequest("some rows are not affected!"));
+        res.status(200).json({"message":`${week} deadline updated to ${newDeadline}`});
+      })
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 
 module.exports = router;

@@ -26,9 +26,7 @@ function Queries() {
           query: newQuery,
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          withCredentials:true
         }
       );
 
@@ -46,9 +44,7 @@ function Queries() {
       const response = await axios.get(
         `http://localhost:1234/student/get_queries_sent_by_my_team/${selector[0].team_id}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          withCredentials:true
         }
       );
       if (Array.isArray(response.data)) {

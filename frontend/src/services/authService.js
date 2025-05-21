@@ -1,18 +1,15 @@
-import axios from "axios";
+import instance from "../utils/axiosInstance";
 import { addUser } from "../utils/userSlice";
 
 export const getProfile = async (dispatch, navigate) => {
   try {
-    const response = await axios.get("http://localhost:1234/profile/view", {
-      withCredentials: true
-    });
+    const response = await instance.get("/profile/view");
 
     if (response.status === 200) {
       const userData = response.data.data;
       console.log("Profile Data:", userData);
       dispatch(addUser(userData));
 
-      // Role-based redirection
       if (userData.role) {
         routeUserByRole(userData.role, navigate);
       } else {
@@ -24,15 +21,14 @@ export const getProfile = async (dispatch, navigate) => {
       navigate("/login");
     }
   } catch (error) {
-    console.error("Error fetching profile:", error.response ? error.response.data.message : error.message);
-    navigate("/login");
+    console.error("Error fetching profile:", error.response?.data?.message || error.message);
   }
 };
 
-// Role-based navigation function
 const routeUserByRole = (role, navigate) => {
   switch (role) {
     case "student":
+    case "ext_student":
       navigate("/student");
       break;
     case "teacher":
@@ -47,12 +43,9 @@ const routeUserByRole = (role, navigate) => {
     case "sub_expert":
       navigate("/subject_expert");
       break;
-    case "ext_student":
-        navigate("/student")
     default:
       console.error("Invalid user role. Redirecting to login...");
       navigate("/login");
       break;
   }
 };
-

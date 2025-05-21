@@ -68,7 +68,7 @@ function Guide_dashboard() {
   const fetchMentoredTeams = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:1234/guide/fetch_mentoring_teams/${selector.reg_num}`
+        `http://localhost:1234/guide/fetch_mentoring_teams/${selector.reg_num}`,{withCredentials:true}
       );
       if (Array.isArray(res.data)) {
         setMentoredTeams(res.data);

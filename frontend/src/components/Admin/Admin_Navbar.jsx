@@ -20,8 +20,8 @@ function Admin_Navbar({ isOpen, toggleSidebar }) {
       let token = localStorage.getItem("refreshToken");
 
       await axios.delete("http://localhost:1234/auth/logout", {
-        data: { refreshToken: token },
-        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true
+        
       });
 
       localStorage.clear();

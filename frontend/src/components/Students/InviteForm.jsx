@@ -21,9 +21,7 @@ function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen,  }) {
           "to_reg_num": inviteForm.registerNumber
         },
         {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
+          withCredentials:true
         }
       );
 

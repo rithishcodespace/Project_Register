@@ -21,8 +21,8 @@ const Project_Details = () => {
     async function fetchExpertsAndGuides() {  
       try {
         const [expertRes, guideRes] = await Promise.all([
-          axios.get('http://localhost:1234/admin/get_users/sub_expert'),
-          axios.get('http://localhost:1234/admin/get_users/guide'),
+          axios.get('http://localhost:1234/admin/get_users/sub_expert',{withCredentials:true}),
+          axios.get('http://localhost:1234/admin/get_users/guide',{withCredentials:true}),
         ]);
 
         if (expertRes.status === 200) setExpertsList(expertRes.data);
@@ -67,6 +67,9 @@ const Project_Details = () => {
           "description":description,
           "outcome":outcome,
           "hard_soft":core
+        },
+        {
+          withCredentials:true
         }
       );
       console.log(response.data); 
@@ -83,7 +86,7 @@ const Project_Details = () => {
         "project_id":project_id,
         "project_name": projectName.trim(),
         "to_guide_reg_num": selectedGuides,
-      });
+      },{withCredentials:true});
 
       // Step 3: Send expert requests
       await axios.post('http://localhost:1234/sub_expert/sent_request_to_expert', {
@@ -91,7 +94,7 @@ const Project_Details = () => {
         "project_id":project_id,
         "project_name": projectName.trim(),
         "to_expert_reg_num": selectedExperts,
-      });
+      },{withCredentials:true});
 
       alert('All requests sent successfully.');
 

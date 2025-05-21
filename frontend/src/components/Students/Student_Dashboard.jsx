@@ -74,9 +74,7 @@ function Student_Dashboard() {
         { 
           // checks whether he is a team member of another team without conformed
           let res = await axios.get(`http://localhost:1234/student/check_accepted_status/${reg_num}`,{
-            headers:{
-              Authorization: `Bearer ${token}`,
-            }
+            withCredentials:true
           })
           if(res.status === 200 && res.data.length > 0)
           {
@@ -114,9 +112,7 @@ function Student_Dashboard() {
           to_reg_num: selector.reg_num 
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+         withCredentials:true
         }
       );
 

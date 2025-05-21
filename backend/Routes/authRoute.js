@@ -36,11 +36,11 @@ router.post("/auth/login",(req,res,next) => {
           id: user.id,
           role: user.role, 
           name: user.name, 
-          email: user.email // Optional - User's email
+          email: user.email 
         },
         process.env.TOKEN_SECRET,
         {
-          expiresIn: "1h" // Token valid for 1 week
+          expiresIn: "7d" 
         }
       );
        // Set the cookie with secure and samesite settings
