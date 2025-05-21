@@ -23,6 +23,9 @@ function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen }) {
       //  Show success message
       alert(response.data || "Invite sent successfully!");
       setIsInviteOpen(false);
+
+       window.location.href = "/student";
+
     } catch (err) {
       console.error("Error sending invite", err);
 
