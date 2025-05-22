@@ -306,7 +306,7 @@ router.get("/guide/check_week_verified/:week/:team_id",(req,res,next) => {
   try{
     const{week,team_id} = req.params;
     if(!week || !team_id)return next(createError.BadRequest("week is null!"));
-    let sql = "select is_verified from weekly_logs_verification where week = ? and team_id = ?";
+    let sql = "select * from weekly_logs_verification where week_number = ? and team_id = ?";
     db.query(sql,[week,team_id],(error,result) => {
       if(error)return next(error);
       if(result.length === 0)return next(createError.NotFound("result not found!"));
@@ -317,8 +317,6 @@ router.get("/guide/check_week_verified/:week/:team_id",(req,res,next) => {
       next(error);
   }
 })
-
-
 
 
 module.exports = router;
