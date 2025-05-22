@@ -113,7 +113,7 @@ router.patch("/guide/accept_reject/:status/:team_id/:my_id",userAuth, (req, res,
           const transporter = nodemailer.createTransport({
               service: 'gmail',
               auth: {
-                  user: 'rithishvkv@gmail.com', // -> temporary
+                  user: process.env.EMAIL_USER, // -> temporary
                   pass: process.env.EMAIL_PASS
               },
           });
@@ -134,10 +134,16 @@ router.patch("/guide/accept_reject/:status/:team_id/:my_id",userAuth, (req, res,
                     errorOccured = true;
                   }
 
-                  // Define email options
+                          
+                  let getGuideRegNum = "select emailId from users where reg_num = ? and role = 'guide'";
+                  db.query(getGuideRegNum,[to_guide_reg_num[i]],(error,result) => {
+                    if(error)return next(error);
+                    if(result.length === 0)return next(createError.BadRequest("no regnum found!"));
+                    let guideEmail = result[0].emailId;
+                       // Define email options
                   const mailOptions = {
-                      from: 'rithishvkv@gmail.com',
-                      to: "rithishcodespace@gmail.com", // guide id -> temporary
+                      from: process.env.EMAIL_USER,
+                      to: guideEmail,// guide id -> temporary
                       subject: 'Request To Accept Invite',
                       text: `Dear Guide,\n\n${from_team_id} team has requested you to be their guide. Please login to the system to accept or reject the request.\n\nThank you.`,
                   };
@@ -163,6 +169,7 @@ router.patch("/guide/accept_reject/:status/:team_id/:my_id",userAuth, (req, res,
                         }
                     }
                 });
+                  })
             });
         }
 
@@ -293,6 +300,23 @@ router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:team_id",userAuth,
     next(error);
   }
 });
+
+// to check whether guide verified that week
+router.get("/guide/check_week_verified/:week/:team_id",(req,res,next) => {
+  try{
+    const{week,team_id} = req.params;
+    if(!week || !team_id)return next(createError.BadRequest("week is null!"));
+    let sql = "select is_verified from weekly_logs_verification where week = ? and team_id = ?";
+    db.query(sql,[week,team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound("result not found!"));
+      res.send(result);
+    })
+  }
+  catch(error){
+      next(error);
+  }
+})
 
 
 

@@ -84,7 +84,7 @@ router.delete("/admin/removeuser/:emailId/:reg_num/:role",userAuth,(req,res,next
 
 router.post("/admin/addTimeLine",userAuth,(req,res,next) => {
   try{
-    const{name,start_date,end_date} = req.body;
+    let{name,start_date,end_date} = req.body;
     if(!name.trim() || !start_date || !end_date)
     {
       return next(createError.BadRequest("name or start_date or end_date is undefined!"));
