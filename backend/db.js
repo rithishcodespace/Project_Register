@@ -1,25 +1,25 @@
 require("dotenv").config();
 const mysql = require("mysql2");
 
-    // const pool = mysql.createPool({
-    //     host:"localhost",
-    //     user:"root",
-    //     password:"Rithish@2006",
-    //     database:"demo",
-    //     waitForConnections:true,
-    //     connectionLimit:10, 
-    //     queueLimit:0
-    // })
+    const pool = mysql.createPool({
+        host:"localhost",
+        user:"root",
+        password:"Rithish@2006",
+        database:"demo",
+        waitForConnections:true,
+        connectionLimit:10, 
+        queueLimit:0
+    })
 
-const pool = mysql.createPool({
-    host:"localhost",
-    user:"root",
-    password:"Mathan@2007",
-    database:"project_registor",
-    waitForConnections:true,
-    connectionLimit:10, 
-    queueLimit:0
-})
+// const pool = mysql.createPool({
+//     host:"localhost",
+//     user:"root",
+//     password:"Mathan@2007",
+//     database:"project_registor",
+//     waitForConnections:true,
+//     connectionLimit:10, 
+//     queueLimit:0
+// })
 
 // const pool = mysql.createPool({
 //     host:"localhost",
@@ -49,7 +49,4 @@ pool.getConnection((error,connection)=>{
     }
 })
 
-module.exports = {
-  pool,             // for callback-based code
-  promisePool: pool.promise(),  // for async/await code
-};
+module.exports = pool;
