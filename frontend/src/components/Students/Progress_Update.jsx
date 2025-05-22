@@ -1,174 +1,139 @@
-import React, { useEffect, useState } from 'react';
-import instance from '../../utils/axiosInstance'; // Your axios instance for API calls
-import { useSelector } from 'react-redux';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 
-const ProjectProgress = () => {
-  // Fetch student data from localStorage (should contain reg_num, team_id)
-  const student = JSON.parse(localStorage.getItem('studentData'));
-  const reg_num = student?.reg_num;
-  const team_id = student?.team_id;
-
-  // Get user info from Redux store as fallback (if needed)
-  const selector = useSelector((state) => state.userSlice);
-
-  // State variables to track form inputs and UI states
-  const [contribution, setContribution] = useState('');
-  const [progress, setProgress] = useState('');
-  const [phase, setPhase] = useState('');
-  const [week, setWeek] = useState(0);
+const Progress_Update = () => {
+  const { reg_num } = useSelector((State) => State.userSlice);
+  const [deadlines, setDeadlines] = useState({});
+  const [verifications, setVerifications] = useState([]);
+  const [teamId, setTeamId] = useState("");
+  const [currentWeek, setCurrentWeek] = useState("");
+  const [description, setDescription] = useState("");
   const [canUpdate, setCanUpdate] = useState(false);
-  const [message, setMessage] = useState('');
+  const [nextWeekToUpdate, setNextWeekToUpdate] = useState(null);
+  const userselector = useSelector((State) => State.userSlice);
+  const teamselector = useSelector((State) => State.teamSlice);
 
-  // List of phases to check and advance through
-  const phaseLabels = [
-    'phase1_progress',
-    'phase2_progress',
-    'phase3_progress',
-    'phase4_progress',
-    'phase5_progress',
-    'phase6_progress',
-  ];
-
-  // Helper: get the next phase label based on current
-  const getNextPhase = (currentPhase) => {
-    const index = phaseLabels.indexOf(currentPhase);
-    return index !== -1 && index + 1 < phaseLabels.length ? phaseLabels[index + 1] : null;
-  };
-
-  // Fetch eligibility and progress status from backend
-  const fetchEligibility = async () => {
-    try {
-      // 1. Check phase eligibility for this student
-      const res = await instance.get(`/student/check_phase_eligibility/${reg_num || selector.reg_num}`);
-      let currentPhase = res.data.allowedPhase; 
-      const weekNumber = res.data.weekNumber;
-      const isMonday = res.data.isMonday;
-
-      // 2. Get team progress for current phase to see if everyone completed
-      const teamRes = await instance.get(`/student/team_progress/${team_id}/${currentPhase.replace('_progress', '')}`);
-      const allMembers = teamRes.data;
-
-      const allCompleted = allMembers.every(member => parseInt(member.progress) === 100);
-
-      const finalPhase = allCompleted ? getNextPhase(currentPhase) || currentPhase : currentPhase;
-
-      // Update state accordingly
-      setPhase(finalPhase);
-      setWeek(weekNumber);
-      setCanUpdate(isMonday && !res.data.alreadyUpdated);
-
-      // Show messages for update restrictions
-      if (!isMonday) {
-        setMessage("Updates allowed only on Mondays");
-      } else if (res.data.alreadyUpdated) {
-        setMessage("You already submitted this phase this week");
-      } else {
-        setMessage('');
-      }
-    } catch (err) {
-      console.error("Error fetching eligibility:", err);
-      setMessage("Error fetching eligibility data");
-    }
-  };
-
-  // Handle the progress update submission
-  const handleUpdate = async () => {
-    // Prevent update if not allowed
-    if (!canUpdate) return;
-
-    // Validate inputs before submitting
-    if (progress === '' || isNaN(progress) || progress < 0 || progress > 100) {
-      setMessage("Please enter a valid progress percentage (0-100).");
-      return;
-    }
-    if (!contribution.trim()) {
-      setMessage("Please enter a description of your contribution.");
-      return;
-    }
-
-    try {
-      const res = await instance.post(
-        `/student/update_progress/${phase}/${reg_num || selector.reg_num}`,
-        { contribution, progress }
-      );
-      setMessage(res.data.message || "Progress updated successfully!");
-      
-      // Clear inputs after success
-      setContribution('');
-      setProgress('');
-      
-      // Refresh eligibility and phase status
-      fetchEligibility();
-    } catch (err) {
-      console.error("Update error:", err);
-      setMessage(err.response?.data?.message || "Something went wrong");
-    }
-  };
-
-  // On component mount, fetch eligibility info
   useEffect(() => {
-    fetchEligibility();
+    fetchTeamId();
   }, []);
 
+  const fetchTeamId = async () => {
+    try {
+      const res = await axios.get(`/student/getTeamDetails/${reg_num}`);
+      console.log(reg_num);
+      
+      if (res.data.length > 0) {
+        const team_id = res.data[0].team_id;
+        setTeamId(team_id);
+        fetchDeadlines(team_id);
+        fetchVerifications(team_id);
+      }
+    } catch (err) {
+      console.error("Error fetching team ID:", err);
+    }
+  };
+
+  const fetchDeadlines = async (team_id) => {
+    try {
+      const res = await axios.get(`/student/fetchDeadlines/${teamselector[0].team_id}`);
+      if (res.data.length > 0) {
+        setDeadlines(res.data[0]);
+      }
+    } catch (err) {
+      console.error("Error fetching deadlines:", err);
+    }
+  };
+
+  const fetchVerifications = async (team_id) => {
+    try {
+      const res = await axios.get(`/guide/view_verification_status/${teamselector[0].team_id}`);
+      if (res.data.length > 0) {
+        setVerifications(res.data);
+        decideNextWeek(res.data);
+      }
+    } catch (err) {
+      console.error("Error fetching verifications:", err);
+    }
+  };
+
+  const decideNextWeek = (verifications) => {
+    const verifiedWeeks = verifications
+      .filter((v) => v.is_verified === 1)
+      .map((v) => v.week_number);
+
+    const nextWeek = Math.max(...verifiedWeeks, 0) + 1;
+    const today = new Date().toISOString().split("T")[0];
+    const deadlineDate = deadlines[`week${nextWeek}`];
+
+    if (deadlineDate && deadlineDate === today) {
+      setCanUpdate(true);
+      setNextWeekToUpdate(`week${nextWeek}`);
+      setCurrentWeek(`Week ${nextWeek}`);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!description.trim()) {
+      return toast.error("Description is required.");
+    }
+
+    try {
+      const res = await axios.post(
+        `/student/update_progress/${nextWeekToUpdate}/${reg_num}/${teamId}`,
+        {
+          progress: description,
+        }
+      );
+
+      if (res.data.includes("email sent")) {
+        toast.success("Progress updated and email sent to guide.");
+      } else {
+        toast.success("Progress updated successfully.");
+      }
+
+      setDescription("");
+      fetchVerifications(teamId);
+    } catch (err) {
+      console.error("Update Error:", err);
+      toast.error("Failed to update progress.");
+    }
+  };
+
   return (
-    <div className="max-w-xl mx-auto mt-10 p-6 bg-white shadow rounded">
-      <h2 className="text-2xl font-bold text-center mb-4">Weekly Progress Update</h2>
+    <div className="p-4 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Progress Update</h1>
 
-      <p className="text-center text-blue-600 font-medium mb-4">
-        Week {week} | Updating: {phase.replace('_progress', '').toUpperCase()}
-      </p>
-
-      <div className="mb-4">
-        <label className="block font-semibold mb-1">Current Phase</label>
-        <input
-          type="text"
-          value={phase.replace('_progress', '').toUpperCase()}
-          disabled
-          className="w-full border p-2 rounded bg-gray-100"
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block font-semibold mb-1">Description of Contribution</label>
-        <input
-          type="text"
-          value={contribution}
-          onChange={(e) => setContribution(e.target.value)}
-          className="w-full border p-2 rounded"
-          placeholder="Example: Circuit built, report submitted..."
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block font-semibold mb-1">Your Phase Progress (%)</label>
-        <input
-          type="number"
-          value={progress}
-          onChange={(e) => setProgress(e.target.value)}
-          className="w-full border p-2 rounded"
-          placeholder="Ex: 50 or 100"
-          min="0"
-          max="100"
-        />
-      </div>
-
-      <button
-        onClick={handleUpdate}
-        disabled={!canUpdate}
-        className={`w-full py-2 mt-2 text-white rounded ${
-          canUpdate ? "bg-green-600 hover:bg-green-700" : "bg-gray-400 cursor-not-allowed"
-        }`}
-      >
-        {canUpdate ? "Submit Update" : "Not Allowed"}
-      </button>
-
-      {message && (
-        <p className={`text-center mt-4 font-medium ${message.includes("error") || message.includes("not") ? "text-red-600" : "text-green-600"}`}>
-          {message}
+      {canUpdate ? (
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white">
+          <h2 className="text-xl font-semibold mb-2">{currentWeek}</h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Deadline: {deadlines[nextWeekToUpdate]}
+          </p>
+          <textarea
+            className="w-full p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+            rows={5}
+            placeholder="Enter your weekly progress description..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          <div className="mt-4">
+            <button
+              onClick={handleSubmit}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+            >
+              Submit Progress
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-center text-red-600 font-medium">
+          No active deadline today or previous week not verified yet.
         </p>
       )}
     </div>
   );
 };
 
-export default ProjectProgress;
+export default Progress_Update;
