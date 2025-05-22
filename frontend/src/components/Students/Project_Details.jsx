@@ -103,6 +103,27 @@ const Project_Details = () => {
   const [selectedExperts, setSelectedExperts] = useState([]);
   const [selectedGuides, setSelectedGuides] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+    useEffect(() => {
+    instance
+      .get(`/student/get_project_details/${teamselector[0].project_id}`)
+      .then((res) => {
+        if (res.status === 200) {
+          setIsSuccess(true);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching project details:", err);
+      });
+  }, []);
+
+  return (
+    <div>
+      {isSuccess && <div>hello only</div>}
+    </div>
+  );
+
 
   useEffect(() => {
     async function fetchExpertsAndGuides() {  
@@ -215,18 +236,25 @@ const Project_Details = () => {
     <div className='flex col-span-2 gap-4 bg-white'>
       <div className="mb-4 w-[50%] bg-white ">
         <label className="block mb-1  bg-white font-medium">Cluster Name</label>
-         <select
+        <select
           value={clusterName}
-          onChange={(e) =>setClusterName(e.target.value)}
-          className="w-full border bg-white  px-3 py-2 rounded"
+          onChange={(e) =>{setClusterName(e.target.value),(console.log(e.target.value))}}
+          className="w-full border px-3 py-2 rounded bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
           required
+           defaultValue=""
         >
-          <option className=' bg-white ' value="" disabled >Select cluster</option>
-          <option className=' bg-white ' value="CSE">CSE</option>
-          <option className=' bg-white ' value="AIML">AIML</option>
-          <option className=' bg-white ' value="AIDS">AIDS</option>
-          <option className=' bg-white ' value="IT">IT</option>
+         <option value="" disabled>
+    Select cluster
+  </option>
+  {teamselector
+    .filter(team => Boolean(team.dept))   // remove any empty/falsy dept
+    .map((team, i) => (
+      <option key={i} value={team.dept}>
+        {team.dept}
+      </option>
+    ))}
         </select>
+
       </div>
 
       <div className="mb-4 bg-white w-[50%]">
