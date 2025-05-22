@@ -259,15 +259,18 @@ router.patch("/admin/update_deadline/:week/:team_id",userAuth,(req,res,next) => 
     today.setHours(0,0,0,0) //removes the time
     newDeadline.setHours(0,0,0,0);
      const allowedWeeks = [
-      "week_1", "week_2", "week_3", "week_4", "week_5",
-      "week_6", "week_7", "week_8", "week_9", "week_10",
-      "week_11", "week_12"
+      "week1", "week2", "week3", "week4", "week5",
+      "week6", "week7", "week8", "week9", "week10",
+      "week11", "week12"
     ];
     if (!allowedWeeks.includes(week)) {
       return next(createError.BadRequest("Invalid week column name!"));
     }
     if(today > newDeadline)return next(createError.BadRequest("Invalid date!"));
-    newDeadline = newDeadline.toISOString().split('T')[0];
+    const year = newDeadline.getFullYear();
+    const month = String(newDeadline.getMonth() + 1).padStart(2, '0');
+    const day = String(newDeadline.getDate()).padStart(2, '0');
+    newDeadline = `${year}-${month}-${day}`;
 
     // checks if deadlines exists - both guide and expert should accepte request
     let sql1 = "select * from weekly_logs_deadlines where team_id = ?";

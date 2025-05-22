@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import instance from "../../utils/axiosInstance";
 import { FaEdit, FaTrash, FaSave, FaTimes } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const TimeLine = () => {
   const [timelines, setTimelines] = useState([]);
@@ -92,7 +93,13 @@ const TimeLine = () => {
   return (
     <>
       <h2 className="text-3xl font-bold text-center mt-6 mb-6">Timeline Management</h2>
-      <div className="max-w-5xl mx-auto mt-2 p-6 bg-white rounded-2xl shadow">
+       <Link
+        to="/admin/change-timeline"
+        className="px-4 py-2 bg-purple-500 rounded hover:bg-purple-700 text-white"
+      >
+        Change Deadline
+      </Link>
+      <div className="max-w-5xl mx-auto mt-8 p-6 bg-white rounded-2xl shadow">
         <form onSubmit={handleAdd} className="grid grid-cols-1 bg-white md:grid-cols-4 gap-4 items-end mb-6">
           <div className="bg-white">
             <label className="block font-medium bg-white mb-1">Name</label>
@@ -107,7 +114,7 @@ const TimeLine = () => {
           <div className="bg-white">
             <label className="block bg-white font-medium mb-1">Start Date & Time</label>
             <input
-              type="datetime-local"
+              type="date"
               value={newTimeline.startTime}
               onChange={(e) => setNewTimeline({ ...newTimeline, startTime: e.target.value })}
               className="w-full px-3 py-2 border bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -117,7 +124,7 @@ const TimeLine = () => {
           <div className="bg-white">
             <label className="block font-medium bg-white mb-1">End Date & Time</label>
             <input
-              type="datetime-local"
+              type="date"
               value={newTimeline.endTime}
               onChange={(e) => setNewTimeline({ ...newTimeline, endTime: e.target.value })}
               className="w-full px-3 py-2 bg-white border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -126,7 +133,7 @@ const TimeLine = () => {
           </div>
           <button
             type="submit"
-            className="bg-purple-500 text-white py-2 rounded-md hover:bg-purple-600 font-semibold"
+            className="bg-purple-500 text-white py-2 rounded-md hover:bg-purple-700 font-semibold"
           >
             Add
           </button>
@@ -152,14 +159,14 @@ const TimeLine = () => {
             ) : (
               timelines.map((item, index) => (
                 <tr key={index} className="hover:bg-gray-50">
-                  <td className="p-3 border text-center bg-white">{index + 1}</td>
+                  <td className="p-3 border text- bg-white">{index + 1}</td>
                   <td className="p-3 border bg-white">
                     {editIndex === index ? (
                       <input
                         type="text"
                         value={editTimeline.name}
                         onChange={(e) => setEditTimeline({ ...editTimeline, name: e.target.value })}
-                        className="w-full px-2 py-1 border rounded-md"
+                        className="bg-white rounded-md"
                         style={{ boxSizing: "border-box" }}
                       />
                     ) : (
@@ -172,8 +179,8 @@ const TimeLine = () => {
                         type="datetime-local"
                         value={editTimeline.startTime}
                         onChange={(e) => setEditTimeline({ ...editTimeline, startTime: e.target.value })}
-                        className="w-full px-2 py-1 border rounded-md"
-                        style={{ boxSizing: "border-box" }}
+                        className="bg-white rounded-md"
+                        style={{ boxSizing: "border-" }}
                       />
                     ) : (
                       new Date(item.startTime).toLocaleString()
@@ -185,8 +192,8 @@ const TimeLine = () => {
                         type="datetime-local"
                         value={editTimeline.endTime}
                         onChange={(e) => setEditTimeline({ ...editTimeline, endTime: e.target.value })}
-                        className="w-full px-2 py-1 border rounded-md"
-                        style={{ boxSizing: "border-box" }}
+                        className="w-a bg-white rounded-md"
+                        style={{ boxSizing: "-box" }}
                       />
                     ) : (
                       new Date(item.endTime).toLocaleString()
@@ -197,7 +204,7 @@ const TimeLine = () => {
                       <>
                         <button
                           onClick={handleEditSave}
-                          className="text-green-600 text-xl"
+                          className="text-green-600 text-xl mx-5"
                           title="Save"
                           type="button"
                         >
@@ -205,7 +212,7 @@ const TimeLine = () => {
                         </button>
                         <button
                           onClick={() => setEditIndex(null)}
-                          className="text-grey-600 text-xl"
+                          className="text-grey-600 text-xl mx-5"
                           title="Cancel"
                           type="button"
                         >

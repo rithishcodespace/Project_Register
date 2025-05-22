@@ -40,6 +40,7 @@ import TeamListByDepartment from "./components/Admin/TeamListByDepartment";
 import NotFound from "./NotFound";
 import Student_expert_review from "./components/Subject_expert/Student_expert_review";
 import Schedule_review from "./components/Students/Schedule_review";
+import ChangeTimeLine from "./components/Admin/ChangeTimeLine";
 
 
 
@@ -74,6 +75,7 @@ function App() {
             <Route path="queries" element={<Queries />} />
            <Route path="Project_Details/proj_details/:id" element={<Proj_Details/>} />
            <Route path="upload-project-files" element={<ProjectFileUpload/>} />
+           
           </Route>
 
           <Route path="/teacher" element={<Teacher />}>
@@ -93,6 +95,7 @@ function App() {
             <Route path="TimeLine" element={<TimeLine/>}/>
             <Route path="team_list/:department" element={<TeamListByDepartment />} />
             <Route path="/admin/team_progress/:project_id" element={<Admin_project_details />} />
+             <Route path="change-timeline" element={<ChangeTimeLine/>} />
           </Route>
 
           <Route path="/subject_expert" element={<Subject_expert />}>
