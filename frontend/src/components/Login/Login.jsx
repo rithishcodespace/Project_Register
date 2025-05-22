@@ -20,7 +20,8 @@ function Login() {
   const [studentUserData, setStudentUserData] = useState(null);
   const [selectedProjectType, setSelectedProjectType] = useState("");
   const [selectedCompany, setSelectedCompany] = useState("");
-  const [projectName, setProjectName] = useState("");
+  const [companyAddress, setcompanyAddress] = useState("");
+  const [contactNumber, setcontactNumber] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -62,14 +63,14 @@ function Login() {
     }
   };
 
-  const updateProjectTypeAndNavigate = async (projectType, companyName, projName) => {
+  const updateProjectTypeAndNavigate = async (projectType, companyName, companyAddress,contactNumber) => {
     if (!studentUserData) return;
     const reg_num = studentUserData.reg_num;
 
     try {
       await instance.patch(
         `/student/alter_project_status/${reg_num}/${projectType}`,
-        { company: companyName, project_name: projName }
+        { "company_name": companyName, "company_address": companyAddress,"company_contact": contactNumber }
       );
 
       setShowStudentPopup(false);
@@ -83,11 +84,11 @@ function Login() {
 
   const handleExternalSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedCompany.trim() || !projectName.trim()) {
-      alert("Please enter both company name and project name.");
+    if (!selectedCompany.trim() || !companyAddress.trim()) {
+      alert("Please enter company name ,address and contact number.");
       return;
     }
-    await updateProjectTypeAndNavigate("external", selectedCompany, projectName);
+    await updateProjectTypeAndNavigate("external", selectedCompany, companyAddress,contactNumber);
   };
 
   async function handleGoogleLogin() {
@@ -171,7 +172,7 @@ function Login() {
         </form>
       </div>
 
-      {/* Popup for selecting project type and company/project name */}
+      {/* Popup for selecting project type and company name,address,contact number */}
       {showStudentPopup && (
         <div style={{
           position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
@@ -204,7 +205,7 @@ function Login() {
 
             {selectedProjectType === "external" && (
               <>
-                <h1 className="text-md md:text-xl bg-white font-semibold text-gray-800 mb-4">Enter Company & Project Details</h1>
+                <h1 className="text-md md:text-xl bg-white font-semibold text-gray-800 mb-4">Enter Company Details</h1>
                 <form onSubmit={handleExternalSubmit} className="bg-white">
                   <input
                     type="text"
@@ -216,10 +217,18 @@ function Login() {
                   />
                   <input
                     type="text"
-                    placeholder="Enter project name"
+                    placeholder="Enter company address"
                     className="w-full p-2 bg-white border rounded mb-4"
-                    value={projectName}
-                    onChange={(e) => setProjectName(e.target.value)}
+                    value={companyAddress}
+                    onChange={(e) => setcompanyAddress(e.target.value)}
+                    required
+                  />
+                   <input
+                    type="number"
+                    placeholder="Enter contact number"
+                    className="w-full p-2 bg-white border rounded mb-4"
+                    value={contactNumber}
+                    onChange={(e) => setcontactNumber(e.target.value)}
                     required
                   />
                   <button

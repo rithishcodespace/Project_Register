@@ -42,7 +42,7 @@ const ProjectDetailsView = ({ project }) => {
         <h3 className="font-semibold mb-1">Description:</h3>
         <p className="text-gray-700">{project.description}</p>
       </div>
-s
+
       {/* Row 4: Expected Outcome */}
       <div>
         <h3 className="font-semibold mb-1">Expected Outcome:</h3>
@@ -225,11 +225,15 @@ const Project_Details = () => {
         );
 
         if (response.status === 201 || response.status === 200) {
-          alert('Project created successfully!');
-          finalProjectId = response.data.project_id;
-          // Optionally refresh or set project_id state here if used elsewhere
-          setExistingProject(response.data);
-        } else {
+    alert('Project created successfully!');
+    const fetchCreatedProject = await instance.get(
+      `/admin/getproject_by_team_id/${response.data.project_id}`,
+      { withCredentials: true }
+    );
+    if (fetchCreatedProject.status === 200 && fetchCreatedProject.data.length > 0) {
+      setExistingProject(fetchCreatedProject.data[0]);
+    }
+  }else {
           alert('Failed to create project.');
         }
       } else {
