@@ -212,8 +212,8 @@ const Project_Details = () => {
           required
         />
       </div>
-
-      <div className="mb-4 bg-white ">
+    <div className='flex col-span-2 gap-4 bg-white'>
+      <div className="mb-4 w-[50%] bg-white ">
         <label className="block mb-1  bg-white font-medium">Cluster Name</label>
          <select
           value={clusterName}
@@ -229,8 +229,8 @@ const Project_Details = () => {
         </select>
       </div>
 
-      <div className="mb-4 bg-white ">
-        <label className="block mb-1 bg-white  font-medim">Project Type</label>
+      <div className="mb-4 bg-white w-[50%]">
+        <label className="block mb-1  bg-white  font-medim">Project Type</label>
         <select
           value={core}
           onChange={(e) => setCore(e.target.value)}
@@ -242,7 +242,7 @@ const Project_Details = () => {
           <option  bg-white  value="software">Software</option>
         </select>
       </div>
-
+    </div>
       <div className="mb-4 bg-white ">
         <label className="block bg-white  mb-1 font-medium">Project Description</label>
         <textarea
@@ -266,9 +266,9 @@ const Project_Details = () => {
       </div>
 
       {/* Expert Selection */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">Select at least 3 Experts:</h3>
-        <div className="flex flex-wrap gap-2">
+      <div className="mb-6 bg-white ">
+        <h3 className="text-md  bg-white font- mb-2">Select Subject Experts:</h3>
+        <div className="flex flex-wrap bg-white  gap-2">
           {expertsList.map((expert) => (
             <button
               key={expert.reg_num}
@@ -287,9 +287,9 @@ const Project_Details = () => {
       </div>
 
       {/* Guide Selection */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">Select at least 3 Guides:</h3>
-        <div className="flex flex-wrap gap-2">
+      <div className="mb-6 bg-white ">
+        <h3 className="text-md bg-white  font- mb-2">Select Guides:</h3>
+        <div className="flex  bg-white flex-wrap gap-2">
           {guidesList.map((guide) => (
             <button
               key={guide.reg_num}
@@ -297,7 +297,7 @@ const Project_Details = () => {
               onClick={() => toggleGuideSelection(guide.reg_num)}
               className={`px-3 py-1 rounded-full border ${
                 selectedGuides.includes(guide.reg_num)
-                  ? 'bg-green-600 text-white border-green-600'
+                  ? 'bg-purple-500 text-white border-purple-600'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-green-100'
               }`}
             >
@@ -307,10 +307,10 @@ const Project_Details = () => {
         </div>
       </div>
 
-      <div className="text-center">
+      <div className="text-center bg-white ">
         <button
           type="submit"
-          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+          className="bg-purple-500 text-white px-6 py-2 rounded hover:bg-purple-600"
         >
           Submit Project
         </button>

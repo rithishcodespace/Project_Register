@@ -17,6 +17,10 @@ function Student_navbar({ isOpen, toggleSidebar }) {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+    const userSelector = useSelector((State) => State.userSlice);
+    const teamSelector = useSelector((State) => State.teamSlice);
+    const a=teamSelector[0].guide_reg_num;
+    const b=teamSelector[0].sub_expert_reg_num;
 
   const handleLogout = async () => {
     try {
@@ -70,7 +74,9 @@ function Student_navbar({ isOpen, toggleSidebar }) {
     return currentPath.endsWith(path) || currentPath === `/student/${path}`;
   };
 
-  const isTeamAvailable = team.length > 0;
+  const hasTeam = team.length > 0;
+  const isTeamFullyAssigned = hasTeam && a !== null && b !== null;
+
   const disabledClass = "pointer-events-none opacity-60";
 
   const navDiv = (path) =>
@@ -106,47 +112,45 @@ function Student_navbar({ isOpen, toggleSidebar }) {
       </div>
 
       <div className="bg-white px-2">
-        {/* Dashboard */}
+
+      
         <Link to="" className={`${navDiv("")} group`}>
           <Home size={24} className={navIcon("")} />
           <p className={navText("")}>Dashboard</p>
         </Link>
 
-        {/* Project Details */}
         <Link
           to="Project_Details"
-          className={`${navDiv("Project_Details")} group ${!isTeamAvailable ? disabledClass : ""}`}
+          className={`${navDiv("Project_Details")} group ${!hasTeam ? disabledClass : ""}`}
         >
           <FileText size={24} className={navIcon("Project_Details")} />
           <p className={navText("Project_Details")}>Project Details</p>
-        </Link>
+        </Link>        
 
-        {/* Queries */}
         <Link
           to="queries"
-          className={`${navDiv("queries")} group ${!isTeamAvailable ? disabledClass : ""}`}
+          className={`${navDiv("queries")} group ${!isTeamFullyAssigned ? disabledClass : ""}`}
         >
           <MessagesSquare size={24} className={navIcon("queries")} />
           <p className={navText("queries")}>Queries</p>
         </Link>
-
-        {/* Student Team */}
+        
         <Link
           to="review"
-          className={`${navDiv("review")} group ${!isTeamAvailable ? disabledClass : ""}`}
+          className={`${navDiv("review")} group ${!isTeamFullyAssigned ? disabledClass : ""}`}
         >
           <Users size={24} className={navIcon("review")} />
           <p className={navText("review")}>Schedule Review</p>
         </Link>
-
-        {/* Progress Update */}
+        
         <Link
           to="Progress_update"
-          className={`${navDiv("Progress_update")} group ${!isTeamAvailable ? disabledClass : ""}`}
+          className={`${navDiv("Progress_update")} group ${!isTeamFullyAssigned ? disabledClass : ""}`}
         >
           <BarChart2 size={24} className={navIcon("Progress_update")} />
           <p className={navText("Progress_update")}>Progress Update</p>
         </Link>
+        
 
         {/* Logout */}
         <button
