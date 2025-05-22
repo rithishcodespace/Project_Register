@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
 const Progress_Update = () => {
-  const { reg_num } = useSelector((State) => State.userSlice);
+  const { reg_num } = useSelector((state) => state.userSlice);
   const [deadlines, setDeadlines] = useState({});
   const [verifications, setVerifications] = useState([]);
   const [teamId, setTeamId] = useState("");
@@ -12,23 +12,26 @@ const Progress_Update = () => {
   const [description, setDescription] = useState("");
   const [canUpdate, setCanUpdate] = useState(false);
   const [nextWeekToUpdate, setNextWeekToUpdate] = useState(null);
-  const userselector = useSelector((State) => State.userSlice);
-  const teamselector = useSelector((State) => State.teamSlice);
 
+  // Fetch team ID when component mounts
   useEffect(() => {
     fetchTeamId();
   }, []);
 
+  // Once teamId is set, fetch related data
+  useEffect(() => {
+    if (teamId) {
+      fetchDeadlines(teamId);
+      fetchVerifications(teamId);
+    }
+  }, [teamId]);
+
   const fetchTeamId = async () => {
     try {
       const res = await axios.get(`/student/getTeamDetails/${reg_num}`);
-      console.log(reg_num);
-      
       if (res.data.length > 0) {
         const team_id = res.data[0].team_id;
         setTeamId(team_id);
-        fetchDeadlines(team_id);
-        fetchVerifications(team_id);
       }
     } catch (err) {
       console.error("Error fetching team ID:", err);
@@ -37,7 +40,7 @@ const Progress_Update = () => {
 
   const fetchDeadlines = async (team_id) => {
     try {
-      const res = await axios.get(`/student/fetchDeadlines/${teamselector[0].team_id}`);
+      const res = await axios.get(`/student/fetchDeadlines/${team_id}`);
       if (res.data.length > 0) {
         setDeadlines(res.data[0]);
       }
@@ -48,13 +51,16 @@ const Progress_Update = () => {
 
   const fetchVerifications = async (team_id) => {
     try {
-      const res = await axios.get(`/guide/view_verification_status/${teamselector[0].team_id}`);
-      if (res.data.length > 0) {
+      const res = await axios.get(`/student/check_week_verified/${team_id}`);
+      if (res.status === 200 && Array.isArray(res.data)) {
         setVerifications(res.data);
         decideNextWeek(res.data);
+      } else {
+        setVerifications([]);
       }
     } catch (err) {
       console.error("Error fetching verifications:", err);
+      setVerifications([]);
     }
   };
 
@@ -67,10 +73,14 @@ const Progress_Update = () => {
     const today = new Date().toISOString().split("T")[0];
     const deadlineDate = deadlines[`week${nextWeek}`];
 
+    setCurrentWeek(`Week ${nextWeek}`);
+    setNextWeekToUpdate(`week${nextWeek}`);
+    console.log("nextWeek:",nextWeek);
+
     if (deadlineDate && deadlineDate === today) {
       setCanUpdate(true);
-      setNextWeekToUpdate(`week${nextWeek}`);
-      setCurrentWeek(`Week ${nextWeek}`);
+    } else {
+      setCanUpdate(false);
     }
   };
 
@@ -109,7 +119,7 @@ const Progress_Update = () => {
         <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white">
           <h2 className="text-xl font-semibold mb-2">{currentWeek}</h2>
           <p className="text-sm text-gray-500 mb-4">
-            Deadline: {deadlines[nextWeekToUpdate]}
+            Deadline: {deadlines[nextWeekToUpdate] || "N/A"}
           </p>
           <textarea
             className="w-full p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -128,9 +138,17 @@ const Progress_Update = () => {
           </div>
         </div>
       ) : (
-        <p className="text-center text-red-600 font-medium">
-          No active deadline today or previous week not verified yet.
-        </p>
+        <div className="text-center text-red-600 font-medium">
+          {currentWeek && nextWeekToUpdate ? (
+            <>
+              Cannot update {currentWeek} yet.
+              <br />
+              Deadline is <strong>{deadlines[nextWeekToUpdate] || "not set"}</strong>.
+            </>
+          ) : (
+            "No active deadline or previous week not verified yet."
+          )}
+        </div>
       )}
     </div>
   );

@@ -837,4 +837,21 @@ router.post("/student/send_review_request/:team_id/:project_id",userAuth,(req,re
   }
 })
 
+// to check whether guide verified that week
+router.get("/student/check_week_verified/:team_id",(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest("team_id is null!"));
+    let sql = "select * from weekly_logs_verification where team_id = ?";
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound("result not found!"));
+      res.send(result);
+    })
+  }
+  catch(error){
+      next(error);
+  }
+})
+
 module.exports = router;
