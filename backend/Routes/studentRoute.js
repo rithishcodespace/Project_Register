@@ -387,65 +387,65 @@ router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, r
     const { week, reg_num, team_id } = req.params;
     const { progress } = req.body;
 
-    const validPhases = [
-      "week1", "week2", "week3", "week4", "week5", "week6",
-      "week7", "week8", "week9", "week10", "week11", "week12"
-    ];
+      const validPhases = [
+        "week1", "week2", "week3", "week4", "week5", "week6",
+        "week7", "week8", "week9", "week10", "week11", "week12"
+      ];
 
-    // Validation Check
-    if (!validPhases.includes(week) || !reg_num || !team_id) {
-      return res.status(400).json({ message: "Invalid week name or reg_num missing" });
-    }
-
-    const sql = `UPDATE team_requests SET ${week}_progress = ? WHERE reg_num = ?`;
-
-    db.query(sql, [progress, reg_num], (err, result) => {
-      if (err) return next(err);
-
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ message: "No record found for the provided reg_num." });
+      // Validation Check
+      if (!validPhases.includes(week) || !reg_num || !team_id) {
+        return res.status(400).json({ message: "Invalid week name or reg_num missing" });
       }
-      let sql1 = `select ${week}_progress from team_requests where team_id = ?`;
-      db.query(sql1,[team_id],(error,result) => {
-        if(error)return next(error);
 
-        const allMembersUpdated = result.every((member) => member[`${week}_progress`] !== null); // every -> checks whether every element satisfies the given condition, optimised instead of forEach // . -> [] alternative for . notation
-        if(allMembersUpdated)
-        {
-            const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-              user: "rithishvkv@gmail.com", 
-              pass: process.env.EMAIL_PASS,
-            },
-            });
+      const sql = `UPDATE team_requests SET ${week}_progress = ? WHERE reg_num = ?`;
 
-            const mailOptions = {
-            from: `"No Reply" <${process.env.EMAIL_USER}>`,
-            to: "rithishs.cs24@bitsathy.ac.in",
-            subject: "Progress update by your mentee team",
-            text: `All team members have updated their progress for ${week}. Please check the Project Register.`
-          };
+      db.query(sql, [progress, reg_num], (err, result) => {
+        if (err) return next(err);
 
-            transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-              console.error("Email Error:", error);
-              return res.status(500).send("Progress updated, but failed to send email.");
-            } else {
-              console.log("Email sent:", info.response);
-              return res.send("Progress updated and email sent successfully!");
-            }
-          }); 
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ message: "No record found for the provided reg_num." });
         }
-        else {
-          res.send("Progress updated successfully for this member!");
-        }
-      })
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+        let sql1 = `select ${week}_progress from team_requests where team_id = ?`;
+        db.query(sql1,[team_id],(error,result) => {
+          if(error)return next(error);
+
+          const allMembersUpdated = result.every((member) => member[`${week}_progress`] !== null); // every -> checks whether every element satisfies the given condition, optimised instead of forEach // . -> [] alternative for . notation
+          if(allMembersUpdated)
+          {
+              const transporter = nodemailer.createTransport({
+              service: "gmail",
+              auth: {
+                user: "rithishvkv@gmail.com", 
+                pass: process.env.EMAIL_PASS,
+              },
+              });
+
+              const mailOptions = {
+              from: `"No Reply" <${process.env.EMAIL_USER}>`,
+              to: "rithishs.cs24@bitsathy.ac.in",
+              subject: "Progress update by your mentee team",
+              text: `All team members have updated their progress for ${week}. Please check the Project Register.`
+            };
+
+              transporter.sendMail(mailOptions, (error, info) => {
+              if (error) {
+                console.error("Email Error:", error);
+                return res.status(500).send("Progress updated, but failed to send email.");
+              } else {
+                console.log("Email sent:", info.response);
+                return res.send("Progress updated and email sent successfully!");
+              }
+            }); 
+          }
+          else {
+            res.send("Progress updated successfully for this member!");
+          }
+        })
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
 
 
 // brings the details of the project through project_id 
