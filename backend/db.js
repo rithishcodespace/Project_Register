@@ -49,4 +49,7 @@ pool.getConnection((error,connection)=>{
     }
 })
 
-module.exports = pool;
+module.exports = {
+  pool,             // for callback-based code
+  promisePool: pool.promise(),  // for async/await code
+};
