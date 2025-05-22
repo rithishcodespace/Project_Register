@@ -8,10 +8,12 @@ cron.schedule("0 0 * * *", () => {// runs every day on midnight 00:00 AM -> to c
   console.log("Checking timelines for all teams...");
 
   //fetches the team with with not null as project_id  and in timeline cron_executed is false
-  const timelineQuery = `
-    SELECT t.team_id, t.start_date, t.project_id
+   const timelineQuery = `
+    SELECT t.team_id, t.start_date, tr.project_id
     FROM timeline t
+    JOIN team_requests tr ON tr.team_id = t.team_id
     WHERE t.name = 'project timeline' AND t.cron_executed = false
+
   `;
 
   db.query(timelineQuery, (err, timelines) => {
@@ -69,6 +71,8 @@ cron.schedule("0 0 * * *", () => {// runs every day on midnight 00:00 AM -> to c
       }
     });
   });
+},{
+  timezone: "Asia/Kolkata"
 });
 
 
@@ -120,4 +124,6 @@ cron.schedule('0 22 * * *', () => {
       console.log(`Marked ${result.affectedRows} teams as absent.`);
     }
   });
+},{
+  timezone: "Asia/Kolkata"
 });

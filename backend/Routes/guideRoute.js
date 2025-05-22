@@ -3,10 +3,11 @@ const router = express.Router();
 const createError = require("http-errors");
 const nodemailer = require("nodemailer");
 const db = require("../db");
+const userAuth = require("../middlewares/userAuth");
 
 // gets the request recevied by the mentor
 
-router.get("/guide/getrequests/:reg_num",(req,res,next) => {
+router.get("/guide/getrequests/:reg_num",userAuth,(req,res,next) => {
     try{
         let {reg_num} = req.params;
         let sql = "select * from guide_requests where to_guide_reg_num = ? and status = 'interested'";
@@ -25,7 +26,7 @@ router.get("/guide/getrequests/:reg_num",(req,res,next) => {
 })
 
 // update status -> accept or reject
-router.patch("/guide/accept_reject/:status/:team_id/:my_id", (req, res, next) => {
+router.patch("/guide/accept_reject/:status/:team_id/:my_id",userAuth, (req, res, next) => {
   try {
     const { status, team_id, my_id } = req.params;
 
@@ -101,7 +102,7 @@ router.patch("/guide/accept_reject/:status/:team_id/:my_id", (req, res, next) =>
 });
 
   // sends request to guide
-  router.post("/guide/sent_request_to_guide", (req, res, next) => {
+  router.post("/guide/sent_request_to_guide",userAuth, (req, res, next) => {
       try {
           const { from_team_id, project_id, project_name, to_guide_reg_num } = req.body;
           if (!from_team_id || !project_id || !project_name || !Array.isArray(to_guide_reg_num) || to_guide_reg_num.length == 0) {
@@ -173,7 +174,7 @@ router.patch("/guide/accept_reject/:status/:team_id/:my_id", (req, res, next) =>
 
 // adds reply to the query
 
-router.patch("/add_reply/:query_id",(req,res,next) => { // after 100 deletes old one
+router.patch("/add_reply/:query_id",userAuth,(req,res,next) => { // after 100 deletes old one
     try{
       const{reply} = req.body;
       const{query_id} = req.params;
@@ -192,7 +193,7 @@ router.patch("/add_reply/:query_id",(req,res,next) => { // after 100 deletes old
 })
 
 // fecthes the queries received
-router.get("/guide/get_queries/:guide_reg_num",(req,res,next) => {
+router.get("/guide/get_queries/:guide_reg_num",userAuth,(req,res,next) => {
     try{
       const{guide_reg_num} = req.params;
       if(!guide_reg_num)return next(createError.BadRequest("reg_num not found!"));
@@ -210,7 +211,7 @@ router.get("/guide/get_queries/:guide_reg_num",(req,res,next) => {
 })
 
 // fetches team details mentored by me -> 1st
-router.get("/guide/fetch_mentoring_teams/:guide_id",(req,res,next) => {
+router.get("/guide/fetch_mentoring_teams/:guide_id",userAuth,(req,res,next) => {
     try{
       const{guide_id} = req.params;
       if(!guide_id)
@@ -232,7 +233,7 @@ router.get("/guide/fetch_mentoring_teams/:guide_id",(req,res,next) => {
 
 // fetches the team progress through project_id -> 2nd
 
-router.get("/guide/fetch_progress_by_project_id/:project_id",(req,res,next) => {
+router.get("/guide/fetch_progress_by_project_id/:project_id",userAuth,(req,res,next) => {
   try{
     const{project_id} = req.params;
     if(!project_id)return next(createError.BadRequest("project_id not found!"));
@@ -250,7 +251,7 @@ router.get("/guide/fetch_progress_by_project_id/:project_id",(req,res,next) => {
 
 // verify weekly logs -> 3rd
 
-router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:team_id", (req, res, next) => {
+router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:team_id",userAuth, (req, res, next) => {
   try {
     const { guide_reg_num, team_id, week } = req.params;
     const { remarks } = req.body;

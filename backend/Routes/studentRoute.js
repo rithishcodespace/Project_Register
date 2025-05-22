@@ -7,7 +7,7 @@ const generateWeeklyDeadlines = require("../utils/generateWeeklyDeadlines");
 const db = require("../db");
 const userAuth = require("../middlewares/userAuth")
 const checkTimeline = require("../middlewares/timeLine");
-const nodemailer = require("nodemailer")
+const nodemailer = require("nodemailer");
 
 // common to all route -> for jwt auth
 router.get("/profile/view", userAuth, (req, res, next) => {
@@ -35,7 +35,7 @@ router.get("/profile/view", userAuth, (req, res, next) => {
 });
 
 // adds the connection request in the db -> invite button
-router.post("/student/join_request", (req, res, next) => {
+router.post("/student/join_request", userAuth, (req, res, next) => {
   try {
     let { from_reg_num, to_reg_num } = req.body;
     
@@ -76,34 +76,34 @@ router.post("/student/join_request", (req, res, next) => {
               if(error)return next(error);
               if(result.length >= 3)return next(createError.BadRequest("You can't form a team more than 4 members1"));
                // validating project_type
-          let query = "SELECT project_type,company FROM users WHERE reg_num IN (?,?)";
-          db.query(query,[from_reg_num,to_reg_num],(error,result) => {
-            if(error)return next(error);
-            if (result.length != 2) {
-              return res.status(400).send("One or both students not found.");
-            }
-            const type1 = result[0].project_type;
-            const type2 = result[1].project_type;
-            const company1 = result[0].company;
-            const company2 = result[1].company;
-            if(type1 === null || type2 === null)return next(createError.BadRequest("User haven't entered his project_type yet!"));
-            else if(type1.toLowerCase() !== type2.toLowerCase()) {
-             return res.status(500).send("BOTH MEMBERS SHOULD BE EITHER INTERNAL OR EXTERNAL!!");
-            }
-            else if(type1 === 'external' && type2 === 'external'){
-              if(company1 != company2)return res.status(500).send("BOTH MEMBERS SHOULD BE OF SAME COMPANY!");
-            }
-    
-            // inserts the request in the request db (only if no existing request)
-            let sql1 = "INSERT INTO team_requests (name, emailId, reg_num, dept, from_reg_num, to_reg_num) VALUES (?,?,?,?,?,?)";
-            let values = [name, emailId, reg_num, dept, from_reg_num, to_reg_num];
-          
-            db.query(sql1, values, (error, result) => {
-              if (error) return next(error);  // Use return here to prevent further code execution
+              let query = "SELECT project_type,company FROM users WHERE reg_num IN (?,?)";
+              db.query(query,[from_reg_num,to_reg_num],(error,result) => {
+                if(error)return next(error);
+                if (result.length != 2) {
+                  return res.status(400).send("One or both students not found.");
+                }
+                const type1 = result[0].project_type;
+                const type2 = result[1].project_type;
+                const company1 = result[0].company;
+                const company2 = result[1].company;
+                if(type1 === null || type2 === null)return next(createError.BadRequest("User haven't entered his project_type yet!")); // should be handled by mathan
+                else if(type1.toLowerCase() !== type2.toLowerCase()) {
+                return res.status(500).send("BOTH MEMBERS SHOULD BE EITHER INTERNAL OR EXTERNAL!!");
+                }
+                else if(type1 === 'external' && type2 === 'external'){
+                  if(company1 != company2)return res.status(500).send("BOTH MEMBERS SHOULD BE OF SAME COMPANY!");
+                }
+        
+                // inserts the request in the request db (only if no existing request)
+                let sql1 = "INSERT INTO team_requests (name, emailId, reg_num, dept, from_reg_num, to_reg_num) VALUES (?,?,?,?,?,?)";
+                let values = [name, emailId, reg_num, dept, from_reg_num, to_reg_num];
               
-              return res.send("Request added successfully!");
-            });
-        })
+                db.query(sql1, values, (error, result) => {
+                  if (error) return next(error);  // Use return here to prevent further code execution
+                  
+                  return res.send("Request added successfully!");
+                });
+            })
             })
           })
         })
@@ -118,7 +118,7 @@ router.post("/student/join_request", (req, res, next) => {
 
 // filters the request i received -> notification
 
-router.get("/student/request_recived/:regnum",(req,res,next) => {
+router.get("/student/request_recived/:regnum",userAuth,(req,res,next) => {
     try{
       let sql = "select * from team_requests where to_reg_num = ? and status = 'interested'";
       let reg_num = req.params.regnum;
@@ -135,7 +135,7 @@ router.get("/student/request_recived/:regnum",(req,res,next) => {
 
 // fetch all the invitations the loggedIn user received
 
-router.get("/student/team_request/:reg_num",(req,res,next) => {
+router.get("/student/team_request/:reg_num",userAuth,(req,res,next) => {
   try{
     const {reg_num} = req.params;
     if(!reg_num)return next(createError.BadRequest("reg_num not found!"));
@@ -159,7 +159,7 @@ router.get("/student/team_request/:reg_num",(req,res,next) => {
 })
 
 // accept or reject request -> inside notification
-router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num", (req, res, next) => {
+router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",userAuth, (req, res, next) => {
   try {
     const { from_reg_num, to_reg_num, status } = req.params;
 
@@ -200,7 +200,7 @@ router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num", (req, re
 });
 
 // it checks whether he sent invitations and if sent it is conformed
-router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
+router.post("/student/fetch_team_status_and_invitations",userAuth, (req, res, next) => {
   try {
     const { from_reg_num } = req.body; // logged user's reg num
 
@@ -293,7 +293,7 @@ router.post("/student/fetch_team_status_and_invitations", (req, res, next) => {
 
 // if it should be solo team both reg_num should be sent same
 
-router.patch("/student/team_request/conform_team", (req, res, next) => {
+router.patch("/student/team_request/conform_team", userAuth,(req, res, next) => {
   let { name, emailId, reg_num, dept, from_reg_num } = req.body;
 
   if (!name || !emailId || !reg_num || !dept || !from_reg_num) {
@@ -351,9 +351,9 @@ router.patch("/student/team_request/conform_team", (req, res, next) => {
                   if(error)return next(error);
                   if(result.length === 0)return next(createError.NotFound("reg_num not found!"));
                   let pending = result.length;
-                  result.forEach(({reg_num}) => {
+                  result.forEach(({to_reg_num}) => {
                     let sql5 = "delete from team_requests where (from_reg_num = ? or to_reg_num = ?) and team_conformed = false and status <> 'accept' and team_id is null";
-                    db.query(sql5,[reg_num,reg_num],(error,result) => {
+                    db.query(sql5,[to_reg_num,to_reg_num],(error,result) => {
                       if(error)return next(error);
                       if(result.affectedRows === 0)return res.status(500).send("some rows got not affected!");
                       else pending --;
@@ -370,7 +370,7 @@ router.patch("/student/team_request/conform_team", (req, res, next) => {
 });
 
 // fetches team members
-router.get("/student/getTeamDetails/:reg_num", (req, res, next) => {
+router.get("/student/getTeamDetails/:reg_num",userAuth, (req, res, next) => {
   const{reg_num} = req.params;
   if(!reg_num)return next(createError.BadRequest("reg_num not found!"));
   let sql = `SELECT * FROM team_requests WHERE (from_reg_num = ? OR to_reg_num = ?) AND team_conformed = true`;
@@ -382,7 +382,7 @@ router.get("/student/getTeamDetails/:reg_num", (req, res, next) => {
 
 // updates the progress
 
-router.post("/student/update_progress/:week/:reg_num/:team_id", (req, res, next) => {
+router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, res, next) => {
   try {
     const { week, reg_num, team_id } = req.params;
     const { progress } = req.body;
@@ -448,8 +448,8 @@ router.post("/student/update_progress/:week/:reg_num/:team_id", (req, res, next)
 });
 
 
-// brings the details of the project through project_id
-router.get("/student/get_project_details/:project_id",(req,res,next) => {
+// brings the details of the project through project_id 
+router.get("/student/get_project_details/:project_id",userAuth,(req,res,next) => {
   try{
      const {project_id} = req.params;
      if(!project_id)next(createError.BadRequest("project_Id not found!"))
@@ -467,17 +467,29 @@ router.get("/student/get_project_details/:project_id",(req,res,next) => {
 
 // updates the project type
 
-router.patch("/student/alter_project_status/:reg_num/:type",(req,res,next) => {
+router.patch("/student/alter_project_status/:reg_num/:type",userAuth,(req,res,next) => {
   try{
-    const{type,reg_num} = req.params;
-    const validTypes = ["EXTERNAL","INTERNAL"];
+    let{type,reg_num} = req.params;
+    let{company_name,company_address,company_contact} = req.body;
+    type = type.toLowerCase();
+    const validTypes = ["internal","external"];
     if(!type || !validTypes.includes(type))
     {
       return next(createError.BadRequest("invalid type! or type is null!"))
     }
-    let sql = "update users set project_type = ? where reg_num = ?";
-    db.query(sql,[type,reg_num],(error,result) => {
+    if(type == 'internal')
+    {
+      company_name = null,
+      company_address = null,
+      company_contact = null
+    }
+    else{
+      if(!company_name.trim() || !company_address.trim() || !company_contact.trim()) return next(createError.BadRequest("External project requires complete company details."));
+    }
+    let sql = "update users set project_type = ?,company_name = ?,company_address = ?,company_contact = ? where reg_num = ?";
+    db.query(sql,[type,company_name,company_address,company_contact,reg_num],(error,result) => {
       if(error) return next(error);
+      if(result.affectedRows === 0)return next(createError.BadRequest("changes not got updated!"));
       res.send(`Project Type updated successfully to ${type}`);
     })
   }
@@ -488,7 +500,7 @@ router.patch("/student/alter_project_status/:reg_num/:type",(req,res,next) => {
 })
 
 // checks whether the user have given project_type -> INTERNAL OR EXTERNAL
-router.get("/student/get_project_type/:reg_num",(req,res,next) => {
+router.get("/student/get_project_type/:reg_num",userAuth,(req,res,next) => {
   try{
     const{reg_num} = req.params;
     if(!reg_num)
@@ -510,7 +522,7 @@ router.get("/student/get_project_type/:reg_num",(req,res,next) => {
 
 // adds the query in the query table
 
-router.post("/student/add_query/:team_member/:guide_reg_num", (req, res, next) => {
+router.post("/student/add_query/:team_member/:guide_reg_num",userAuth, (req, res, next) => {
   try {
     const { team_id, project_id, query } = req.body;
     const { team_member, guide_reg_num } = req.params;
@@ -567,7 +579,7 @@ router.post("/student/add_query/:team_member/:guide_reg_num", (req, res, next) =
 
 // gets student details by reg_num
 
-router.get("/student/get_student_details_by_regnum/:reg_num",(req,res,next) => {
+router.get("/student/get_student_details_by_regnum/:reg_num",userAuth,(req,res,next) => {
   try{
     const{reg_num} = req.params;
     if(!reg_num)return next(createError.BadRequest("reg_num not found!!"));
@@ -585,7 +597,7 @@ router.get("/student/get_student_details_by_regnum/:reg_num",(req,res,next) => {
 
 // gets team details using the team_id
 
-router.get("/student/getTeamdetails_using_team_id/:team_id",(req,res,next) => {
+router.get("/student/getTeamdetails_using_team_id/:team_id",userAuth,(req,res,next) => {
   try{
     const{team_id} = req.body;
     if(!team_id) return next(createError.BadRequest("team_id is not defined!!"));
@@ -603,7 +615,7 @@ router.get("/student/getTeamdetails_using_team_id/:team_id",(req,res,next) => {
 
 //fetch queries sent by my team
 
-router.get("/student/get_queries_sent_by_my_team/:team_id",(req,res,next) => {
+router.get("/student/get_queries_sent_by_my_team/:team_id",userAuth,(req,res,next) => {
   try{
     const{team_id} = req.params;
     if(!team_id)return next(createError.BadRequest("team_id not found!!"));
@@ -621,7 +633,7 @@ router.get("/student/get_queries_sent_by_my_team/:team_id",(req,res,next) => {
 
 // checks whether he is already a member of another team
 
-router.get("/student/check_accepted_status/:reg_num",(req,res,next) => {
+router.get("/student/check_accepted_status/:reg_num",userAuth,(req,res,next) => {
   try{
     const{reg_num} = req.params;
     let sql = "SELECT * FROM team_requests WHERE (to_reg_num = ? OR from_reg_num = ?) AND status = 'accepted'";
@@ -638,7 +650,7 @@ router.get("/student/check_accepted_status/:reg_num",(req,res,next) => {
 
 // fetchs the deadlines from weekly_logs table
 
-router.get("/student/fetchDeadlines/:team_id",(req,res,next) => {
+router.get("/student/fetchDeadlines/:team_id",userAuth,(req,res,next) => {
   try{
     const{team_id} = req.params;
     if(!team_id)return next(createError.BadRequest("teamid not found!"));
@@ -656,7 +668,7 @@ router.get("/student/fetchDeadlines/:team_id",(req,res,next) => {
 
 
 // gives the weekly deadlines for the specific team -> we can filter the current phase
-router.get("students/get_current_week/:team_id",(req,res,next) => {
+router.get("students/get_current_week/:team_id",userAuth,(req,res,next) => {
   try{
     const{team_id} = req.params;
     if(!team_id)return next(createError.BadRequest("team_id not found!"));
@@ -677,7 +689,7 @@ router.get("students/get_current_week/:team_id",(req,res,next) => {
 // only team_member can post the project
 // -> send the project_type from redux not input tag
 
-router.post("/student/addproject/:project_type/:reg_num", (req, res, next) => {
+router.post("/student/addproject/:project_type/:reg_num", userAuth,(req, res, next) => {
   try {
     let { project_type,reg_num } = req.params;
     let { project_name, cluster, description, outcome, hard_soft } = req.body;
@@ -745,7 +757,7 @@ router.post("/student/addproject/:project_type/:reg_num", (req, res, next) => {
 });
 
 // sends the review request to the expert => once in a month
-router.post("/student/send_review_request/:team_id/:project_id",(req,res,next) => {
+router.post("/student/send_review_request/:team_id/:project_id",userAuth,(req,res,next) => {
   try{
     const{team_id,project_id} = req.params;
     const{project_name,team_lead,review_date,start_time,expert_reg_num} = req.body;

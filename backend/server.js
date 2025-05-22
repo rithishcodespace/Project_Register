@@ -14,6 +14,7 @@ const guideRouter = require("./Routes/guideRoute");
 const subjectExpertRouter = require("./Routes/subjectExpertRouter");
 const uploadRouter = require("./Routes/uploadRoute");
 const path = require("path");
+const cronJob = require("./utils/cronJobs");
 
 
 app.use(express.json());

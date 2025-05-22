@@ -2,10 +2,11 @@ const express = require("express");
 const router = express.Router();
 const createError = require("http-errors");
 const db = require("../db");
+const userAuth = require("../middlewares/userAuth")
 
 // add users
 
-router.post("/admin/adduser",(req,res,next) => {
+router.post("/admin/adduser",userAuth,(req,res,next) => {
    try{
      let sql = "insert into users(name,emailId,password,role,dept,reg_num,phone_number) values(?,?,?,?,?,?,?)";
      const values = [req.body.name,req.body.emailId,req.body.password,req.body.role,req.body.dept,req.body.reg_num,req.body.phone_number];
@@ -23,7 +24,7 @@ router.post("/admin/adduser",(req,res,next) => {
 
 // get project through project_id
 
-router.get("/admin/getproject_by_team_id/:project_id",(req,res,next) => {
+router.get("/admin/getproject_by_team_id/:project_id",userAuth,(req,res,next) => {
   try{
    const{project_id} = req.params;
    if(!project_id)return next("team_id not found");
@@ -41,7 +42,7 @@ router.get("/admin/getproject_by_team_id/:project_id",(req,res,next) => {
 
 // fetch users based on role
 
-router.get("/admin/get_users/:role",(req,res,next) => {
+router.get("/admin/get_users/:role",userAuth,(req,res,next) => {
   try{
     const{role} = req.params;
     const validRoles = ['student','admin','sub_expert','guide','teacher'];
@@ -62,7 +63,7 @@ router.get("/admin/get_users/:role",(req,res,next) => {
 
 // remove users
 
-router.delete("/admin/removeuser/:emailId/:reg_num/:role",(req,res,next) => {
+router.delete("/admin/removeuser/:emailId/:reg_num/:role",userAuth,(req,res,next) => {
   try{
     const{emailId,reg_num,role} = req.params;
     if(!emailId || !reg_num || !role)return createError.BadRequest("parameters are misssing!");
@@ -81,7 +82,7 @@ router.delete("/admin/removeuser/:emailId/:reg_num/:role",(req,res,next) => {
 
 // adds timeline to the timeline table
 
-router.post("/admin/addTimeLine",(req,res,next) => {
+router.post("/admin/addTimeLine",userAuth,(req,res,next) => {
   try{
     const{name,start_date,end_date} = req.body;
     if(!name.trim() || !start_date || !end_date)
@@ -109,7 +110,7 @@ router.post("/admin/addTimeLine",(req,res,next) => {
 
 // fetches the timelines
 
-router.get("/admin/get_timelines",(req,res,next) => {
+router.get("/admin/get_timelines",userAuth,(req,res,next) => {
   try{
    let sql = "select * from timeline";
    db.query(sql,(error,result) => {
@@ -126,7 +127,7 @@ router.get("/admin/get_timelines",(req,res,next) => {
 
 // deletes the timeline
 
-router.delete("/admin/remove_timeline/:id",(req,res,next) => {
+router.delete("/admin/remove_timeline/:id",userAuth,(req,res,next) => {
   try{
     const{id} = req.params;
     if(!id)return next(createError.BadRequest("id not found!"));
@@ -145,7 +146,7 @@ router.delete("/admin/remove_timeline/:id",(req,res,next) => {
 
 // updates the timeline -> whole timeline (not team_specific)
 
-router.patch("/admin/update_timeline_id/:id",(req,res,next) => {
+router.patch("/admin/update_timeline_id/:id",userAuth,(req,res,next) => {
   try{
      const{id} = req.params;
      let{start_date,end_date} = req.body;
@@ -178,7 +179,7 @@ router.patch("/admin/update_timeline_id/:id",(req,res,next) => {
 
 // updates timeline team-specific -> either guide or expert not accepted
 
-router.patch("/admin/update_team_timeline/:team_id", (req, res, next) => {
+router.patch("/admin/update_team_timeline/:team_id",userAuth, (req, res, next) => {
   try {
     const { team_id } = req.params;
     let { start_date, end_date } = req.body;
@@ -230,7 +231,7 @@ router.patch("/admin/update_team_timeline/:team_id", (req, res, next) => {
 
 // fetches the team_progress based on the project_id
 
-router.get("/admin/fetch_progress_by_project_id/:project_id",(req,res,next) => {
+router.get("/admin/fetch_progress_by_project_id/:project_id",userAuth,(req,res,next) => {
   try{
     const{project_id} = req.params;
     if(!project_id)return next(createError.BadRequest("project_id not found!"));
@@ -247,7 +248,7 @@ router.get("/admin/fetch_progress_by_project_id/:project_id",(req,res,next) => {
 })
 
 // updates the weekly deadlines for a specific team -> for a single week ->  did'not updated weekly logs
-router.patch("/admin/update_deadline/:week/:team_id",(req,res,next) => {
+router.patch("/admin/update_deadline/:week/:team_id",userAuth,(req,res,next) => {
   try{
     const{week,team_id} = req.params;
     let{newDeadline} = req.body;

@@ -52,7 +52,7 @@ const Project_Details = () => {
 
       try {
         setLoadingProject(true);
-        const res = await instance.get(`http://localhost:1234/admin/getproject_by_team_id/${project_id}`, { withCredentials: true });
+        const res = await instance.get(`/admin/getproject_by_team_id/${project_id}`);
         if (res.status === 200 && res.data.length > 0) {
           console.log();
           

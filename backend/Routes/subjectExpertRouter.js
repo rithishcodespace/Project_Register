@@ -2,11 +2,12 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 const createError = require("http-errors");
-const nodemailer = require("nodemailer")
+const nodemailer = require("nodemailer");
+const userAuth = require("../middlewares/userAuth");
 
 // gets the request recevied by the expert
 
-router.get("/expert/getrequests/:reg_num",(req,res,next) => {
+router.get("/expert/getrequests/:reg_num",userAuth,(req,res,next) => {
     try{
         let {reg_num} = req.params;
         let sql = "select * from sub_expert_requests where to_expert_reg_num = ? and status = 'interested'";
@@ -25,7 +26,7 @@ router.get("/expert/getrequests/:reg_num",(req,res,next) => {
 })
 
 // update status -> accept or reject // from id => project_id
-router.patch("/sub_expert/accept_reject/:status/:team_id/:my_id", (req, res, next) => {
+router.patch("/sub_expert/accept_reject/:status/:team_id/:my_id",userAuth, (req, res, next) => {
   try {
     const { status, team_id, my_id } = req.params;
     // Validate status
@@ -88,7 +89,7 @@ router.patch("/sub_expert/accept_reject/:status/:team_id/:my_id", (req, res, nex
 
 // sends request to expert
 
-router.post("/sub_expert/sent_request_to_expert", (req, res, next) => {
+router.post("/sub_expert/sent_request_to_expert",userAuth, (req, res, next) => {
     try {
         const { from_team_id, project_id, project_name, to_expert_reg_num } = req.body;
         if (!from_team_id || !project_id || !project_name || !Array.isArray(to_expert_reg_num) || to_expert_reg_num.length == 0) {
@@ -157,7 +158,7 @@ router.post("/sub_expert/sent_request_to_expert", (req, res, next) => {
 
 // fetches team details, i am acting as the subject expert
 
-router.get("/sub_expert/fetch_teams/:expert_id",(req,res,next) => {
+router.get("/sub_expert/fetch_teams/:expert_id",userAuth,(req,res,next) => {
     try{
       const{expert_id} = req.params;
       if(!expert_id)
@@ -179,7 +180,7 @@ router.get("/sub_expert/fetch_teams/:expert_id",(req,res,next) => {
 
 // fetching the review requests sent by teams
 
-router.get("/sub_expert/fetch_review_requests/:expert_reg_num",(req,res,next) => {
+router.get("/sub_expert/fetch_review_requests/:expert_reg_num",userAuth,(req,res,next) => {
   try{
     const{expert_reg_num} = req.params;
     if(!expert_reg_num)return next(createError.BadRequest("expert id is undefined!"));
@@ -196,7 +197,7 @@ router.get("/sub_expert/fetch_review_requests/:expert_reg_num",(req,res,next) =>
 
 // fetching the upcoming reviews -> mark attendence page
 
-router.get("/sub_expert/fetch_upcoming_reviews/:expert_reg_num",(req,res,next) => {
+router.get("/sub_expert/fetch_upcoming_reviews/:expert_reg_num",userAuth,(req,res,next) => {
   try{
     const{expert_reg_num} = req.params;
     if(!expert_reg_num)return next(createError.BadRequest("expert reg num missing!"));
@@ -214,7 +215,7 @@ router.get("/sub_expert/fetch_upcoming_reviews/:expert_reg_num",(req,res,next) =
 
 // conforming the review request by student
 
-router.post("/sub_expert/add_review_details/:request_id/:status",(req,res,next) => {
+router.post("/sub_expert/add_review_details/:request_id/:status",userAuth,(req,res,next) => {
     try{
       const{project_id,project_name,team_lead,review_date,start_time,venue} = req.body;
       const{request_id,status} = req.params;
@@ -255,7 +256,7 @@ router.post("/sub_expert/add_review_details/:request_id/:status",(req,res,next) 
 })
 
 // marks attendance
-router.patch("/sub_expert/mark_attendance/:team_id",(req,res,send) => {
+router.patch("/sub_expert/mark_attendance/:team_id",userAuth,(req,res,send) => {
     try{
       const{team_id} = req.params;
       if(!team_id) return next(createError.BadRequest("team_id is missing!"));
@@ -273,7 +274,7 @@ router.patch("/sub_expert/mark_attendance/:team_id",(req,res,send) => {
 })
 
 // add marks and remarks
-router.post("sub_expert/add_marks_remarks/:team_id",(req,res,send) => {
+router.post("sub_expert/add_marks_remarks/:team_id",userAuth,(req,res,send) => {
   try{
     const{mark,remark} = req.body;
     const{team_id} = req.params;
