@@ -17,10 +17,11 @@ function Student_navbar({ isOpen, toggleSidebar }) {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-    const userSelector = useSelector((State) => State.userSlice);
-    const teamSelector = useSelector((State) => State.teamSlice);
-    const a=teamSelector[0].guide_reg_num;
-    const b=teamSelector[0].sub_expert_reg_num;
+  const userSelector = useSelector((State) => State.userSlice);
+  const teamSelector = useSelector((State) => State.teamSlice);
+  const a = teamSelector?.[0]?.guide_reg_num || null;
+  const b = teamSelector?.[0]?.sub_expert_reg_num || null;
+
 
   const handleLogout = async () => {
     try {

@@ -104,25 +104,56 @@ const Project_Details = () => {
   const [selectedGuides, setSelectedGuides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [projectData,setProjectData] = useState([])
 
     useEffect(() => {
     instance
       .get(`/student/get_project_details/${teamselector[0].project_id}`)
       .then((res) => {
         if (res.status === 200) {
+          setProjectData(res.data)
           setIsSuccess(true);
+          console.log(res)
         }
       })
       .catch((err) => {
         console.error("Error fetching project details:", err);
       });
   }, []);
-
+function Detail({ label, value, fullWidth = false }) {
   return (
-    <div>
-      {isSuccess && <div>hello only</div>}
+    <div className={`flex flex-col ${fullWidth ? 'md:col-span-2' : ''}`}>
+      <span className="text-sm bg-white text-gray-500 font-medium">{label}</span>
+      <span className="text-base bg-white text-gray-800 font-semibold">{value}</span>
     </div>
   );
+}
+
+return (
+  <div>
+    {isSuccess && (
+      <div className="max-w-3xl mx-auto mt-10">
+        <h2 className="text-2xl flex justify-center font-semibold text-gray-800 mb-6 border-b pb-3">
+          Project Details
+        </h2>
+        <div className="bg-white shadow-lg rounded-xl p-5 border border-gray-200 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-14 gap-y-4 text-gray-700 bg-white p-4 rounded-lg">
+            <Detail label="Project ID" value={projectData[0].project_id} />
+            <Detail label="Project Name" value={projectData[0].project_name} />
+            <Detail label="Project Type" value={projectData[0].project_type} />
+            <Detail label="Cluster" value={projectData[0].cluster} />
+            <Detail label="Hard/Soft" value={projectData[0].hard_soft} />
+            <Detail label="Posted Date" value={new Date(projectData[0].posted_date).toLocaleDateString()} />
+            <Detail label="Team Lead Reg.no" value={projectData[0].tl_reg_num} />
+            <Detail label="Description" value={projectData[0].description} fullWidth />
+            <Detail label="Outcome" value={projectData[0].outcome} fullWidth />
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+);
+
 
 
   useEffect(() => {
