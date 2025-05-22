@@ -8,6 +8,7 @@ const db = require("../db");
 const userAuth = require("../middlewares/userAuth")
 const checkTimeline = require("../middlewares/timeLine");
 const nodemailer = require("nodemailer");
+require("dotenv").config();
 
 // common to all route -> for jwt auth
 router.get("/profile/view", userAuth, (req, res, next) => {
@@ -165,6 +166,11 @@ router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",userAuth,
 
     if (!from_reg_num || !to_reg_num || !status)
       return next(createError.BadRequest("Missing required parameters."));
+
+    const validStatuses = ['accept', 'reject'];
+    if (!validStatuses.includes(status.toLowerCase())) {
+      return next(createError.BadRequest("Invalid status."));
+    }
 
     //  Update the request if it exists and is still 'interested'
     const updateSQL = `UPDATE team_requests SET status = ? WHERE to_reg_num = ? AND from_reg_num = ? AND status = 'interested'`;
@@ -347,7 +353,7 @@ router.patch("/student/team_request/conform_team", userAuth,(req, res, next) => 
 
                 // remove the requests recieved the conformed team members
                 let sql4 = "select to_reg_num from team_requests where team_id = ?";
-                db.query(sql4,[team_id],(error,result) => {
+                db.query(sql4,[team_id],(error,result) => { 
                   if(error)return next(error);
                   if(result.length === 0)return next(createError.NotFound("reg_num not found!"));
                   let pending = result.length;
@@ -412,30 +418,63 @@ router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, r
           const allMembersUpdated = result.every((member) => member[`${week}_progress`] !== null); // every -> checks whether every element satisfies the given condition, optimised instead of forEach // . -> [] alternative for . notation
           if(allMembersUpdated)
           {
-              const transporter = nodemailer.createTransport({
-              service: "gmail",
-              auth: {
-                user: "rithishvkv@gmail.com", 
-                pass: process.env.EMAIL_PASS,
-              },
-              });
+            let getGuide = "select guide_reg_num from team_requests where team_id = ?";
+            db.query(getGuide,[team_id],(error,result) => {
+             if(error)return next(error);
+             if(result.length === 0)return next(createError.NotFound("guide reg num not found!"));
+             let guide_reg_num = result[0].guide_reg_num;
+             let getGuideEmailStudentEmail = "SELECT emailId, role FROM users WHERE reg_num IN (?, ?) AND role IN ('guide', 'student');";
+              db.query(getGuideEmailStudentEmail,[guide_reg_num,reg_num],(error,result) => {
+                if(error)return next(error);
+                if(result.length === 0)return next(createError.NotFound("guide email not found!"));
+                 let guideEmail = null;
+                let studentEmail = null;
 
-              const mailOptions = {
-              from: `"No Reply" <${process.env.EMAIL_USER}>`,
-              to: "rithishs.cs24@bitsathy.ac.in",
-              subject: "Progress update by your mentee team",
-              text: `All team members have updated their progress for ${week}. Please check the Project Register.`
-            };
+                result.forEach(user => {
+                  if (user.role === 'guide') guideEmail = user.emailId;
+                  else if (user.role === 'student') studentEmail = user.emailId;
+                });
 
-              transporter.sendMail(mailOptions, (error, info) => {
-              if (error) {
-                console.error("Email Error:", error);
-                return res.status(500).send("Progress updated, but failed to send email.");
-              } else {
-                console.log("Email sent:", info.response);
-                return res.send("Progress updated and email sent successfully!");
-              }
-            }); 
+                if (!guideEmail || !studentEmail) {
+                  return next(createError.InternalServerError("Could not resolve guide or student email."));
+                }
+
+                const transporter = nodemailer.createTransport({
+                  service: "gmail",
+                  auth: {
+                    user: process.env.EMAIL_USER, 
+                    pass: process.env.EMAIL_PASS,
+                  },
+                });
+
+                  const mailOptions = {
+                    from: `"No Reply" <${process.env.EMAIL_USER}>`,
+                    to: guideEmail,
+                    subject: `Progress update for ${week} by Team ${team_id}`,
+                    replyTo: studentEmail,  // Optional: replies go to student
+                    text: `Dear Guide,
+
+                    Team ${team_id} has completed their progress update for ${week}.
+                    This submission was triggered by the student with registration number: ${reg_num}.
+
+                    Please check the Project Register for more details.
+
+                    Best regards,
+                    Project Management System`
+                };
+                  transporter.sendMail(mailOptions, (error, info) => {
+                  if (error) {
+                    console.error("Email Error:", error);
+                    return res.status(500).send("Progress updated, but failed to send email.");
+                  } else {
+                    console.log("Email sent:", info.response);
+                    return res.send("Progress updated and email sent successfully!");
+                  }
+                }); 
+              
+              })
+            })
+
           }
           else {
             res.send("Progress updated successfully for this member!");
@@ -522,7 +561,7 @@ router.get("/student/get_project_type/:reg_num",userAuth,(req,res,next) => {
 
 // adds the query in the query table
 
-router.post("/student/add_query/:team_member/:guide_reg_num",userAuth, (req, res, next) => {
+router.post("/student_query/:team_member/:guide_reg_num",userAuth, (req, res, next) => {
   try {
     const { team_id, project_id, query } = req.body;
     const { team_member, guide_reg_num } = req.params;
