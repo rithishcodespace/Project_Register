@@ -301,22 +301,7 @@ router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:team_id",userAuth,
   }
 });
 
-// to check whether guide verified that week
-router.get("/guide/check_week_verified/:week/:team_id",(req,res,next) => {
-  try{
-    const{week,team_id} = req.params;
-    if(!week || !team_id)return next(createError.BadRequest("week is null!"));
-    let sql = "select * from weekly_logs_verification where week = ? and team_id = ?";
-    db.query(sql,[week,team_id],(error,result) => {
-      if(error)return next(error);
-      if(result.length === 0)return next(createError.NotFound("result not found!"));
-      res.send(result);
-    })
-  }
-  catch(error){
-      next(error);
-  }
-})
+
 
 
 module.exports = router;
