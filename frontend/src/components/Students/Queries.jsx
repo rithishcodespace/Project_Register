@@ -94,7 +94,7 @@ function Queries() {
         </div>
 
         {/* Send Query Form */}
-        <div className="mb-[-16px] bg-white sticky bottom-0 w-full">
+        <div className="mb-[-16px] ml-[-15px]  bg-white sticky bottom-0 w-[calc(100%+30px)]">
           <form onSubmit={submitQuery} className="flex p-3  bg-white gap-2">
             <input
               type="text"
