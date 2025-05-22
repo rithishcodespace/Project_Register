@@ -144,80 +144,89 @@ const SubjectExpertDashboard = () => {
 
       {/* Popup */}
       {showPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-md rounded-xl shadow-xl p-6 relative">
-            <button
-              onClick={handleClose}
-              className="absolute top-3 right-4 text-gray-400 hover:text-red-500 text-2xl"
-            >
-              &times;
-            </button>
+  <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+    <div className="relative w-full max-w-xl mx-4 bg-white rounded-2xl shadow-2xl p-6 animate-fade-in">
+      <button
+        onClick={handleClose}
+        className="absolute top-3 right-4 text-gray-400 hover:text-red-500 text-2xl"
+        aria-label="Close"
+      >
+        &times;
+      </button>
 
-            {/* Team Invitations */}
-            <h2 className="text-2xl font-bold text-center mb-4">Team Invitations</h2>
-            {invitations.length === 0 ? (
-              <p className="text-gray-600 text-center">No invitations yet.</p>
-            ) : (
-              <ul className="space-y-4">
+      <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Notifications</h2>
+
+      {(invitations.length === 0 && reviewRequests.length === 0) ? (
+        <p className="text-center text-gray-500">No notifications at the moment.</p>
+      ) : (
+        <div className="space-y-8 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-purple-300">
+          
+          {/* Team Invitations */}
+          {invitations.length > 0 && (
+            <div>
+              <h3 className="text-xl font-semibold text-purple-700 mb-2">Team Invitations</h3>
+              <div className="space-y-4">
                 {invitations.map((invite) => (
-                  <li key={invite.from_team_id} className="bg-white rounded-lg p-4">
-                    <p className="font-semibold">Team: {invite.from_team_id}</p>
+                  <div key={`invite-${invite.from_team_id}`} className="p-4 rounded-xl border border-purple-200 shadow-sm">
+                    <p className="font-semibold text-gray-800">Team: {invite.from_team_id}</p>
                     <p className="text-gray-600">Project: {invite.project_name}</p>
-                    <div className="flex justify-end gap-2 mt-3">
+                    <div className="flex justify-end gap-3 mt-3">
                       <button
                         onClick={() => handleAccept(invite.from_team_id)}
-                        className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-1 rounded"
+                        className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-1.5 rounded-lg text-sm"
                       >
                         Accept
                       </button>
                       <button
                         onClick={() => handleReject(invite.from_team_id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm"
                       >
                         Reject
                       </button>
                     </div>
-                  </li>
+                  </div>
                 ))}
-              </ul>
-            )}
+              </div>
+            </div>
+          )}
 
-            {/* Divider */}
-            <hr className="my-5" />
-
-            {/* Review Requests */}
-            <h2 className="text-2xl font-bold text-center mb-4">Review Requests</h2>
-            {reviewRequests.length === 0 ? (
-              <p className="text-gray-600 text-center">No review requests.</p>
-            ) : (
-              <ul className="space-y-4">
+          {/* Review Requests */}
+          {reviewRequests.length > 0 && (
+            <div>
+              <h3 className="text-xl font-semibold text-green-700 mb-2">Review Requests</h3>
+              <div className="space-y-4">
                 {reviewRequests.map((req) => (
-                  <li key={req.request_id} className="bg-white rounded-lg p-4">
-                    <p className="font-semibold">Project: {req.project_name}</p>
+                  <div key={`review-${req.request_id}`} className="p-4 rounded-xl border border-green-200 shadow-sm">
+                    <p className="font-semibold text-gray-800">Project: {req.project_name}</p>
                     <p className="text-gray-600">Lead: {req.team_lead}</p>
                     <p className="text-gray-600">Date: {req.review_date}</p>
                     <p className="text-gray-600">Time: {req.start_time}</p>
-                    <div className="flex justify-end gap-2 mt-3">
+                    <div className="flex justify-end gap-3 mt-3">
                       <button
                         onClick={() => handleReview('accept', req)}
-                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded"
+                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded-lg text-sm"
                       >
                         Accept
                       </button>
                       <button
                         onClick={() => handleReview('reject', req)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm"
                       >
                         Reject
                       </button>
                     </div>
-                  </li>
+                  </div>
                 ))}
-              </ul>
-            )}
-          </div>
+              </div>
+            </div>
+          )}
+
         </div>
       )}
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
