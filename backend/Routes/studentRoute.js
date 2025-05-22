@@ -522,7 +522,7 @@ router.get("/student/get_project_type/:reg_num",userAuth,(req,res,next) => {
 
 // adds the query in the query table
 
-router.post("/student/add_query/:team_member/:guide_reg_num",userAuth, (req, res, next) => {
+router.post("/student_query/:team_member/:guide_reg_num",userAuth, (req, res, next) => {
   try {
     const { team_id, project_id, query } = req.body;
     const { team_member, guide_reg_num } = req.params;

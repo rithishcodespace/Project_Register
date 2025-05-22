@@ -33,7 +33,7 @@ const ProjectDetailsView = ({ project }) => {
         </div>
         <div className="flex justify-between">
           <span className="font-semibold">Internal/External:</span>
-          <span>{project.internal_external}</span>
+          <span>{project.project_type}</span>
         </div>
       </div>
 
@@ -42,7 +42,7 @@ const ProjectDetailsView = ({ project }) => {
         <h3 className="font-semibold mb-1">Description:</h3>
         <p className="text-gray-700">{project.description}</p>
       </div>
-
+s
       {/* Row 4: Expected Outcome */}
       <div>
         <h3 className="font-semibold mb-1">Expected Outcome:</h3>
@@ -139,6 +139,8 @@ const Project_Details = () => {
     fetchExpertsAndGuides();
   }, []);
 
+  
+
   // Fetch existing project details by project_id
   useEffect(() => {
     async function fetchProjectDetails() {
@@ -213,22 +215,36 @@ const Project_Details = () => {
         const response = await instance.post(
           `/student/addproject/${userselector.project_type}/${userselector.reg_num}`,
           {
-            project_name: projectName,
-            cluster: clusterName,
-            hard_soft: core,
-            description,
-            outcome,
-            sub_experts: selectedExperts,
-            guides: selectedGuides,
-          },
-          { withCredentials: true }
+            "project_name": projectName,
+            "cluster": clusterName,
+            "hard_soft": core,
+            "description":description,
+            "outcome":outcome
+           
+          }
         );
 
         if (response.status === 201 || response.status === 200) {
           alert('Project created successfully!');
           finalProjectId = response.data.project_id;
-          // Optionally refresh or set project_id state here if used elsewhere
           setExistingProject(response.data);
+          let res1 = await instance.post(`/guide/sent_request_to_guide`,{
+            "from_team_id":teamselector[0].team_id,
+            "project_id":teamselector[0].project_id,
+            "project_name":projectName,
+            "to_guide_reg_num":selectedGuides,
+          })
+          if(res1.status === 200){
+            let res2 = await instance.post(`/sub_expert/sent_request_to_expert`,{
+            "from_team_id":teamselector[0].team_id,
+            "project_id":teamselector[0].project_id,
+            "project_name":projectName,
+            "to_expert_reg_num":selectedExperts,
+          })
+          if(res2.status === 200){
+            alert("both experts and guides req are sent!")
+          }
+          }
         } else {
           alert('Failed to create project.');
         }
@@ -351,7 +367,7 @@ const Project_Details = () => {
             selectedItems={selectedExperts}
             toggleSelection={toggleExpertSelection}
             colorClass="bg-indigo-600"
-            minSelectCount={3}
+            minSelectCount={1}
           />
 
           {/* Guides selection */}
@@ -361,7 +377,7 @@ const Project_Details = () => {
             selectedItems={selectedGuides}
             toggleSelection={toggleGuideSelection}
             colorClass="bg-green-600"
-            minSelectCount={3}
+            minSelectCount={1}
           />
 
           {formError && (
