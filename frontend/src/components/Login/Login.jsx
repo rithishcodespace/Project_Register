@@ -42,9 +42,9 @@ function Login() {
           const projectTypeRes = await instance.get(`/student/get_project_type/${reg_num}`);
           const projectType = projectTypeRes.data?.project_type;
 
-          if (projectType === "INTERNAL") {
+          if (projectType === "internal") {
             navigate("/student");
-          } else if (projectType === "EXTERNAL") {
+          } else if (projectType === "external") {
             navigate("/student");
           } else {
             setStudentUserData(response.data);
@@ -194,13 +194,13 @@ function Login() {
                 </h1>
                 <div className="flex flex-col gap-4">
                   <button
-                    onClick={() => updateProjectTypeAndNavigate("INTERNAL", "", "")}
+                    onClick={() => updateProjectTypeAndNavigate("internal", "", "")}
                     className="px-6 py-3 bg-purple-500 text-white rounded-xl shadow hover:bg-purple-700"
                   >
                     Internal
                   </button>
                   <button
-                    onClick={() => setSelectedProjectType("EXTERNAL")}
+                    onClick={() => setSelectedProjectType("external")}
                     className="px-6 py-3 bg-green-600 text-white rounded-xl shadow hover:bg-green-700"
                   >
                     External

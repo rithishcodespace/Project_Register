@@ -195,8 +195,8 @@ const Project_Details = () => {
     e.preventDefault();
     setFormError('');
 
-    if (selectedExperts.length < 3 || selectedGuides.length < 3) {
-      setFormError('Please select at least 3 experts and 3 guides.');
+    if (selectedExperts.length < 1 || selectedGuides.length < 1) {
+      setFormError('Please select at least 1 experts and 1 guides.');
       return;
     }
 
@@ -279,19 +279,26 @@ const Project_Details = () => {
               className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
             >
-              <option value="">Select Cluster</option>
-              <option value="IOT">IOT</option>
-              <option value="Networking">Networking</option>
-              <option value="Web">Web</option>
-              <option value="Cloud">Cloud</option>
-              <option value="AI/ML">AI/ML</option>
+              <option value="" disabled>Select Cluster Name</option>
+                  <option value="CSE">CSE</option>
+                  <option value="AIDS">AIDS</option>
+                  <option value="IT">IT</option>
+                  <option value="AIML">AIML</option>
+                  <option value="CT">CT</option>
+                  <option value="AGRI">AGRI</option>
+                  <option value="ECE">ECE</option>
+                  <option value="EIE">EIE</option>
+                  <option value="EEE">EEE</option>
+                  <option value="MECH">MECH</option>
+                  <option value="FT">FT</option>
+                  <option value="FD">FD</option>
             </select>
           </div>
 
           <div>
-            <label className="block mb-1 font-semibold">Type (Hard/Soft) <span className="text-red-500">*</span></label>
+            <label className="block mb-1 font-semibold">Type (Hardware/Software) <span className="text-red-500">*</span></label>
             <div className="flex gap-4">
-              {['Hard', 'Soft'].map((type) => (
+              {['hardware', 'software'].map((type) => (
                 <label key={type} className="inline-flex items-center space-x-2">
                   <input
                     type="radio"

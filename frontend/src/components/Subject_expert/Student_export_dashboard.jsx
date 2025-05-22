@@ -9,7 +9,6 @@ const SubjectExpertDashboard = () => {
   const [reviewRequests, setReviewRequests] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const selector = useSelector((Store) => Store.userSlice);
-  console.log(selector);
 
   // Fetch team invitations
   async function fetchInvitations() {
@@ -91,17 +90,25 @@ const SubjectExpertDashboard = () => {
           team_lead: reviewRequests.team_lead,
           review_date: reviewRequests.review_date,
           start_time: reviewRequests.start_time,
-          venue: "Biy",
+          venue: "Bir",
           request_id:reviewRequests.request_id,
-          status:"accept"
+          status:status,
         };
         const response = await instance.post(url, payload);
         if (response.status === 200) {
           alert(`Review for ${req.project_name} accepted and scheduled!`);
           setReviewRequests(prev => prev.filter(r => r.request_id !== req.request_id));
         }
-      } else if (status === "reject") {
-        const response = await instance.post(url); // No payload needed
+      } else if (status === "reject") { const payload = {
+          project_id: reviewRequests.project_id,
+          project_name: reviewRequests.project_name,
+          team_lead: reviewRequests.team_lead,
+          review_date: reviewRequests.review_date,
+          start_time: reviewRequests.start_time,
+          venue: "Biw",
+          request_id:reviewRequests.request_id,
+          status:status}
+        const response = await instance.post(url, payload); // No payload needed
         if (response.status === 200) {
           alert(`Review request ${req.request_id} rejected.`);
           setReviewRequests(prev => prev.filter(r => r.request_id !== req.request_id));
