@@ -67,15 +67,16 @@ function Schedule_review() {
   };
 
   return (
+    <div>
+      <h2 className="text-2xl font-semibold mt-4 text-center mb-4">Schedule Review</h2>
     <div className="max-w-xl mx-auto mt-10 bg-white shadow-md rounded-lg p-6 space-y-4">
-      <h2 className="text-2xl font-semibold text-center mb-4">Schedule Review</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 bg-white">
 
-        <div>
-          <label className="block font-medium mb-1">Select Review Date</label>
+        <div className='bg-white'>
+          <label className="block bg-white  font-medium mb-1">Select Review Date</label>
           <input
             type="date"
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            className="w-full bg-white border border-gray-300 rounded px-3 py-2"
             value={reviewDate}
             onChange={(e) => setReviewDate(e.target.value)}
             required
@@ -83,11 +84,11 @@ function Schedule_review() {
           />
         </div>
 
-        <div>
-          <label className="block font-medium mb-1">Select Start Time</label>
+        <div className='bg-white'>
+          <label className="block bg-white font-medium mb-1">Select Start Time</label>
           <input
             type="time"
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            className="w-full border bg-white border-gray-300 rounded px-3 py-2"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
             required
@@ -115,7 +116,7 @@ function Schedule_review() {
           </p>
         )}
       </form>
-    </div>
+    </div></div>
   );
 }
 

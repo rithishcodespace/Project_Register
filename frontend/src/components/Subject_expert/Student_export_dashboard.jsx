@@ -154,17 +154,16 @@ const SubjectExpertDashboard = () => {
         &times;
       </button>
 
-      <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Notifications</h2>
+      <h2 className="text-3xl font-bold bg-white text-center text-gray-800 mb-6">Notifications</h2>
 
       {(invitations.length === 0 && reviewRequests.length === 0) ? (
-        <p className="text-center text-gray-500">No notifications at the moment.</p>
+        <p className="text-center bg-white text-gray-500">No notifications at the moment.</p>
       ) : (
-        <div className="space-y-8 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-purple-300">
+        <div className="space-y-8 bg-white max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-purple-300">
           
           {/* Team Invitations */}
           {invitations.length > 0 && (
             <div>
-              <h3 className="text-xl font-semibold text-purple-700 mb-2">Team Invitations</h3>
               <div className="space-y-4">
                 {invitations.map((invite) => (
                   <div key={`invite-${invite.from_team_id}`} className="p-4 rounded-xl border border-purple-200 shadow-sm">
@@ -193,7 +192,6 @@ const SubjectExpertDashboard = () => {
           {/* Review Requests */}
           {reviewRequests.length > 0 && (
             <div>
-              <h3 className="text-xl font-semibold text-green-700 mb-2">Review Requests</h3>
               <div className="space-y-4">
                 {reviewRequests.map((req) => (
                   <div key={`review-${req.request_id}`} className="p-4 rounded-xl border border-green-200 shadow-sm">

@@ -83,8 +83,8 @@ function Guide_team_progress() {
   };
 
   return (
-    <div className="p-6 min-h-screen bg-gray-50">
-      <h1 className="text-4xl font-bold text-center text-black mb-10">Student Progress</h1>
+    <div className="p-6 min-h-screen">
+      <h1 className="text-4xl font-bold text-center text-black  mb-10">Student Progress</h1>
 
       {loading ? (
         <p className="text-center text-gray-500 text-lg">Loading teams...</p>
@@ -95,33 +95,33 @@ function Guide_team_progress() {
           {teams.map((team, idx) => (
             <div key={idx} className="bg-white rounded-2xl shadow-md border border-purple-200 overflow-hidden hover:shadow-xl transition">
               <div className="bg-white px-4 py-3">
-                <h2 className="text-xl font-bold text-black-800">{team.projectTitle}</h2>
-                <p className="text-sm mt-1 text-purple-600">Team ID: {team.id}</p>
+                <h2 className="text-xl font-bold bg-white  text-black-800">{team.projectTitle}</h2>
+                <p className="text-sm mt-1 bg-white  text-purple-600">Team ID: {team.id}</p>
               </div>
 
-              <div className="p-4">
+              <div className="p-4 bg-white ">
 
-                <p className="text-center font-semibold text-gray-700 mt-2">
+                <p className="text-center font-semibold bg-white text-gray-700 mt-2">
                   Verified Weeks: {team.guide_verified} / 12
                 </p>
 
                 {team.showButtons ? (
-                  <div className="mt-4">
-                    <p className="text-gray-800 font-semibold text-center mb-2">
+                  <div className="mt-4 bg-white ">
+                    <p className="text-gray-800  bg-white font-semibold text-center mb-2">
                       Week {team.currentWeek} Progress by Team Members
                     </p>
-                    <ul className="space-y-1 p-3 rounded-lg bg-gray-100">
+                    <ul className="space-y-1 p-3 rounded-lg bg-white  ">
                       {team.members.map((member, i) => {
                         const field = `week${team.currentWeek}_progress`;
                         return (
-                          <li key={i} className="text-sm text-gray-600">
+                          <li key={i} className="text-sm bg-white  text-gray-600   ">
                             <strong>{member.name}:</strong>{' '}
-                            {member[field] ? member[field] : <em className="text-gray-400">No update</em>}
+                            {member[field] ? member[field] : <em className="text-gray-400  bg-white ">No update</em>}
                           </li>
                         );
                       })}
                     </ul>
-                    <div className="text-center mt-2">
+                    <div className="text-center  bg-white mt-2">
                       <button
                         onClick={() => handleVerify(team)}
                         className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg shadow-md transition transform hover:scale-105"
@@ -131,7 +131,7 @@ function Guide_team_progress() {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-center text-sm text-gray-500 mt-3 italic">
+                  <p className="text-center text-sm bg-white  text-gray-500 mt-3 italic">
                     {team.currentWeek === team.guide_verified
                       ? `Week ${team.currentWeek} already verified`
                       : `Waiting for all members to update Week ${team.guide_verified + 1}`}

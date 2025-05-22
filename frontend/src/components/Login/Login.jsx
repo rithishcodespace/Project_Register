@@ -182,25 +182,25 @@ function Login() {
             background: "white", padding: "30px", borderRadius: "8px", textAlign: "center", minWidth: "300px"
           }}>
             {!selectedProjectType && (
-              <>
+              <div className="w-auto bg-white">
                 <h1 className="text-md md:text-xl font-semibold bg-white text-gray-800 mb-4">
                   Are you an internal or external student?
                 </h1>
-                <div className="flex flex-col gap-4">
+                <div className="flex bg-white flex-col-2 gap-4">
                   <button
                     onClick={() => updateProjectTypeAndNavigate("internal", "", "")}
-                    className="px-6 py-3 bg-purple-500 text-white rounded-xl shadow hover:bg-purple-700"
+                    className="px-6 py-3 w-[50%] bg-purple-500 text-white rounded-xl shadow hover:bg-purple-700"
                   >
                     Internal
                   </button>
                   <button
                     onClick={() => setSelectedProjectType("external")}
-                    className="px-6 py-3 bg-green-600 text-white rounded-xl shadow hover:bg-green-700"
+                    className="px-6 py-3 w-[50%] bg-green-600 text-white rounded-xl shadow hover:bg-green-700"
                   >
                     External
                   </button>
                 </div>
-              </>
+              </div>
             )}
 
             {selectedProjectType === "external" && (

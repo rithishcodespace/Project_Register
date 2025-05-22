@@ -107,19 +107,25 @@ const Project_Details = () => {
   const [projectData,setProjectData] = useState([])
 
     useEffect(() => {
-    instance
-      .get(`/student/get_project_details/${teamselector[0].project_id}`)
-      .then((res) => {
-        if (res.status === 200) {
-          setProjectData(res.data)
-          setIsSuccess(true);
-          console.log(res)
-        }
-      })
-      .catch((err) => {
-        console.error("Error fetching project details:", err);
-      });
-  }, []);
+  if (!teamselector || !Array.isArray(teamselector) || !teamselector[0] || !teamselector[0].project_id) {
+    console.log("Team selector not ready or missing project_id");
+    return;
+  }
+
+  instance
+    .get(`/student/get_project_details/${teamselector[0].project_id}`)
+    .then((res) => {
+      if (res.status === 200) {
+        setProjectData(res.data);
+        setIsSuccess(true);
+        console.log(res);
+      }
+    })
+    .catch((err) => {
+      console.error("Error fetching project details:", err);
+    });
+}, [teamselector]); // <-- important to add teamselector as dependency
+
 function Detail({ label, value, fullWidth = false }) {
   return (
     <div className={`flex flex-col ${fullWidth ? 'md:col-span-2' : ''}`}>
