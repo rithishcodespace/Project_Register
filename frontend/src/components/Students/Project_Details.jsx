@@ -1,15 +1,102 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
 import instance from '../../utils/axiosInstance';
 
+// Helper component: Loading Spinner
+const LoadingSpinner = () => (
+  <div className="flex justify-center items-center p-6">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+  </div>
+);
+
+// Helper component: Readonly project details display
+const ProjectDetailsView = ({ project }) => {
+  return (
+    <div className="max-w-5xl mx-auto bg-white p-8 rounded shadow space-y-8">
+      {/* Row 1: Project Name & Cluster */}
+      <div className="grid grid-cols-2 gap-6">
+        <div className="flex justify-between">
+          <span className="font-semibold">Project Name:</span>
+          <span>{project.project_name}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="font-semibold">Cluster:</span>
+          <span>{project.cluster}</span>
+        </div>
+      </div>
+
+      {/* Row 2: Project Type & Internal/External */}
+      <div className="grid grid-cols-2 gap-6">
+        <div className="flex justify-between">
+          <span className="font-semibold">Project Type:</span>
+          <span>{project.hard_soft}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="font-semibold">Internal/External:</span>
+          <span>{project.internal_external}</span>
+        </div>
+      </div>
+
+      {/* Row 3: Description */}
+      <div>
+        <h3 className="font-semibold mb-1">Description:</h3>
+        <p className="text-gray-700">{project.description}</p>
+      </div>
+
+      {/* Row 4: Expected Outcome */}
+      <div>
+        <h3 className="font-semibold mb-1">Expected Outcome:</h3>
+        <p className="text-gray-700">{project.outcome}</p>
+      </div>
+    </div>
+  );
+};
+
+// Helper component: Experts and Guides Selector Buttons
+const SelectorButtons = ({
+  title,
+  items,
+  selectedItems,
+  toggleSelection,
+  colorClass,
+  minSelectCount = 3,
+}) => {
+  return (
+    <div className="mb-6">
+      <h3 className="text-lg font-semibold mb-2">
+        Select at least {minSelectCount} {title}:
+      </h3>
+      <div className="flex flex-wrap gap-2">
+        {items.map((item) => (
+          <button
+            key={item.reg_num}
+            type="button"
+            onClick={() => toggleSelection(item.reg_num)}
+            className={`px-3 py-1 rounded-full border transition-colors duration-200 ${
+              selectedItems.includes(item.reg_num)
+                ? `${colorClass} text-white border-${colorClass.split('-')[1]}-600`
+                : `bg-white text-gray-700 border-gray-300 hover:bg-${colorClass.split('-')[1]}-100`
+            }`}
+          >
+            {item.name}
+          </button>
+        ))}
+      </div>
+      <p className="text-sm mt-1 text-gray-500">
+        Selected: {selectedItems.length}
+      </p>
+    </div>
+  );
+};
+
 const Project_Details = () => {
-  const userselector = useSelector((State) => State.userSlice);
-  const teamselector = useSelector((State) => State.teamSlice);
+  const userselector = useSelector((state) => state.userSlice);
+  const teamselector = useSelector((state) => state.teamSlice);
 
-  const  project_id  = teamselector[0].project_id; // Get project_id from URL
+  // Project ID from team slice
+  const project_id = teamselector.length > 0 ? teamselector[0].project_id : null;
 
-  // Form state
+  // Form states
   const [projectName, setProjectName] = useState('');
   const [clusterName, setClusterName] = useState('');
   const [core, setCore] = useState('');
@@ -21,8 +108,15 @@ const Project_Details = () => {
   const [selectedExperts, setSelectedExperts] = useState([]);
   const [selectedGuides, setSelectedGuides] = useState([]);
 
+  // Loading states
   const [loading, setLoading] = useState(true);
   const [loadingProject, setLoadingProject] = useState(false);
+
+  // State to hold existing project data from backend
+  const [existingProject, setExistingProject] = useState(null);
+
+  // Errors for validation
+  const [formError, setFormError] = useState('');
 
   // Fetch experts and guides on mount
   useEffect(() => {
@@ -30,8 +124,8 @@ const Project_Details = () => {
       try {
         setLoading(true);
         const [expertRes, guideRes] = await Promise.all([
-          instance.get('http://localhost:1234/admin/get_users/sub_expert', { withCredentials: true }),
-          instance.get('http://localhost:1234/admin/get_users/guide', { withCredentials: true }),
+          instance.get('/admin/get_users/sub_expert', { withCredentials: true }),
+          instance.get('/admin/get_users/guide', { withCredentials: true }),
         ]);
         if (expertRes.status === 200) setExpertsList(expertRes.data);
         if (guideRes.status === 200) setGuidesList(guideRes.data);
@@ -45,28 +139,36 @@ const Project_Details = () => {
     fetchExpertsAndGuides();
   }, []);
 
-  // Fetch existing project details if project_id is present
+  // Fetch existing project details by project_id
   useEffect(() => {
     async function fetchProjectDetails() {
-      if (!project_id) return;
-
+      if (!project_id) {
+        setExistingProject(null);
+        return;
+      }
       try {
         setLoadingProject(true);
+<<<<<<< HEAD
         const res = await instance.get(`/admin/getproject_by_team_id/${project_id}`);
+=======
+        const res = await instance.get(`/admin/getproject_by_team_id/${project_id}`, { withCredentials: true });
+>>>>>>> 107c49fec248c348ba4562f6a1a6aae9f52b9cd9
         if (res.status === 200 && res.data.length > 0) {
-          console.log();
-          
-          const project = res.data[0];
+          const project = res.data[0]; // Assuming data is an array with project objects
+          setExistingProject(project);
+
+          // Pre-fill form state with fetched project data in case update is allowed
           setProjectName(project.project_name || '');
           setClusterName(project.cluster || '');
           setCore(project.hard_soft || '');
           setDescription(project.description || '');
           setOutcome(project.outcome || '');
 
-          // Optionally fetch and preselect guides/experts if your backend provides this info
-          // Here you may add code to setSelectedGuides and setSelectedExperts if needed
+          // TODO: If backend provides selected experts/guides, prefill selected arrays here
+
         } else {
-          alert('Project data not found');
+          // No existing project
+          setExistingProject(null);
         }
       } catch (error) {
         console.error('Error fetching project:', error);
@@ -78,207 +180,204 @@ const Project_Details = () => {
     fetchProjectDetails();
   }, [project_id]);
 
+  // Toggle expert selection
   const toggleExpertSelection = (reg_num) => {
     setSelectedExperts((prev) =>
       prev.includes(reg_num) ? prev.filter((e) => e !== reg_num) : [...prev, reg_num]
     );
   };
 
+  // Toggle guide selection
   const toggleGuideSelection = (reg_num) => {
     setSelectedGuides((prev) =>
       prev.includes(reg_num) ? prev.filter((g) => g !== reg_num) : [...prev, reg_num]
     );
   };
 
+  // Form submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError('');
 
     if (selectedExperts.length < 3 || selectedGuides.length < 3) {
-      alert('Please select at least 3 experts and 3 guides.');
+      setFormError('Please select at least 3 experts and 3 guides.');
+      return;
+    }
+
+    if (!projectName.trim() || !clusterName || !core || !description.trim() || !outcome.trim()) {
+      setFormError('Please fill all required fields.');
       return;
     }
 
     try {
       let finalProjectId = project_id;
 
-      // If no project_id, create new project
+      // If no project exists, create new
       if (!project_id) {
         const response = await instance.post(
-          `http://localhost:1234/student/addproject/${userselector.project_type}/${userselector.reg_num}`,
+          `/student/addproject/${userselector.project_type}/${userselector.reg_num}`,
           {
             project_name: projectName,
             cluster: clusterName,
+            hard_soft: core,
             description,
             outcome,
-            hard_soft: core,
-          }
+            sub_experts: selectedExperts,
+            guides: selectedGuides,
+          },
+          { withCredentials: true }
         );
 
-        const { message, project_id: newId } = response.data;
-        if (!newId) throw new Error('Project ID not returned from backend');
-        alert(message || 'Project added.');
-        finalProjectId = newId;
+        if (response.status === 201 || response.status === 200) {
+          alert('Project created successfully!');
+          finalProjectId = response.data.project_id;
+          // Optionally refresh or set project_id state here if used elsewhere
+          setExistingProject(response.data);
+        } else {
+          alert('Failed to create project.');
+        }
       } else {
-        // You can add update API call here if you want to update the project info
-        // For now, we just reuse the existing project_id to send requests
-      }
-
-      // Send guide requests
-      await instance.post('/guide/sent_request_to_guide', {
-        from_team_id: teamselector[0].team_id,
-        project_id: finalProjectId,
-        project_name: projectName.trim(),
-        to_guide_reg_num: selectedGuides,
-      });
-
-      // Send expert requests
-      await instance.post('/sub_expert/sent_request_to_expert', {
-        from_team_id: teamselector[0].team_id,
-        project_id: finalProjectId,
-        project_name: projectName.trim(),
-        to_expert_reg_num: selectedExperts,
-      });
-
-      alert('Requests sent successfully.');
-
-      // Reset form if needed
-      if (!project_id) {
-        setProjectName('');
-        setClusterName('');
-        setCore('');
-        setDescription('');
-        setOutcome('');
-        setSelectedExperts([]);
-        setSelectedGuides([]);
+        // TODO: Add update project logic if needed
+        alert('Project update feature coming soon!');
       }
     } catch (error) {
-      console.error('Submit error:', error);
-      alert(error?.response?.data?.message || 'Failed to submit project.');
+      console.error('Error submitting project:', error);
+      alert('Error occurred while submitting the project.');
     }
   };
 
-  if (loading || loadingProject) return <div className="p-4">Loading...</div>;
+  if (loading || loadingProject) return <LoadingSpinner />;
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-3xl mx-auto p-6 bg-white rounded shadow">
-      <h2 className="text-3xl font-bold text-center mb-6">📄 Project Submission</h2>
-
-      <div className="mb-4">
-        <label className="block mb-1 font-medium">Project Name</label>
-        <input
-          type="text"
-          value={projectName}
-          onChange={(e) => setProjectName(e.target.value)}
-          className="w-full border px-3 py-2 rounded"
-          required
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-1 font-medium">Cluster Name</label>
-        <select
-          value={clusterName}
-          onChange={(e) => setClusterName(e.target.value)}
-          className="w-full border px-3 py-2 rounded"
-          required
+    <div className="min-h-screen p-8 bg--100">
+      {!existingProject ? (
+        <form
+          onSubmit={handleSubmit}
+          className="max-w-4xl mx-auto bg-white p-8 rounded shadow space-y-6"
         >
-          <option value="">Select cluster</option>
-          <option value="CSE">CSE</option>
-          <option value="AIML">AIML</option>
-          <option value="AIDS">AIDS</option>
-          <option value="IT">IT</option>
-        </select>
-      </div>
+          <h1 className="text-3xl font-bold mb-6 text-center">Create Your Project</h1>
 
-      <div className="mb-4">
-        <label className="block mb-1 font-medium">Hard-Soft</label>
-        <select
-          value={core}
-          onChange={(e) => setCore(e.target.value)}
-          className="w-full border px-3 py-2 rounded"
-          required
-        >
-          <option value="">Select</option>
-          <option value="hardware">Hardware</option>
-          <option value="software">Software</option>
-        </select>
-      </div>
+          <div>
+            <label className="block mb-1 font-semibold" htmlFor="projectName">
+              Project Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="projectName"
+              type="text"
+              placeholder="Enter project name"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
 
-      <div className="mb-4">
-        <label className="block mb-1 font-medium">Project Description</label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="w-full border px-3 py-2 rounded"
-          rows={4}
-          required
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-1 font-medium">Expected Outcome</label>
-        <textarea
-          value={outcome}
-          onChange={(e) => setOutcome(e.target.value)}
-          className="w-full border px-3 py-2 rounded"
-          rows={3}
-          required
-        />
-      </div>
-
-      {/* Expert Selection */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">Select at least 3 Experts:</h3>
-        <div className="flex flex-wrap gap-2">
-          {expertsList.map((expert) => (
-            <button
-              key={expert.reg_num}
-              type="button"
-              onClick={() => toggleExpertSelection(expert.reg_num)}
-              className={`px-3 py-1 rounded-full border ${
-                selectedExperts.includes(expert.reg_num)
-                  ? 'bg-purple-500 text-white border-purple-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
-              }`}
+          <div>
+            <label className="block mb-1 font-semibold" htmlFor="clusterName">
+              Cluster <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="clusterName"
+              value={clusterName}
+              onChange={(e) => setClusterName(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
             >
-              {expert.name}
-            </button>
-          ))}
-        </div>
-        <p className="text-sm mt-1 text-gray-500">Selected: {selectedExperts.length}</p>
-      </div>
+              <option value="">Select Cluster</option>
+              <option value="IOT">IOT</option>
+              <option value="Networking">Networking</option>
+              <option value="Web">Web</option>
+              <option value="Cloud">Cloud</option>
+              <option value="AI/ML">AI/ML</option>
+            </select>
+          </div>
 
-      {/* Guide Selection */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">Select at least 3 Guides:</h3>
-        <div className="flex flex-wrap gap-2">
-          {guidesList.map((guide) => (
+          <div>
+            <label className="block mb-1 font-semibold">Type (Hard/Soft) <span className="text-red-500">*</span></label>
+            <div className="flex gap-4">
+              {['Hard', 'Soft'].map((type) => (
+                <label key={type} className="inline-flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="coreType"
+                    value={type}
+                    checked={core === type}
+                    onChange={() => setCore(type)}
+                    required
+                  />
+                  <span>{type}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block mb-1 font-semibold" htmlFor="description">
+              Description <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              id="description"
+              rows="4"
+              placeholder="Write a detailed project description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-semibold" htmlFor="outcome">
+              Expected Outcome <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              id="outcome"
+              rows="3"
+              placeholder="Describe the expected outcome"
+              value={outcome}
+              onChange={(e) => setOutcome(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
+
+          {/* Experts selection */}
+          <SelectorButtons
+            title="Sub Experts"
+            items={expertsList}
+            selectedItems={selectedExperts}
+            toggleSelection={toggleExpertSelection}
+            colorClass="bg-indigo-600"
+            minSelectCount={3}
+          />
+
+          {/* Guides selection */}
+          <SelectorButtons
+            title="Guides"
+            items={guidesList}
+            selectedItems={selectedGuides}
+            toggleSelection={toggleGuideSelection}
+            colorClass="bg-green-600"
+            minSelectCount={3}
+          />
+
+          {formError && (
+            <p className="text-red-600 font-semibold text-center">{formError}</p>
+          )}
+
+          <div className="flex justify-center">
             <button
-              key={guide.reg_num}
-              type="button"
-              onClick={() => toggleGuideSelection(guide.reg_num)}
-              className={`px-3 py-1 rounded-full border ${
-                selectedGuides.includes(guide.reg_num)
-                  ? 'bg-green-600 text-white border-green-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-green-100'
-              }`}
+              type="submit"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded transition"
             >
-              {guide.name}
+              Submit Project
             </button>
-          ))}
-        </div>
-        <p className="text-sm mt-1 text-gray-500">Selected: {selectedGuides.length}</p>
-      </div>
-
-      <div className="text-center mt-6">
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-all duration-200"
-        >
-          {project_id ? 'Update Project & Re-send Requests' : 'Submit Project'}
-        </button>
-      </div>
-    </form>
+          </div>
+        </form>
+      ) : (
+        <ProjectDetailsView project={existingProject} />
+      )}
+    </div>
   );
 };
 
