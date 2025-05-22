@@ -42,9 +42,7 @@ function Login() {
           const projectTypeRes = await instance.get(`/student/get_project_type/${reg_num}`);
           const projectType = projectTypeRes.data?.project_type;
 
-          if (projectType === "internal") {
-            navigate("/student");
-          } else if (projectType === "external") {
+          if (projectType === "internal" || projectType == "external") {
             navigate("/student");
           } else {
             setStudentUserData(response.data);
@@ -76,11 +74,6 @@ function Login() {
 
       setShowStudentPopup(false);
 
-      // if (projectType === "INTERNAL") {
-      //   navigate("/student");
-      // } else {
-      //   navigate("/ext_student");
-      // }
       navigate("/student");
     } catch (err) {
       console.error("Failed to update project type", err);
