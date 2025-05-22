@@ -165,4 +165,67 @@
   //   );
   // }
 
- 
+ import React, { useState } from "react";
+import axios from "axios";
+
+function GuideRequestActions({ teamId, myId }) {
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  // API function inside the component file
+  async function updateGuideRequestStatus(status, teamId, myId) {
+    try {
+      if (status !== "accept" && status !== "reject") {
+        throw new Error("Invalid status: must be 'accept' or 'reject'");
+      }
+      if (!teamId || !myId) {
+        throw new Error("teamId and myId are required");
+      }
+
+      const url = `/guide/accept_reject/${status}/${teamId}/${myId}`;
+      const token = localStorage.getItem("token"); // adjust based on your auth system
+
+      const response = await axios.patch(
+        url,
+        {}, // no request body
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data; // success message from backend
+    } catch (error) {
+      if (error.response) {
+        throw new Error(error.response.data || error.response.statusText);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  const handleStatusUpdate = async (status) => {
+    try {
+      setError("");
+      setMessage("Processing...");
+      const result = await updateGuideRequestStatus(status, teamId, myId);
+      setMessage(result);
+    } catch (err) {
+      setError(err.message);
+      setMessage("");
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={() => handleStatusUpdate("accept")}>Accept</button>
+      <button onClick={() => handleStatusUpdate("reject")}>Reject</button>
+
+      {message && <p style={{ color: "green" }}>{message}</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+    </div>
+  );
+}
+
+export default GuideRequestActions;

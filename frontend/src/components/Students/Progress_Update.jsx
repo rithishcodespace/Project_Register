@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import instance from "../../utils/axiosInstance";
 
 const Progress_Update = () => {
   const { reg_num } = useSelector((state) => state.userSlice);
@@ -13,12 +13,10 @@ const Progress_Update = () => {
   const [canUpdate, setCanUpdate] = useState(false);
   const [nextWeekToUpdate, setNextWeekToUpdate] = useState(null);
 
-  // Fetch team ID when component mounts
   useEffect(() => {
     fetchTeamId();
   }, []);
 
-  // Once teamId is set, fetch related data
   useEffect(() => {
     if (teamId) {
       fetchDeadlines(teamId);
@@ -26,12 +24,26 @@ const Progress_Update = () => {
     }
   }, [teamId]);
 
+  // Call decideNextWeek only when both deadlines and verifications are loaded
+  useEffect(() => {
+    if (
+      Object.keys(deadlines).length > 0 &&
+      Array.isArray(verifications) &&
+      verifications.length > 0
+    ) {
+      decideNextWeek(verifications);
+    }
+  }, [deadlines, verifications]);
+
   const fetchTeamId = async () => {
     try {
-      const res = await axios.get(`/student/getTeamDetails/${reg_num}`);
+      const res = await instance.get(`/student/getTeamDetails/${reg_num}`);
+      console.log("Team Details Response:", res.data);
       if (res.data.length > 0) {
         const team_id = res.data[0].team_id;
         setTeamId(team_id);
+      } else {
+        console.warn("No team data found.");
       }
     } catch (err) {
       console.error("Error fetching team ID:", err);
@@ -40,7 +52,8 @@ const Progress_Update = () => {
 
   const fetchDeadlines = async (team_id) => {
     try {
-      const res = await axios.get(`/student/fetchDeadlines/${team_id}`);
+      const res = await instance.get(`/student/fetchDeadlines/${team_id}`);
+      console.log("Deadlines Response:", res.data);
       if (res.data.length > 0) {
         setDeadlines(res.data[0]);
       }
@@ -50,11 +63,14 @@ const Progress_Update = () => {
   };
 
   const fetchVerifications = async (team_id) => {
+    console.log("Fetching verifications for team:", team_id);
     try {
-      const res = await axios.get(`/student/check_week_verified/${team_id}`);
+      const res = await instance.get(
+        `/student/check_week_verified/${team_id}`
+      );
+      console.log("Verifications Response:", res.data);
       if (res.status === 200 && Array.isArray(res.data)) {
         setVerifications(res.data);
-        decideNextWeek(res.data);
       } else {
         setVerifications([]);
       }
@@ -65,19 +81,32 @@ const Progress_Update = () => {
   };
 
   const decideNextWeek = (verifications) => {
+    console.log("decideNextWeek called");
     const verifiedWeeks = verifications
       .filter((v) => v.is_verified === 1)
       .map((v) => v.week_number);
 
     const nextWeek = Math.max(...verifiedWeeks, 0) + 1;
     const today = new Date().toISOString().split("T")[0];
+
     const deadlineDate = deadlines[`week${nextWeek}`];
+    const prevDeadline = deadlines[`week${nextWeek - 1}`];
+
+    console.log("Verified weeks:", verifiedWeeks);
+    console.log("Next week to update:", nextWeek);
+    console.log("Today:", today);
+    console.log("Deadline date:", deadlineDate);
+    console.log("Previous deadline:", prevDeadline);
 
     setCurrentWeek(`Week ${nextWeek}`);
     setNextWeekToUpdate(`week${nextWeek}`);
-    console.log("nextWeek:",nextWeek);
 
-    if (deadlineDate && deadlineDate === today) {
+    if (
+      deadlineDate &&
+      prevDeadline &&
+      new Date(today) > new Date(prevDeadline) &&
+      new Date(today) <= new Date(deadlineDate)
+    ) {
       setCanUpdate(true);
     } else {
       setCanUpdate(false);
@@ -90,7 +119,7 @@ const Progress_Update = () => {
     }
 
     try {
-      const res = await axios.post(
+      const res = await instance.post(
         `/student/update_progress/${nextWeekToUpdate}/${reg_num}/${teamId}`,
         {
           progress: description,

@@ -2,6 +2,93 @@ import React, { useEffect, useState } from 'react';
 import instance from '../../utils/axiosInstance';
 import { useSelector } from 'react-redux';
 
+// Helper component: Loading Spinner
+const LoadingSpinner = () => (
+  <div className="flex justify-center items-center p-6">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+  </div>
+);
+
+// Helper component: Readonly project details display
+const ProjectDetailsView = ({ project }) => {
+  return (
+    <div className="max-w-5xl mx-auto bg-white p-8 rounded shadow space-y-8">
+      {/* Row 1: Project Name & Cluster */}
+      <div className="grid grid-cols-2 gap-6">
+        <div className="flex justify-between">
+          <span className="font-semibold">Project Name:</span>
+          <span>{project.project_name}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="font-semibold">Cluster:</span>
+          <span>{project.cluster}</span>
+        </div>
+      </div>
+
+      {/* Row 2: Project Type & Internal/External */}
+      <div className="grid grid-cols-2 gap-6">
+        <div className="flex justify-between">
+          <span className="font-semibold">Project Type:</span>
+          <span>{project.hard_soft}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="font-semibold">Internal/External:</span>
+          <span>{project.project_type}</span>
+        </div>
+      </div>
+
+      {/* Row 3: Description */}
+      <div>
+        <h3 className="font-semibold mb-1">Description:</h3>
+        <p className="text-gray-700">{project.description}</p>
+      </div>
+
+      {/* Row 4: Expected Outcome */}
+      <div>
+        <h3 className="font-semibold mb-1">Expected Outcome:</h3>
+        <p className="text-gray-700">{project.outcome}</p>
+      </div>
+    </div>
+  );
+};
+
+// Helper component: Experts and Guides Selector Buttons
+const SelectorButtons = ({
+  title,
+  items,
+  selectedItems,
+  toggleSelection,
+  colorClass,
+  minSelectCount = 3,
+}) => {
+  return (
+    <div className="mb-6">
+      <h3 className="text-lg font-semibold mb-2">
+        Select at least {minSelectCount} {title}:
+      </h3>
+      <div className="flex flex-wrap gap-2">
+        {items.map((item) => (
+          <button
+            key={item.reg_num}
+            type="button"
+            onClick={() => toggleSelection(item.reg_num)}
+            className={`px-3 py-1 rounded-full border transition-colors duration-200 ${
+              selectedItems.includes(item.reg_num)
+                ? `${colorClass} text-white border-${colorClass.split('-')[1]}-600`
+                : `bg-white text-gray-700 border-gray-300 hover:bg-${colorClass.split('-')[1]}-100`
+            }`}
+          >
+            {item.name}
+          </button>
+        ))}
+      </div>
+      <p className="text-sm mt-1 text-gray-500">
+        Selected: {selectedItems.length}
+      </p>
+    </div>
+  );
+};
+
 const Project_Details = () => {
   const userselector = useSelector((State) => State.userSlice);
   const teamselector = useSelector((State) => State.teamSlice);
@@ -134,7 +221,7 @@ const Project_Details = () => {
           className="w-full border px-3 py-2 rounded"
           required
         >
-          <option value="">Select cluster</option>
+          <option value="" disabled >Select cluster</option>
           <option value="CSE">CSE</option>
           <option value="AIML">AIML</option>
           <option value="AIDS">AIDS</option>
@@ -150,7 +237,7 @@ const Project_Details = () => {
           className="w-full border px-3 py-2 rounded"
           required
         >
-          <option value="">Select</option>
+          <option value="" disabled>Select</option>
           <option value="hardware">Hardware</option>
           <option value="software">Software</option>
         </select>
