@@ -148,11 +148,7 @@ const Project_Details = () => {
       }
       try {
         setLoadingProject(true);
-<<<<<<< HEAD
-        const res = await instance.get(`/admin/getproject_by_team_id/${project_id}`);
-=======
         const res = await instance.get(`/admin/getproject_by_team_id/${project_id}`, { withCredentials: true });
->>>>>>> 107c49fec248c348ba4562f6a1a6aae9f52b9cd9
         if (res.status === 200 && res.data.length > 0) {
           const project = res.data[0]; // Assuming data is an array with project objects
           setExistingProject(project);

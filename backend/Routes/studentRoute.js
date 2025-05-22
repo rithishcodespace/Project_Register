@@ -76,7 +76,7 @@ router.post("/student/join_request", userAuth, (req, res, next) => {
               if(error)return next(error);
               if(result.length >= 3)return next(createError.BadRequest("You can't form a team more than 4 members1"));
                // validating project_type
-              let query = "SELECT project_type,company FROM users WHERE reg_num IN (?,?)";
+              let query = "SELECT project_type,company_name FROM users WHERE reg_num IN (?,?)";
               db.query(query,[from_reg_num,to_reg_num],(error,result) => {
                 if(error)return next(error);
                 if (result.length != 2) {
@@ -84,8 +84,8 @@ router.post("/student/join_request", userAuth, (req, res, next) => {
                 }
                 const type1 = result[0].project_type;
                 const type2 = result[1].project_type;
-                const company1 = result[0].company;
-                const company2 = result[1].company;
+                const company1 = result[0].company_name;
+                const company2 = result[1].company_name;
                 if(type1 === null || type2 === null)return next(createError.BadRequest("User haven't entered his project_type yet!")); // should be handled by mathan
                 else if(type1.toLowerCase() !== type2.toLowerCase()) {
                 return res.status(500).send("BOTH MEMBERS SHOULD BE EITHER INTERNAL OR EXTERNAL!!");
