@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import instance from '../../utils/axiosInstance';
+import { useSelector } from 'react-redux';
 
 // Helper component: Loading Spinner
 const LoadingSpinner = () => (
@@ -220,7 +221,7 @@ const Project_Details = () => {
           className="w-full border px-3 py-2 rounded"
           required
         >
-          <option value="">Select cluster</option>
+          <option value="" disabled >Select cluster</option>
           <option value="CSE">CSE</option>
           <option value="AIML">AIML</option>
           <option value="AIDS">AIDS</option>
@@ -236,7 +237,7 @@ const Project_Details = () => {
           className="w-full border px-3 py-2 rounded"
           required
         >
-          <option value="">Select</option>
+          <option value="" disabled>Select</option>
           <option value="hardware">Hardware</option>
           <option value="software">Software</option>
         </select>
