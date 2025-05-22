@@ -86,14 +86,26 @@ function InviteForm({ inviteForm, handleInviteChange, handleInviteSubmit, depart
 function TeamMembersList({ teamMembers, pendingInvitations, selector }) {
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-[50%]">
       {/* Team Leader */}
-      <div className="border w-full p-4 bg-white rounded-xl">
-        <p className="bg-white"><strong className="bg-white">Leader:</strong> {selector.name}</p>
-        <p className="bg-white"><strong className="bg-white">Email:</strong> {selector.emailId}</p>
-        <p className="bg-white"><strong className="bg-white">Register Number:</strong> {selector.reg_num}</p>
-        <p className="text-green-600 bg-white font-semibold">Status: Accepted</p>
-      </div>
+      <div className="border w-full p-4 bg-white rounded-xl space-y-2">
+  <div className="flex bg-white">
+    <strong className="w-[50%] bg-white">Leader:</strong>
+    <span className="w-[50%] bg-white">{selector.name}</span>
+  </div>
+  <div className="flex bg-white">
+    <strong className="w-[50%] bg-white">Email:</strong>
+    <span className="w-[50%] bg-white">{selector.emailId}</span>
+  </div>
+  <div className="flex bg-white">
+    <strong className="w-[50%] bg-white">Register Number:</strong>
+    <span className="w-[50%] bg-white">{selector.reg_num}</span>
+  </div>
+  <div className="flex bg-white">
+    <strong className="w-[50%] bg-white">Status:</strong>
+    <span className="w-[50%] text-green-600 font-semibold bg-white">Accepted</span>
+  </div>
+</div>
 
       {/* Accepted Members */}
       {teamMembers.filter(member => member.status === 'accept').map((member, idx) => (
