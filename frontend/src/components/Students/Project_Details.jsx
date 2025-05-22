@@ -33,7 +33,7 @@ const ProjectDetailsView = ({ project }) => {
         </div>
         <div className="flex justify-between">
           <span className="font-semibold">Internal/External:</span>
-          <span>{project.internal_external}</span>
+          <span>{project.project_type}</span>
         </div>
       </div>
 
@@ -42,7 +42,7 @@ const ProjectDetailsView = ({ project }) => {
         <h3 className="font-semibold mb-1">Description:</h3>
         <p className="text-gray-700">{project.description}</p>
       </div>
-
+s
       {/* Row 4: Expected Outcome */}
       <div>
         <h3 className="font-semibold mb-1">Expected Outcome:</h3>
