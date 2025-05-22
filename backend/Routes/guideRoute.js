@@ -177,7 +177,7 @@ router.patch("/guide/accept_reject/:status/:team_id/:my_id",userAuth, (req, res,
         next(error);
     }
 });
-
+  
 
 // adds reply to the query
 
