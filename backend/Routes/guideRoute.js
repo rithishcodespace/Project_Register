@@ -337,5 +337,22 @@ router.get("/guide/fetchDeadlines/:team_id",(req,res,next) => {
   }
 })
 
+// checks if already updated
+router.get("/guide/checks_already_guide_updated_weekly_progress/:team_id/:week",(req,res,next) => {
+  try{
+    const{team_id,week} = req.params;
+    if(!team_id || !week)return next(createError.BadRequest("data is missing!"));
+    let sql = "select is_verified from weekly_logs_verification where team_id = ? and week = ?";
+    db.query(sql,[team_id,week],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error)
+  }
+})
+
 
 module.exports = router;
