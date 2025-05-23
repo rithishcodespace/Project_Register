@@ -59,7 +59,7 @@ function Student_expert_review() {
 
   const markAttendance = async (projectId) => {
     try {
-      await instance.patch(`/sub_expert/mark_attendance/:team_id`);
+      await instance.patch(`/sub_expert/mark_attendance/${projectId}`);
       setAttendanceMarked((prev) => ({ ...prev, [projectId]: true }));
     } catch (error) {
       console.error("Failed to mark attendance:", error);
