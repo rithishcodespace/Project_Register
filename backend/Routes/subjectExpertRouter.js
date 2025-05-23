@@ -215,11 +215,11 @@ router.get("/sub_expert/fetch_upcoming_reviews/:expert_reg_num",userAuth,(req,re
 
 // conforming the review request by student
 
-router.post("/sub_expert/add_review_details/:request_id/:status",userAuth,(req,res,next) => {
+router.post("/sub_expert/add_review_details/:request_id/:status/:expert_reg_num/:team_id",userAuth,(req,res,next) => {
     try{
       const{project_id,project_name,team_lead,review_date,start_time,venue} = req.body;
-      const{request_id,status} = req.params;
-      if(!project_id || !project_name || !team_lead || !review_date || !start_time || !venue || !request_id || !status)
+      const{request_id,status,expert_reg_num,team_id} = req.params;
+      if(!project_id || !project_name || !team_lead || !review_date || !expert_reg_num || !start_time || !venue || !request_id || !status || !team_id)
       {
         return next(createError.BadRequest("data is missing!"));
       }
@@ -231,8 +231,8 @@ router.post("/sub_expert/add_review_details/:request_id/:status",userAuth,(req,r
         if(status === 'accept')
         {
           // inserting into scheduled reivews
-          let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,venue) values(?,?,?,?,?,?)";
-          db.query(sql,[project_id,project_name,team_lead,review_date,start_time,venue],(error,result) => {
+          let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,venue,expert_reg_num,team_id) values(?,?,?,?,?,?,?,?)";
+          db.query(sql,[project_id,project_name,team_lead,review_date,start_time,venue,expert_reg_num,team_id],(error,result) => {
             if(error) return next(error);
             if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
             // removing request from the review requests

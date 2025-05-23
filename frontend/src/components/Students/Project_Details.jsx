@@ -147,7 +147,7 @@ useEffect(() => {
         if (guideRes.status === 200) setGuidesList(guideRes.data);
       } catch (err) {
         console.error('Fetch Error:', err);
-        alert('Failed to load experts and guides.');
+        alert('Failed to load experts and guides.',err);
       } finally {
         setLoading(false);
       }
@@ -224,7 +224,9 @@ useEffect(() => {
       setSelectedGuides([]);
     } catch (error) {
       console.error('Submit Error:', error);
-      alert(error?.response?.data?.message || 'Failed to submit project.');
+      alert("Failed to submit project. Error: " + response.error.message);
+
+
     }
   };
 
@@ -238,7 +240,7 @@ return (
           Project Details
         </h2>
         <div className="bg-white shadow-lg rounded-xl p-5 border border-gray-200 max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-14 gap-y-4 text-gray-700 bg-white p-4 rounded-lg">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-14 gap-y-4 text-gray-700 bg-white p-4 rounded-lg">
             <Detail label="Project ID" value={projectData[0].project_id} />
             <Detail label="Project Name" value={projectData[0].project_name} />
             <Detail label="Project Type" value={projectData[0].project_type} />

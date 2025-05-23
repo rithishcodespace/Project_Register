@@ -4,7 +4,7 @@ const db = require("../db");
 
 const userAuth = (req, res, next) => {
   try {
-    console.log("Cookies Received:", req.cookies); // Debugging Line
+    console.log("Cookies Received:", req.cookies); 
     
     const token = req.cookies.token; // Directly access the cookie
     if (!token) return res.status(401).json({ success: false, message: "TokenMissing" });

@@ -108,8 +108,8 @@ function Schedule_review() {
           {alreadyRequested ? 'Review Request Already Sent' : 'Send Review Request'}
         </button>
 
-        {message && <p className="text-green-600 font-medium">{message}</p>}
-        {error && <p className="text-red-600 font-medium">{error}</p>}
+        {message && <p className="text-green-600 font-medium bg-white">{message}</p>}
+        {error && <p className="text-red-600 font-medium bg-white">{error}</p>}
         {alreadyRequested && !message && (
           <p className="text-yellow-600 font-medium">
             You’ve already submitted a review request. Please wait for response.

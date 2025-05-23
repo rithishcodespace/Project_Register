@@ -9,6 +9,8 @@ import { useNavigate } from 'react-router-dom';
 import { addTeamStatus } from '../../utils/teamStatus';
 
 function Student_Dashboard() {
+  const userSlice = useSelector((State) => State.userSlice);
+  const teamSelector = useSelector((State) => State.teamSlice);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [reInviteOpen, setReInviteOpen] = useState(false);
   const [teamConformationPending, setteamConformationPending] = useState(false);
@@ -22,8 +24,23 @@ function Student_Dashboard() {
     department: '',
   });
   const [timeline, setTimeline] = useState(null);
+  const [project, setProject] = useState(null);
 
+useEffect(() => {
+  const fetchProjectDetails = async () => {
+    try {
+      const response = await instance.get(`/student/get_project_details/${teamSelector[0].project_id}`);
+      setProject(response.data); 
+      console.log(response.data);
+    } catch (error) {
+      console.error("Error fetching project details:", error);
+    }
+  };
 
+}, [teamSelector]);
+  const readableDate = project && project[0] && new Date(project[0].posted_date).toLocaleString();
+  console.log(readableDate);
+  
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const selector = useSelector((state) => state.userSlice);
@@ -39,9 +56,25 @@ function Student_Dashboard() {
     return email.endsWith('@bitsathy.ac.in');
   };
 
+    const studentInfo = {
+    studentId: "S123456",
+    email: "alex.johnson@university.edu",
+    program: "Computer Science",
+    semester: "Fall 2023",
+    gpa: 3.7,
+    creditsCompleted: 45,
+    upcomingAssignments: [
+      { name: "Data Structures Project", dueDate: "2023-12-15", course: "CS 201" },
+      { name: "Algorithms Quiz", dueDate: "2023-12-18", course: "CS 202" },
+    ]
+  };
+
+  // Sample team data (between 1 and 4 teams)
+   
+
   const fetchTimeline = async () => {
     try {
-      const response = await instance.get('/admin/get_timelines');
+      const response = await instance.get('/admin/get_timelines');        
       if (response.status === 200 && response.data.length > 0) {
         const current = new Date();
         const active = response.data.find(t => {
@@ -168,9 +201,127 @@ function Student_Dashboard() {
 
   if (teamStatus === 1) {
     return (
-      <div className="flex flex-col justify-center items-center h-96">
-        <h1 className="text-3xl font-bold text-green-600">Welcome to your Team Dashboard!</h1>
+       <div className="min-h-screen  p-6">
+      {/* Header */}
+      <header className="mb-6">
+        <h1 className="text-3xl flex justify-center font-bold text-black">Student Dashboard</h1>
+        <p className="flex justify-center mt-2 text-lg  text-gray-600">Welcome back, {userSlice.name} !</p>
+      </header>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Student Info Card */}
+        <div className=" ">
+          <div className='bg-white rounded-lg shadow p-6'><h2 className="text-xl font-semibold mb-2 bg-white text-black">Student Information </h2><hr className='mb-4'/>
+          <div className="space-y-3 bg-white">
+            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Name</span> {userSlice.name}</p>
+            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Email:</span> {userSlice.emailId}</p>
+            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Register Number:</span> {userSlice.reg_num}</p>
+            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Department:</span> {userSlice.dept}</p>
+            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Guide :</span>{teamSelector[0]?.guide_reg_num ? teamSelector[0].guide_reg_num : "Not Assigned"}</p>
+            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Subject Expert:</span> {teamSelector[0]?.guide_reg_num? teamSelector[0].sub_expert_reg_num : "Not Assigned"}</p>
+          </div></div>
+
+          <div className="mt-10 bg-white p-6 rounded-lg shadow ">
+            <h2 className="text-xl font-semibold mb-2 bg-white text-black">Project Details</h2><hr className='mb-4'/>
+            <div className="space-y-6 bg-white">
+                <div  className=" bg-white ">
+                  <div className="flex bg-white justify-between items-start mb-1">
+                    <ul className='bg-white'>
+                    <h3 className="text-lg bg-white font-medium  text-gray-800">  Project Name: {project && project.length > 0 && project[0].project_name ? project[0].project_name : "Project is not created yet ..."}</h3>
+                    <h3 className="text-lg bg-white font-medium text-gray-800">Project Id: {project && project.length > 0 && project[0].project_id?project[0].project_id:"Project is not create yet ..."}</h3>
+                    <h3 className="text-lg bg-white font-medium text-gray-800">Cluster  : {project && project.length > 0 && project[0]?.cluster?project[0].cluster:"Project is not create yet ..."}</h3>
+                    <h3 className="text-lg bg-white font-medium text-gray-800">Outcome : {project && project.length > 0 && project[0].outcome?project[0].outcome:"Project is not create yet ..."}</h3>
+                    <h3 className="text-lg bg-white font-medium text-gray-800">Project Taking Date  : {readableDate}?:"Project is not created yet ..."</h3>
+                    </ul>
+                  </div>
+                  
+                  
+                </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="col-2 space-y-6">
+          {/* Upcoming Assignments */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4 text-black bg-white">Upcoming Deadline</h2><hr className='mb-4'/>
+            <div className="space-y-4 bg-white">
+              {studentInfo.upcomingAssignments.map((assignment, index) => (
+                <div key={index} className="border-l-4 bg-white border-blue-500 pl-4 py-2">
+                  <h3 className="font-medium bg-white text-gray-800">----</h3>
+                  <p className="text-sm text-gray-600 bg-white">---- ------- ------</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Teams Section */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4  text-black bg-white">Your Teams</h2><hr className='mb-4'/>
+            <div className="space-y-6 bg-white">
+  <div className=" rounded-lg bg-white p-4">
+  <h4 className="font-medium text-gray-700 bg-white mb-2">
+    Team ID: <span className="text-blue-500 bg-white font-semibold">{teamSelector[0]?.team_id}</span>
+  </h4>
+
+  <div className="grid grid-cols-1 md:grid-cols-2  bg-white gap-4">
+
+    {/* Check if leader exists */}
+    {teamSelector.length > 0 && teamSelector[teamSelector.length - 1].teamLeader && (() => {
+      const leader = teamSelector[teamSelector.length - 1].teamLeader;
+      
+      return (
+        <div key="team-leader" className="flex items-start space-x-4 bg-yellow-100 p-3 rounded shadow-sm">
+          <div className="h-10 w-10 rounded-full bg-yellow-200 flex items-center justify-center text-yellow-700 font-bold text-lg">
+            {leader.name.charAt(0)}
+          </div>
+          <div className='bg-yellow-100'>
+            <p className="text-sm bg-yellow-100 font-semibold text-yellow-900">{leader.name}</p>
+            <p className="text-xs bg-yellow-100 text-yellow-700 font-semibold">Team Leader</p>
+            <p className="text-xs bg-yellow-100 text-yellow-800 mt-1">Reg No: {leader.reg_num}</p>
+            <p className="text-xs bg-yellow-100 text-yellow-800">Email: {leader.emailId}</p>
+            <p className="text-xs bg-yellow-100 text-yellow-800">Dept: {leader.dept}</p>
+          </div>
+        </div>
+      );
+    })()}
+
+    {/* Render all members except the leader */}
+    {teamSelector.map((member, idx) => {
+      if (!member || !member.name) return null;
+
+      const leader = teamSelector[teamSelector.length - 1].teamLeader;
+
+      // Skip member if reg_num equals leader's reg_num
+      if (leader && member.reg_num === leader.reg_num) return null;
+
+      return (
+        <div key={`member-${idx}-1`} className="flex items-start space-x-4 bg-blue-100 p-3 rounded shadow-sm">
+          <div className="h-10 w-10 rounded-full bg-blue-200 flex items-center justify-center text-blue-700 font-bold text-lg">
+            {member.name.charAt(0)}
+          </div>
+          <div className='bg-blue-100'>
+            <p className="text-sm font-semibold bg-blue-100 text-gray-800">{member.name}</p>
+            <p className="text-xs bg-blue-100 text-gray-500">Team Member</p>
+            <p className="text-xs bg-blue-100 text-gray-600 mt-1">Reg No: {member.reg_num}</p>
+            <p className="text-xs bg-blue-100 text-gray-600">Email: {member.emailId}</p>
+            <p className="text-xs bg-blue-100 text-gray-600">Dept: {member.dept}</p>
+          </div>
+        </div>
+      );
+    })}
+
+  </div>
+</div>
+
+
+</div>
+
+          </div>
+        </div>
       </div>
+    </div>
     );
   }
 
