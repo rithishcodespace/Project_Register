@@ -1,6 +1,6 @@
-// import React, { useState, useEffect } from "react";
-// import instance from "../../utils/axiosInstance";
-// import { useSelector } from "react-redux";
+
+
+// import React from 'react'
 
 // function Student_expert_review() {
 //   const [projects, setProjects] = useState([]);
@@ -27,28 +27,33 @@
 
 //   useEffect(() => {
 //     const interval = setInterval(() => {
+//       const now = Date.now();
+
 //       if (activeReview) {
-//         const now = Date.now();
 //         const elapsed = Math.floor((now - activeReview.startTime) / 1000);
 //         const projectId = activeReview.projectId;
+//         const teamId = activeReview.teamId;
+
 //         setTimers((prev) => ({ ...prev, [projectId]: elapsed }));
-//         if (elapsed >= 60 && !attendanceMarked[projectId]) {
-//           markAttendance(projectId);
+
+//         if (elapsed >= 60 && !attendanceMarked[teamId]) {
+//           markAttendance(teamId);
 //         }
 //       }
 
-//       const now = new Date();
+//       const nowDate = new Date();
 //       projects.forEach((project) => {
 //         const scheduled = new Date(`${project.review_date}T${project.start_time}`);
-//         const diff = now - scheduled;
+//         const diff = nowDate - scheduled;
+
 //         if (
 //           diff > 2 * 60 * 60 * 1000 &&
-//           !attendanceMarked[project.project_id] &&
-//           !markedAbsent[project.project_id]
+//           !attendanceMarked[project.team_id] &&
+//           !markedAbsent[project.team_id]
 //         ) {
 //           setMarkedAbsent((prev) => ({
 //             ...prev,
-//             [project.project_id]: true,
+//             [project.team_id]: true,
 //           }));
 //         }
 //       });
@@ -57,23 +62,23 @@
 //     return () => clearInterval(interval);
 //   }, [activeReview, attendanceMarked, markedAbsent, projects]);
 
-//   const markAttendance = async (projectId) => {
+//   const markAttendance = async (teamId) => {
 //     try {
-//       await instance.patch(`/sub_expert/mark_attendance/${projectId}`);
-//       setAttendanceMarked((prev) => ({ ...prev, [projectId]: true }));
+//       await instance.patch(`/sub_expert/mark_attendance/${teamId}`);
+//       setAttendanceMarked((prev) => ({ ...prev, [teamId]: true }));
 //     } catch (error) {
 //       console.error("Failed to mark attendance:", error);
 //     }
 //   };
 
-//   const handleStartReview = (projectId, scheduledDate, startTime) => {
+//   const handleStartReview = (projectId, teamId, scheduledDate, startTime) => {
 //     const now = new Date();
 //     const scheduled = new Date(`${scheduledDate}T${startTime}`);
 //     if (now - scheduled > 2 * 60 * 60 * 1000) {
 //       alert("Review cannot be started. You are marked absent.");
 //       return;
 //     }
-//     setActiveReview({ projectId, startTime: Date.now() });
+//     setActiveReview({ projectId, teamId, startTime: Date.now() });
 //     setTimers((prev) => ({ ...prev, [projectId]: 0 }));
 //   };
 
@@ -99,10 +104,11 @@
 //           <div className="space-y-6">
 //             {projects.map((project) => {
 //               const projectId = project.project_id;
+//               const teamId = project.team_id;
 //               const isActive = activeReview?.projectId === projectId;
 //               const timerValue = timers[projectId] || 0;
-//               const isPresent = attendanceMarked[projectId];
-//               const isAbsent = markedAbsent[projectId];
+//               const isPresent = attendanceMarked[teamId];
+//               const isAbsent = markedAbsent[teamId];
 
 //               const datePart = new Date(project.review_date).toLocaleDateString();
 //               const timePart = project.start_time;
@@ -110,7 +116,7 @@
 //               const now = new Date();
 //               const scheduled = new Date(`${project.review_date}T${project.start_time}`);
 //               const diffInMs = now - scheduled;
-//               const isBeforeScheduledTime = diffInMs < 0;
+//               const showBeforeTime = diffInMs < 0;
 
 //               return (
 //                 <div
@@ -140,91 +146,37 @@
 //                         </span>
 //                       </div>
 
-// <<<<<<< HEAD
-//       <div className="mt-4 bg-white">
-//         <p className="bg-white font-medium text-gray-800">
-//           Timer: {formatTime(timerValue)}
-//         </p>
-//         <p className="text-green-600 bg-white font-semibold mt-2">
-//           {isPresent && " Attendance Marked"}
-//         </p>
-//         {!isPresent && isAbsent && (
-//           <p className="text-red-600 bg-white font-semibold mt-2">Absent</p>
-//         )}
-//         {!isPresent && !isAbsent && showBeforeTime && (
-//           <p className="text-yellow-600 font-semibold mt-2">
-//             Review time has not started yet
-//           </p>
-//         )}
-//       </div>
+//                       <div className="mt-4">
+//                         <p className="text-green-600 font-semibold mt-2">
+//                           {isPresent && "Attendance Marked"}
+//                         </p>
+//                         {!isPresent && isAbsent && (
+//                           <p className="text-red-600 bg-white font-semibold mt-2">Absent</p>
+//                         )}
+//                         {!isPresent && !isAbsent && showBeforeTime && (
+//                           <p className="text-yellow-600 font-semibold mt-2">
+//                             Review time has not started yet
+//                           </p>
+//                         )}
+//                       </div>
 
-//       <div className="mt-4 flex gap-4">
-//         <button
-//           onClick={() => handleStartReview(projectId, project.review_date)}
-//           disabled={isActive || isAbsent || showBeforeTime}
-//           className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400"
-//         >
-//           Start Review
-//         </button>
-//         <button
-//           onClick={handleStopReview}
-//           disabled={!isActive}
-//           className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-400"
-//         >
-//           Stop Review
-//         </button>
-//       </div>
-//     </div>
-//   );
-// })}
-
-// =======
-//                       {isPresent && (
-//                         <span
-//                           role="status"
-//                           aria-label="Attendance marked"
-//                           className="inline-block px-3 py-1 text-sm bg-green-100 text-green-800 rounded-full"
-//                         >
-//                           ✅ Attendance
-//                         </span>
-//                       )}
-//                       {!isPresent && isAbsent && (
-//                         <span
-//                           role="status"
-//                           aria-label="Marked absent"
-//                           className="inline-block px-3 py-1 text-sm bg-red-100 text-red-800 rounded-full"
-//                         >
-//                           🚫 Absent
-//                         </span>
-//                       )}
-//                       {!isPresent && !isAbsent && isBeforeScheduledTime && (
-//                         <span
-//                           role="status"
-//                           aria-label="Review not started"
-//                           className="inline-block px-3 py-1 text-sm bg-yellow-100 text-yellow-800 rounded-full"
-//                         >
-//                           ⏳ Not Started
-//                         </span>
-//                       )}
-
-//                       <div className="mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+//                       <div className="mt-4 flex gap-4">
 //                         <button
 //                           onClick={() =>
-//                             handleStartReview(projectId, project.review_date, project.start_time)
+//                             handleStartReview(projectId, teamId, project.review_date, project.start_time)
 //                           }
-//                           disabled={isActive || isAbsent || isBeforeScheduledTime}
-//                           aria-label={`Start review for ${project.project_name}`}
-//                           className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition w-full sm:w-auto"
+//                           disabled={isActive || isAbsent || showBeforeTime || isPresent}
+
+//                           className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400"
 //                         >
-//                           Start
+//                           Start Review
 //                         </button>
 //                         <button
 //                           onClick={handleStopReview}
 //                           disabled={!isActive}
-//                           aria-label={`Stop review for ${project.project_name}`}
-//                           className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition w-full sm:w-auto"
+//                           className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-400"
 //                         >
-//                           Stop
+//                           Stop Review
 //                         </button>
 //                       </div>
 //                     </div>
@@ -235,17 +187,14 @@
 //           </div>
 //         )}
 //       </div>
-// >>>>>>> bf9afa7f4598a90379899fd9289a4521016b4d89
 //     </div>
-//   );
+//   );s
 // }
 
 // export default Student_expert_review;
-// <<<<<<< HEAD
 
 
-// =======
-// >>>>>>> bf9afa7f4598a90379899fd9289a4521016b4d89
+
 
 import React from 'react'
 
