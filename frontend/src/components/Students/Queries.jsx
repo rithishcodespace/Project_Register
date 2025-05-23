@@ -19,7 +19,7 @@ function Queries() {
     try {
       const token = localStorage.getItem("accessToken");
       await instance.post(
-        `/student_query/${name.name}/${selector[0].guide_reg_num}`,
+        `/student/add_query/${name.name}/${selector[0].guide_reg_num}`,
         {
           team_id: selector[0].team_id,
           project_id: selector[0].project_id,

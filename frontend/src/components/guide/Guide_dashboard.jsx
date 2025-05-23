@@ -104,33 +104,44 @@ function Guide_dashboard() {
    
         <Card icon={<Users className="text-purple-600 bg-white" size={32} />} label="Assigned Teams" value={mentoredTeams.length} />
         <Card icon={<ClipboardList className="text-green-600 bg-white" size={32} />} label="Ongoing Projects" value={mentoredTeams.length} />
-        <Card icon={<Check className="text-green-500 bg-white" size={32} />} label="Completed Project Teams" value={Math.floor(mentoredTeams.length / 2)} />
+        <Card icon={<Check className="text-green-500 bg-white" size={32} />} label="Completed Project Teams" value={Math.floor(0)} />
 
       </div>
 
-      {/* Team Progress Pie Chart */}
-      <div className="bg-white p-6 rounded-2xl shadow-md w-full max-w-4xl mx-auto">
-        <h2 className="text-2xl font-semibold mb-4 text-center bg-white">Team Progress Overview</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart style={{ outline: 'none' }}>
-            <Pie
-              data={progressData}
-              dataKey="value"
-              nameKey="name"
-              outerRadius={100}
-              innerRadius={50}
-              label
-              style={{ outline: 'none' }}
-            >
-              {progressData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend verticalAlign="bottom" height={36} />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
+
+      <div className="mt-10 bg-white p-6 rounded-xl shadow-md">
+  <h2 className="text-xl font-semibold mb-4 bg-white text-black">Mentored Teams Overview</h2>
+  <table className="w-full table-auto -collapse">
+    <thead>
+      <tr className="bg-gray-100 text-left">
+        <th className="p-3 bg-white border-b">Team ID</th>
+        <th className="p-3 bg-white border-b">Project ID</th>
+        <th className="p-3 bg-white border-b">Project Name</th>
+        <th className="p-3 bg-white border-b">Weeks Verified</th>
+        <th className="p-3 bg-white border-b">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {mentoredTeams.map((team, index) => (
+        <tr key={team.from_team_id} className="hover:bg-gray-50">
+          <td className="p-3 bg-white border-t">{team.from_team_id}</td>
+          <td className="p-3 bg-white border-t">{team.project_id}</td>
+          <td className="p-3 bg-white border-t">{team.project_name}</td>
+          <td className="p-3 bg-white border-t text-left">~ / 12</td>
+          
+          <td className="p-3 bg-white border-t">
+            <span className={`px-2 py-1 text-sm rounded-full font-medium 
+              ${team.status === 'accept' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+              {team.status}
+            </span>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>  
+</div>
+
+
 
       {/* Invitation Popup */}
       {showPopup && (
