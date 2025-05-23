@@ -9,14 +9,17 @@ const SubjectExpertDashboard = () => {
   const [reviewRequests, setReviewRequests] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const selector = useSelector((Store) => Store.userSlice);
+  const [selectedReview, setSelectedReview] = useState(null); // store the selected review to accept
+  const [venueInput, setVenueInput] = useState("");           // user-entered venue
+
 
   function formatDateOnly(date) {
-  const d = new Date(date);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
+    const d = new Date(date);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
 
   // Fetch team invitations
   async function fetchInvitations() {
@@ -40,7 +43,7 @@ const SubjectExpertDashboard = () => {
     try {
       const response = await instance.get(`/sub_expert/fetch_review_requests/${selector.reg_num}`);
       if (response.status === 200 && Array.isArray(response.data)) {
-               
+
         setReviewRequests(response.data);
       } else {
         setReviewRequests([]);
@@ -88,47 +91,71 @@ const SubjectExpertDashboard = () => {
 
   // Single function for accepting/rejecting reviews
   const handleReview = async (status, req) => {
-    try {
-      const url = `/sub_expert/add_review_details/${req.request_id}/${status}/${selector.reg_num}/${req.team_id}`;
-
-      let new_review_date = formatDateOnly(req.review_date);
-      if (status === "accept") {
-        
+    if (status === "accept") {
+      // First step: Show input field
+      setSelectedReview(req);  // store the request to be accepted
+    } else if (status === "reject") {
+      // Directly reject as before
+      try {
+        const url = `/sub_expert/add_review_details/${req.request_id}/${status}/${selector.reg_num}/${req.team_id}`;
+        const new_review_date = formatDateOnly(req.review_date);
         const payload = {
           project_id: req.project_id,
           project_name: req.project_name,
           team_lead: req.team_lead,
           review_date: new_review_date,
           start_time: req.start_time,
-          venue: "Bir",
-          request_id:req.request_id,
-          status:status,
+          venue: "Biw",
+          request_id: req.request_id,
+          status: status
         };
         const response = await instance.post(url, payload);
-        if (response.status === 200) {
-          alert(`Review for ${req.project_name} accepted and scheduled!`);
-          setReviewRequests(prev => prev.filter(r => r.request_id !== req.request_id));
-        }
-      } else if (status === "reject") { const payload = {
-          project_id: req.project_id,
-          project_name: req.project_name,
-          team_lead: req.team_lead,
-          review_date: new_review_date,
-          start_time: req.start_time,
-          venue: "Biw",
-          request_id:req.request_id,
-          status:status}
-        const response = await instance.post(url, payload); // No payload needed
         if (response.status === 200) {
           alert(`Review request ${req.request_id} rejected.`);
           setReviewRequests(prev => prev.filter(r => r.request_id !== req.request_id));
         }
+      } catch (error) {
+        alert("Something went wrong while rejecting.");
+        console.error(error);
+      }
+    }
+  };
+  ;
+
+  const handleConfirmAccept = async () => {
+    if (!venueInput || !selectedReview) {
+      alert("Please enter venue.");
+      return;
+    }
+
+    try {
+      const req = selectedReview;
+      const url = `/sub_expert/add_review_details/${req.request_id}/accept/${selector.reg_num}/${req.team_id}`;
+      const new_review_date = formatDateOnly(req.review_date);
+      const payload = {
+        project_id: req.project_id,
+        project_name: req.project_name,
+        team_lead: req.team_lead,
+        review_date: new_review_date,
+        start_time: req.start_time,
+        venue: venueInput,
+        request_id: req.request_id,
+        status: "accept",
+      };
+
+      const response = await instance.post(url, payload);
+      if (response.status === 200) {
+        alert(`Review for ${req.project_name} accepted and scheduled!`);
+        setReviewRequests(prev => prev.filter(r => r.request_id !== req.request_id));
+        setSelectedReview(null); // clear selection
+        setVenueInput(""); // clear input
       }
     } catch (error) {
-      alert("Something went wrong while processing the review request.");
+      alert("Something went wrong during confirmation.");
       console.error(error);
     }
   };
+
 
   const handleClose = () => {
     setShowPopup(false);
@@ -154,85 +181,101 @@ const SubjectExpertDashboard = () => {
 
       {/* Popup */}
       {showPopup && (
-  <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-    <div className="relative w-full max-w-xl mx-4 bg-white rounded-2xl shadow-2xl p-6 animate-fade-in">
-      <button
-        onClick={handleClose}
-        className="absolute top-3 right-4 text-gray-400 hover:text-red-500 text-2xl"
-        aria-label="Close"
-      >
-        &times;
-      </button>
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+          <div className="relative w-full max-w-xl mx-4 bg-white rounded-2xl shadow-2xl p-6 animate-fade-in">
+            <button
+              onClick={handleClose}
+              className="absolute top-3 right-4 text-gray-400 hover:text-red-500 text-2xl"
+              aria-label="Close"
+            >
+              &times;
+            </button>
 
-      <h2 className="text-3xl font-bold bg-white text-center text-gray-800 mb-6">Notifications</h2>
+            <h2 className="text-3xl font-bold bg-white text-center text-gray-800 mb-6">Notifications</h2>
 
-      {(invitations.length === 0 && reviewRequests.length === 0) ? (
-        <p className="text-center bg-white text-gray-500">No notifications at the moment.</p>
-      ) : (
-        <div className="space-y-8 bg-white max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-purple-300">
-          
-          {/* Team Invitations */}
-          {invitations.length > 0 && (
-            <div>
-              <div className="space-y-4">
-                {invitations.map((invite) => (
-                  <div key={`invite-${invite.from_team_id}`} className="p-4 rounded-xl border border-purple-200 shadow-sm">
-                    <p className="font-semibold text-gray-800">Team: {invite.from_team_id}</p>
-                    <p className="text-gray-600">Project: {invite.project_name}</p>
-                    <div className="flex justify-end gap-3 mt-3">
-                      <button
-                        onClick={() => handleAccept(invite.from_team_id)}
-                        className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-1.5 rounded-lg text-sm"
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={() => handleReject(invite.from_team_id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm"
-                      >
-                        Reject
-                      </button>
+            {(invitations.length === 0 && reviewRequests.length === 0) ? (
+              <p className="text-center bg-white text-gray-500">No notifications at the moment.</p>
+            ) : (
+              <div className="space-y-8 bg-white max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-purple-300">
+
+                {/* Team Invitations */}
+                {invitations.length > 0 && (
+                  <div className='rounded-xl'>
+                    <div className="space-y-4 rounded-xl">
+                      {invitations.map((invite) => (
+                        <div key={`invite-${invite.from_team_id}`} className="p-4 bg-white rounded-xl border border-purple-200 shadow-sm">
+                          <p className=" bg-white font-semibold text-gray-800">Team: {invite.from_team_id}</p>
+                          <p className=" bg-white text-gray-600">Project: {invite.project_name}</p>
+                          <div className="flex bg-white justify-end gap-3 mt-3">
+                            <button
+                              onClick={() => handleAccept(invite.from_team_id)}
+                              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-1.5 rounded-lg text-sm"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => handleReject(invite.from_team_id)}
+                              className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                )}
 
-          {/* Review Requests */}
-          {reviewRequests.length > 0 && (
-            <div>
-              <div className="space-y-4">
+                {/* Review Requests */}
                 {reviewRequests.map((req) => (
                   <div key={`review-${req.request_id}`} className="p-4 rounded-xl border border-green-200 shadow-sm">
                     <p className="font-semibold text-gray-800">Project: {req.project_name}</p>
                     <p className="text-gray-600">Lead: {req.team_lead}</p>
                     <p className="text-gray-600">Date: {req.review_date}</p>
                     <p className="text-gray-600">Time: {req.start_time}</p>
-                    <div className="flex justify-end gap-3 mt-3">
-                      <button
-                        onClick={() => handleReview('accept', req)}
-                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded-lg text-sm"
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={() => handleReview('reject', req)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm"
-                      >
-                        Reject
-                      </button>
-                    </div>
+
+                    {/* Conditionally render venue input */}
+                    {selectedReview?.request_id === req.request_id ? (
+                      <div className="mt-2">
+                        <input
+                          type="text"
+                          placeholder="Enter venue"
+                          value={venueInput}
+                          onChange={(e) => setVenueInput(e.target.value)}
+                          className="border px-3 py-1 rounded w-full mb-2"
+                        />
+                        <button
+                          onClick={handleConfirmAccept}
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded-lg text-sm"
+                        >
+                          Confirm Accept
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex justify-end gap-3 mt-3">
+                        <button
+                          onClick={() => handleReview('accept', req)}
+                          className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded-lg text-sm"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          onClick={() => handleReview('reject', req)}
+                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
+
+
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
-    </div>
-  </div>
-)}
 
     </div>
   );
