@@ -27,7 +27,7 @@ router.post("/admin/adduser",userAuth,(req,res,next) => {
 router.get("/admin/getproject_by_team_id/:project_id",userAuth,(req,res,next) => {
   try{
    const{project_id} = req.params;
-   if(!project_id)return next("team_id not found");
+   if(!project_id)return next("project_id not found");
    let sql = "select * from projects where project_id = ?";
    db.query(sql,[project_id],(error,result) => {
     if(error)return next(error);
@@ -133,7 +133,7 @@ router.delete("/admin/remove_timeline/:id",userAuth,(req,res,next) => {
     if(!id)return next(createError.BadRequest("id not found!"));
     let sql = "delete from timeline where id = ?";
     db.query(sql,[id],(error,result) => {
-      if(error)return next(createError);
+      if (error) return next(error);
       if(result.affectedRows === 0)return next(createError.BadRequest("rows are not affected!"));
       res.send(`${id}st timeline successfully deleted from timelines!`);
     })
@@ -252,7 +252,7 @@ router.patch("/admin/update_deadline/:week/:team_id",userAuth,(req,res,next) => 
   try{
     const{week,team_id} = req.params;
     let{newDeadline} = req.body;
-    if(!week || !team_id || !newDeadline)return next(createError.BadGateway("week or team_id or newDeadline not found!"));
+    if(!week || !team_id || !newDeadline)return next(createError.BadRequest("week, team_id, or newDeadline is missing!"));
     // validating date and week
     newDeadline = new Date(newDeadline);
     let today = new Date();
@@ -291,7 +291,7 @@ router.patch("/admin/update_deadline/:week/:team_id",userAuth,(req,res,next) => 
   }
 })
 
-// assingn guide or route for a paritcular team 
+// assingn guide or expert for a paritcular team 
 router.patch("/admin/assign_guide_expert/:team_id/:role", (req, res, next) => {
   try {
     const { team_id, role } = req.params;

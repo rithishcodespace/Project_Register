@@ -7,13 +7,6 @@ const InvitationPage = () => {
   const [loadingId, setLoadingId] = useState(null);
   const selector = useSelector((Store) => Store.userSlice);
 
-  // Load invitations from localStorage on mount
-  useEffect(() => {
-    const savedInvitations = localStorage.getItem('studentInvitations');
-    if (savedInvitations) {
-      setInvitations(JSON.parse(savedInvitations));
-    }
-  }, []);
 
   // Fetch latest invitations from backend
   useEffect(() => {
@@ -49,7 +42,6 @@ const InvitationPage = () => {
               };
 
               setInvitations([enrichedData]);
-              localStorage.setItem('studentInvitations', JSON.stringify([enrichedData]));
             }
           }
         }
@@ -73,7 +65,6 @@ const InvitationPage = () => {
         i.reg_num === invite.reg_num ? { ...i, status } : i
       );
       setInvitations(updated);
-      localStorage.setItem('studentInvitations', JSON.stringify(updated));
     } catch (error) {
       console.error('Error handling action:', error);
     } finally {

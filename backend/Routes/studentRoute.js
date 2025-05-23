@@ -299,79 +299,105 @@ router.post("/student/fetch_team_status_and_invitations",userAuth, (req, res, ne
 
 // if it should be solo team both reg_num should be sent same
 
-router.patch("/student/team_request/conform_team", userAuth,(req, res, next) => {
-  let { name, emailId, reg_num, dept, from_reg_num } = req.body;
+router.patch("/student/team_request/conform_team", userAuth, (req, res, next) => {
+  const { name, emailId, reg_num, dept, from_reg_num } = req.body;
 
   if (!name || !emailId || !reg_num || !dept || !from_reg_num) {
-    return next(createError.BadRequest("some req.body is null!"));
+    return next(createError.BadRequest("Some required fields are missing!"));
   }
 
-  //Count the number of confirmed teams
-  let sql = "SELECT COUNT(*) as count FROM team_requests WHERE team_conformed = true";
-  db.query(sql, (err, result) => {
+  const countSql = "SELECT distinct COUNT(*) AS count FROM team_requests WHERE team_conformed = true";
+  db.query(countSql, (err, result) => {
     if (err) return next(err);
 
     const teamNumber = result[0].count + 1;
     const team_id = `TEAM-${String(teamNumber).padStart(4, "0")}`;
 
-    // one member in the team -> directly inserting in team_requests as conformed
-      let query1 = "SELECT * FROM team_requests WHERE (from_reg_num = ? OR to_reg_num = ?) AND status = 'accept'";
-      db.query(query1,[from_reg_num,from_reg_num],(error,result) => {
-        if(error)return next(error);
-        if(result.length == 0){
-          let query2 = "insert into team_requests (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status, team_conformed) values(?, ?, ?, ?, ?, ?, ?, ?, ?)";
-          db.query(query2,[team_id, name, emailId, reg_num, dept, from_reg_num, from_reg_num,'accept',true],(error,result) => {
-            if(error)return next(error);
-            return res.send(`${from_reg_num} is the only team_member in his team!`);
-          })
-          return;
-        }
-        else{
-            //Set team as confirmed
-          let sql1 = "UPDATE team_requests SET team_conformed = true WHERE from_reg_num = ? AND status = 'accept'";
-          db.query(sql1, [from_reg_num], (error1, result1) => {
-            if (error1) return next(error1);
+    // Step 2: Check if this user already has accepted requests
+    const checkSql = `
+      SELECT * FROM team_requests 
+      WHERE (from_reg_num = ? OR to_reg_num = ?) AND status = 'accept'
+    `;
+    db.query(checkSql, [from_reg_num, from_reg_num], (err, rows) => {
+      if (err) return next(err);
 
-            if(result1.affectedRows === 0)return res.status(500).send("some error occured silently!");
+      // Case: No team members, solo team
+      if (rows.length === 0) {
+        const soloSql = `
+          INSERT INTO team_requests 
+          (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status, team_conformed)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'accept', true)
+        `;
+        db.query(soloSql, [team_id, name, emailId, reg_num, dept, from_reg_num, from_reg_num], (err) => {
+          if (err) return next(err);
+          return res.send(`${from_reg_num} is the only member in their team.`);
+        });
+        return;
+      }
 
-            // Assign team ID
-            let sql2 = "UPDATE team_requests SET team_id = ? WHERE from_reg_num = ? AND status = 'accept'";
-            db.query(sql2, [team_id, from_reg_num], (error2, result2) => {
-              if (error2) return next(error2);
+      // Step 3: Set team_conformed = true for accepted members
+      const updateConfirmSql = `
+        UPDATE team_requests 
+        SET team_conformed = true 
+        WHERE from_reg_num = ? AND status = 'accept'
+      `;
+      db.query(updateConfirmSql, [from_reg_num], (err, result1) => {
+        if (err) return next(err);
+        if (result1.affectedRows === 0) return res.status(500).send("Could not confirm team.");
 
-              if(result2.affectedRows === 0)return res.status(500).send("some error occured silently!");
+        // Step 4: Set team_id for those members
+        const updateIdSql = `
+          UPDATE team_requests 
+          SET team_id = ? 
+          WHERE from_reg_num = ? AND status = 'accept'
+        `;
+        db.query(updateIdSql, [team_id, from_reg_num], (err, result2) => {
+          if (err) return next(err);
+          if (result2.affectedRows === 0) return res.status(500).send("Could not assign team ID.");
 
-              // Insert the team request (Executed Last) -> team leader
-              let sql3 = `
-                INSERT INTO team_requests (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status,team_conformed) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'accept',1)
-              `;
-              db.query(sql3, [team_id, name, emailId, reg_num, dept, from_reg_num, from_reg_num], (error3, result3) => {
-                if (error3) return next(error3);
+          // Step 5: Insert leader row
+          const insertLeaderSql = `
+            INSERT INTO team_requests 
+            (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status, team_conformed)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'accept', true)
+          `;
+          db.query(insertLeaderSql, [team_id, name, emailId, reg_num, dept, from_reg_num, from_reg_num], (err, result3) => {
+            if (err) return next(err);
+            if (result3.affectedRows === 0) return res.status(500).send("Could not insert team leader row.");
 
-                if(result3.affectedRows === 0)return res.status(500).send("some error occured silently!");
+            // Step 6: Get all members in the new team
+            const getMembersSql = `
+              SELECT to_reg_num FROM team_requests 
+              WHERE team_id = ?
+            `;
+            db.query(getMembersSql, [team_id], (err, members) => {
+              if (err) return next(err);
+              if (members.length === 0) return next(createError.NotFound("No team members found."));
 
-                // remove the requests recieved the conformed team members
-                let sql4 = "select to_reg_num from team_requests where team_id = ?";
-                db.query(sql4,[team_id],(error,result) => { 
-                  if(error)return next(error);
-                  if(result.length === 0)return next(createError.NotFound("reg_num not found!"));
-                  let pending = result.length;
-                  result.forEach(({to_reg_num}) => {
-                    let sql5 = "delete from team_requests where (from_reg_num = ? or to_reg_num = ?) and team_conformed = false and status <> 'accept' and team_id is null";
-                    db.query(sql5,[to_reg_num,to_reg_num],(error,result) => {
-                      if(error)return next(error);
-                      if(result.affectedRows === 0)return res.status(500).send("some rows got not affected!");
-                      else pending --;
-                      if(pending === 0)return res.send("Team status changed from false to true, and team request added.");
-                    })
-                  })
-                })
+              // Step 7: Cleanup pending requests of each team member
+              let pending = members.length;
+              members.forEach(({ to_reg_num }) => {
+                const deleteSql = `
+                  DELETE FROM team_requests 
+                  WHERE (from_reg_num = ? OR to_reg_num = ?) 
+                  AND team_conformed = false 
+                  AND status <> 'accept' 
+                  AND team_id IS NULL
+                `;
+                db.query(deleteSql, [to_reg_num, to_reg_num], (err, delResult) => {
+                  if (err) return next(err);
+
+                  pending--;
+                  if (pending === 0) {
+                    return res.send("Team confirmed and all pending requests cleaned.");
+                  }
+                });
               });
             });
           });
-        }
-      })
+        });
+      });
+    });
   });
 });
 

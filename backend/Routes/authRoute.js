@@ -129,7 +129,11 @@ router.post("/auth/role",(req,res,next) => {
 
 router.delete("/auth/logout",async(req,res,next) => {
     try {
-        res.cookie("token",null,{expiresIn: new Date(Date.now())}) 
+       res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax"
+      });
         res.status(200).send("User logged out successfully");
     }
     catch (error) {
@@ -182,7 +186,6 @@ router.post("/auth/google-login", async (req, res) => {
         { expiresIn: "7d" }
       );
 
-      // ✅ Set cookie
       res.cookie("token", jwtToken, {
         httpOnly: true,
         secure: false,
