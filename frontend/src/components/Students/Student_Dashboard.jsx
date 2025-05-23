@@ -9,6 +9,8 @@ import { useNavigate } from 'react-router-dom';
 import { addTeamStatus } from '../../utils/teamStatus';
 
 function Student_Dashboard() {
+  const userSlice = useSelector((State) => State.userSlice);
+  const teamSelector = useSelector((State) => State.teamSlice);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [reInviteOpen, setReInviteOpen] = useState(false);
   const [teamConformationPending, setteamConformationPending] = useState(false);
@@ -23,6 +25,7 @@ function Student_Dashboard() {
   });
   const [timeline, setTimeline] = useState(null);
 
+  
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -38,6 +41,48 @@ function Student_Dashboard() {
   const isValidEmail = (email) => {
     return email.endsWith('@bitsathy.ac.in');
   };
+
+    const studentInfo = {
+    studentId: "S123456",
+    email: "alex.johnson@university.edu",
+    program: "Computer Science",
+    semester: "Fall 2023",
+    gpa: 3.7,
+    creditsCompleted: 45,
+    upcomingAssignments: [
+      { name: "Data Structures Project", dueDate: "2023-12-15", course: "CS 201" },
+      { name: "Algorithms Quiz", dueDate: "2023-12-18", course: "CS 202" },
+    ]
+  };
+
+  // Sample team data (between 1 and 4 teams)
+  const teams = [
+    {
+      id: 1,
+      name: "Quantum Coders",
+      course: "Advanced Programming",
+      members: [
+        { name: "Alex Johnson", role: "Developer" },
+        { name: "Sarah Smith", role: "Team Lead" },
+        { name: "Michael Chen", role: "QA" },
+        { name: "Emma Wilson", role: "Documentation" }
+      ],
+      currentProject: "AI Recommendation System",
+      deadline: "2023-12-20"
+    },
+    {
+      id: 2,
+      name: "Data Wizards",
+      course: "Database Systems",
+      members: [
+        { name: "Alex Johnson", role: "Database Designer" },
+        { name: "James Brown", role: "Team Lead" },
+        { name: "Olivia Green", role: "Frontend" }
+      ],
+      currentProject: "University Database Optimization",
+      deadline: "2023-12-10"
+    }
+  ];
 
   const fetchTimeline = async () => {
     try {
@@ -168,9 +213,108 @@ function Student_Dashboard() {
 
   if (teamStatus === 1) {
     return (
-      <div className="flex flex-col justify-center items-center h-96">
-        <h1 className="text-3xl font-bold text-green-600">Welcome to your Team Dashboard!</h1>
+       <div className="min-h-screen  p-6">
+      {/* Header */}
+      <header className="mb-6">
+        <h1 className="text-3xl flex justify-center font-bold text-black">Student Dashboard</h1>
+        <p className="flex justify-center mt-2 text-lg  text-gray-600">Welcome back, {userSlice.name} !</p>
+      </header>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Student Info Card */}
+        <div className="bg-white rounded-lg shadow p-6 ">
+          <h2 className="text-xl font-semibold mb-4 text-gray-800">Student Information </h2>
+          <div className="space-y-3">
+            <p><span className="font-medium text-gray-700">Name</span> {userSlice.name}</p>
+            <p><span className="font-medium text-gray-700">Email:</span> {userSlice.emailId}</p>
+            <p><span className="font-medium text-gray-700">Register Number:</span> {userSlice.reg_num}</p>
+            <p><span className="font-medium text-gray-700">Department:</span> {userSlice.dept}</p>
+          </div>
+
+          <div className="mt-10">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Your Project</h2>
+            <div className="space-y-6">
+                <div  className="border rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="text-lg font-medium text-gray-800">{teamSelector[0].project_id}hg</h3>
+                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                      
+                    </span>
+                  </div>
+                  <p className="text-gray-600 mb-4">
+                    <span className="font-medium">Current Project:</span> 
+                  </p>
+                  
+                  <h4 className="font-medium text-gray-700 mb-2">Team Members:</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div  className="flex items-center space-x-3 bg-gray-50 p-2 rounded">
+                        <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600">
+                          q
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-800">s</p>
+                          <p   className="text-xs text-gray-500">d</p>
+                        </div>
+                      </div>
+                    
+                  </div>
+                </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="col-2 space-y-6">
+          {/* Upcoming Assignments */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Upcoming Assignments</h2>
+            <div className="space-y-4">
+              {studentInfo.upcomingAssignments.map((assignment, index) => (
+                <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
+                  <h3 className="font-medium text-gray-800">{assignment.name}</h3>
+                  <p className="text-sm text-gray-600">{assignment.course} • Due {assignment.dueDate}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Teams Section */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Your Teams</h2>
+            <div className="space-y-6">
+              {teams.map(team => (
+                <div key={team.id} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-lg font-medium text-gray-800">{team.name}</h3>
+                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                      {team.course}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 mb-4">
+                    <span className="font-medium">Current Project:</span> {team.currentProject} (Due {team.deadline})
+                  </p>
+                  
+                  <h4 className="font-medium text-gray-700 mb-2">Team Members:</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {team.members.map((member, idx) => (
+                      <div key={idx} className="flex items-center space-x-3 bg-gray-50 p-2 rounded">
+                        <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600">
+                          {member.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-800">{member.name}</p>
+                          <p className="text-xs text-gray-500">{member.role}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
+    </div>
     );
   }
 

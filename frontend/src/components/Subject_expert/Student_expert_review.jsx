@@ -146,7 +146,7 @@ function Student_expert_review() {
           Timer: {formatTime(timerValue)}
         </p>
         <p className="text-green-600 bg-white font-semibold mt-2">
-          {isPresent && "✅ Attendance Marked"}
+          {isPresent && " Attendance Marked"}
         </p>
         {!isPresent && isAbsent && (
           <p className="text-red-600 bg-white font-semibold mt-2">Absent</p>
@@ -158,7 +158,7 @@ function Student_expert_review() {
         )}
       </div>
 
-      <div className="mt-4 bg-white flex gap-4">
+      <div className="mt-4 flex gap-4">
         <button
           onClick={() => handleStartReview(projectId, project.review_date)}
           disabled={isActive || isAbsent || showBeforeTime}
@@ -183,3 +183,5 @@ function Student_expert_review() {
 }
 
 export default Student_expert_review;
+
+
