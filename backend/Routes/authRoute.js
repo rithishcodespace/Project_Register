@@ -8,9 +8,9 @@ const jwt = require("jsonwebtoken");
 const userAuth = require("../middlewares/userAuth");
 // const client = require("../utils/redis");
 const bcrypt = require("bcrypt");
-const verifyRefreshToken = require("../utils/verifyRefreshToken");
 const { OAuth2Client } = require("google-auth-library");
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 
 router.post("/auth/login",(req,res,next) => {
    const{emailId,password} = req.body;
@@ -36,13 +36,16 @@ router.post("/auth/login",(req,res,next) => {
           id: user.id,
           role: user.role, 
           name: user.name, 
-          email: user.email 
+          email: user.emailId 
         },
         process.env.TOKEN_SECRET,
         {
           expiresIn: "7d" 
         }
       );
+      console.log("Generated JWT Token:", token); 
+      console.log("Secret Key:", process.env.TOKEN_SECRET);
+
        // Set the cookie with secure and samesite settings
         res.cookie("token", token, {
           httpOnly: true,       // Makes it inaccessible to JavaScript (secure)
@@ -134,46 +137,67 @@ router.delete("/auth/logout",async(req,res,next) => {
     }
 })
 
-router.post("/auth/google-login", async (req, res, next) => {
+// google review
+// In /auth/google-login route
+
+router.post("/auth/google-login", async (req, res) => {
   const { token } = req.body;
-  console.log("Token received on backend:", req.body.token);
+  console.log("Received token:", token);
+
+  if (!token) {
+    return res.status(400).json({ message: "No token provided" });
+  }
 
   try {
+    // ✅ Verify token using Google OAuth2Client
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: "1054001837515-sj8nrurh5djljlaghguetc7hl9did3oe.apps.googleusercontent.com",
+      audience: process.env.GOOGLE_CLIENT_ID,
     });
-    
+    const decoded = ticket.getPayload();
+    console.log("Verified Google user:", decoded);
 
-    const payload = ticket.getPayload();
-    const { email, name } = payload;
-
-    db.query("SELECT * FROM users WHERE emailId = ?", [email], (err, result) => {
-      if (err) return next(err);
-
-      let user = result[0];
-      if (!user) {
-        db.query("INSERT INTO users (emailId, fullName) VALUES (?, ?)", [email, name], (err, insertResult) => {
-          if (err) return next(err);
-          user = { id: insertResult.insertId, emailId: email };
-          return generateTokens(user);
-        });
-      } else {
-        generateTokens(user);
+    // ✅ Now lookup your user in DB
+    db.query("SELECT * FROM student WHERE emailId = ?", [decoded.email], async (err, result) => {
+      if (err) {
+        console.error("DB Error:", err);
+        return res.status(500).json({ message: "Internal server error" });
       }
 
-      function generateTokens(user) {
-        const accessToken = jwt.sign({ id: user.id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
-        const refreshToken = jwt.sign({ id: user.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
-
-        clientRedis.set(user.id.toString(), refreshToken, { EX: 604800 });
-
-        res.status(200).json({ accessToken, refreshToken });
+      if (result.length === 0) {
+        return res.status(404).json({ message: "User not found in system" });
       }
+
+      const user = result[0];
+
+      // ✅ Sign your JWT
+      const jwtToken = jwt.sign(
+        {
+          id: user.id,
+          role: user.role,
+          name: user.name,
+          email: user.emailId,
+        },
+        process.env.TOKEN_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      // ✅ Set cookie
+      res.cookie("token", jwtToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 60 * 60 * 1000,
+      });
+
+      res.status(200).json({
+        message: "User logged in successfully",
+        ...user,
+      });
     });
   } catch (err) {
-    console.error("Google login failed:", err);
-    next(createError.Unauthorized("Invalid Google token"));
+    console.error("Google token verification failed:", err.message);
+    res.status(401).json({ message: "Invalid or expired token" });
   }
 });
 

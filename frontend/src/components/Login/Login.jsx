@@ -92,23 +92,28 @@ function Login() {
   };
 
   async function handleGoogleLogin() {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      const idToken = await user.getIdToken();
+  console.log("Google login clicked"); // check if this shows
 
-      const res = await instance.post("/auth/google-login", {
-        token: idToken,
-      });
+  try {
+    const result = await signInWithPopup(auth, provider);
+    console.log("Google sign-in result:", result); // inspect this
 
-      localStorage.setItem("accessToken", res.data.accessToken);
-      localStorage.setItem("refreshToken", res.data.refreshToken);
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Google Sign-in error:", error);
-      alert("Google login failed. Try again.");
-    }
+    const user = result.user;
+    const idToken = await user.getIdToken();
+
+    const res = await instance.post("/auth/google-login", {
+      token: idToken,
+    });
+
+    localStorage.setItem("accessToken", res.data.accessToken);
+    localStorage.setItem("refreshToken", res.data.refreshToken);
+    navigate("/");
+  } catch (error) {
+    console.error("Google Sign-in error:", error);
+    alert("Google login failed. Try again.");
   }
+}
+
 
   return (
     <>
@@ -167,7 +172,7 @@ function Login() {
 
           <div className="gdiv" onClick={handleGoogleLogin}>
             <img src={Google} className="google-logo" alt="Google logo" />
-            <button className="glogin">Continue with Google</button>
+            <button className="glogin" type="button">Continue with Google</button>
           </div>
         </form>
       </div>

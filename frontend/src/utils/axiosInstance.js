@@ -11,10 +11,10 @@ const instance = axios.create({
 instance.interceptors.response.use(
   (response) => response,
   (error) => {
+    const message = error.response?.data?.error?.message || error.response?.data?.message;
     if (error.response && error.response.status === 401) {
-      const message = error.response.data.message;
-      if (message === "TokenExpired" || message === "TokenMissing") {
-        window.location.href = "/login"; // force reload to login
+      if (["TokenExpired", "TokenMissing", "Invalid token!"].includes(message)) {
+        window.location.href = "/login";
       }
     }
     return Promise.reject(error);
