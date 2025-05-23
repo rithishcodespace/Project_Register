@@ -1,7 +1,6 @@
-
-
-import React, { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from "react";
+import instance from "../../utils/axiosInstance";
+import { useSelector } from "react-redux";
 
 function Student_expert_review() {
   const [projects, setProjects] = useState([]);
@@ -95,10 +94,10 @@ function Student_expert_review() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen  py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         {projects.length === 0 ? (
-          <div className="text-center text-gray-600">
+          <div className="text-center  text-gray-600">
             <p>No upcoming reviews available.</p>
           </div>
         ) : (
@@ -192,4 +191,4 @@ function Student_expert_review() {
   );s
 }
 
-export default Student_expert_review;
+export default Student_expert_review;  
