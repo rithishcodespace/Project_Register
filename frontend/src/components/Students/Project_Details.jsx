@@ -147,7 +147,7 @@ useEffect(() => {
         if (guideRes.status === 200) setGuidesList(guideRes.data);
       } catch (err) {
         console.error('Fetch Error:', err);
-        alert('Failed to load experts and guides.');
+        alert('Failed to load experts and guides.',err);
       } finally {
         setLoading(false);
       }
@@ -224,7 +224,9 @@ useEffect(() => {
       setSelectedGuides([]);
     } catch (error) {
       console.error('Submit Error:', error);
-      alert(error?.response?.data?.message || 'Failed to submit project.');
+      alert("Failed to submit project. Error: " + response.error.message);
+
+
     }
   };
 

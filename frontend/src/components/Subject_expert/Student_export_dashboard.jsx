@@ -10,6 +10,14 @@ const SubjectExpertDashboard = () => {
   const [showPopup, setShowPopup] = useState(false);
   const selector = useSelector((Store) => Store.userSlice);
 
+  function formatDateOnly(date) {
+  const d = new Date(date);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
   // Fetch team invitations
   async function fetchInvitations() {
     try {
@@ -81,17 +89,19 @@ const SubjectExpertDashboard = () => {
   // Single function for accepting/rejecting reviews
   const handleReview = async (status, req) => {
     try {
-      const url = `/sub_expert/add_review_details/${reviewRequests.request_id}/${status}`;
+      const url = `/sub_expert/add_review_details/${req.request_id}/${status}/${selector.reg_num}`;
 
+      let new_review_date = formatDateOnly(req.review_date);
       if (status === "accept") {
+        
         const payload = {
-          project_id: reviewRequests.project_id,
-          project_name: reviewRequests.project_name,
-          team_lead: reviewRequests.team_lead,
-          review_date: reviewRequests.review_date,
-          start_time: reviewRequests.start_time,
+          project_id: req.project_id,
+          project_name: req.project_name,
+          team_lead: req.team_lead,
+          review_date: new_review_date,
+          start_time: req.start_time,
           venue: "Bir",
-          request_id:reviewRequests.request_id,
+          request_id:req.request_id,
           status:status,
         };
         const response = await instance.post(url, payload);
@@ -100,13 +110,13 @@ const SubjectExpertDashboard = () => {
           setReviewRequests(prev => prev.filter(r => r.request_id !== req.request_id));
         }
       } else if (status === "reject") { const payload = {
-          project_id: reviewRequests.project_id,
-          project_name: reviewRequests.project_name,
-          team_lead: reviewRequests.team_lead,
-          review_date: reviewRequests.review_date,
-          start_time: reviewRequests.start_time,
+          project_id: req.project_id,
+          project_name: req.project_name,
+          team_lead: req.team_lead,
+          review_date: new_review_date,
+          start_time: req.start_time,
           venue: "Biw",
-          request_id:reviewRequests.request_id,
+          request_id:req.request_id,
           status:status}
         const response = await instance.post(url, payload); // No payload needed
         if (response.status === 200) {
