@@ -301,41 +301,7 @@ router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:team_id",userAuth,
   }
 });
 
-// fetches all verification history of weekly logs by guide
-router.get("/guide/check_week_verified/:team_id",(req,res,next) => {
-  try{
-    const{team_id} = req.params;
-    if(!team_id)return next(createError.BadRequest("team_id is null!"));
-    let sql = "select * from weekly_logs_verification where team_id = ?";
-    db.query(sql,[team_id],(error,result) => {
-      if(error)return next(error);
-      if(result.length === 0)return next(createError.NotFound("result not found!"));
-      res.send(result);
-    })
-  }
-  catch(error){
-      next(error);
-  }
-})
 
-// fetchs the deadlines from weekly_logs table
-
-router.get("/guide/fetchDeadlines/:team_id",(req,res,next) => {
-  try{
-    const{team_id} = req.params;
-    if(!team_id)return next(createError.BadRequest("teamid not found!"));
-    let sql = "select * from weekly_logs_deadlines where team_id = ?";
-    db.query(sql,[team_id],(error,result) => {
-      if(error)return next(error);
-      if(result.length === 0)return next(createError.NotFound("deadlines not found!"));
-      res.send(result);
-    })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
 
 // checks if already updated
 router.get("/guide/checks_already_guide_updated_weekly_progress/:team_id/:week",(req,res,next) => {
