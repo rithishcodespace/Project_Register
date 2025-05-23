@@ -92,7 +92,7 @@ CREATE TABLE `scheduled_reviews` (
   `review_date` DATE DEFAULT NULL,
   `start_time` TIME DEFAULT NULL,
   `venue` varchar(200) DEFAULT NULL,
-  `attendance` VARCHAR(255) DEFAULT 'absent',
+  `attendance` VARCHAR(255) DEFAULT null,
   `marks` VARCHAR(20) DEFAULT NULL,
   `remarks` VARCHAR(5000) DEFAULT NULL,
   `team_id` VARCHAR(300) DEFAULT NULL,
