@@ -306,8 +306,7 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
     return next(createError.BadRequest("Some required fields are missing!"));
   }
 
-  // Step 1: Get the next team number
-  const countSql = "SELECT COUNT(*) AS count FROM team_requests WHERE team_conformed = true";
+  const countSql = "SELECT distinct COUNT(*) AS count FROM team_requests WHERE team_conformed = true";
   db.query(countSql, (err, result) => {
     if (err) return next(err);
 
@@ -316,7 +315,7 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
 
     // Step 2: Check if this user already has accepted requests
     const checkSql = `
-      SELECT * FROM team_requests
+      SELECT * FROM team_requests 
       WHERE (from_reg_num = ? OR to_reg_num = ?) AND status = 'accept'
     `;
     db.query(checkSql, [from_reg_num, from_reg_num], (err, rows) => {
@@ -325,7 +324,7 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
       // Case: No team members, solo team
       if (rows.length === 0) {
         const soloSql = `
-          INSERT INTO team_requests
+          INSERT INTO team_requests 
           (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status, team_conformed)
           VALUES (?, ?, ?, ?, ?, ?, ?, 'accept', true)
         `;
@@ -338,8 +337,8 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
 
       // Step 3: Set team_conformed = true for accepted members
       const updateConfirmSql = `
-        UPDATE team_requests
-        SET team_conformed = true
+        UPDATE team_requests 
+        SET team_conformed = true 
         WHERE from_reg_num = ? AND status = 'accept'
       `;
       db.query(updateConfirmSql, [from_reg_num], (err, result1) => {
@@ -348,8 +347,8 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
 
         // Step 4: Set team_id for those members
         const updateIdSql = `
-          UPDATE team_requests
-          SET team_id = ?
+          UPDATE team_requests 
+          SET team_id = ? 
           WHERE from_reg_num = ? AND status = 'accept'
         `;
         db.query(updateIdSql, [team_id, from_reg_num], (err, result2) => {
@@ -358,7 +357,7 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
 
           // Step 5: Insert leader row
           const insertLeaderSql = `
-            INSERT INTO team_requests
+            INSERT INTO team_requests 
             (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status, team_conformed)
             VALUES (?, ?, ?, ?, ?, ?, ?, 'accept', true)
           `;
@@ -368,7 +367,7 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
 
             // Step 6: Get all members in the new team
             const getMembersSql = `
-              SELECT to_reg_num FROM team_requests
+              SELECT to_reg_num FROM team_requests 
               WHERE team_id = ?
             `;
             db.query(getMembersSql, [team_id], (err, members) => {
@@ -379,10 +378,10 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
               let pending = members.length;
               members.forEach(({ to_reg_num }) => {
                 const deleteSql = `
-                  DELETE FROM team_requests
-                  WHERE (from_reg_num = ? OR to_reg_num = ?)
-                  AND team_conformed = false
-                  AND status <> 'accept'
+                  DELETE FROM team_requests 
+                  WHERE (from_reg_num = ? OR to_reg_num = ?) 
+                  AND team_conformed = false 
+                  AND status <> 'accept' 
                   AND team_id IS NULL
                 `;
                 db.query(deleteSql, [to_reg_num, to_reg_num], (err, delResult) => {
