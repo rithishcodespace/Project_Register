@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
 import { useSelector } from "react-redux";
 import instance from '../../utils/axiosInstance';
 import { setLogLevel } from 'firebase/app';
+import { Users, Check, ClipboardList, MessageCircle, Bell } from 'lucide-react';
 
 const SubjectExpertDashboard = () => {
   const [invitations, setInvitations] = useState([]);
@@ -10,7 +10,8 @@ const SubjectExpertDashboard = () => {
   const [showPopup, setShowPopup] = useState(false);
   const selector = useSelector((Store) => Store.userSlice);
   const [selectedReview, setSelectedReview] = useState(null); // store the selected review to accept
-  const [venueInput, setVenueInput] = useState("");           // user-entered venue
+  const [venueInput, setVenueInput] = useState("");       
+  const [mentoredTeams, setMentoredTeams] = useState([]);
 
 
   function formatDateOnly(date) {
@@ -38,6 +39,29 @@ const SubjectExpertDashboard = () => {
     }
   }
 
+  const [loading, setLoading] = useState(false);
+
+useEffect(() => {
+    const fetchReviewRequests = async () => {
+      try {
+        const response = await instance.get(`/sub_exp/fetch_mentoring_teams/${userSlice.reg_num}`);
+        if (Array.isArray(response.data)) {
+          setReviewRequests(response.data);console.log(response.data);
+          
+        } else {
+          setReviewRequests([]);
+        }
+      } catch (error) {
+        alert("Error fetching review requests");
+        console.error(error);
+      }
+    };
+
+    fetchReviewRequests();
+  }, [selector.reg_num]);
+
+
+
   // Fetch review requests
   async function fetchReviewRequests() {
     try {
@@ -54,6 +78,11 @@ const SubjectExpertDashboard = () => {
       console.error(error);
       setReviewRequests([]);
     }
+  }
+
+
+  async function name(params) {
+    
   }
 
   useEffect(() => {
@@ -164,7 +193,7 @@ const SubjectExpertDashboard = () => {
   return (
     <div className="p-10">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between mb-3 items-center">
         <h1 className="text-3xl font-semibold text-center flex-1">Dashboard</h1>
         <div className="relative ml-auto">
           <button
@@ -178,6 +207,11 @@ const SubjectExpertDashboard = () => {
           </button>
         </div>
       </div>
+<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10'>
+      <Card icon={<Users className="text-purple-600 bg-white" size={32} />} label="Assigned Teams" value={mentoredTeams.length} />
+        <Card icon={<ClipboardList className="text-green-600 bg-white" size={32} />} label="Ongoing Projects" value={mentoredTeams.length} />
+        <Card icon={<Check className="text-green-500 bg-white" size={32} />} label="Completed Project Teams" value={Math.floor(mentoredTeams.length / 2)} />
+</div>
 
       {/* Popup */}
       {showPopup && (
@@ -280,5 +314,15 @@ const SubjectExpertDashboard = () => {
     </div>
   );
 };
+
+const Card = ({ icon, label, value }) => (
+  <div className="flex items-center bg-white shadow-md rounded-2xl p-4 space-x-4">
+    <div className="p-2 rounded-full bg-white">{icon}</div>
+    <div>
+      <p className="text-sm text-gray-600 bg-white">{label}</p>
+      <p className="text-2xl font-bold text-gray-800 bg-white">{value}</p>
+    </div>
+  </div>
+);
 
 export default SubjectExpertDashboard;

@@ -25,6 +25,7 @@ router.get("/expert/getrequests/:reg_num",userAuth,(req,res,next) => {
     }
 })
 
+
 // update status -> accept or reject // from id => project_id
 router.patch("/sub_expert/accept_reject/:status/:team_id/:my_id",userAuth, (req, res, next) => {
   try {
@@ -193,6 +194,28 @@ router.get("/sub_expert/fetch_review_requests/:expert_reg_num",userAuth,(req,res
   catch(error){
     next(error);
   }
+})
+
+
+//menteee
+router.get("/sub_exp/fetch_mentoring_teams/:sub_expert__id",userAuth,(req,res,next) => {
+    try{
+      const{guide_id} = req.params;
+      if(!guide_id)
+      {
+        return next(createError.BadRequest("guide id not found!"));
+    }
+    let sql = "select * from sub_expert_requests where to_expert_reg_num = ? and status = 'accept'";
+    db.query(sql,[guide_id],(error,result) => {
+        if(error)return next(error);
+        if(result.length == 0)return res.send("No Teams found!");
+        res.send(result);
+    })
+    }
+    catch(error)
+    {
+       next(error);
+    }
 })
 
 // fetching the upcoming reviews -> mark attendence page
