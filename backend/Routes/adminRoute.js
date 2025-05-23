@@ -228,25 +228,6 @@ router.patch("/admin/update_team_timeline/:team_id",userAuth, (req, res, next) =
 
 // router.patch()
 
-
-// fetches the team_progress based on the project_id
-
-router.get("/admin/fetch_progress_by_project_id/:project_id",userAuth,(req,res,next) => {
-  try{
-    const{project_id} = req.params;
-    if(!project_id)return next(createError.BadRequest("project_id not found!"));
-    let sql = "select * from team_requests where project_id = ?";
-    db.query(sql,[project_id],(error,result) => {
-      if(error)return next(error);
-      res.send(result);
-    })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
-
 // updates the weekly deadlines for a specific team -> for a single week ->  did'not updated weekly logs
 router.patch("/admin/update_deadline/:week/:team_id",userAuth,(req,res,next) => {
   try{
@@ -330,6 +311,26 @@ router.patch("/admin/assign_guide_expert/:team_id/:role", (req, res, next) => {
     });
   } catch (error) {
     next(error);  
+  }
+});
+
+// gets all projects 
+
+router.get("/admin/get_all_projects", (req, res, next) => {
+  try {
+    let sql = "SELECT team_id FROM team_requests";
+    db.query(sql, (error, result) => {
+      if (error) return next(error);
+
+      if (result.length === 0) {
+        return next(createError.NotFound("project not found!"))
+      }
+
+      res.send(result);
+    });
+  } catch (error) {
+    next(error);
+
   }
 });
 
