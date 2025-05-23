@@ -164,7 +164,7 @@ const SubjectExpertDashboard = () => {
         &times;
       </button>
 
-      <h2 className="text-3xl font-bold bg-white text-center text-gray-800 mb-6">Notifications</h2>
+      <h2 className="text-3xl font-bold bg-white text-center  text-gray-800 mb-6">Notifications</h2>
 
       {(invitations.length === 0 && reviewRequests.length === 0) ? (
         <p className="text-center bg-white text-gray-500">No notifications at the moment.</p>
@@ -173,13 +173,13 @@ const SubjectExpertDashboard = () => {
           
           {/* Team Invitations */}
           {invitations.length > 0 && (
-            <div>
-              <div className="space-y-4">
+            <div className='rounded-xl'>
+              <div className="space-y-4 rounded-xl shadow-lg">
                 {invitations.map((invite) => (
-                  <div key={`invite-${invite.from_team_id}`} className="p-4 rounded-xl border border-purple-200 shadow-sm">
-                    <p className="font-semibold text-gray-800">Team: {invite.from_team_id}</p>
-                    <p className="text-gray-600">Project: {invite.project_name}</p>
-                    <div className="flex justify-end gap-3 mt-3">
+                  <div key={`invite-${invite.from_team_id}`} className="p-4 bg-white rounded-xl border border-purple-200 shadow-sm">
+                    <p className="font-semibold bg-white text-gray-800">Team: {invite.from_team_id}</p>
+                    <p className="text-gray-600 bg-white">Project: {invite.project_name}</p>
+                    <div className="flex bg-white justify-end gap-3 mt-3">
                       <button
                         onClick={() => handleAccept(invite.from_team_id)}
                         className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-1.5 rounded-lg text-sm"
