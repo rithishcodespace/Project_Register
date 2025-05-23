@@ -24,9 +24,23 @@ function Student_Dashboard() {
     department: '',
   });
   const [timeline, setTimeline] = useState(null);
-
+  const [projects,setProjects] = useState([]);
   
+  useEffect(() => {
+    const fetchProjectDetails = async () => {
+      try {
+        const response = await instance.get(`/student/get_project_details/${teamSelector[0].project_id}`);
+        setProjects(response.data); // Assuming the response contains project details
+      } catch (error) {
+        console.error("Error fetching project details:", error);
+      }
+    };
 
+    if (teamSelector.length > 0 && teamSelector[0].project_id) {
+      fetchProjectDetails();
+    }
+  }, []);
+  console.log(projects)
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const selector = useSelector((state) => state.userSlice);
@@ -236,16 +250,9 @@ function Student_Dashboard() {
             <div className="space-y-6">
                 <div  className="border rounded-lg p-4">
                   <div className="flex justify-between items-start mb-1">
-                    <h3 className="text-lg font-medium text-gray-800">{teamSelector[0].project_id}hg</h3>
-                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                      
-                    </span>
+                    <h3 className="text-lg font-medium text-gray-800">Project Id : {teamSelector[0].project_id}</h3>
                   </div>
-                  <p className="text-gray-600 mb-4">
-                    <span className="font-medium">Current Project:</span> 
-                  </p>
                   
-                  <h4 className="font-medium text-gray-700 mb-2">Team Members:</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div  className="flex items-center space-x-3 bg-gray-50 p-2 rounded">
                         <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600">
