@@ -133,23 +133,23 @@ function Student_expert_review() {
       key={projectId}
       className="mb-6 p-6 bg-white rounded shadow-lg border"
     >
-      <h3 className="text-xl font-semibold">{project.project_name}</h3>
-      <p className="text-gray-700 mt-1">
-        <strong>Team Lead:</strong> {project.team_lead}
+      <h3 className="text-xl bg-white font-semibold">{project.project_name}</h3>
+      <p className="text-gray-700 bg-white mt-1">
+        <strong className="bg-white">Team Lead:</strong> {project.team_lead}
       </p>
-      <p className="text-gray-700 mt-1">
-        <strong>Scheduled Time:</strong> {scheduledDate.toLocaleString()}
+      <p className="text-gray-700 bg-white mt-1">
+        <strong className="bg-white">Scheduled Time:</strong> {scheduledDate.toLocaleString()}
       </p>
 
-      <div className="mt-4">
-        <p className="font-medium text-gray-800">
+      <div className="mt-4 bg-white">
+        <p className="bg-white font-medium text-gray-800">
           Timer: {formatTime(timerValue)}
         </p>
-        <p className="text-green-600 font-semibold mt-2">
+        <p className="text-green-600 bg-white font-semibold mt-2">
           {isPresent && "✅ Attendance Marked"}
         </p>
         {!isPresent && isAbsent && (
-          <p className="text-red-600 font-semibold mt-2">Absent</p>
+          <p className="text-red-600 bg-white font-semibold mt-2">Absent</p>
         )}
         {!isPresent && !isAbsent && showBeforeTime && (
           <p className="text-yellow-600 font-semibold mt-2">
@@ -158,7 +158,7 @@ function Student_expert_review() {
         )}
       </div>
 
-      <div className="mt-4 flex gap-4">
+      <div className="mt-4 bg-white flex gap-4">
         <button
           onClick={() => handleStartReview(projectId, project.review_date)}
           disabled={isActive || isAbsent || showBeforeTime}
