@@ -179,7 +179,7 @@ const decideNextWeek = (verifications) => {
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold flex justify-center mb-4">Progress Update</h1>
+      <h1 className="text-2xl font-bold mb-4">Progress Update</h1>
 
       {allWeeksCompleted ? (
         <ProjectFileUpload
@@ -244,7 +244,7 @@ const decideNextWeek = (verifications) => {
               </div>
             </div>
           ) : !alreadyUpdated ? (
-            <div className="text-center mt-10 text-red-600 font-medium">
+            <div className="text-center text-red-600 font-medium">
               {currentWeek && nextWeekToUpdate ? (
                 <>
                   Cannot update {currentWeek} yet.
