@@ -416,13 +416,15 @@ router.get("/student/getTeamDetails/:reg_num",userAuth, (req, res, next) => {
 
 router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, res, next) => {
   try {
-    const { week, reg_num, team_id } = req.params;
+    let { week, reg_num, team_id } = req.params;
     const { progress } = req.body;
 
       const validPhases = [
         "week1", "week2", "week3", "week4", "week5", "week6",
         "week7", "week8", "week9", "week10", "week11", "week12"
       ];
+
+      week = week.toLowerCase();
 
       // Validation Check
       if (!validPhases.includes(week) || !reg_num || !team_id) {
