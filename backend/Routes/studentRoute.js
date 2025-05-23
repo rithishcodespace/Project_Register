@@ -315,7 +315,7 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
 
     // Step 2: Check if this user already has accepted requests
     const checkSql = `
-      SELECT * FROM team_requests 
+      SELECT * FROM team_requests  "
       WHERE (from_reg_num = ? OR to_reg_num = ?) AND status = 'accept'
     `;
     db.query(checkSql, [from_reg_num, from_reg_num], (err, rows) => {
