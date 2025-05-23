@@ -37,9 +37,6 @@ useEffect(() => {
     }
   };
 
-  if (teamSelector.length > 0 && teamSelector[0].project_id) {
-    fetchProjectDetails();
-  }
 }, [teamSelector]);
   const readableDate = project && project[0] && new Date(project[0].posted_date).toLocaleString();
   console.log(readableDate);
@@ -230,11 +227,11 @@ useEffect(() => {
                 <div  className=" bg-white ">
                   <div className="flex bg-white justify-between items-start mb-1">
                     <ul className='bg-white'>
-                    <h3 className="text-lg bg-white font-medium  text-gray-800">Project Name  : {project[0].project_name}</h3>
-                    <h3 className="text-lg bg-white font-medium text-gray-800">Project Id: {project[0].project_id}</h3>
-                    <h3 className="text-lg bg-white font-medium text-gray-800">Cluster  : {project[0].cluster}</h3>
-                    <h3 className="text-lg bg-white font-medium text-gray-800">Outcome : {project[0].outcome}</h3>
-                    <h3 className="text-lg bg-white font-medium text-gray-800">Project Taking Date  : {readableDate}</h3>
+                    <h3 className="text-lg bg-white font-medium  text-gray-800">  Project Name: {project && project.length > 0 && project[0].project_name ? project[0].project_name : "Project is not created yet ..."}</h3>
+                    <h3 className="text-lg bg-white font-medium text-gray-800">Project Id: {project && project.length > 0 && project[0].project_id?project[0].project_id:"Project is not create yet ..."}</h3>
+                    <h3 className="text-lg bg-white font-medium text-gray-800">Cluster  : {project && project.length > 0 && project[0]?.cluster?project[0].cluster:"Project is not create yet ..."}</h3>
+                    <h3 className="text-lg bg-white font-medium text-gray-800">Outcome : {project && project.length > 0 && project[0].outcome?project[0].outcome:"Project is not create yet ..."}</h3>
+                    <h3 className="text-lg bg-white font-medium text-gray-800">Project Taking Date  : {readableDate}?:"Project is not created yet ..."</h3>
                     </ul>
                   </div>
                   
