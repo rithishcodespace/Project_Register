@@ -315,7 +315,7 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
 
     // Step 2: Check if this user already has accepted requests
     const checkSql = `
-      SELECT * FROM team_requests 
+      SELECT * FROM team_requests
       WHERE (from_reg_num = ? OR to_reg_num = ?) AND status = 'accept'
     `;
     db.query(checkSql, [from_reg_num, from_reg_num], (err, rows) => {
@@ -792,7 +792,7 @@ router.post("/student/addproject/:project_type/:reg_num", userAuth,(req, res, ne
 
     // checks whether he is a team_leader -> to post project
 
-    let query = "select team_id from team_requests where from_reg_num = ? and team_conformed = true";
+    let query = "select distinct team_id from team_requests where from_reg_num = ? and team_conformed = true";
     db.query(query,[reg_num],(error,result) => {
       if(error)return next(error);
       if(result.length === 0)return next(createError.BadRequest("You are not a TEAM LEADER!"));
@@ -860,7 +860,27 @@ router.post("/student/send_review_request/:team_id/:project_id",userAuth,(req,re
 
    const formattedDate = reviewDate.toISOString().split('T')[0]; // YYYY-MM-DD
 
-    //checking already requested for same date and time
+   // checking already completed 3 reviews
+
+   let sql2 = "select * from scheduled_reviews where team_id = ? and attendance = 'present'";
+   db.query(sql2,[team_id],(error,result1) => {
+    if(error)return next(error);
+    if(result1.length >= 3)return(next(createError.BadRequest("Your team already completed 3 reviews")));
+
+    // checking time gap
+
+   let sql3 = "select week1 from weekly_logs_deadlines where team_id = ?";
+   db.query(sql3,[team_id],(error,result2) => {
+    if(error)return next(error);
+    if(result2.length === 0)return next(createError.NotFound("week1 deadline for your teams not found!"));
+    let week1_deadline = result2[0].week1;
+    const diff_ms = week1_deadline - today
+    const diff_days = diff_ms / (1000 * 60 * 60 * 24);
+    // if ((result1.length === 1 && diff_days < 28) || (result1.length === 2 && diff_days < 56) || (result1.length === 3 && diff_days < 74)) {
+    //   return next(createError.BadRequest(`You haven't met the eligibility requirements for requesting ${result1.length + 1}th review`));
+    // }
+
+     //checking already requested for same date and time
 
     let checkdate = "select * from review_requests where review_date = ? and start_time = ? and expert_reg_num = ?";
     db.query(checkdate,[formattedDate,start_time,expert_reg_num],(error,result) => {
@@ -876,6 +896,9 @@ router.post("/student/send_review_request/:team_id/:project_id",userAuth,(req,re
         return res.send(`${review_date}:-${start_time} request inserted successfully`)
       })
     })
+
+   })
+   })
   }
   catch(error)
   {

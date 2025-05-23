@@ -89,7 +89,7 @@ const SubjectExpertDashboard = () => {
   // Single function for accepting/rejecting reviews
   const handleReview = async (status, req) => {
     try {
-      const url = `/sub_expert/add_review_details/${req.request_id}/${status}/${selector.reg_num}`;
+      const url = `/sub_expert/add_review_details/${req.request_id}/${status}/${selector.reg_num}/${req.team_id}`;
 
       let new_review_date = formatDateOnly(req.review_date);
       if (status === "accept") {
