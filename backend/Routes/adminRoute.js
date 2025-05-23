@@ -291,5 +291,47 @@ router.patch("/admin/update_deadline/:week/:team_id",userAuth,(req,res,next) => 
   }
 })
 
+// assingn guide or route for a paritcular team 
+router.patch("/admin/assign_guide_expert/:team_id/:role", (req, res, next) => {
+  try {
+    const { team_id, role } = req.params;
+    const { guideOrexpert_reg_num } = req.body;
+
+    if (!team_id || !guideOrexpert_reg_num || !role) {
+      return next(createError.BadRequest("Missing team_id, role, or registration number."));
+    }
+
+    const validRoles = ['sub_expert', 'guide'];
+    if (!validRoles.includes(role)) {
+      return next(createError.BadRequest("Invalid role!"));
+    }
+
+    const sql = "SELECT guide_reg_num, sub_expert_reg_num FROM team_requests WHERE team_id = ?";
+    db.query(sql, [team_id], (error, result) => {
+      if (error) return next(error);
+      if (result.length === 0) return next(createError.NotFound("Team not found!"));
+
+      const team = result[0];
+      const columnToUpdate = role === 'guide' ? 'guide_reg_num' : 'sub_expert_reg_num';
+
+      if (team[columnToUpdate] !== null) {
+        return next(createError.Conflict(`${role} is already assigned to this team.`));
+      }
+
+      const updateSql = `UPDATE team_requests SET ${columnToUpdate} = ? WHERE team_id = ?`;
+      db.query(updateSql, [guideOrexpert_reg_num, team_id], (err, updateResult) => {
+        if (err) return next(err);
+        if (updateResult.affectedRows === 0) {
+          return next(createError.InternalServerError("No rows were updated."));
+        }
+
+        res.send(`${role} with reg_num ${guideOrexpert_reg_num} assigned successfully to team ${team_id}.`);
+      });
+    });
+  } catch (error) {
+    next(error);  
+  }
+});
+
 
 module.exports = router;

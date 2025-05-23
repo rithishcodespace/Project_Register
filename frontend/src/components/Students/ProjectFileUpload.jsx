@@ -1,27 +1,37 @@
 import React, { useState } from "react";
 import instance from "../../utils/axiosInstance";
 
-const ProjectFileUpload = () => {
-  const [teamId, setTeamId] = useState("");
-  const [projectId, setProjectId] = useState("");
+const ProjectFileUpload = ({ teamId, reg_num, project_id }) => {
   const [outcomeFile, setOutcomeFile] = useState(null);
   const [reportFile, setReportFile] = useState(null);
   const [pptFile, setPptFile] = useState(null);
 
   const handleUpload = async (fileType, file) => {
-    if (!teamId || !projectId) {
+    if (!teamId || !project_id) {
       alert("Please enter both Team ID and Project ID");
       return;
     }
 
     if (!file) {
-      alert(`Please choose a ${fileType} file`);
+      alert(`Please choose a ${fileType.toUpperCase()} file`);
+      return;
+    }
+
+    const allowedExtensions = {
+      outcome: ["pdf"],
+      report: ["pdf"],
+      ppt: ["ppt", "pptx"],
+    };
+
+    const ext = file.name.split(".").pop().toLowerCase();
+    if (!allowedExtensions[fileType].includes(ext)) {
+      alert(`Invalid file type for ${fileType.toUpperCase()}`);
       return;
     }
 
     const formData = new FormData();
     formData.append("team_id", teamId);
-    formData.append("project_id", projectId);
+    formData.append("project_id", project_id);
     formData.append(fileType, file);
 
     try {
@@ -38,22 +48,6 @@ const ProjectFileUpload = () => {
     <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-lg mt-10">
       <h2 className="text-2xl font-bold mb-4 text-center">Project File Upload</h2>
 
-      <input
-        type="text"
-        placeholder="Enter Team ID"
-        value={teamId}
-        onChange={(e) => setTeamId(e.target.value)}
-        className="w-full border p-2 mb-3"
-      />
-      <input
-        type="text"
-        placeholder="Enter Project ID"
-        value={projectId}
-        onChange={(e) => setProjectId(e.target.value)}
-        className="w-full border p-2 mb-5"
-      />
-
-      {/* Upload Outcome */}
       <div className="mb-4">
         <label>Upload Outcome:</label>
         <input
@@ -69,7 +63,6 @@ const ProjectFileUpload = () => {
         </button>
       </div>
 
-      {/* Upload Report */}
       <div className="mb-4">
         <label>Upload Report:</label>
         <input
@@ -85,7 +78,6 @@ const ProjectFileUpload = () => {
         </button>
       </div>
 
-      {/* Upload PPT */}
       <div>
         <label>Upload PPT:</label>
         <input

@@ -559,6 +559,26 @@ router.get("/student/get_project_type/:reg_num",userAuth,(req,res,next) => {
   }
 })
 
+// checks whether the student have already added the progress for the particular week
+
+router.get("/student/gets_progress_of_mine/:week/:reg_num",(req,res,next) => {
+  try{
+    const{week,reg_num} = req.params;
+    if(!week || !reg_num)return next(createError.BadRequest("week or reg_num not found!"));
+    const column = `week${week}_progress`;
+    const sql = `SELECT ?? FROM team_requests WHERE reg_num = ? AND team_conformed = 1`;
+    db.query(sql,[column,reg_num],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound("progress not found!"));
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 // adds the query in the query table
 
 router.post("/student_query/:team_member/:guide_reg_num",userAuth, (req, res, next) => {
