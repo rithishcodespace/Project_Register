@@ -93,12 +93,20 @@ const TimeLine = () => {
   return (
     <>
       <h2 className="text-3xl font-bold text-center mt-6 mb-6">Timeline Management</h2>
+      <div className="w-full flex flex-end justify-between">
        <Link
         to="/admin/change-timeline"
         className="px-4 py-2 bg-purple-500 rounded hover:bg-purple-700 text-white"
       >
         Change Deadline
       </Link>
+      <Link
+        to="/admin/assignguideexpert"
+        className="px-4 py-2 bg-purple-500 rounded hover:bg-purple-700 text-white"
+      >
+       Assign Guide or Expert
+      </Link>
+      </div>
       <div className="max-w-5xl mx-auto mt-8 p-6 bg-white rounded-2xl shadow">
         <form onSubmit={handleAdd} className="grid grid-cols-1 bg-white md:grid-cols-4 gap-4 items-end mb-6">
           <div className="bg-white">

@@ -41,6 +41,7 @@ import NotFound from "./NotFound";
 import Student_expert_review from "./components/Subject_expert/Student_expert_review";
 import Schedule_review from "./components/Students/Schedule_review";
 import ChangeTimeLine from "./components/Admin/ChangeTimeLine";
+import AssignGuideExpert from "./components/Admin/AssignGuideExpert";
 
 
 
@@ -98,7 +99,8 @@ function App() {
             <Route path="TimeLine" element={<TimeLine/>}/>
             <Route path="team_list/:department" element={<TeamListByDepartment />} />
             <Route path="/admin/team_progress/:project_id" element={<Admin_project_details />} />
-             <Route path="change-timeline" element={<ChangeTimeLine/>} />
+            <Route path="change-timeline" element={<ChangeTimeLine/>} />
+            <Route path="assignguideexpert" element={<AssignGuideExpert/>} />
           </Route>
 
           <Route path="/subject_expert" element={<Subject_expert />}>

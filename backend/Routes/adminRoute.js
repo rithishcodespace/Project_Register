@@ -291,7 +291,7 @@ router.patch("/admin/update_deadline/:week/:team_id",userAuth,(req,res,next) => 
   }
 })
 
-// assingn guide or route for a paritcular team 
+// assingn guide or expert for a paritcular team 
 router.patch("/admin/assign_guide_expert/:team_id/:role", (req, res, next) => {
   try {
     const { team_id, role } = req.params;
