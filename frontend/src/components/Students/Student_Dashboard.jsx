@@ -24,20 +24,25 @@ function Student_Dashboard() {
     department: '',
   });
   const [timeline, setTimeline] = useState(null);
-  const [project, setProject] = useState(null);
+const [project, setProject] = useState(null);
 
 useEffect(() => {
   const fetchProjectDetails = async () => {
     try {
-      const response = await instance.get(`/student/get_project_details/${teamSelector[0].project_id}`);
-      setProject(response.data); 
-      console.log(response.data);
+      const projectId = teamSelector?.[0]?.project_id;
+      if (!projectId) return; // Exit if no project_id
+
+      const response = await instance.get(`/student/get_project_details/${projectId}`);
+      setProject(response.data);
+      console.log("Fetched Project ID:", projectId);
     } catch (error) {
       console.error("Error fetching project details:", error);
     }
   };
 
-}, [teamSelector]);
+  fetchProjectDetails();
+}, [teamSelector]); // Run when teamSelector changes
+
   const readableDate = project && project[0] && new Date(project[0].posted_date).toLocaleString();
   console.log(readableDate);
   
@@ -218,7 +223,7 @@ useEffect(() => {
             <p className='bg-white'><span className="font-medium bg-white text-gray-700">Register Number:</span> {userSlice.reg_num}</p>
             <p className='bg-white'><span className="font-medium bg-white text-gray-700">Department:</span> {userSlice.dept}</p>
             <p className='bg-white'><span className="font-medium bg-white text-gray-700">Guide :</span>{teamSelector && teamSelector[0]?.guide_reg_num ? teamSelector[0].guide_reg_num : "Not Assigned"}</p>
-            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Subject Expert:</span> {teamSelector && teamSelector[0]?.guide_reg_num? teamSelector[0].sub_expert_reg_num : "Not Assigned"}</p>
+            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Subject Expert:</span> {teamSelector && teamSelector[0]?.sub_expert_reg_num? teamSelector[0].sub_expert_reg_num : "Not Assigned"}</p>
           </div></div>
 
           <div className="mt-10 bg-white p-6 rounded-lg shadow ">
@@ -262,7 +267,7 @@ useEffect(() => {
             <div className="space-y-6 bg-white">
   <div className=" rounded-lg bg-white p-4">
   <h4 className="font-medium text-gray-700 bg-white mb-2">
-    Team ID: <span className="text-blue-500 bg-white font-semibold">{teamSelector[0]?.team_id}</span>
+    Team ID: <span className="text-blue-500 bg-white font-semibold">{teamSelector && teamSelector[0]?.team_id}</span>
   </h4>
 
   <div className="grid grid-cols-1 md:grid-cols-2  bg-white gap-4">

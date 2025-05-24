@@ -46,7 +46,7 @@ const Guide_queries = () => {
     try {
       const token = localStorage.getItem("accessToken");
       const response = await instance.patch(
-        `/guide/add_reply/${queryId}`,
+        `/add_reply/${queryId}`,
         { reply }
       );
 
