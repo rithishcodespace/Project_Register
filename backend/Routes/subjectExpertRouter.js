@@ -275,75 +275,57 @@ router.patch("/sub_expert/mark_attendance/:team_id",userAuth,(req,res,send) => {
     }
 })
 
-// add marks and remarks
-router.post("sub_expert/add_marks_remarks/:team_id",userAuth,(req,res,send) => {
-  try{
-    const{mark,remark} = req.body;
-    const{team_id} = req.params;
-    if(!mark || !remark || !team_id)
-    {
-      return next(createError.BadRequest("mark or remark or team_id missing!"));
-    }
-    let sql = "insert into scheduled_reviews(mark,remark) values(?,?) where team_id = ?";
-    db.query(sql,[mark,remark,team_id],(error,result,next) => {
-      if(error)return next(error);
-      if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
-      res.send("marks and remarks added successfully!");
-    })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
 
-// adds detaied marks rubix
-router.post("sub_expert/add_review_marks_rubix/:team_id",(error,result,next) => {
-  try{
-    const{team_id} = req.params;
-    const{review_no,review_date,literature_survery,aim,scope,need_for_study,proposed_methodology,work_plan,oral_presentation,viva_voce_and_ppt,contributions} = req.body;
-    if(!review_no || !review_date || !literature_survery || !aim || !scope || !need_for_study || !proposed_methodology || !work_plan || !oral_presentation || !viva_voce_and_ppt || !contributions){
+// adds detaied marks to rubix -> also inserts total mark for the review guide_mark and expert_mark to the scheduled_Review table
+router.post("/sub_expert/add_review_marks_rubix/:team_id/:review_id", userAuth, (req, res, next) => {
+  try {
+    const { team_id,review_id } = req.params;
+    const {review_no,review_date,literature_survey,aim,scope,need_for_study,proposed_methodology,work_plan,oral_presentation,viva_voce_and_ppt,contributions,remark} = req.body;
+
+    if (!review_no || !review_id || !review_date || !literature_survey || !aim || !scope || !need_for_study || !proposed_methodology || !work_plan || !oral_presentation || !viva_voce_and_ppt || !contributions || !remark) {
       return next(createError.BadRequest('Data not found!'));
     }
-    if(!team_id)return next(createError.BadRequest("Team_id is null!"));
-    if(review_no > 3 || review_no < 0)return next(createError.BadRequest('invalid review month!'));
-    // checking already updated for same month and same team
+    if (!team_id) return next(createError.BadRequest("Team_id is null!"));
+    if (review_no > 3 || review_no < 1) return next(createError.BadRequest('invalid review month!'));
+
     let sql = "select * from review_marks where team_id = ? and review_no = ?";
-    db.query(sql,[team_id,review_no],(error,result) => {
-      if(error)return next(error);
-      if(result.length > 0)return next(createError.BadRequest("Review marks already updated!"));
-      // calculating guide total marks -> provided by guide
+    db.query(sql, [team_id, review_no], (error, result) => {
+      if (error) return next(error);
+      if (result.length > 0) return next(createError.BadRequest("Review marks already updated!"));
+
       let sql1 = "select * from weekly_logs_verification where team_id = ?";
-      db.query(sql1,[team_id],(error,result) => {
-        if(error)return next(error);
+      db.query(sql1, [team_id], (error, result) => {
+        if (error) return next(error);
         let g_marks = 0;
-        for(let i=1;i<4*review_no;i++)
-        {
-          if(result[0].week_number == i && result[0].is_verified)g_marks += 10;
+        for (let i = 1; i <= 4 * review_no; i++) {
+          const row = result.find(r => r.week_number == i && r.is_verified);
+          if (row) g_marks += 10;
         }
-        // calculating total expert marks
+
         let e_marks = 0;
-        markFields = [literature_survery,aim,scope,need_for_study,proposed_methodology,work_plan,oral_presentation,viva_voce_and_ppt,contributions];
-        for(let j=0;j<9;j++)
-        {
-          e_marks += markFields[i];
+        markFields = [literature_survey, aim, scope, need_for_study, proposed_methodology, work_plan, oral_presentation, viva_voce_and_ppt, contributions];
+        for (let j = 0; j < 9; j++) {
+          e_marks += parseInt(markFields[j], 10);
         }
-        // inserting into db
-        let sql2 = "insert into review_marks (review_no,review_date,team_id,literature_survery,aim,scope,need_for_study,proposed_methodology,work_plan,oral_presentation,viva_voce_and_ppt,contributions,totat_expert_marks,total_guide_marks) values(?,?,?,?,?,?,?,?.?,?,?,?,?,?,?)";
-        db.query(sql2,[review_no,review_date,team_id,literature_survery,aim,scope,need_for_study,proposed_methodology,work_plan,oral_presentation,viva_voce_and_ppt,contributions,e_marks,g_marks],(error,result) => {
-          if(error)return next(error);
-          if(result.affectedRows === 0)return next('some rows not affected!');
-          res.send('review marks successfully updated!');
-        })
-        })
-    })
-  }
-  catch(error)
-  {
+
+        let sql2 = "insert into review_marks (review_no,review_date,team_id,literature_survey,aim,scope,need_for_study,proposed_methodology,work_plan,oral_presentation,viva_voce_and_ppt,contributions,total_expert_marks,total_guide_marks) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        db.query(sql2, [review_no, review_date, team_id, literature_survey, aim, scope, need_for_study, proposed_methodology, work_plan, oral_presentation, viva_voce_and_ppt, contributions, e_marks, g_marks], (error, result) => {
+          if (error) return next(error);
+          if (result.affectedRows === 0) return next('some rows not affected!');
+          let mark = e_marks + g_marks;
+          let sql3 = "update scheduled_reviews set remark = ?, mark = ? where team_id = ? and review_id = ?";
+          db.query(sql3,[remark,mark,team_id,review_id],(error,result) => {
+            if(error)return next(error);
+            if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
+            res.send("marks and remarks added successfully!");
+          })
+        });
+      });
+    });
+  } catch (error) {
     next(error);
   }
-})
-
+});
 
 
 module.exports = router;

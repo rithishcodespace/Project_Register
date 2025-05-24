@@ -39,7 +39,7 @@ CREATE TABLE `projects` (
 
 
 CREATE TABLE team_requests (
-  team_id varchar(255) NULL,
+  team_id varchar(20),
   name varchar(255) DEFAULT NULL,
   emailId varchar(255) DEFAULT NULL,
   reg_num varchar(255) DEFAULT NULL,
@@ -171,7 +171,7 @@ CREATE TABLE weekly_logs_verification (
 
 CREATE TABLE review_requests (
   request_id INT AUTO_INCREMENT PRIMARY KEY,
-  team_id VARCHAR(50) NOT NULL,
+  team_id VARCHAR(20),
   project_id VARCHAR(50) NOT NULL,
   project_name VARCHAR(100) NOT NULL,
   team_lead VARCHAR(50) NOT NULL,
