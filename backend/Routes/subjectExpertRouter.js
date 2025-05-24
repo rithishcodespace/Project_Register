@@ -297,6 +297,53 @@ router.post("sub_expert/add_marks_remarks/:team_id",userAuth,(req,res,send) => {
   }
 })
 
+// adds detaied marks rubix
+router.post("sub_expert/add_review_marks_rubix/:team_id",(error,result,next) => {
+  try{
+    const{team_id} = req.params;
+    const{review_no,review_date,literature_survery,aim,scope,need_for_study,proposed_methodology,work_plan,oral_presentation,viva_voce_and_ppt,contributions} = req.body;
+    if(!review_no || !review_date || !literature_survery || !aim || !scope || !need_for_study || !proposed_methodology || !work_plan || !oral_presentation || !viva_voce_and_ppt || !contributions){
+      return next(createError.BadRequest('Data not found!'));
+    }
+    if(!team_id)return next(createError.BadRequest("Team_id is null!"));
+    if(review_no > 3 || review_no < 0)return next(createError.BadRequest('invalid review month!'));
+    // checking already updated for same month and same team
+    let sql = "select * from review_marks where team_id = ? and review_no = ?";
+    db.query(sql,[team_id,review_no],(error,result) => {
+      if(error)return next(error);
+      if(result.length > 0)return next(createError.BadRequest("Review marks already updated!"));
+      // calculating guide total marks -> provided by guide
+      let sql1 = "select * from weekly_logs_verification where team_id = ?";
+      db.query(sql1,[team_id],(error,result) => {
+        if(error)return next(error);
+        let g_marks = 0;
+        for(let i=1;i<4*review_no;i++)
+        {
+          if(result[0].week_number == i && result[0].is_verified)g_marks += 10;
+        }
+        // calculating total expert marks
+        let e_marks = 0;
+        markFields = [literature_survery,aim,scope,need_for_study,proposed_methodology,work_plan,oral_presentation,viva_voce_and_ppt,contributions];
+        for(let j=0;j<9;j++)
+        {
+          e_marks += markFields[i];
+        }
+        // inserting into db
+        let sql2 = "insert into review_marks (review_no,review_date,team_id,literature_survery,aim,scope,need_for_study,proposed_methodology,work_plan,oral_presentation,viva_voce_and_ppt,contributions,totat_expert_marks,total_guide_marks) values(?,?,?,?,?,?,?,?.?,?,?,?,?,?,?)";
+        db.query(sql2,[review_no,review_date,team_id,literature_survery,aim,scope,need_for_study,proposed_methodology,work_plan,oral_presentation,viva_voce_and_ppt,contributions,e_marks,g_marks],(error,result) => {
+          if(error)return next(error);
+          if(result.affectedRows === 0)return next('some rows not affected!');
+          res.send('review marks successfully updated!');
+        })
+        })
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 
 
 module.exports = router;

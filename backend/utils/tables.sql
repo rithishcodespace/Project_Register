@@ -185,6 +185,27 @@ CREATE TABLE review_requests (
   INDEX idx_review_date (review_date)
 );
 
+CREATE TABLE review_marks (
+  review_no INT,
+  review_date DATE NOT NULL,
+  team_id INT,
+  literature_survey INT NOT NULL CHECK (literature_survey BETWEEN 0 AND 10),
+  aim INT NOT NULL CHECK (aim BETWEEN 0 AND 10),
+  scope INT NOT NULL CHECK (scope BETWEEN 0 AND 10),
+  need_for_study INT NOT NULL CHECK (need_for_study BETWEEN 0 AND 10),
+  proposed_methodology INT NOT NULL CHECK (proposed_methodology BETWEEN 0 AND 10),
+  work_plan INT NOT NULL CHECK (work_plan BETWEEN 0 AND 10),
+  oral_presentation INT NOT NULL CHECK (oral_presentation BETWEEN 0 AND 10),
+  viva_voce_and_ppt INT NOT NULL CHECK (viva_voce_and_ppt BETWEEN 0 AND 10),
+  contributions INT NOT NULL CHECK (contributions BETWEEN 0 AND 10),
+  total_expert_marks INT NOT NULL CHECK (total_expert_marks BETWEEN 0 AND 50),
+  total_guide_marks INT NOT NULL CHECK (total_guide_marks BETWEEN 0 AND 50),
+  PRIMARY KEY (review_no, team_id)
+);
+
+
+
+
 
 
 
