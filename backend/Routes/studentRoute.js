@@ -431,6 +431,15 @@ router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, r
         return res.status(400).json({ message: "Invalid week name or reg_num missing" });
       }
 
+      // checks if already submmited
+      let check = `SELECT ${week}_progress FROM team_requests WHERE reg_num = ? AND team_conformed = true AND team_id = ?`;
+      db.query(check, [reg_num, team_id], (error, results) => {
+        if (error) return next(error);
+
+        if (results[0] && results[0][`${week}_progress`] !== null) {
+          return res.status(200).send("YOU HAVE ALREADY SUBMITTED YOUR PROGRESS FOR THIS WEEK!");
+        }
+
       const sql = `UPDATE team_requests SET ${week}_progress = ? WHERE reg_num = ?`;
 
       db.query(sql, [progress, reg_num], (err, result) => {
@@ -508,6 +517,8 @@ router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, r
             res.send("Progress updated successfully for this member!");
           }
         })
+      });
+
       });
     } catch (error) {
       next(error);

@@ -18,11 +18,14 @@ const Progress_Update = () => {
 
   const handleSubmit = async() => {
    let response = await instance.post(`/student/update_progress/${nextWeekToUpdate}/${reg_num}/${teamSelector[0].team_id}`, { progress: description })
-    if(response.status === 200)
-    {
+    if (response.data === 'YOU HAVE ALREADY SUBMITTED YOUR PROGRESS FOR THIS WEEK!') {
+      alert('YOU HAVE ALREADY SUBMITTED YOUR PROGRESS FOR THIS WEEK!');
       setAlreadyUpdated(true);
       setDescription("");
+    } else if (response.status === 200) {
       alert("Progress submitted");
+      setAlreadyUpdated(true);
+      setDescription("");
     }
   };
 
@@ -149,4 +152,6 @@ const Progress_Update = () => {
   );
 };
 
-export default Progress_Update;
+export default Progress_Update;  
+
+
