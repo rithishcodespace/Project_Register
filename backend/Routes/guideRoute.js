@@ -320,5 +320,22 @@ router.get("/guide/checks_already_guide_updated_weekly_progress/:team_id/:week",
   }
 })
 
+//fetches all deadlines for a team
+router.get("/guide/fetchDeadlines/:team_id",(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest("team_id not found!"));
+    let sql = "select * from weekly_logs_deadlines where team_id = ?";
+    db.query(sql,[team_id],(error,result) =>{
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 
 module.exports = router;
