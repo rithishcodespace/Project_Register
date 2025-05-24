@@ -41,6 +41,7 @@ import NotFound from "./NotFound";
 import Student_expert_review from "./components/Subject_expert/Student_expert_review";
 import Schedule_review from "./components/Students/Schedule_review";
 import ChangeTimeLine from "./components/Admin/ChangeTimeLine";
+import { useSelector } from "react-redux";
 
 
 
@@ -60,6 +61,9 @@ const Loader = () => {
 
 function App() {
 
+const userselector = useSelector((State) => State.userSlice);
+const teamselector = useSelector((state) => state.teamSlice);
+
   return (
     <Provider store={Store}>
       <BrowserRouter>
@@ -71,13 +75,18 @@ function App() {
 
           <Route path="/student" element={<Student />}>
             <Route index element={<Student_Dashboard />} />
-            <Route path="Progress_update" element={<Progress_Update />} />
-            <Route path="Project_Details" element={<Project_Details />} />
-            <Route path="review" element={<Schedule_review/>} />
-            <Route path="invitations" element={<InvitationPage />} />
-            <Route path="queries" element={<Queries />} />
-           <Route path="Project_Details/proj_details/:id" element={<Proj_Details/>} />
-           <Route path="upload-project-files" element={<ProjectFileUpload/>} />
+              {teamselector ? (
+            <>
+              <Route path="Project_Details" element={<Project_Details />} />
+              <Route path="invitations" element={<InvitationPage />} />
+              {teamselector[0].guide_reg_num ?(<>
+              <Route path="queries" element={<Queries />} />
+              <Route path="review" element={<Schedule_review />} />
+              <Route path="Progress_update" element={<Progress_Update />} /></>):null}
+              <Route path="Project_Details/proj_details/:id" element={<Proj_Details />} />
+              <Route path="upload-project-files" element={<ProjectFileUpload />} />
+            </>
+          ) : null}
            
           </Route>
 
