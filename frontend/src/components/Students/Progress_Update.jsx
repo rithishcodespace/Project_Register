@@ -8,7 +8,7 @@ const Progress_Update = () => {
   const teamSelector = useSelector((state) => state.teamSlice);
 
   const [description, setDescription] = useState("");
-  const [canUpdate, setCanUpdate] = useState(false);
+  const [canUpdate, setCanUpdate] = useState(true);
   const [alreadyUpdated, setAlreadyUpdated] = useState(false);
   const [allWeeksCompleted, setAllWeeksCompleted] = useState(false);
   const [currentWeek, setCurrentWeek] = useState("");
@@ -16,16 +16,23 @@ const Progress_Update = () => {
   const [deadlines, setDeadlines] = useState({});
   const [loading, setLoading] = useState(true);
 
-  const handleSubmit = async() => {
-   let response = await instance.post(`/student/update_progress/${nextWeekToUpdate}/${reg_num}/${teamSelector[0].team_id}`, { progress: description })
-    if (response.data === 'YOU HAVE ALREADY SUBMITTED YOUR PROGRESS FOR THIS WEEK!') {
-      alert('YOU HAVE ALREADY SUBMITTED YOUR PROGRESS FOR THIS WEEK!');
-      setAlreadyUpdated(true);
-      setDescription("");
-    } else if (response.status === 200) {
-      alert("Progress submitted");
-      setAlreadyUpdated(true);
-      setDescription("");
+  const handleSubmit = async () => {
+    try {
+      let response = await instance.post(
+        `/student/update_progress/${nextWeekToUpdate}/${reg_num}/${teamSelector[0].team_id}`,
+        { progress: description }
+      );
+      if (response.data === 'YOU HAVE ALREADY SUBMITTED YOUR PROGRESS FOR THIS WEEK!') {
+        alert('YOU HAVE ALREADY SUBMITTED YOUR PROGRESS FOR THIS WEEK!');
+        setAlreadyUpdated(true);
+        setDescription("");
+      } else if (response.status === 200) {
+        alert("Progress submitted");
+        setAlreadyUpdated(true);
+        setDescription("");
+      }
+    } catch (error) {
+      console.error("Progress submission failed:", error);
     }
   };
 
@@ -34,9 +41,13 @@ const Progress_Update = () => {
       const response = await instance.get(
         `/guide/checks_already_guide_updated_weekly_progress/${teamId}/${weekKey}`
       );
+
       if (response.data.length > 0 && response.data[0].is_verified === 1) {
-        setAlreadyUpdated(true);
+        setAlreadyUpdated(false);
         setCanUpdate(false);
+      } else {
+        setAlreadyUpdated(false);
+        setCanUpdate(true);
       }
     } catch (error) {
       console.error("Failed to check guide verification status:", error);
@@ -56,7 +67,6 @@ const Progress_Update = () => {
         setCurrentWeek(`Week ${i}`);
         setNextWeekToUpdate(weekKey);
         await checkIfAlreadyVerified(teamId, weekKey);
-        setCanUpdate(true);
         return;
       }
     }
@@ -114,7 +124,9 @@ const Progress_Update = () => {
                   </svg>
                   <div>
                     <p className="text-lg font-semibold">Progress Already Verified</p>
-                    <p className="mt-1 text-sm">Your progress for <span className="font-semibold">{currentWeek}</span> has already been verified by the guide. No changes allowed.</p>
+                    <p className="mt-1 text-sm">
+                      Your progress for <span className="font-semibold">{currentWeek}</span> has already been verified by the guide. No changes allowed.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -135,7 +147,7 @@ const Progress_Update = () => {
               <div className="mt-6 text-right bg-white">
                 <button
                   onClick={handleSubmit}
-                  className="bg-gradient-to-r bg-white from-indigo-600 to-blue-500 text-white px-6 py-2 rounded-xl hover:from-indigo-700 hover:to-blue-600 transition font-semibold shadow-lg"
+                  className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white px-6 py-2 rounded-xl hover:from-indigo-700 hover:to-blue-600 transition font-semibold shadow-lg"
                 >
                   Submit Progress
                 </button>
@@ -152,6 +164,4 @@ const Progress_Update = () => {
   );
 };
 
-export default Progress_Update;  
-
-
+export default Progress_Update;
