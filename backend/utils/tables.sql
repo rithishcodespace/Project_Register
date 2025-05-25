@@ -24,6 +24,7 @@ CREATE TABLE `project_files` (
 
 CREATE TABLE `projects` (
   `project_id` varchar(50) NOT NULL,
+  `team_id` VARCHAR(200) NOT NULL
   `project_name` varchar(500) DEFAULT NULL,
   `cluster` varchar(100) DEFAULT NULL,
   `description` text,
@@ -47,24 +48,8 @@ CREATE TABLE team_requests (
   from_reg_num varchar(255) NOT NULL,
   to_reg_num varchar(255) NOT NULL,
   status varchar(255) DEFAULT 'interested',
+  reason TEXT DEFAULT NULL,
   team_conformed int DEFAULT '0',
-  project_id varchar(250) DEFAULT NULL,
-  guide_reg_num varchar(500) DEFAULT NULL,
-  sub_expert_reg_num varchar(500) DEFAULT NULL,
-  project_picked_date datetime DEFAULT CURRENT_TIMESTAMP,
-  guide_verified INT DEFAULT 0,
-  week1_progress varchar(200) DEFAULT NULL,
-  week2_progress varchar(200) DEFAULT NULL,
-  week3_progress varchar(200) DEFAULT NULL,
-  week4_progress varchar(200) DEFAULT NULL,
-  week5_progress varchar(200) DEFAULT NULL,
-  week6_progress varchar(200) DEFAULT NULL,
-  week7_progress varchar(200) DEFAULT NULL,
-  week8_progress varchar(200) DEFAULT NULL,
-  week9_progress varchar(200) DEFAULT NULL,
-  week10_progress varchar(200) DEFAULT NULL,
-  week11_progress varchar(200) DEFAULT NULL,
-  week12_progress varchar(200) DEFAULT NULL,
   UNIQUE KEY unique_request (from_reg_num,to_reg_num),
   PRIMARY KEY (from_reg_num, to_reg_num)
 )
@@ -133,9 +118,10 @@ CREATE TABLE `users` (
   `emailId` VARCHAR(200) NOT NULL,
   `password` VARCHAR(200) DEFAULT NULL,
   `role` VARCHAR(200) DEFAULT NULL,
-  `reg_num` VARCHAR(200) DEFAULT NULL,
+  `reg_num` VARCHAR(200) NOT NULL UNIQUE,
   `name` VARCHAR(200) DEFAULT NULL,
   `dept` VARCHAR(200) DEFAULT NULL,
+  `semester` INT DEFAULT NULL
   `company_name` VARCHAR(300) DEFAULT NULL,
   `company_contact` VARCHAR(50) DEFAULT NULL,
   `company_address` VARCHAR(200) DEFAULT NULL,
@@ -202,6 +188,35 @@ CREATE TABLE review_marks (
   total_guide_marks INT NOT NULL CHECK (total_guide_marks BETWEEN 0 AND 50),
   PRIMARY KEY (review_no, team_id)
 );
+
+CREATE TABLE teams (
+  team_id VARCHAR(20),
+  reg_num VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, -- must match users.reg_num
+  is_leader BOOLEAN DEFAULT 0,
+  project_id VARCHAR(250),
+  guide_reg_num VARCHAR(500),
+  sub_expert_reg_num VARCHAR(500),
+  project_picked_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+  guide_verified INT DEFAULT 0,
+  week1_progress VARCHAR(200),
+  week2_progress VARCHAR(200),
+  week3_progress VARCHAR(200),
+  week4_progress VARCHAR(200),
+  week5_progress VARCHAR(200),
+  week6_progress VARCHAR(200),
+  week7_progress VARCHAR(200),
+  week8_progress VARCHAR(200),
+  week9_progress VARCHAR(200),
+  week10_progress VARCHAR(200),
+  week11_progress VARCHAR(200),
+  week12_progress VARCHAR(200),
+
+  PRIMARY KEY (team_id, reg_num),
+  FOREIGN KEY (reg_num) REFERENCES users(reg_num)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
 
 
 
