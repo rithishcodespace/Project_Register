@@ -3,8 +3,10 @@ CREATE TABLE guide_requests (
   `from_team_id` VARCHAR(200) NOT NULL,
   `project_id` VARCHAR(200) NOT NULL,
   `to_guide_reg_num` VARCHAR(200) NOT NULL,
-  status VARCHAR(200) DEFAULT 'interested',
+  `status` VARCHAR(200) DEFAULT 'interested',
+  `reason` TEXT DEFAULT NULL,
  `project_name` VARCHAR(500) DEFAULT NULL,
+ `team_semester` INT NOT NULL;
   PRIMARY KEY (`from_team_id, project_id, to_guide_reg_num`),
   INDEX `idx_status` (status)
 ) 
@@ -81,7 +83,7 @@ CREATE TABLE `scheduled_reviews` (
   `marks` VARCHAR(20) DEFAULT NULL,
   `remarks` VARCHAR(5000) DEFAULT NULL,
   `team_id` VARCHAR(300) DEFAULT NULL,
-  expert_reg_num varchar(100) not null,
+  `expert_reg_num` varchar(100) not null,
   PRIMARY KEY (`review_id`)
 ) 
 
@@ -90,7 +92,9 @@ CREATE TABLE `sub_expert_requests` (
   `project_id` VARCHAR(200) NOT NULL,
   `to_expert_reg_num` VARCHAR(200) NOT NULL,
   `status` VARCHAR(200) DEFAULT 'interested',
+  `reason` TEXT DEFAULT NULL,
   `project_name` VARCHAR(500) DEFAULT NULL,
+  `team_semester` INT NOT NULL,
   PRIMARY KEY (`from_team_id`, `project_id`, `to_expert_reg_num`),
   INDEX `idx_status` (`status`)
 ) 
@@ -196,6 +200,7 @@ CREATE TABLE teams (
   project_id VARCHAR(250),
   guide_reg_num VARCHAR(500),
   sub_expert_reg_num VARCHAR(500),
+  mentor_reg_num VARCHAR(100) default NULL,
   project_picked_date DATETIME DEFAULT CURRENT_TIMESTAMP,
   guide_verified INT DEFAULT 0,
   week1_progress VARCHAR(200),
@@ -217,10 +222,14 @@ CREATE TABLE teams (
     ON UPDATE CASCADE
 );
 
-
-
-
-
-
-
-
+CREATE TABLE `mentor_requests` (
+  `from_team_id` VARCHAR(200) NOT NULL,
+  `project_id` VARCHAR(200) NOT NULL,
+  `mentor_reg_num` VARCHAR(200) NOT NULL,
+  `status` VARCHAR(200) DEFAULT 'interested',
+  `reason` TEXT DEFAULT NULL,
+  `project_name` VARCHAR(500) DEFAULT NULL,
+  `team_semester` INT NOT NULL,
+  PRIMARY KEY (`from_team_id`, `project_id`, `mentor_reg_num`),
+  INDEX `idx_status` (`status`)
+) 

@@ -5,11 +5,12 @@ const nodemailer = require("nodemailer");
 const db = require("../db");
 const userAuth = require("../middlewares/userAuth");
 
-// gets the request recevied by the mentor
+// gets the request recevied by the guide
 
 router.get("/guide/getrequests/:reg_num",userAuth,(req,res,next) => {
     try{
         let {reg_num} = req.params;
+        if(!reg_num)return next(createError.BadRequest('reg_num is not defined!'));
         let sql = "select * from guide_requests where to_guide_reg_num = ? and status = 'interested'";
         db.query(sql,[reg_num],(error,result) => {
             if(error)return next(error);
@@ -26,60 +27,54 @@ router.get("/guide/getrequests/:reg_num",userAuth,(req,res,next) => {
 })
 
 // update status -> accept or reject
-router.patch("/guide/accept_reject/:status/:team_id/:my_id",userAuth, (req, res, next) => {
+router.patch("/guide/accept_reject/:status/:team_id/:semester/:my_id",userAuth, (req, res, next) => {
   try {
-    const { status, team_id, my_id } = req.params;
+    const { status, team_id, my_id,semester } = req.params;
+    const {reason} = req.body;
 
     if (status !== "accept" && status !== "reject") {
       return res.status(400).send("Invalid status");
     }
 
-    if (!team_id || !my_id) {
-      return res.status(400).json({ error: 'Invalid team_id or reg_num' });
-    }
+    if(!team_id || !my_id || !semester || !reason)return next(createError.BadRequest("data is missing!"));
 
-    // Step 1: Get project_id
-    let sql = "SELECT project_id FROM team_requests WHERE team_id = ?";
-    db.query(sql, [team_id], (error, result) => {
+    //checks whether he acts as expert or mentor to that particular team
+    let sql = "SELECT * FROM sub_expert_requests WHERE to_expert_reg_num = ? AND from_team_id = ? AND status = 'accept' UNION SELECT * FROM mentor_requests WHERE to_mentor_reg_num = ? AND from_team_id = ? AND status = 'accept'";
+    db.query(sql, [my_id,team_id,my_id,team_id], (error, result) => {
       if (error) return next(error);
-      if (result.length === 0) return res.status(404).send("Project not found");
+      if (result.length > 0) return res.status(404).send('Your are already acting as guide or mentor to this team, so you cant accept or reject this request!');
 
-      const project_id = result[0].project_id;
-
-      // Step 2: Update guide_requests
+      //Update guide_requests
       let sql1 = "UPDATE guide_requests SET status = ? WHERE to_guide_reg_num = ? AND from_team_id = ? AND status = 'interested'";
       db.query(sql1, [status, my_id, team_id], (error, result) => {
         if (error) return next(error);
         if(result.affectedRows === 0)return res.status(500).send("no rows affected!")
 
         if (status === "accept") {
-          // Step 3: Count how many projects the guide has
-          let sql2 = "SELECT * FROM guide_requests WHERE to_guide_reg_num = ? AND status = 'accept'";
-          db.query(sql2, [my_id], (error, result) => {
+          //Count how many teams the guide has
+          let sql2 = "SELECT * FROM guide_requests WHERE to_guide_reg_num = ? AND status = 'accept' and team_semester = ?";
+          db.query(sql2, [my_id,semester], (error, result) => {
             if (error) return next(error);
 
             const mentoringTeams = result.length;
-            if (mentoringTeams < 4) {
-              // Step 4: Assign guide to team_requests
-              let sql3 = "UPDATE team_requests SET guide_reg_num = ? WHERE team_id = ?";
+            if (mentoringTeams <= 3) {
+              // Assign guide to the teams tablew
+              let sql3 = "UPDATE teams SET guide_reg_num = ? WHERE team_id = ?";
               db.query(sql3, [my_id, team_id], (error, result) => {
                 if (error) return next(error);
                 if(result.affectedRows === 0)return res.status(500).send("no rows affected!")
-
-                // Step 5: Assign guide to projects
-                let sql4 = "UPDATE projects SET guide_reg_num = ? WHERE project_id = ?";
-                db.query(sql4, [my_id, project_id], (error, result) => {
-                  if (error) return next(error);
-                  res.send("Status updated successfully and guide assigned!");
-                });
+                else {
+                      res.send("Status updated successfully and guide assigned!");
+                }
               });
             } else {
-              // Step 6: Guide already has 4 projects, mark them as unavailable(false)
+              //Guide already has 3 projects, mark them as unavailable(false)
               let sql4 = "update users set available = false where reg_num = ?";
               db.query(sql4, [my_id], (error, result) => {
                 if (error) return next(error);
                 if(result.affectedRows === 0)return res.status(500).send("no rows affected!")
 
+                // remove the requests they got
                 let sql5 = "DELETE FROM guide_requests WHERE to_guide_reg_num = ? AND status = 'interested'";
                 db.query(sql5, [my_id], (error, result) => {
                   if (error) return next(error);
@@ -91,7 +86,12 @@ router.patch("/guide/accept_reject/:status/:team_id/:my_id",userAuth, (req, res,
           });
         } else if (status === "reject") {
           // Handle rejection: status already updated in sub_expert_requests
-          res.send(`${team_id} rejected successfully!`)
+          let rejectSql = "guide_requests set reason = ? where team_id = ?";
+            db.query(rejectSql,[reason,team_id],(error,result) => {
+              if(error)return next(error);
+              if(result.affectedRows === 0)return next(createError.BadRequest('reason not updated in requests table!'));
+              res.send(`${team_id} rejected successfully!`)
+            })
           
         }
       });
@@ -102,82 +102,103 @@ router.patch("/guide/accept_reject/:status/:team_id/:my_id",userAuth, (req, res,
 });
 
   // sends request to guide
-  router.post("/guide/sent_request_to_guide",userAuth, (req, res, next) => {
-      try {
-          const { from_team_id, project_id, project_name, to_guide_reg_num } = req.body;
-          if (!from_team_id || !project_id || !project_name || !Array.isArray(to_guide_reg_num) || to_guide_reg_num.length == 0) {
-              return res.status(400).json({ message: "All fields are required" });
-          }
+  router.post("/guide/sent_request_to_guide/:semester", userAuth, (req, res, next) => {
+  try {
+    const { semester } = req.params;
+    const { from_team_id, project_id, project_name, to_guide_reg_num } = req.body;
 
-          // Create a transporter
-          const transporter = nodemailer.createTransport({
-              service: 'gmail',
-              auth: {
-                  user: process.env.EMAIL_USER, // -> temporary
-                  pass: process.env.EMAIL_PASS
-              },
-          });
+    if (!from_team_id || !project_id || !project_name || !Array.isArray(to_guide_reg_num) || to_guide_reg_num.length === 0 || !semester || (semester != 5 && semester != 7)) {
+      return res.status(400).json({ message: "Some fields are required" });
+    }
 
-          let errorOccured = false;
-          let completedRequests = 0;
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      },
+    });
 
-          // Loop for each guide
-          for (let i = 0; i < to_guide_reg_num.length; i++) {
-              let sql = "INSERT INTO guide_requests (from_team_id, project_id, project_name, to_guide_reg_num) VALUES (?,?,?,?)";
-              db.query(sql, [from_team_id, project_id, project_name, to_guide_reg_num[i]], (error, result) => {
-                  if (error) {
-                      console.error(`DATABASE ERROR: ${error}`);
-                      errorOccured = true;
-                  }
-                  else if(!result || result.affectedRows === 0){
-                    console.error(`No rows inserted for guide ${to_guide_reg_num[i]}`);
-                    errorOccured = true;
-                  }
+    let validGuides = [];
+    let checked = 0;
 
-                          
-                  let getGuideRegNum = "select emailId from users where reg_num = ? and role = 'guide'";
-                  db.query(getGuideRegNum,[to_guide_reg_num[i]],(error,result) => {
-                    if(error)return next(error);
-                    if(result.length === 0)return next(createError.BadRequest("no regnum found!"));
-                    let guideEmail = result[0].emailId;
-                       // Define email options
-                  const mailOptions = {
-                      from: process.env.EMAIL_USER,
-                      to: guideEmail,// guide id -> temporary
-                      subject: 'Request To Accept Invite',
-                      text: `Dear Guide,\n\n${from_team_id} team has requested you to be their guide. Please login to the system to accept or reject the request.\n\nThank you.`,
-                  };
+    to_guide_reg_num.forEach((guideRegNum, idx) => {
+      let checkSql = "SELECT team_semester FROM guide_requests WHERE to_guide_reg_num = ? AND status = 'accept'";
+      db.query(checkSql, [guideRegNum], (error, results) => {
+        if (error) return next(error);
 
-                  // Send the email
-                transporter.sendMail(mailOptions, (error, info) => {
-                    if (error) {
-                        console.error('Email Error:', error);
-                        errorOccured = true;
-                    } else {
-                        console.log('Email sent:', info.response);
-                    }
-
-                    // Track completed requests
-                    completedRequests++;
-
-                    // When all requests are done
-                    if (completedRequests === to_guide_reg_num.length) {
-                        if (errorOccured) {
-                            return res.status(500).json({ "message": "Some requests failed, check logs!" });
-                        } else {
-                            res.send("Request sent successfully to the given guide!");
-                        }
-                    }
-                });
-                  })
-            });
+        let s5 = 0, s7 = 0;
+        for (let r of results) {
+          if (r.team_semester === 5) s5++;
+          else if (r.team_semester === 7) s7++;
         }
 
-    } catch (error) {
-        next(error);
-    }
+        if ((semester == 5 && s5 < 3) || (semester == 7 && s7 < 3)) {
+          validGuides.push(guideRegNum);
+        }
+
+        checked++; // runs on last index
+        if (checked === to_guide_reg_num.length) {
+          // All guides checked, now proceed to insert requests
+          if (validGuides.length === 0) {
+            return res.status(400).json({ message: "No eligible guides found" });
+          }
+
+          let completed = 0;
+          let errors = false;
+
+          validGuides.forEach((guide) => {
+            const insertSql = "INSERT INTO guide_requests (from_team_id, project_id, project_name, to_guide_reg_num,team_semester) VALUES (?, ?, ?, ?)";
+            db.query(insertSql, [from_team_id, project_id, project_name, guide,semester], (error, insertResult) => {
+              if (error || insertResult.affectedRows === 0) {
+                console.error("Insert failed for:", guide, error || "No rows inserted");
+                errors = true;
+              }
+
+              let emailQuery = "SELECT emailId FROM users WHERE reg_num = ? AND role = 'staff'";
+              db.query(emailQuery, [guide], (error, emailResult) => {
+                if (error || emailResult.length === 0) {
+                  console.error("Email not found for:", guide);
+                  errors = true;
+                  checkComplete();
+                } else {
+                  const mailOptions = {
+                    from: process.env.EMAIL_USER,
+                    to: emailResult[0].emailId,
+                    subject: 'Request To Accept Invite',
+                    text: `Dear Guide,\n\n${from_team_id} team has requested you to be their guide. Please login to the system to accept or reject the request.\n\nThank you.`,
+                  };
+
+                  transporter.sendMail(mailOptions, (err, info) => {
+                    if (err) {
+                      console.error("Email failed:", err);
+                      errors = true;
+                    }
+                    checkComplete();
+                  });
+                }
+              });
+
+              function checkComplete() {
+                completed++;
+                if (completed === validGuides.length) {
+                  if (errors) {
+                    return res.status(500).json({ message: "Some requests or emails failed." });
+                  } else {
+                    return res.send("Requests sent successfully to all eligible guides!");
+                  }
+                }
+              }
+            });
+          });
+        }
+      });
+    });
+  } catch (error) {
+    next(error);
+  }
 });
-  
+
 
 // adds reply to the query
 
@@ -224,7 +245,7 @@ router.get("/guide/fetch_mentoring_teams/:guide_id",userAuth,(req,res,next) => {
       if(!guide_id)
       {
         return next(createError.BadRequest("guide id not found!"));
-    }
+      }
     let sql = "select * from guide_requests where to_guide_reg_num = ? and status = 'accept'";
     db.query(sql,[guide_id],(error,result) => {
         if(error)return next(error);

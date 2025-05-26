@@ -123,20 +123,28 @@ router.post("/student/join_request", userAuth, (req, res, next) => {
 
 // filters the request i received -> notification
 
-// router.get("/student/request_recived/:regnum",userAuth,(req,res,next) => {
-//     try{
-//       let sql = "select * from team_requests where to_reg_num = ? and status = 'interested'";
-//       let reg_num = req.params.regnum;
-//       db.query(sql,[reg_num],(error,result) => {
-//         if(error)return next(error);
-//         res.send(result);
-//       })
-//     }
-//     catch(error)
-//     {
-//       next(error.message);
-//     }
-// })
+router.get("/student/request_recived/:reg_num",userAuth,(req,res,next) => {
+    try{
+      const{reg_num} = req.params;
+      if(!reg_num)return next(createError.BadRequest('reg_num not found!'));
+      // checks if he is already a team_member
+      let sql1 = "select * from team_requests where (from_reg_num = ? or to_reg_num = ?) and status = 'accept'";
+      db.query(sql1,[reg_num,reg_num],(error,result) => {
+        if(error)return next(error);
+        if(result.length > 0)return next('You are already a member of another team!')
+        // fetching the requests
+        let sql = "select * from team_requests where to_reg_num = ? and status = 'interested'";
+        db.query(sql,[reg_num],(error,result) => {
+          if(error)return next(error);
+          res.send(result);
+        })
+      })
+    }
+    catch(error)
+    {
+      next(error.message);
+    }
+})
 
 // fetch all the invitations the loggedIn user received
 
@@ -179,18 +187,23 @@ router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",userAuth,
       return next(createError.BadRequest("Invalid status."));
     }
 
+    const safeStatus = status.toLowerCase();
+
+    if(safeStatus === 'reject' && reason === null)return next(createError.BadRequest('reason not found for rejecting the connection request!'));
+    
+
     //  Update the request if it exists and is still 'interested'
     let updateSQL;
     if(status === 'accept') updateSQL = `UPDATE team_requests SET status = ? WHERE to_reg_num = ? AND from_reg_num = ? AND status = 'interested'`;
     else if(status === 'reject') updateSQL = `UPDATE team_requests SET status = ?,reason = ? WHERE to_reg_num = ? AND from_reg_num = ? AND status = 'interested'`;
 
-    db.query(updateSQL, [status, reason, to_reg_num, from_reg_num], (err, result) => {
+    db.query(updateSQL, [safeStatus, reason, to_reg_num, from_reg_num], (err, result) => {
       if (err) return next(err);
       if (result.affectedRows === 0)
         return next(createError.BadRequest("No matching pending request found or already processed."));
 
       // If accepted, check team size
-      if (status.toLowerCase() === 'accept') {
+      if (safeStatus === 'accept') {
         const countSQL = `SELECT COUNT(*) AS count FROM team_requests WHERE from_reg_num = ? AND status = 'accept'`;
         db.query(countSQL, [from_reg_num], (err1, result1) => {
           if (err1) return next(err1);
@@ -829,71 +842,64 @@ router.post("/student/addproject/:project_type/:team_id/:reg_num", userAuth,(req
 });
 
 // sends the review request to the expert => once in a month
-// router.post("/student/send_review_request/:team_id/:project_id",userAuth,(req,res,next) => {
-//   try{
-//     const{team_id,project_id} = req.params;
-//     const{project_name,team_lead,review_date,start_time,expert_reg_num} = req.body;
-//     if(!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time || !expert_reg_num)return next(createError.BadRequest("some parameters are missing!"));
+router.post("/student/send_review_request/:team_id/:project_id", userAuth, (req, res, next) => {
+  try {
+    const { team_id, project_id } = req.params;
+    const { project_name, team_lead, review_date, start_time, expert_reg_num } = req.body;
 
-//    const today = new Date();
-//    const reviewDate = new Date(review_date);
+    if (!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time || !expert_reg_num) {
+      return next(createError.BadRequest("Some parameters are missing!"));
+    }
 
-//    today.setHours(0, 0, 0, 0);
-//    reviewDate.setHours(0, 0, 0, 0);
+    const today = new Date();
+    const reviewDate = new Date(review_date);
+    today.setHours(0, 0, 0, 0);
+    reviewDate.setHours(0, 0, 0, 0);
 
-//   if (reviewDate < today) {
-//     return next(createError.BadRequest("Invalid date! Review date cannot be in the past."));
-//   }
+    if (reviewDate < today) {
+      return next(createError.BadRequest("Invalid date! Review date cannot be in the past."));
+    }
 
-//    const formattedDate = reviewDate.toISOString().split('T')[0]; // YYYY-MM-DD
+    const formattedDate = reviewDate.toISOString().split('T')[0]; // YYYY-MM-DD
 
-//    // checking already completed 3 reviews
+    // Check if already completed 2 reviews
+    let sql2 = "SELECT * FROM scheduled_reviews WHERE team_id = ?";
+    db.query(sql2, [team_id], (error, result1) => {
+      if (error) return next(error);
+      if (result1.length >= 2) return next(createError.BadRequest("Your team already completed 2 reviews."));
 
-//    let sql2 = "select * from scheduled_reviews where team_id = ? and attendance = 'present'";
-//    db.query(sql2,[team_id],(error,result1) => {
-//     if(error)return next(error);
-//     if(result1.length >= 3)return(next(createError.BadRequest("Your team already completed 3 reviews")));
+      // Eligibility check
+      const weekToCheck = result1.length === 0 ? 3 : 6;
+      let weekSql = "SELECT * FROM weekly_logs_verifications WHERE week_number = ? AND is_verified = true AND team_id = ?";
+      db.query(weekSql, [weekToCheck, team_id], (error, verificationResult) => {
+        if (error) return next(error);
+        if (verificationResult.length === 0) {
+          return next(createError.BadRequest(`You are not eligible to apply for the review request. Week ${weekToCheck} log not verified.`));
+        }
 
-//     // checking time gap
+        // Check for duplicate review request for same date/time/expert
+        let checkSql = "SELECT * FROM review_requests WHERE review_date = ? AND start_time = ? AND expert_reg_num = ?";
+        db.query(checkSql, [formattedDate, start_time, expert_reg_num], (error, existingResult) => {
+          if (error) return next(error);
+          if (existingResult.length > 0) {
+            return next(createError.BadRequest("Review request already exists for this slot!"));
+          }
 
-
-    
-//    let sql3 = "select week1 from weekly_logs_deadlines where team_id = ?";
-//    db.query(sql3,[team_id],(error,result2) => {
-//     if(error)return next(error);
-//     if(result2.length === 0)return next(createError.NotFound("week1 deadline for your teams not found!"));
-//     let week1_deadline = result2[0].week1;
-//     const diff_ms = week1_deadline - today
-//     const diff_days = diff_ms / (1000 * 60 * 60 * 24);
-//     // if ((result1.length === 1 && diff_days < 28) || (result1.length === 2 && diff_days < 56) || (result1.length === 3 && diff_days < 74)) {
-//     //   return next(createError.BadRequest(`You haven't met the eligibility requirements for requesting ${result1.length + 1}th review`));
-//     // }
-
-//      //checking already requested for same date and time
-
-//     let checkdate = "select * from review_requests where review_date = ? and start_time = ? and expert_reg_num = ?";
-//     db.query(checkdate,[formattedDate,start_time,expert_reg_num],(error,result) => {
-//       if(error)return next(error);
-//       if(result.length > 0)return next(createError.BadRequest("review request already exists!"));
-
-//       // inserting into db
-
-//       let sql = "insert into review_requests (team_id,project_id,project_name,team_lead,review_date,start_time,expert_reg_num) values (?, ?, ?, ?, ?, ?, ?)";
-//       db.query(sql,[team_id,project_id,project_name,team_lead,formattedDate,start_time,expert_reg_num],(error,result) => {
-//         if(error)return next(error);
-//         if(result.affectedRows === 0)return res.status(500).json({"message":"some rows are not affected!"});
-//         return res.send(`${review_date}:-${start_time} request inserted successfully`)
-//       })
-//     })
-
-//    })
-//    })
-//   }
-//   catch(error)
-//   {
-//     next(error);
-//   }
-// })
+          // Insert into review_requests
+          let insertSql = "INSERT INTO review_requests (team_id, project_id, project_name, team_lead, review_date, start_time, expert_reg_num) VALUES (?, ?, ?, ?, ?, ?, ?)";
+          db.query(insertSql, [team_id, project_id, project_name, team_lead, formattedDate, start_time, expert_reg_num], (error, result) => {
+            if (error) return next(error);
+            if (result.affectedRows === 0) return res.status(500).json({ message: "Insertion failed!" });
+            return res.send(`${formattedDate} - ${start_time}: Review request submitted successfully.`);
+          });
+        });
+      });
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+                             
 
 
 module.exports = router;
