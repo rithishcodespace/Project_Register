@@ -8,10 +8,27 @@ const userAuth = require("../middlewares/userAuth")
 
 router.post("/admin/adduser",userAuth,(req,res,next) => {
    try{
-     let sql = "insert into users(name,emailId,password,role,dept,reg_num,phone_number) values(?,?,?,?,?,?,?)";
-     const values = [req.body.name,req.body.emailId,req.body.password,req.body.role,req.body.dept,req.body.reg_num,req.body.phone_number];
+     const{name,emailId,password,role,dept,reg_num,phone_number,semester} = req.body;
+     if(!name || !emailId || !password || !role || !dept || !reg_num){ // not checking semester since it might be null other than students
+      return next(createError.BadRequest("data is missing!"));
+     }
+     const normalRole = role.toLowerCase();
+     const safeSemester = normalRole === "student" ? semester : null;
+     const safePhone_number = phone_number ? phone_number : null;
+     const validRoles = ['student','admin','staff'];
+     if(!validRoles.includes(normalRole)){
+       return next(createError.BadRequest("invalid role!"));
+     }
+     if (normalRole === "student") {
+      let validSem = [5, 7];
+      if (!validSem.includes(semester)) {
+        return next(createError.BadRequest("Invalid semester for student!"));
+      }
+     }
+     let sql = "insert into users(name,emailId,password,role,dept,reg_num,phone_number,semester) values(?,?,?,?,?,?,?,?)";
+     const values = [name,emailId,password,normalRole,dept,reg_num,safePhone_number,safeSemester];
      db.query(sql,values,(error,result) => {
-        if(error) next(error);
+        if(error)return next(error);
         if(result.affectedRows === 0)return next(createError.BadRequest("rows are not affected!"));
         res.send("user added successfully by admin!");
      })
@@ -24,33 +41,34 @@ router.post("/admin/adduser",userAuth,(req,res,next) => {
 
 // get project through project_id
 
-router.get("/admin/getproject_by_team_id/:project_id",userAuth,(req,res,next) => {
-  try{
-   const{project_id} = req.params;
-   if(!project_id)return next("project_id not found");
-   let sql = "select * from projects where project_id = ?";
-   db.query(sql,[project_id],(error,result) => {
-    if(error)return next(error);
-    return res.send(result);
-   })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
+// router.get("/admin/getproject_by_team_id/:project_id",userAuth,(req,res,next) => {
+//   try{
+//    const{project_id} = req.params;
+//    if(!project_id)return next("project_id not found");
+//    let sql = "select * from projects where project_id = ?";
+//    db.query(sql,[project_id],(error,result) => {
+//     if(error)return next(error);
+//     return res.send(result);
+//    })
+//   }
+//   catch(error)
+//   {
+//     next(error);
+//   }
+// })
 
 // fetch users based on role
 
 router.get("/admin/get_users/:role",userAuth,(req,res,next) => {
   try{
     const{role} = req.params;
-    const validRoles = ['student','admin','sub_expert','guide','teacher'];
-    if (!role || !validRoles.includes(role)) {
-      return next(createError.BadRequest("Invalid or missing user role!"));
+    const validRoles = ['student','admin','staff'];
+    const safeRole = role.toLowerCase();
+    if (!validRoles.includes(safeRole)) {
+      return next(createError.BadRequest("Invalid role!"))
     }
     let sql = "select * from users where role = ? and available = true";
-    db.query(sql,[role],(error,result) => {
+    db.query(sql,[safeRole],(error,result) => {
       if(error)return next(error);
       res.send(result);
     })
@@ -67,8 +85,11 @@ router.delete("/admin/removeuser/:emailId/:reg_num/:role",userAuth,(req,res,next
   try{
     const{emailId,reg_num,role} = req.params;
     if(!emailId || !reg_num || !role)return createError.BadRequest("parameters are misssing!");
+    const validRoles = ['student','admin','staff'];
+    const safeRole = role.toLowerCase();
+    if(!validRoles.includes(safeRole))return next(createError.BadRequest("invalid role!"));
     let sql = "delete from users where emailId = ? and reg_num = ? and role = ?";
-    db.query(sql,[emailId,reg_num,role],(error,result) => {
+    db.query(sql,[emailId,reg_num,safeRole],(error,result) => {
       if(error) return next(error);
       if(result.affectedRows === 0)return next(createError.BadRequest("rows are not affected!"));
       res.send("user deleted successfully !")
@@ -144,7 +165,7 @@ router.delete("/admin/remove_timeline/:id",userAuth,(req,res,next) => {
   }
 })
 
-// updates the timeline -> whole timeline (not team_specific)
+// updates the whole timeline -> whole timeline (not team_specific)
 
 router.patch("/admin/update_timeline_id/:id",userAuth,(req,res,next) => {
   try{
@@ -177,16 +198,17 @@ router.patch("/admin/update_timeline_id/:id",userAuth,(req,res,next) => {
   }
 })
 
-// updates timeline team-specific -> either guide or expert not accepted
-
-router.patch("/admin/update_team_timeline/:team_id",userAuth, (req, res, next) => {
+// updates whole timeline [team-specific]
+router.patch("/admin/update_team_timeline/:team_id/:timelinename",userAuth, (req, res, next) => { 
   try {
-    const { team_id } = req.params;
+    const { team_id,timelinename } = req.params;
     let { start_date, end_date } = req.body;
 
     if (!start_date || !end_date) {
       return next(createError.BadRequest("Start and end dates are required."));
     }
+
+    if(!team_id || !timelinename)return next(createError.BadRequest('some fields are missing!'))
 
     start_date = new Date(start_date);
     end_date = new Date(end_date);
@@ -203,7 +225,7 @@ router.patch("/admin/update_team_timeline/:team_id",userAuth, (req, res, next) =
     const sql = `
       UPDATE timeline 
       SET start_date = ?, end_date = ?, cron_executed = false 
-      WHERE team_id = ? AND name = 'project timeline'
+      WHERE team_id = ? AND name = ?
     `;
 
     db.query(sql, [start_date, end_date, team_id], (error, result) => {
@@ -214,9 +236,9 @@ router.patch("/admin/update_team_timeline/:team_id",userAuth, (req, res, next) =
 
       res.status(200).json({
         message: "Team-specific timeline updated successfully.",
-        team_id,
-        start_date,
-        end_date
+        "team_id":team_id,
+        "start_date":start_date,
+        "end_date":end_date
       });
     });
   } catch (error) {
@@ -224,11 +246,8 @@ router.patch("/admin/update_team_timeline/:team_id",userAuth, (req, res, next) =
   }
 });
 
-// updates the deadline only for specific week -> not updated weekly log
 
-// router.patch()
-
-// updates the weekly deadlines for a specific team -> for a single week ->  did'not updated weekly logs
+// updates the weekly deadlines for a specific team -> for a single week(all weeks wont be updated) ->  did'not updated weekly logs
 router.patch("/admin/update_deadline/:week/:team_id",userAuth,(req,res,next) => {
   try{
     const{week,team_id} = req.params;
@@ -253,7 +272,7 @@ router.patch("/admin/update_deadline/:week/:team_id",userAuth,(req,res,next) => 
     const day = String(newDeadline.getDate()).padStart(2, '0');
     newDeadline = `${year}-${month}-${day}`;
 
-    // checks if deadlines exists - both guide and expert should accepte request
+    // checks if deadlines exists -> to update
     let sql1 = "select * from weekly_logs_deadlines where team_id = ?";
     db.query(sql1,[team_id],(error,result) => {
       if(error)return next(error);
@@ -272,67 +291,58 @@ router.patch("/admin/update_deadline/:week/:team_id",userAuth,(req,res,next) => 
   }
 })
 
-// assingn guide or expert for a paritcular team 
-router.patch("/admin/assign_guide_expert/:team_id/:role", (req, res, next) => {
+// // assign or update -> guide or expert for a paritcular team 
+router.patch("/admin/assign_guide_expert_mentor/:team_id/:role", (req, res, next) => {
   try {
     const { team_id, role } = req.params;
-    const { guideOrexpert_reg_num } = req.body;
+    const { guideOrexpertOrmentor_reg_num } = req.body;
 
-    if (!team_id || !guideOrexpert_reg_num || !role) {
+    if (!team_id || !guideOrexpertOrmentor_reg_num || !role) {
       return next(createError.BadRequest("Missing team_id, role, or registration number."));
     }
 
-    const validRoles = ['sub_expert', 'guide'];
+    const validRoles = ['sub_expert', 'guide', 'mentor'];
     if (!validRoles.includes(role)) {
       return next(createError.BadRequest("Invalid role!"));
     }
-
-    const sql = "SELECT guide_reg_num, sub_expert_reg_num FROM team_requests WHERE team_id = ?";
-    db.query(sql, [team_id], (error, result) => {
-      if (error) return next(error);
-      if (result.length === 0) return next(createError.NotFound("Team not found!"));
-
-      const team = result[0];
-      const columnToUpdate = role === 'guide' ? 'guide_reg_num' : 'sub_expert_reg_num';
-
-      if (team[columnToUpdate] !== null) {
-        return next(createError.Conflict(`${role} is already assigned to this team.`));
-      }
-
-      const updateSql = `UPDATE team_requests SET ${columnToUpdate} = ? WHERE team_id = ?`;
-      db.query(updateSql, [guideOrexpert_reg_num, team_id], (err, updateResult) => {
-        if (err) return next(err);
-        if (updateResult.affectedRows === 0) {
-          return next(createError.InternalServerError("No rows were updated."));
-        }
-
-        res.send(`${role} with reg_num ${guideOrexpert_reg_num} assigned successfully to team ${team_id}.`);
-      });
-    });
+    
+    // checks whether the person already acts as expert or mentor or guide for this particular team
+    let checkSql = "SELECT * FROM teams WHERE team_id = ? AND (guide_reg_num = ? OR sub_expert_reg_num = ? OR mentor_reg_num = ?)";
+    db.query(checkSql,[team_id,guideOrexpertOrmentor_reg_num,guideOrexpertOrmentor_reg_num,guideOrexpertOrmentor_reg_num],(error,result) => {
+      if(error)return next(error);
+      if(result.length >= 1)return next(createError.BadRequest('This staff already acts as guide or expert or mentor for this particular team!'));
+      //updating
+      let updateSql = `update teams set ${role}_reg_num = ? where team_id = ?`;
+      db.query(updateSql,[guideOrexpertOrmentor_reg_num,team_id],(error,result) => {
+        if(error)return next(error);
+        if(result.affectedRows === 0)return next(createError.BadRequest('Reg_num not updated!'));
+        res.send(`${team_id} teams ${role} has updated as ${guideOrexpertOrmentor_reg_num}`);
+      })  
+    })
   } catch (error) {
     next(error);  
   }
 });
 
-// gets all projects 
+// // gets all projects 
 
-router.get("/admin/get_all_projects", (req, res, next) => {
-  try {
-    let sql = "SELECT team_id FROM team_requests";
-    db.query(sql, (error, result) => {
-      if (error) return next(error);
+// router.get("/admin/get_all_projects", (req, res, next) => {
+//   try {
+//     let sql = "SELECT team_id FROM team_requests";
+//     db.query(sql, (error, result) => {
+//       if (error) return next(error);
 
-      if (result.length === 0) {
-        return next(createError.NotFound("project not found!"))
-      }
+//       if (result.length === 0) {
+//         return next(createError.NotFound("project not found!"))
+//       }
 
-      res.send(result);
-    });
-  } catch (error) {
-    next(error);
+//       res.send(result);
+//     });
+//   } catch (error) {
+//     next(error);
 
-  }
-});
+//   }
+// });
 
 
 module.exports = router;

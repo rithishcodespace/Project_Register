@@ -10,6 +10,7 @@ const userAuth = require("../middlewares/userAuth");
 router.get("/expert/getrequests/:reg_num",userAuth,(req,res,next) => {
     try{
         let {reg_num} = req.params;
+        if(!reg_num)return next(createError.BadRequest('reg_num is not defined!'));
         let sql = "select * from sub_expert_requests where to_expert_reg_num = ? and status = 'interested'";
         db.query(sql,[reg_num],(error,result) => {
             if(error)return next(error);
@@ -27,63 +28,81 @@ router.get("/expert/getrequests/:reg_num",userAuth,(req,res,next) => {
 
 
 // update status -> accept or reject // from id => project_id
-router.patch("/sub_expert/accept_reject/:status/:team_id/:my_id",userAuth, (req, res, next) => {
+// my_id -> expert reg_num
+router.patch("/sub_expert/accept_reject/:status/:team_id/:semester/:my_id",userAuth, (req, res, next) => {
   try {
-    const { status, team_id, my_id } = req.params;
+    const { status, team_id, my_id, semester } = req.params;
+    const {reason} = req.body;
     // Validate status
     if (status !== "accept" && status !== "reject") {
       return res.status(400).send("Invalid status");
     }
 
-    // Update status in guide_requests table based on the action
-    let sql1 = "UPDATE sub_expert_requests SET status = ? WHERE to_expert_reg_num = ? AND from_team_id = ? AND status = 'interested'";
-    db.query(sql1, [status, my_id, team_id], (error, result) => {
-      if (error) return next(error);
-      if(result.affectedRows === 0)return res.status(500).send("no rows affected!")
-      else {
-        if (status === "accept") {
-          // Check the number of accepted mentoring projects
-          let sql2 = "SELECT * FROM sub_expert_requests WHERE to_expert_reg_num = ? AND status = 'accept'";
-          db.query(sql2, [my_id], (error, result) => {
-            if (error) return next(error);
-            else {
-              const mentoringTeams = result.length;
-              if (mentoringTeams < 4) {
-                // After accepting the request, update the expert in team_requests
-                let sql3 = "UPDATE team_requests SET sub_expert_reg_num = ? WHERE team_id = ?";
-                db.query(sql3, [my_id, team_id], (error, result) => {
-                  if (error) return next(error);
-                  if(result.affectedRows === 0)return res.status(500).send("no rows affected!")
-                  else {
-                    res.send("Status updated successfully and guide assigned!");
-                  }
-                });
-              } else {
-                // If the expert already has 4 projects,  delete pending request and make him unavilable
-                let sql4 = "update users set available = false where reg_num = ?";
-                db.query(sql4, [my_id], (error, result) => {
-                  if (error) return next(error);
-                  if(result.affectedRows === 0)return res.status(500).send("no rows affected!")
-                  else {
-                    let sql5 = "DELETE FROM sub_expert_requests WHERE to_expert_reg_num = ? AND status = 'interested'";
-                    db.query(sql5, [my_id], (error, result) => {
-                      if (error) return next(error);
-                      else {
-                        res.send("Status updated successfully by removing the expert from guides and guide_requests");
-                      }
-                    });
-                  }
-                });
+    if(!team_id || !my_id || !semester || !reason)return next(createError.BadRequest("data is missing!"));
+
+    // checks whether he acts as guide or mentor to that particular team
+    let sql0 = "SELECT * FROM guide_requests WHERE to_guide_reg_num = ? AND from_team_id = ? AND status = 'accept' UNION SELECT * FROM mentor_requests WHERE to_mentor_reg_num = ? AND from_team_id = ? AND status = 'accept';"
+    db.query(sql0,[my_id,team_id,my_id,team_id],(error,my_teams) => {
+      if(error)return next(error);
+      if(my_teams.length > 0)return next(createError.BadRequest('Your are already acting as guide or mentor to this team, so you cant accept or reject this request!'));
+
+      // Update status in guide_requests table based on the action
+      let sql1 = "UPDATE sub_expert_requests SET status = ? WHERE to_expert_reg_num = ? AND from_team_id = ? AND status = 'interested'";
+      db.query(sql1, [status, my_id, team_id], (error, result) => {
+        if (error) return next(error);
+        if(result.affectedRows === 0)return res.status(500).send("no rows affected!")
+        else {
+          if (status === "accept") {
+            // Check the number of accepted experting projects
+            let sql2 = "SELECT * FROM sub_expert_requests WHERE to_expert_reg_num = ? AND status = 'accept' and team_semester = ?";
+            db.query(sql2, [my_id,semester], (error, result) => {
+              if (error) return next(error);
+              else {
+                const mentoringTeams = result.length;
+                if (mentoringTeams <= 3) {
+                  // After accepting the request, update the expert in teams table
+                  let sql3 = "UPDATE teams SET sub_expert_reg_num = ? WHERE team_id = ?";
+                  db.query(sql3, [my_id, team_id], (error, result) => {
+                    if (error) return next(error);
+                    if(result.affectedRows === 0)return res.status(500).send("no rows affected!")
+                    else {
+                      res.send("Status updated successfully and guide assigned!");
+                    }
+                  });
+                } else {
+                  // If the expert already has 3 projects,  delete pending request and make him unavilable
+                  let sql4 = "update users set available = false where reg_num = ? and role = 'staff'";
+                  db.query(sql4, [my_id], (error, result) => {
+                    if (error) return next(error);
+                    if(result.affectedRows === 0)return res.status(500).send("no rows affected!")
+                    else {
+                      let sql5 = "DELETE FROM sub_expert_requests WHERE to_expert_reg_num = ? AND status = 'interested'";
+                      db.query(sql5, [my_id], (error, result) => {
+                        if (error) return next(error);
+                        else {
+                          res.send("Status updated successfully by removing the expert from guides and guide_requests");
+                        }
+                      });
+                    }
+                  });
+                }
               }
-            }
-          });
-        } else if (status === "reject") {
-          // Handle rejection: status already updated in sub_expert_requests
-          res.send(`${team_id} rejected successfully!`)
+            });
+          } else if (status === "reject") {
+            // Handle rejection: status already updated in sub_expert_requests
+            let rejectSql = "update sub_expert_requests set reason = ? where team_id = ?";
+            db.query(rejectSql,[reason,team_id],(error,result) => {
+              if(error)return next(error);
+              if(result.affectedRows === 0)return next(createError.BadRequest('reason not updated in requests table!'));
+              res.send(`${team_id} rejected successfully!`)
+            })
+          }
         }
-      }
-    });
-  } catch (error) {
+      });
+  
+    })
+
+    } catch (error) {
     next(error);
   }
 });
@@ -91,67 +110,98 @@ router.patch("/sub_expert/accept_reject/:status/:team_id/:my_id",userAuth, (req,
 // sends request to expert
 
 router.post("/sub_expert/sent_request_to_expert",userAuth, (req, res, next) => {
-    try {
+      try {
+        const { semester } = req.params;
         const { from_team_id, project_id, project_name, to_expert_reg_num } = req.body;
-        if (!from_team_id || !project_id || !project_name || !Array.isArray(to_expert_reg_num) || to_expert_reg_num.length == 0) {
-            return res.status(400).json({ message: "All fields are required" });
+    
+        if (!from_team_id || !project_id || !project_name || !Array.isArray(to_expert_reg_num) || to_expert_reg_num.length === 0 || !semester || (semester != 5 && semester != 7)) {
+          return res.status(400).json({ message: "Some fields are required" });
         }
-
-        // Create a transporter
+    
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: 'rithishvkv@gmail.com', // -> temporary
-                pass: 'ncwbsvgspuplvzzr',
-            },
+          service: 'gmail',
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+          },
         });
-
-        let errorOccured = false;
-        let completedRequests = 0;
-
-        for (let i = 0; i < to_expert_reg_num.length; i++) {
-            let sql = "insert into sub_expert_requests (from_team_id, project_id, project_name, to_expert_reg_num) values (?,?,?,?)";
-            db.query(sql, [from_team_id, project_id, project_name, to_expert_reg_num[i]], (dbError, result) => {
-                if (dbError) {
-                    console.error(`DATABASE ERROR: ${dbError}`);
-                    errorOccured = true;
-                }
-                else if(!result || result.affectedRows === 0){
-                  console.error(`No rows inserted for guide ${to_expert_reg_num[i]}`);
-                  errorOccured = true;
-                }
-                else {
-                    // Define email options
-                    const mailOptions = {
-                        from: 'rithishvkv@gmail.com',
-                        to: "guides.cs24@bitsathy.ac.in", // guide id -> temporary
+    
+        let validExperts = [];
+        let checked = 0;
+    
+        to_expert_reg_num.forEach((expertRegNum, idx) => {
+          let checkSql = "SELECT team_semester FROM sub_expert_requests WHERE to_expert_reg_num = ? AND status = 'accept'";
+          db.query(checkSql, [expertRegNum], (error, results) => {
+            if (error) return next(error);
+    
+            let s5 = 0, s7 = 0;
+            for (let r of results) {
+              if (r.team_semester === 5) s5++;
+              else if (r.team_semester === 7) s7++;
+            }
+    
+            if ((semester == 5 && s5 < 3) || (semester == 7 && s7 < 3)) {
+              validExperts.push(expertRegNum);
+            }
+    
+            checked++; // runs on last index
+            if (checked === to_expert_reg_num.length) {
+              // All guides checked, now proceed to insert requests
+              if (validExperts.length === 0) {
+                return res.status(400).json({ message: "No eligible guides found" });
+              }
+    
+              let completed = 0;
+              let errors = false;
+    
+              validExperts.forEach((expert) => {
+                const insertSql = "INSERT INTO sub_expert_requests (from_team_id, project_id, project_name, to_expert_reg_num,team_semester) VALUES (?, ?, ?, ?)";
+                db.query(insertSql, [from_team_id, project_id, project_name, expert,semester], (error, insertResult) => {
+                  if (error || insertResult.affectedRows === 0) {
+                    console.error("Insert failed for:", expert, error || "No rows inserted");
+                    errors = true;
+                  }
+    
+                  let emailQuery = "SELECT emailId FROM users WHERE reg_num = ? AND role = 'staff'";
+                  db.query(emailQuery, [expert], (error, emailResult) => {
+                    if (error || emailResult.length === 0) {
+                      console.error("Email not found for:", expert);
+                      errors = true;
+                      checkComplete();
+                    } else {
+                      const mailOptions = {
+                        from: process.env.EMAIL_USER,
+                        to: emailResult[0].emailId,
                         subject: 'Request To Accept Invite',
-                        text: `Dear Expert,\n\n${from_team_id} team has requested you to be their expert. Please login to the system to accept or reject the request.\n\nThank you.`,
-                    };
-
-                    // Send the email
-                    transporter.sendMail(mailOptions, (emailError, info) => {
-                        if (emailError) {
-                            console.error('Email Error:', emailError);
-                            errorOccured = true;
-                        } else {
-                            console.log('Email sent:', info.response);
+                        text: `Dear Expert,\n\n${from_team_id} team has requested you to be their sub_expert. Please login to the system to accept or reject the request.\n\nThank you.`,
+                      };
+    
+                      transporter.sendMail(mailOptions, (err, info) => {
+                        if (err) {
+                          console.error("Email failed:", err);
+                          errors = true;
                         }
-
-                        // Increment after both DB and Email are done
-                        completedRequests++;
-                        if (completedRequests === to_expert_reg_num.length) {
-                            if (errorOccured) {
-                                res.status(500).json({ "message": "Some request failed, check logs!!" });
-                            } else {
-                                res.send("Request sent successfully to the guide!");
-                            }
-                        }
-                    });
-                }
-            });
-        }
-    } catch (error) {
+                        checkComplete();
+                      });
+                    }
+                  });
+    
+                  function checkComplete() {
+                    completed++;
+                    if (completed === validExperts.length) {
+                      if (errors) {
+                        return res.status(500).json({ message: "Some requests or emails failed." });
+                      } else {
+                        return res.send("Requests sent successfully to all eligible expert");
+                      }
+                    }
+                  }
+                });
+              });
+            }
+          });
+        });
+      } catch (error) {
         next(error);
     }
 });
@@ -165,7 +215,7 @@ router.get("/sub_expert/fetch_teams/:expert_id",(req,res,next) => {
       if(!expert_id)
       {
         return next(createError.BadRequest("expert id not found!"));
-    }
+      }
     let sql = "select * from sub_expert_requests where to_expert_reg_num = ? and status = 'accept'";
     db.query(sql,[expert_id],(error,result) => {
         if(error)return next(error);
@@ -225,12 +275,15 @@ router.post("/sub_expert/add_review_details/:request_id/:status/:expert_reg_num/
       {
         return next(createError.BadRequest("data is missing!"));
       }
+      const safeStatus = status.toLowerCase();
+      const validStatus = ['accept','reject'];
+      if(!validStatus.includes(safeStatus))return next(createError.BadRequest('invalid status!'));
       // updating status
       let updatequery = "UPDATE review_requests SET status = ? WHERE request_id = ?";
-      db.query(updatequery,[status,request_id],(error,result) => {
+      db.query(updatequery,[safeStatus,request_id],(error,result) => {
         if(error)return next(error);
         if(result.affectedRows === 0)return next(createError.BadRequest("some rows not affected!"));
-        if(status === 'accept')
+        if(safeStatus === 'accept')
         {
           // inserting into scheduled reivews
           let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,venue,expert_reg_num,team_id) values(?,?,?,?,?,?,?,?)";
@@ -245,7 +298,7 @@ router.post("/sub_expert/add_review_details/:request_id/:status/:expert_reg_num/
             })
           })
         }
-        else if(status == 'reject')
+        else if(safeStatus == 'reject')
         {
           return res.send(`${request_id} :- ${status}ed successfully`)
         }
@@ -258,45 +311,74 @@ router.post("/sub_expert/add_review_details/:request_id/:status/:expert_reg_num/
 })
 
 // marks attendance
-router.patch("/sub_expert/mark_attendance/:team_id",userAuth,(req,res,send) => {
-    try{
-      const{team_id} = req.params;
-      if(!team_id) return next(createError.BadRequest("team_id is missing!"));
-      let sql = "update scheduled_reviews set attendance = 'present' where team_id = ?";
-      db.query(sql,[team_id],(error,result) => {
-        if(error) return next(error);
-        if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
-        res.send("attendance marked successfully!");
-      })
-    }
-    catch(error)
-    {
-      next(error);
-    }
-})
+// router.patch("/sub_expert/mark_attendance/:team_id",userAuth,(req,res,send) => {
+//     try{
+//       const{team_id} = req.params;
+//       if(!team_id) return next(createError.BadRequest("team_id is missing!"));
+//       let sql = "update scheduled_reviews set attendance = 'present' where team_id = ?";
+//       db.query(sql,[team_id],(error,result) => {
+//         if(error) return next(error);
+//         if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
+//         res.send("attendance marked successfully!");
+//       })
+//     }
+//     catch(error)
+//     {
+//       next(error);
+//     }
+// })
 
-// add marks and remarks
-router.post("sub_expert/add_marks_remarks/:team_id",userAuth,(req,res,send) => {
-  try{
-    const{mark,remark} = req.body;
-    const{team_id} = req.params;
-    if(!mark || !remark || !team_id)
-    {
-      return next(createError.BadRequest("mark or remark or team_id missing!"));
-    }
-    let sql = "insert into scheduled_reviews(mark,remark) values(?,?) where team_id = ?";
-    db.query(sql,[mark,remark,team_id],(error,result,next) => {
-      if(error)return next(error);
-      if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
-      res.send("marks and remarks added successfully!");
-    })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
 
+// adds detaied marks to rubix -> also inserts total mark for the review guide_mark and expert_mark to the scheduled_Review table
+// router.post("/sub_expert/add_review_marks_rubix/:team_id/:review_id", userAuth, (req, res, next) => {
+//   try {
+//     const { team_id,review_id } = req.params;
+//     const {review_no,review_date,literature_survey,aim,scope,need_for_study,proposed_methodology,work_plan,oral_presentation,viva_voce_and_ppt,contributions,remark} = req.body;
+
+//     if (!review_no || !review_id || !review_date || !literature_survey || !aim || !scope || !need_for_study || !proposed_methodology || !work_plan || !oral_presentation || !viva_voce_and_ppt || !contributions || !remark) {
+//       return next(createError.BadRequest('Data not found!'));
+//     }
+//     if (!team_id) return next(createError.BadRequest("Team_id is null!"));
+//     if (review_no > 3 || review_no < 1) return next(createError.BadRequest('invalid review month!'));
+
+//     let sql = "select * from review_marks where team_id = ? and review_no = ?";
+//     db.query(sql, [team_id, review_no], (error, result) => {
+//       if (error) return next(error);
+//       if (result.length > 0) return next(createError.BadRequest("Review marks already updated!"));
+
+//       let sql1 = "select * from weekly_logs_verification where team_id = ?";
+//       db.query(sql1, [team_id], (error, result) => {
+//         if (error) return next(error);
+//         let g_marks = 0;
+//         for (let i = 1; i <= 4 * review_no; i++) {
+//           const row = result.find(r => r.week_number == i && r.is_verified);
+//           if (row) g_marks += 10;
+//         }
+
+//         let e_marks = 0;
+//         markFields = [literature_survey, aim, scope, need_for_study, proposed_methodology, work_plan, oral_presentation, viva_voce_and_ppt, contributions];
+//         for (let j = 0; j < 9; j++) {
+//           e_marks += parseInt(markFields[j], 10);
+//         }
+
+//         let sql2 = "insert into review_marks (review_no,review_date,team_id,literature_survey,aim,scope,need_for_study,proposed_methodology,work_plan,oral_presentation,viva_voce_and_ppt,contributions,total_expert_marks,total_guide_marks) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+//         db.query(sql2, [review_no, review_date, team_id, literature_survey, aim, scope, need_for_study, proposed_methodology, work_plan, oral_presentation, viva_voce_and_ppt, contributions, e_marks, g_marks], (error, result) => {
+//           if (error) return next(error);
+//           if (result.affectedRows === 0) return next('some rows not affected!');
+//           let mark = e_marks + g_marks;
+//           let sql3 = "update scheduled_reviews set remark = ?, mark = ? where team_id = ? and review_id = ?";
+//           db.query(sql3,[remark,mark,team_id,review_id],(error,result) => {
+//             if(error)return next(error);
+//             if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
+//             res.send("marks and remarks added successfully!");
+//           })
+//         });
+//       });
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 
 module.exports = router;
