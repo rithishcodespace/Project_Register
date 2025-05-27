@@ -84,6 +84,7 @@ CREATE TABLE `scheduled_reviews` (
   `remarks` VARCHAR(5000) DEFAULT NULL,
   `team_id` VARCHAR(300) DEFAULT NULL,
   `expert_reg_num` varchar(100) not null,
+   `guide_reg_num` VARCHAR(100) NOT NULL,
   PRIMARY KEY (`review_id`)
 ) 
 
@@ -167,8 +168,10 @@ CREATE TABLE review_requests (
   team_lead VARCHAR(50) NOT NULL,
   review_date DATE DEFAULT NULL,
   start_time TIME DEFAULT NULL,
-  status varchar(100) DEFAULT 'interested',
-  expert_reg_num varchar(100) NOT NULL
+  guide_status VARCHAR (100) DEFAULT 'interested',
+  expert_status VARCHAR(100) default 'interested'
+  expert_reg_num varchar(100) NOT NULL,
+  guide_reg_num VARCHAR(100) NOT NULL,
   
   INDEX idx_team_id (team_id),
   INDEX idx_project_id (project_id),
@@ -179,19 +182,41 @@ CREATE TABLE review_marks (
   review_no INT,
   review_date DATE NOT NULL,
   team_id INT,
-  literature_survey INT NOT NULL CHECK (literature_survey BETWEEN 0 AND 10),
-  aim INT NOT NULL CHECK (aim BETWEEN 0 AND 10),
-  scope INT NOT NULL CHECK (scope BETWEEN 0 AND 10),
-  need_for_study INT NOT NULL CHECK (need_for_study BETWEEN 0 AND 10),
-  proposed_methodology INT NOT NULL CHECK (proposed_methodology BETWEEN 0 AND 10),
-  work_plan INT NOT NULL CHECK (work_plan BETWEEN 0 AND 10),
-  oral_presentation INT NOT NULL CHECK (oral_presentation BETWEEN 0 AND 10),
-  viva_voce_and_ppt INT NOT NULL CHECK (viva_voce_and_ppt BETWEEN 0 AND 10),
-  contributions INT NOT NULL CHECK (contributions BETWEEN 0 AND 10),
+
+  guide_literature_survey INT NOT NULL CHECK (guide_literature_survey BETWEEN 0 AND 5),
+  expert_literature_survey INT NOT NULL CHECK (expert_literature_survey BETWEEN 0 AND 5),
+
+  guide_aim INT NOT NULL CHECK (guide_aim BETWEEN 0 AND 5),
+  expert_aim INT NOT NULL CHECK (expert_aim BETWEEN 0 AND 5),
+
+  guide_scope INT NOT NULL CHECK (guide_scope BETWEEN 0 AND 5),
+  expert_scope INT NOT NULL CHECK (expert_scope BETWEEN 0 AND 5),
+
+  guide_need_for_study INT NOT NULL CHECK (guide_need_for_study BETWEEN 0 AND 5),
+  expert_need_for_study INT NOT NULL CHECK (expert_need_for_study BETWEEN 0 AND 5),
+
+  guide_proposed_methodology INT NOT NULL CHECK (guide_proposed_methodology BETWEEN 0 AND 10),
+  expert_proposed_methodology INT NOT NULL CHECK (expert_proposed_methodology BETWEEN 0 AND 10),
+
+  guide_work_plan INT NOT NULL CHECK (guide_work_plan BETWEEN 0 AND 5),
+  expert_work_plan INT NOT NULL CHECK (expert_work_plan BETWEEN 0 AND 5),
+
+  guide_oral_presentation INT NOT NULL CHECK (guide_oral_presentation BETWEEN 0 AND 5),
+  expert_oral_presentation INT NOT NULL CHECK (expert_oral_presentation BETWEEN 0 AND 5),
+
+  guide_viva_voce_and_ppt INT NOT NULL CHECK (guide_viva_voce_and_ppt BETWEEN 0 AND 5),
+  expert_viva_voce_and_ppt INT NOT NULL CHECK (expert_viva_voce_and_ppt BETWEEN 0 AND 5),
+
+  guide_contributions INT NOT NULL CHECK (guide_contributions BETWEEN 0 AND 5),
+  expert_contributions INT NOT NULL CHECK (expert_contributions BETWEEN 0 AND 5),
+
   total_expert_marks INT NOT NULL CHECK (total_expert_marks BETWEEN 0 AND 50),
   total_guide_marks INT NOT NULL CHECK (total_guide_marks BETWEEN 0 AND 50),
+  total_marks INT NOT NULL CHECK (total_marks BETWEEN 0 AND 100),
+
   PRIMARY KEY (review_no, team_id)
 );
+
 
 CREATE TABLE teams (
   team_id VARCHAR(20),

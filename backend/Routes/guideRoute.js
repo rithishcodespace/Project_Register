@@ -199,6 +199,97 @@ router.patch("/guide/accept_reject/:status/:team_id/:semester/:my_id",userAuth, 
   }
 });
 
+// conforming review request -> sent by the team, both guide and expert should accept
+router.post("/guide/add_review_details/:request_id/:status/:guide_reg_num/:team_id",userAuth,(req,res,next) => {
+    try{
+      const{project_id,project_name,team_lead,review_date,start_time} = req.body;
+      const{request_id,status,guide_reg_num,team_id} = req.params;
+      if(!project_id || !project_name || !team_lead || !review_date || !expert_reg_num || !start_time || !request_id || !status || !team_id)
+      {
+        return next(createError.BadRequest("data is missing!"));
+      }
+      const safeStatus = status.toLowerCase();
+      const validStatus = ['accept','reject'];
+      if(!validStatus.includes(safeStatus))return next(createError.BadRequest('invalid status!'));
+      // updating status
+      let updatequery = "UPDATE review_requests SET guide_status = ? WHERE request_id = ?";
+      db.query(updatequery,[safeStatus,request_id],(error,result) => {
+        if(error)return next(error);
+        if(result.affectedRows === 0)return next(createError.BadRequest("some rows not affected!"));
+        if(safeStatus === 'accept')
+        {
+          // checking whether expert accepted the review request
+          let sql1 = "select expert_status,expert_reg_num from review_requests where request_id = ?";
+          db.query(sql1,[request_id],(error,result) => {
+            if(error)return next(error);
+            if(result.length === 0)return next(createError.BadRequest('expert status not found!'));
+            if (result[0].expert_status !== 'accept') {
+              return res.send('Guide accepted, but expert has not yet accepted the request!');
+            }
+            const expert_reg_num = result[0].expert_reg_num;
+
+            // inserting into scheduled reivews
+            let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id) values(?,?,?,?,?,?,?,?)";
+            db.query(sql,[project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id],(error,result) => {
+              if(error) return next(error);
+              if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
+              // removing request from the review requests
+              let sql1 = "delete from review_requests where request_id = ?";
+              db.query(sql1,[request_id],(error,result)=>{
+                if(error)return next(error);
+                return res.send(`${request_id} :- ${status}ed successfully and inserted into the scheduled reviews`);
+              })
+            })
+          })
+        }
+        else if(safeStatus == 'reject')
+        {
+          return res.send(`${request_id} :- ${status}ed successfully`)
+        }
+      })
+    }
+    catch(error)
+    {
+      next(error);
+    }
+})
+
+// fetching the upcoming reviews -> mark attendence page
+
+router.get("/guide/fetch_upcoming_reviews/:guide_reg_num",userAuth,(req,res,next) => {
+  try{
+    const{guide_reg_num} = req.params;
+    if(!guide_reg_num)return next(createError.BadRequest("guide reg num missing!"));
+    let sql = "SELECT * FROM scheduled_reviews WHERE guide_reg_num = ? AND review_date >= CURRENT_DATE AND attendance IS NULL";
+    db.query(sql,[guide_reg_num],(error,result) => {
+      if(error)return next(error);
+      return res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+// fetching the review requests sent by teams
+
+router.get("/guide/fetch_review_requests/:guide_reg_num",userAuth,(req,res,next) => {
+  try{
+    const{guide_reg_num} = req.params;
+    if(!guide_reg_num)return next(createError.BadRequest("guide id is undefined!"));
+    let sql = "select * from review_requests where guide_reg_num = ? and status = 'interested'";
+    db.query(sql,[guide_reg_num],(error,result) => {
+      if(error)return next(error);
+      return res.send(result);
+    })
+  }
+  catch(error){
+    next(error);
+  }
+})
+
+
 
 // adds reply to the query
 
