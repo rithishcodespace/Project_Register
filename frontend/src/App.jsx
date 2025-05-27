@@ -1,10 +1,6 @@
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import Login from "./components/Login/Login";
-import TeacherDashBoard from "./components/Teacher/TeacherDashBoard";
-import TeacherAdd from "./components/Teacher/TeacherAdd";
-import PostedProjects from "./components/Teacher/PostedProjects";
 import Student from "./components/Students/Student";
-import Teacher from "./components/Teacher/Teacher";
 import './index.css';
 import Student_Dashboard from "./components/Students/Student_Dashboard";
 import Progress_Update from "./components/Students/Progress_Update";
@@ -15,9 +11,7 @@ import Add_Users from "./components/Admin/Add_Users";
 import Students_Progress from "./components/Admin/Students_Progress";
 import Posted_project from "./components/Admin/Posted_project";
 import Admin_Dashboard from "./components/Admin/Admin_Dashboard";
-import Create_team from "./components/Teacher/Create_team";
 import { Provider } from "react-redux";
-import ProjDetails from "./components/Teacher/ProjDetails";
 import { Store } from "./utils/Store";
 import InvitationPage from "./components/Students/InvitationPage";
 import ProtectedRoute from "./utils/ProtectedRoute"; 
@@ -75,26 +69,19 @@ const teamselector = useSelector((state) => state.teamSlice);
 
           <Route path="/student" element={<Student />}>
             <Route index element={<Student_Dashboard />} />
+              <Route path="invitations" element={<InvitationPage />} />
+              <Route path="Project_Details/proj_details/:id" element={<Proj_Details />} />
+              <Route path="upload-project-files" element={<ProjectFileUpload />} />
               {teamselector ? (
             <>
               <Route path="Project_Details" element={<Project_Details />} />
-              <Route path="invitations" element={<InvitationPage />} />
               {teamselector[0].guide_reg_num ?(<>
               <Route path="queries" element={<Queries />} />
               <Route path="review" element={<Schedule_review />} />
               <Route path="Progress_update" element={<Progress_Update />} /></>):null}
-              <Route path="Project_Details/proj_details/:id" element={<Proj_Details />} />
-              <Route path="upload-project-files" element={<ProjectFileUpload />} />
             </>
           ) : null}
            
-          </Route>
-
-          <Route path="/teacher" element={<Teacher />}>
-            <Route index element={<TeacherDashBoard />} />
-            <Route path="add" element={<TeacherAdd />} />
-            <Route path="posted_projects" element={<PostedProjects />} />
-            <Route path="student_progress/project_details/:cluster/:id" element={<ProjDetails />} />
           </Route>
 
           <Route path="/admin" element={<Admin />}>
@@ -120,7 +107,6 @@ const teamselector = useSelector((state) => state.teamSlice);
             <Route index element={<Guide_dashboard />} />
             <Route path="queries" element={<Guide_queries />} />
             <Route path="team_progress" element={<Guide_team_progress />} />
-            {/* <Route path="/guide/team_progress/:id" element={<TeamDetails/>} /> */}
           </Route>
 
           <Route path="*" element={<NotFound/>} />

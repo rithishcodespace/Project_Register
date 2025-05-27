@@ -52,7 +52,7 @@ useEffect(() => {
           setReviewRequests([]);
         }
       } catch (error) {
-        alert("Error fetching review requests");
+        console.log("Error fetching review requests",error);
         console.error(error);
       }
     };
@@ -235,7 +235,7 @@ useEffect(() => {
                 {/* Team Invitations */}
                 {invitations.length > 0 && (
                   <div className='rounded-xl'>
-                    <div className="space-y-4 rounded-xl">
+                    <div className="space-y-4 rounded-xl bg-white">
                       {invitations.map((invite) => (
                         <div key={`invite-${invite.from_team_id}`} className="p-4 bg-white rounded-xl border border-purple-200 shadow-sm">
                           <p className=" bg-white font-semibold text-gray-800">Team: {invite.from_team_id}</p>
@@ -262,21 +262,21 @@ useEffect(() => {
 
                 {/* Review Requests */}
                 {reviewRequests.map((req) => (
-                  <div key={`review-${req.request_id}`} className="p-4 rounded-xl border border-green-200 shadow-sm">
-                    <p className="font-semibold text-gray-800">Project: {req.project_name}</p>
-                    <p className="text-gray-600">Lead: {req.team_lead}</p>
-                    <p className="text-gray-600">Date: {req.review_date}</p>
-                    <p className="text-gray-600">Time: {req.start_time}</p>
+                  <div key={`review-${req.request_id}`} className="p-4 rounded-xl border bg-white shadow-sm">
+                    <p className="font-semibold bg-white text-gray-800">Project: {req.project_name}</p>
+                    <p className="text-gray-600 bg-white">Lead: {req.team_lead}</p>
+                    <p className="text-gray-600 bg-white">Date: {req.review_date}</p>
+                    <p className="text-gray-600 bg-white">Time: {req.start_time}</p>
 
                     {/* Conditionally render venue input */}
                     {selectedReview?.request_id === req.request_id ? (
-                      <div className="mt-2">
+                      <div className="mt-2 bg-white">
                         <input
                           type="text"
                           placeholder="Enter venue"
                           value={venueInput}
                           onChange={(e) => setVenueInput(e.target.value)}
-                          className="border px-3 py-1 rounded w-full mb-2"
+                          className="border px-3 py-1 bg-white rounded w-full mb-2"
                         />
                         <button
                           onClick={handleConfirmAccept}
@@ -286,7 +286,7 @@ useEffect(() => {
                         </button>
                       </div>
                     ) : (
-                      <div className="flex justify-end gap-3 mt-3">
+                      <div className="flex justify-end bg-white gap-3 mt-3">
                         <button
                           onClick={() => handleReview('accept', req)}
                           className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded-lg text-sm"
