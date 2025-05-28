@@ -210,6 +210,9 @@ CREATE TABLE review_marks (
   guide_contributions INT NOT NULL CHECK (guide_contributions BETWEEN 0 AND 5),
   expert_contributions INT NOT NULL CHECK (expert_contributions BETWEEN 0 AND 5),
 
+  guide_remarks TEXT NOT NULL,
+  expert_remarks TEXT NOT NULL,
+
   total_expert_marks INT NOT NULL CHECK (total_expert_marks BETWEEN 0 AND 50),
   total_guide_marks INT NOT NULL CHECK (total_guide_marks BETWEEN 0 AND 50),
   total_marks INT NOT NULL CHECK (total_marks BETWEEN 0 AND 100),
