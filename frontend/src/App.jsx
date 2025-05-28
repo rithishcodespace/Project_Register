@@ -19,7 +19,7 @@ import SubjectExpertDashboard from "./components/Subject_expert/Student_export_d
 import Subject_expert_remarks from "./components/Subject_expert/Subject_expert_remarks";
 import Subject_expert from "./components/Subject_expert/Subject_expert";
 import Guide from "./components/guide/guide";
-import Guide_dashboard from "./components/guide/Guide_dashboard";
+import Staff_dashboard from "./components/guide/Staff_dashboard";
 import Guide_queries from "./components/guide/Guide_queries";
 import Guide_team_progress from "./components/guide/Guide_team_progress";
 import Queries from "./components/Students/Queries";
@@ -36,6 +36,8 @@ import Student_expert_review from "./components/Subject_expert/Student_expert_re
 import Schedule_review from "./components/Students/Schedule_review";
 import ChangeTimeLine from "./components/Admin/ChangeTimeLine";
 import { useSelector } from "react-redux";
+import Review_projects from "./components/guide/Review_projects";
+import TeamDetails from "./components/guide/Team_Details";
 
 
 
@@ -104,9 +106,11 @@ const teamselector = useSelector((state) => state.teamSlice);
           </Route>
 
           <Route path="/guide" element={<Guide />}>
-            <Route index element={<Guide_dashboard />} />
+            <Route index element={<Staff_dashboard />} />
             <Route path="queries" element={<Guide_queries />} />
             <Route path="team_progress" element={<Guide_team_progress />} />
+            <Route path="review_progress" element={<Review_projects/>} />
+            <Route path="team-details/:teamId" element={<TeamDetails />} />
           </Route>
 
           <Route path="*" element={<NotFound/>} />
