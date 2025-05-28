@@ -76,27 +76,28 @@ function Guide_navbar({ isOpen, toggleSidebar }) {
       </div>
 
       <div className="bg-white px-2">
-        {/* Dashboard Link */}
+        
         <Link to="." className={`${navDiv("")} group`}>
           <Home size={24} className={navIcon("")} />
           <p className={navText("")}>Dashboard</p>
         </Link>
 
-        {/* Mark Attendance Link */}
         <Link to="queries" className={`${navDiv("queries")} group`}>
           <CheckSquare size={24} className={navIcon("queries")} />
           <p className={navText("queries")}>Queries</p>
         </Link>
 
-        {/* Review Projects Link */}
         <Link to="team_progress" className={`${navDiv("team_progress")} group`}>
           <FileText size={24} className={navIcon("team_progress")} />
           <p className={navText("team_progress")}>Team Project</p>
         </Link>
 
-        
+        <Link to="review_progress" className={`${navDiv("review_progress")} group`}>
+          <FileText size={24} className={navIcon("review_progress")} />
+          <p className={navText("review_progress")}>Review Progress</p>
+        </Link>
 
-
+    
         {/* Logout Button */}
         <button
           onClick={handleLogout}

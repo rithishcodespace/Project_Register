@@ -201,7 +201,8 @@ useEffect(() => {
   }, [selector.reg_num]);
 
   if (teamStatus === null) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    
+    return  <div className='flex flex-col justify-center items-center '><div className="animate-spin rounded-full  flex self-center h-12 w-12 border-t-4 border-blue-500 border-solid mb-4"></div></div>
   }
 
   if (teamStatus === 1) {

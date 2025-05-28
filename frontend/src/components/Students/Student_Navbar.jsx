@@ -120,7 +120,7 @@ function Student_navbar({ isOpen, toggleSidebar }) {
           <p className={navText("")}>Dashboard</p>
         </Link>
 
-        {!teamSelector[0]?.project_id && (
+        {teamSelector && !teamSelector[0]?.project_id && (
   <Link
     to="Project_Details"
     className={`${navDiv("Project_Details")} group ${!hasTeam ? disabledClass : ""}`}

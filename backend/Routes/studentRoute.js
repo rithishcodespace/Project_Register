@@ -914,5 +914,29 @@ router.post("/student/send_review_request/:team_id/:project_id", userAuth, (req,
 });
                              
 
+router.get("/student/schedule_review/:project_id", userAuth, (req, res, next) => {
+  try {
+    const project_id = req.params.project_id;
+
+    if (!project_id) {
+      return next(createError.BadRequest("Project ID is required"));
+    }
+
+    const query = `SELECT * FROM project_registor.scheduled_reviews WHERE project_id = ?`;
+
+    db.query(query, [project_id], (error, result) => {
+      if (error) return next(error);
+      if (result.length === 0) {
+        return res.status(404).json({ message: "No review found for the given project ID" });
+      }
+      return res.json(result);
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+
 
 module.exports = router;

@@ -10,7 +10,8 @@ import instance from "../../utils/axiosInstance";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../../utils/firebase";
 import { useDispatch } from "react-redux";
-import { addUser } from "../../utils/userSlice";
+import { addUser } from "../../utils/userSlice";import { client, account } from './Appwrite';
+
 
 function Login() {
   const [emailId, setemailId] = useState("");
@@ -91,29 +92,13 @@ function Login() {
     await updateProjectTypeAndNavigate("external", selectedCompany, companyAddress,contactNumber);
   };
 
-  async function handleGoogleLogin() {
-  console.log("Google login clicked"); // check if this shows
-
-  try {
-    const result = await signInWithPopup(auth, provider);
-    console.log("Google sign-in result:", result); // inspect this
-
-    const user = result.user;
-    const idToken = await user.getIdToken();
-
-    const res = await instance.post("/auth/google-login", {
-      token: idToken,
-    });
-
-    localStorage.setItem("accessToken", res.data.accessToken);
-    localStorage.setItem("refreshToken", res.data.refreshToken);
-    navigate("/");
-  } catch (error) {
-    console.error("Google Sign-in error:", error);
-    alert("Google login failed. Try again.");
-  }
+   function handleGoogleLogin() {
+    account.createOAuth2Session(
+  'google',
+  'http://localhost:5173/login',
+  'http://localhost:5173/login' 
+);
 }
-
 
   return (
     <>

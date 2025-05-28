@@ -8,6 +8,8 @@ function Schedule_review() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [alreadyRequested, setAlreadyRequested] = useState(false);
+  const [getReview, setGetReview] = useState([]);
+  const [upcomingReviews, setUpcomingReviews] = useState([]);
 
   const userselector = useSelector((state) => state.userSlice);
   const teamselector = useSelector((state) => state.teamSlice);
@@ -37,6 +39,7 @@ function Schedule_review() {
 
     fetchReviewRequests();
   }, [expert_reg_num, team_id]);
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,6 +57,8 @@ function Schedule_review() {
           expert_reg_num,
         }
       );
+      console.log(team_id);
+      
 
       setMessage(res.data);
       setAlreadyRequested(true); // prevent resubmission
@@ -65,6 +70,26 @@ function Schedule_review() {
       }
     }
   };
+
+ useEffect(() => {
+  const fetchReviewByProjectId = async () => {
+    if (!project_id) return;
+
+    try {
+      const res = await instance.get(`/student/schedule_review/${project_id}`);
+      setGetReview(res.data);
+      console.log(" Fetched Review Details:", res.data);
+    } catch (err) {
+      console.error(" Error fetching review by project_id:", err);
+    }
+  };
+
+  fetchReviewByProjectId();
+}, [project_id]);
+
+
+
+
 
   return (
     <div>
@@ -111,8 +136,8 @@ function Schedule_review() {
         {message && <p className="text-green-600 font-medium bg-white">{message}</p>}
         {error && <p className="text-red-600 font-medium bg-white">{error}</p>}
         {alreadyRequested && !message && (
-          <p className="text-yellow-600 font-medium">
-            You’ve already submitted a review request. Please wait for response.
+          <p className="text-yellow-600 bg-white font-medium">
+            You've already submitted a review request. Please wait for response.
           </p>
         )}
       </form>
@@ -121,3 +146,4 @@ function Schedule_review() {
 }
 
 export default Schedule_review;
+
