@@ -985,8 +985,15 @@ router.get('/student/get_mentor_guide_expert/:team_id/:role',(req,res,next) => {
     db.query(sql,[team_id],(error,result) => {
       if(error)return next(error);
       if(result.length === 0)return next(createError.BadRequest('register number not found!!'));
-      res.send(result);
+      // gets the name from users table
+      let sql1 = "select name from users where reg_num = ?";
+      db.query(sql1,[reg_num],(error,result) => {
+        if(error)return next(error);
+        if(result.length === 0)return next(createError[404]);
+        res.send(result);
+      })
     })
+    
   }
   catch(error)
   {
