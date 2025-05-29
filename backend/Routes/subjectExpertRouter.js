@@ -269,9 +269,9 @@ router.get("/sub_expert/fetch_upcoming_reviews/:expert_reg_num",userAuth,(req,re
 
 router.post("/sub_expert/add_review_details/:request_id/:status/:expert_reg_num/:team_id",userAuth,(req,res,next) => {
     try{
-      const{project_id,project_name,team_lead,review_date,start_time,venue} = req.body;
+      const{project_id,project_name,team_lead,review_date,start_time} = req.body;
       const{request_id,status,expert_reg_num,team_id} = req.params;
-      if(!project_id || !project_name || !team_lead || !review_date || !expert_reg_num || !start_time || !venue || !request_id || !status || !team_id)
+      if(!project_id || !project_name || !team_lead || !review_date || !expert_reg_num || !start_time || !request_id || !status || !team_id)
       {
         return next(createError.BadRequest("data is missing!"));
       }
@@ -279,24 +279,35 @@ router.post("/sub_expert/add_review_details/:request_id/:status/:expert_reg_num/
       const validStatus = ['accept','reject'];
       if(!validStatus.includes(safeStatus))return next(createError.BadRequest('invalid status!'));
       // updating status
-      let updatequery = "UPDATE review_requests SET status = ? WHERE request_id = ?";
+      let updatequery = "UPDATE review_requests SET expert_status = ? WHERE request_id = ?";
       db.query(updatequery,[safeStatus,request_id],(error,result) => {
         if(error)return next(error);
         if(result.affectedRows === 0)return next(createError.BadRequest("some rows not affected!"));
         if(safeStatus === 'accept')
         {
-          // inserting into scheduled reivews
-          let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,venue,expert_reg_num,team_id) values(?,?,?,?,?,?,?,?)";
-          db.query(sql,[project_id,project_name,team_lead,review_date,start_time,venue,expert_reg_num,team_id],(error,result) => {
-            if(error) return next(error);
-            if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
-            // removing request from the review requests
-            let sql1 = "delete from review_requests where request_id = ?";
-            db.query(sql1,[request_id],(error,result)=>{
-              if(error)return next(error);
-              return res.send(`${request_id} :- ${status}ed successfully and inserted into the scheduled reviews`);
+          //checking whether guide accepted the review request
+          let sql1 = "select guide_status,guide_reg_num from review_requests where request_id = ?";
+          db.query(sql1,[request_id],(error,result) => {
+            if(error)return next(error);
+            if(result.length === 0)return next(createError.BadRequest('guide status not found!'));
+            if (result[0].guide_status !== 'accept') {
+              return res.send('Expert accepted, but guide has not yet accepted the request!');
+            }
+            const guide_reg_num = result[0].guide_reg_num;
+
+            // inserting into scheduled reivews
+            let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id) values(?,?,?,?,?,?,?,?)";
+            db.query(sql,[project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id],(error,result) => {
+              if(error) return next(error);
+              if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
+              // removing request from the review requests
+              let sql1 = "delete from review_requests where request_id = ?";
+              db.query(sql1,[request_id],(error,result)=>{
+                if(error)return next(error);
+                return res.send(`${request_id} :- ${status}ed successfully and inserted into the scheduled reviews`);
+              })
             })
-          })
+            })
         }
         else if(safeStatus == 'reject')
         {
@@ -330,55 +341,57 @@ router.post("/sub_expert/add_review_details/:request_id/:status/:expert_reg_num/
 
 
 // adds detaied marks to rubix -> also inserts total mark for the review guide_mark and expert_mark to the scheduled_Review table
-// router.post("/sub_expert/add_review_marks_rubix/:team_id/:review_id", userAuth, (req, res, next) => {
-//   try {
-//     const { team_id,review_id } = req.params;
-//     const {review_no,review_date,literature_survey,aim,scope,need_for_study,proposed_methodology,work_plan,oral_presentation,viva_voce_and_ppt,contributions,remark} = req.body;
+// reivew no -> 1 or 2 -> get from input tag
+router.post("/sub_expert/add_review_marks_rubix/:team_id/:review_id", userAuth, (req, res, next) => {
+  try {
+    const { team_id,review_id } = req.params;
+    const {review_no,review_date,expert_literature_survey,expert_aim,expert_scope,expert_need_for_study,expert_proposed_methodology,expert_work_plan,expert_oral_presentation,expert_viva_voce_and_ppt,expert_contributions,expert_remarks} = req.body;
 
-//     if (!review_no || !review_id || !review_date || !literature_survey || !aim || !scope || !need_for_study || !proposed_methodology || !work_plan || !oral_presentation || !viva_voce_and_ppt || !contributions || !remark) {
-//       return next(createError.BadRequest('Data not found!'));
-//     }
-//     if (!team_id) return next(createError.BadRequest("Team_id is null!"));
-//     if (review_no > 3 || review_no < 1) return next(createError.BadRequest('invalid review month!'));
+    if (!team_id || !review_id || !review_no || !review_date || !expert_literature_survey || !expert_aim || !expert_scope || !expert_need_for_study || !expert_proposed_methodology || !expert_work_plan || !expert_oral_presentation || !expert_viva_voce_and_ppt || !expert_contributions || !expert_remarks) {
+      return next(createError.BadRequest('Data not found!'));
+    }
+    if (review_no > 2 || review_no < 1) return next(createError.BadRequest('invalid review month!'));
 
-//     let sql = "select * from review_marks where team_id = ? and review_no = ?";
-//     db.query(sql, [team_id, review_no], (error, result) => {
-//       if (error) return next(error);
-//       if (result.length > 0) return next(createError.BadRequest("Review marks already updated!"));
+    // checking whether already added marks for this review
+    let sql = "select * from review_marks where team_id = ? and review_no = ?";
+    db.query(sql, [team_id, review_no], (error, result) => {
+      if (error) return next(error);
+      if (result.length > 0) return next(createError.BadRequest("Review marks already updated!"));
 
-//       let sql1 = "select * from weekly_logs_verification where team_id = ?";
-//       db.query(sql1, [team_id], (error, result) => {
-//         if (error) return next(error);
-//         let g_marks = 0;
-//         for (let i = 1; i <= 4 * review_no; i++) {
-//           const row = result.find(r => r.week_number == i && r.is_verified);
-//           if (row) g_marks += 10;
-//         }
+      const expert_inp_list = [expert_literature_survey,expert_aim,expert_scope,expert_need_for_study,expert_proposed_methodology,expert_work_plan,expert_oral_presentation,expert_viva_voce_and_ppt,expert_contributions];
+      let exp_marks = 0;
+      for(let i=0;i<expert_inp_list.length;i++)
+      {
+        exp_marks += parseInt(expert_inp_list[i], 10);
+      }
 
-//         let e_marks = 0;
-//         markFields = [literature_survey, aim, scope, need_for_study, proposed_methodology, work_plan, oral_presentation, viva_voce_and_ppt, contributions];
-//         for (let j = 0; j < 9; j++) {
-//           e_marks += parseInt(markFields[j], 10);
-//         }
+      // insert data into scheduled reveiws
+      let sql1 = "UPDATE scheduled_reviews SET expert_literature_survey = ?, expert_aim = ?, expert_scope = ?, expert_need_for_study = ?, expert_proposed_methodology = ?, expert_work_plan = ?, expert_oral_presentation = ?, expert_viva_voce_and_ppt = ?, expert_contributions = ?, total_expert_marks = ? WHERE review_id = ?"
+      db.query(sql1,[expert_literature_survey,expert_aim,expert_scope,expert_need_for_study,expert_proposed_methodology,expert_work_plan,expert_oral_presentation,expert_viva_voce_and_ppt,expert_contributions,exp_marks,review_id],(error,result) => {
+        if(error)return next(error);
+        if(result.affectedRows === 0)return next(createError.BadRequest('failed to update marks!'));
 
-//         let sql2 = "insert into review_marks (review_no,review_date,team_id,literature_survey,aim,scope,need_for_study,proposed_methodology,work_plan,oral_presentation,viva_voce_and_ppt,contributions,total_expert_marks,total_guide_marks) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-//         db.query(sql2, [review_no, review_date, team_id, literature_survey, aim, scope, need_for_study, proposed_methodology, work_plan, oral_presentation, viva_voce_and_ppt, contributions, e_marks, g_marks], (error, result) => {
-//           if (error) return next(error);
-//           if (result.affectedRows === 0) return next('some rows not affected!');
-//           let mark = e_marks + g_marks;
-//           let sql3 = "update scheduled_reviews set remark = ?, mark = ? where team_id = ? and review_id = ?";
-//           db.query(sql3,[remark,mark,team_id,review_id],(error,result) => {
-//             if(error)return next(error);
-//             if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
-//             res.send("marks and remarks added successfully!");
-//           })
-//         });
-//       });
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// });
+        //checks if guide also updated the marks -> to update total marks 
+        let sql2 = "select total_guide_marks from review_marks where review_id = ?";
+        db.query(sql2,[review_id],(error,result) => {
+          if(error)return next(error);
+          if(result.length == 0)return res.send("marks updated successfully by expert!");
+
+          // guide_total_marks is present we can calculate total_marks
+          const total_marks = result[0].total_guide_marks + exp_marks;
+          let updateTotalMarks = "update review_marks set total_marks = ? where review_id = ?";
+          db.query(updateTotalMarks,[total_marks,review_id],(error,markUpdated) => {
+            if(error)return next(error);
+            if(markUpdated.affectedRows === 0)return next(createError.BadRequest('total marks failed to be updated!'));
+            res.send('marks and total marks updated successfully!');
+          })
+        })
+      })
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 
-module.exports = router;
+module.exports = router;6

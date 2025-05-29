@@ -841,13 +841,13 @@ router.post("/student/addproject/:project_type/:team_id/:reg_num", userAuth,(req
   }
 });
 
-// sends the review request to the expert => once in a month
+// sends the review request to the expert and guide => once in a month
 router.post("/student/send_review_request/:team_id/:project_id", userAuth, (req, res, next) => {
   try {
     const { team_id, project_id } = req.params;
-    const { project_name, team_lead, review_date, start_time, expert_reg_num } = req.body;
+    const { project_name, team_lead, review_date, start_time } = req.body;
 
-    if (!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time || !expert_reg_num) {
+    if (!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time) {
       return next(createError.BadRequest("Some parameters are missing!"));
     }
 
@@ -862,39 +862,52 @@ router.post("/student/send_review_request/:team_id/:project_id", userAuth, (req,
 
     const formattedDate = reviewDate.toISOString().split('T')[0]; // YYYY-MM-DD
 
-    // Check if already completed 2 reviews
-    let sql2 = "SELECT * FROM scheduled_reviews WHERE team_id = ?";
-    db.query(sql2, [team_id], (error, result1) => {
-      if (error) return next(error);
-      if (result1.length >= 2) return next(createError.BadRequest("Your team already completed 2 reviews."));
+    //fetching expert and guide reg_num
 
-      // Eligibility check
-      const weekToCheck = result1.length === 0 ? 3 : 6;
-      let weekSql = "SELECT * FROM weekly_logs_verifications WHERE week_number = ? AND is_verified = true AND team_id = ?";
-      db.query(weekSql, [weekToCheck, team_id], (error, verificationResult) => {
+    let sql = "select guide_reg_num, sub_expert_reg_num from teams where team_id = ?";
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      if (!result || result.length === 0) {
+        return next(createError.BadRequest('Guide or expert reg_num not found!'));
+      }
+
+      const expert_reg_num = result[0].sub_expert_reg_num;
+      const guide_reg_num = result[0].guide_reg_num;
+
+      // Check if already completed 2 reviews
+      let sql2 = "SELECT * FROM scheduled_reviews WHERE team_id = ?";
+      db.query(sql2, [team_id], (error, result1) => {
         if (error) return next(error);
-        if (verificationResult.length === 0) {
-          return next(createError.BadRequest(`You are not eligible to apply for the review request. Week ${weekToCheck} log not verified.`));
-        }
+        if (result1.length >= 2) return next(createError.BadRequest("Your team already completed 2 reviews."));
 
-        // Check for duplicate review request for same date/time/expert
-        let checkSql = "SELECT * FROM review_requests WHERE review_date = ? AND start_time = ? AND expert_reg_num = ?";
-        db.query(checkSql, [formattedDate, start_time, expert_reg_num], (error, existingResult) => {
+        // Eligibility check
+        const weekToCheck = result1.length === 0 ? 3 : 6;
+        let weekSql = "SELECT * FROM weekly_logs_verifications WHERE week_number = ? AND is_verified = true AND team_id = ?";
+        db.query(weekSql, [weekToCheck, team_id], (error, verificationResult) => {
           if (error) return next(error);
-          if (existingResult.length > 0) {
-            return next(createError.BadRequest("Review request already exists for this slot!"));
+          if (verificationResult.length === 0) {
+            return next(createError.BadRequest(`You are not eligible to apply for the review request. Week ${weekToCheck} log not verified.`));
           }
 
-          // Insert into review_requests
-          let insertSql = "INSERT INTO review_requests (team_id, project_id, project_name, team_lead, review_date, start_time, expert_reg_num) VALUES (?, ?, ?, ?, ?, ?, ?)";
-          db.query(insertSql, [team_id, project_id, project_name, team_lead, formattedDate, start_time, expert_reg_num], (error, result) => {
+          // Check for duplicate review request for same date/time/expert
+          let checkSql = "SELECT * FROM review_requests WHERE review_date = ? AND start_time = ? AND expert_reg_num = ? and guide_reg_num = ? and team_id = ?";
+          db.query(checkSql, [formattedDate, start_time, expert_reg_num, guide_reg_num, team_id], (error, existingResult) => {
             if (error) return next(error);
-            if (result.affectedRows === 0) return res.status(500).json({ message: "Insertion failed!" });
-            return res.send(`${formattedDate} - ${start_time}: Review request submitted successfully.`);
+            if (existingResult.length > 0) {
+              return next(createError.BadRequest("Review request already exists for this slot!"));
+            }
+
+            // Insert into review_requests
+            let insertSql = "INSERT INTO review_requests (team_id, project_id, project_name, team_lead, review_date, start_time, expert_reg_num, guide_reg_num) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            db.query(insertSql, [team_id, project_id, project_name, team_lead, formattedDate, start_time, expert_reg_num, guide_reg_num], (error, result) => {
+              if (error) return next(error);
+              if (result.affectedRows === 0) return res.status(500).json({ message: "Insertion failed!" });
+              return res.send(`${formattedDate} - ${start_time}: Review request submitted successfully.`);
+            });
           });
         });
       });
-    });
+    })
   } catch (error) {
     next(error);
   }
