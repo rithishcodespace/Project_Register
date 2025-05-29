@@ -437,116 +437,124 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
 
 // updates the progress
 
-// router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, res, next) => {
-//   try {
-//     let { week, reg_num, team_id } = req.params;
-//     const { progress } = req.body;
+router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, res, next) => {
+  try {
+    let { week, reg_num, team_id } = req.params;
+    const { progress } = req.body;
 
-//       const validPhases = [
-//         "week1", "week2", "week3", "week4", "week5", "week6",
-//         "week7", "week8", "week9", "week10", "week11", "week12"
-//       ];
+      const validPhases = [
+        "week1", "week2", "week3", "week4", "week5", "week6",
+        "week7", "week8", "week9", "week10", "week11", "week12"
+      ];
 
-//       week = week.toLowerCase();
+      week = week.toLowerCase();
 
-//       // Validation Check
-//       if (!validPhases.includes(week) || !reg_num || !team_id) {
-//         return res.status(400).json({ message: "Invalid week name or reg_num missing" });
-//       }
+      // Validation Check
+      if (!validPhases.includes(week) || !reg_num || !team_id) {
+        return res.status(400).json({ message: "Invalid week name or reg_num missing" });
+      }
 
-//       // checks if already submmited
-//       let check = `SELECT ${week}_progress FROM team_requests WHERE reg_num = ? AND team_conformed = true AND team_id = ?`;
-//       db.query(check, [reg_num, team_id], (error, results) => {
-//         if (error) return next(error);
+      // checks if already submmited
+      let check = `SELECT ${week}_progress FROM teams WHERE reg_num = ? AND team_id = ?`;
+      db.query(check, [reg_num, team_id], (error, results) => {
+        if (error) return next(error);
 
-//         if (results[0] && results[0][`${week}_progress`] !== null) {
-//           return res.status(200).send("YOU HAVE ALREADY SUBMITTED YOUR PROGRESS FOR THIS WEEK!");
-//         }
+        if (results[0] && results[0][`${week}_progress`] !== null) {
+          return res.status(200).send("YOU HAVE ALREADY SUBMITTED YOUR PROGRESS FOR THIS WEEK!");
+        }
 
-//       const sql = `UPDATE team_requests SET ${week}_progress = ? WHERE reg_num = ?`;
+      const sql = `UPDATE teams SET ${week}_progress = ? WHERE reg_num = ? and team_id = ?`;
 
-//       db.query(sql, [progress, reg_num], (err, result) => {
-//         if (err) return next(err);
+      db.query(sql, [progress, reg_num,team_id], (err, result) => {
+        if (err) return next(err);
 
-//         if (result.affectedRows === 0) {
-//           return res.status(404).json({ message: "No record found for the provided reg_num." });
-//         }
-//         let sql1 = `select ${week}_progress from team_requests where team_id = ?`;
-//         db.query(sql1,[team_id],(error,result) => {
-//           if(error)return next(error);
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ message: "No record found for the provided reg_num." });
+        }
+        let sql1 = `select ${week}_progress from teams where team_id = ?`;
+        db.query(sql1,[team_id],(error,result) => {
+          if(error)return next(error);
 
-//           const allMembersUpdated = result.every((member) => member[`${week}_progress`] !== null); // every -> checks whether every element satisfies the given condition, optimised instead of forEach // . -> [] alternative for . notation
-//           if(allMembersUpdated)
-//           {
-//             let getGuide = "select guide_reg_num from team_requests where team_id = ?";
-//             db.query(getGuide,[team_id],(error,result) => {
-//              if(error)return next(error);
-//              if(result.length === 0)return next(createError.NotFound("guide reg num not found!"));
-//              let guide_reg_num = result[0].guide_reg_num;
-//              let getGuideEmailStudentEmail = "SELECT emailId, role FROM users WHERE reg_num IN (?, ?) AND role IN ('guide', 'student');";
-//               db.query(getGuideEmailStudentEmail,[guide_reg_num,reg_num],(error,result) => {
-//                 if(error)return next(error);
-//                 if(result.length === 0)return next(createError.NotFound("guide email not found!"));
-//                  let guideEmail = null;
-//                 let studentEmail = null;
+          const allMembersUpdated = result.every((member) => member[`${week}_progress`] !== null); // every -> checks whether every element satisfies the given condition, optimised instead of forEach // . -> [] alternative for . notation
+          if(allMembersUpdated)
+          {
+            let weekNumber = week.replace(/\D/g, ''); 
+            let insertSql = "INSERT INTO weekly_logs_verification (team_id, week_number) VALUES (?, ?)";
+            db.query(insertSql,[team_id,weekNumber],(error,inserted) => {
+              if(error)return next(error);
+              if(inserted.affectedRows === 0)return next(createError.BadRequest('An error occured while inserting!'));
 
-//                 result.forEach(user => {
-//                   if (user.role === 'guide') guideEmail = user.emailId;
-//                   else if (user.role === 'student') studentEmail = user.emailId;
-//                 });
+              let getGuide = "select guide_reg_num from teams where team_id = ?";
+              db.query(getGuide,[team_id],(error,result) => {
+              if(error)return next(error);
+              if(result.length === 0)return next(createError.NotFound("guide reg num not found!"));
+              let guide_reg_num = result[0].guide_reg_num;
+              let getGuideEmailStudentEmail = "SELECT emailId, role FROM users WHERE reg_num IN (?, ?) AND role IN ('staff', 'student');";
+                db.query(getGuideEmailStudentEmail,[guide_reg_num,reg_num],(error,result) => {
+                  if(error)return next(error);
+                  if(result.length === 0)return next(createError.NotFound("guide email not found!"));
+                  let guideEmail = null;
+                  let studentEmail = null;
 
-//                 if (!guideEmail || !studentEmail) {
-//                   return next(createError.InternalServerError("Could not resolve guide or student email."));
-//                 }
+                  result.forEach(user => {
+                    if (user.role === 'staff') guideEmail = user.emailId;
+                    else if (user.role === 'student') studentEmail = user.emailId;
+                  });
 
-//                 const transporter = nodemailer.createTransport({
-//                   service: "gmail",
-//                   auth: {
-//                     user: process.env.EMAIL_USER, 
-//                     pass: process.env.EMAIL_PASS,
-//                   },
-//                 });
+                  if (!guideEmail || !studentEmail) {
+                    return next(createError.InternalServerError("Could not resolve guide or student email."));
+                  }
 
-//                   const mailOptions = {
-//                     from: `"No Reply" <${process.env.EMAIL_USER}>`,
-//                     to: guideEmail,
-//                     subject: `Progress update for ${week} by Team ${team_id}`,
-//                     replyTo: studentEmail,  // Optional: replies go to student
-//                     text: `Dear Guide,
+                  const transporter = nodemailer.createTransport({
+                    service: "gmail",
+                    auth: {
+                      user: process.env.EMAIL_USER, 
+                      pass: process.env.EMAIL_PASS,
+                    },
+                  });
 
-//                     Team ${team_id} has completed their progress update for ${week}.
-//                     This submission was triggered by the student with registration number: ${reg_num}.
+                    const mailOptions = {
+                      from: `"No Reply" <${process.env.EMAIL_USER}>`,
+                      to: guideEmail,
+                      subject: `Progress update for ${week} by Team ${team_id}`,
+                      replyTo: studentEmail,  // Optional: replies go to student
+                      text: `Dear Guide,
 
-//                     Please check the Project Register for more details.
+                      Team ${team_id} has completed their progress update for ${week}.
+                      This submission was triggered by the student with registration number: ${reg_num}.
 
-//                     Best regards,
-//                     Project Management System`
-//                 };
-//                   transporter.sendMail(mailOptions, (error, info) => {
-//                   if (error) {
-//                     console.error("Email Error:", error);
-//                     return res.status(500).send("Progress updated, but failed to send email.");
-//                   } else {
-//                     console.log("Email sent:", info.response);
-//                     return res.send("Progress updated and email sent successfully!");
-//                   }
-//                 }); 
-              
-//               })
-//             })
+                      Please check the Project Register for more details.
 
-//           }
-//           else {
-//             res.send("Progress updated successfully for this member!");
-//           }
-//         })
-//       });
+                      Best regards,
+                      Project Management System`
+                  };
+                    transporter.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                      console.error("Email Error:", error);
+                      return res.status(500).send("Progress updated, but failed to send email.");
+                    } else {
+                      console.log("Email sent:", info.response);
+                      return res.send("Progress updated and email sent successfully!");
+                    }
+                  }); 
+                
+                })
+              })
 
-//       });
-//     } catch (error) {
-//       next(error);
-//     }
-//   });
+            })
+
+          }
+          else {
+            return res.send("Progress updated successfully for this member!");
+          }
+        })
+      });
+
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
 
 
 // brings the details of the project through project_id 
@@ -973,13 +981,13 @@ router.get('/student/fetch_upcoming_meeting_links/:team_id',(req,res,next) => {
   }
 })
 
-// fetches mentor-guide-expert for a particular team
-router.get('/student/get_mentor_guide_expert/:team_id/:role',(req,res,next) => {
+// fetches guide-expert for a particular team
+router.get('/student/get_guide_expert/:team_id/:role',(req,res,next) => {
   try{
     const{team_id,role} = req.params;
     if(!team_id || !role)return next(createError.BadRequest('team id or role is undefined!'));
     const safeRole = role.toLowerCase();
-    const validRoles = ['guide','sub_expert','mentor'];
+    const validRoles = ['guide','sub_expert'];
     if(!validRoles.includes(safeRole))return next(createError.BadRequest('invalid role!'));
     let sql = `select ${role}_reg_num from teams where team_id = ?`;
     db.query(sql,[team_id],(error,result) => {

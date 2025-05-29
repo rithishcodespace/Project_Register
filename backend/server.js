@@ -16,6 +16,7 @@ const uploadRouter = require("./Routes/uploadRoute");
 const path = require("path");
 const cronJob = require("./utils/cronJobs");
 const admin = require("firebase-admin");
+const mentorRoute = require("./Routes/mentorRoute");
 
 
 app.use(express.json());
@@ -35,6 +36,7 @@ app.use("/",adminRouter);
 app.use("/",guideRouter);
 app.use("/",subjectExpertRouter);
 app.use("/",uploadRouter);
+app.use("/",mentorRoute);
 
 // Serve static files from the uploads directory
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

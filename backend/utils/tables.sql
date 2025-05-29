@@ -153,7 +153,7 @@ CREATE TABLE weekly_logs_verification (
     team_id VARCHAR(100) NOT NULL,
     week_number INT NOT NULL CHECK (week_number BETWEEN 1 AND 12),
     is_verified BOOLEAN DEFAULT FALSE,
-    verified_by VARCHAR(100), -- e.g., guide's email or user ID
+    guide_reg_num VARCHAR(100), -- e.g., guide's email or user ID
     verified_at DATETIME DEFAULT NULL,
     remarks TEXT,
 
@@ -228,7 +228,6 @@ CREATE TABLE teams (
   project_id VARCHAR(250),
   guide_reg_num VARCHAR(500),
   sub_expert_reg_num VARCHAR(500),
-  mentor_reg_num VARCHAR(100) default NULL,
   project_picked_date DATETIME DEFAULT CURRENT_TIMESTAMP,
   guide_verified INT DEFAULT 0,
   week1_progress VARCHAR(200),
@@ -277,3 +276,13 @@ CREATE TABLE meeting_links (
     ON UPDATE CASCADE
 );
 
+CREATE TABLE mentors_mentees (
+    mentee_name VARCHAR(100) NOT NULL,
+    mentee_reg_num VARCHAR(100) NOT NULL,
+    mentee_emailId VARCHAR(100) NOT NULL,
+    mentee_sem INT NOT NULL,
+    mentor_name VARCHAR(100) NOT NULL,
+    mentor_reg_num VARCHAR(100),
+    mentor_emailId VARCHAR(100),
+    PRIMARY KEY (mentee_reg_num)
+);

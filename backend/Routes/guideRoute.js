@@ -438,16 +438,44 @@ router.get('/guide/no_of_weeks_verified/:team_id',(req,res,next) => {
   }
 })
 
-// fetches the team progress through project_id -> 2nd
+// fetches the pending verifications that needs to be done by me -> gives only team_id
+// finds the team_id that is ready for weekly_log verification
 
-router.get("/guide/fetch_progress_by_project_id/:project_id",userAuth,(req,res,next) => {
+router.get('/guide/fetching_pending_verifications/:guide_reg_num',(req,res,next) => {
   try{
-    const{project_id} = req.params;
-    if(!project_id)return next(createError.BadRequest("project_id not found!"));
-    let sql = "select * from team_requests where project_id = ?";
-    db.query(sql,[project_id],(error,result) => {
+    const{guide_reg_num} = req.params;
+    if(!guide_reg_num)return next(createError.BadRequest('guide_reg_num not found!'));
+    let sql = "select team_id from weekly_logs_verification where guide_reg_num = ? and is_verified = false";
+    db.query(sql,[guide_reg_num],(error,team_id) => {
+      if(error)return  next(error);
+      if(team_id.length === 0)return res.send('No pending teams to be verified!');
+      res.send(team_id);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+// finds the latest week and gives the progress entered by each member
+// fetches the progress submitted by the particular team
+
+router.get('/guide/gets_the_progress_updated_team_members/:team_id',(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest('team_id not found!'));
+    let sql = "SELECT MAX(week_number) AS latest_week FROM weekly_logs_verification WHERE team_id = ?";
+    db.query(sql,[team_id],(error,week_number) => {
       if(error)return next(error);
-      res.send(result);
+      if(week_number.length === 0)return next(createError.BadRequest('week_no not found!'));
+
+      let sql1 = `select week${week_number[0].latest_week}_progress from teams where team_id = ?`;
+      db.query(sql1,[team_id],(error,result) => {
+        if(error)return next(error);
+        if(result.length === 0)return next(createError.NotFound('progress not found!'));
+        return res.send(result);
+      })
     })
   }
   catch(error)
