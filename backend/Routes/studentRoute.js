@@ -621,6 +621,20 @@ router.get("/student/get_project_type/:reg_num",(req,res,next) => {
   }
 })
 
+// send request to mentor for optional review -> if missed any one of the review
+
+router.post('/send_request_for_optional_review/:mentor_reg_num',(req,res,next) => {
+  try{
+    const{mentor_reg_num} = req.params;
+    if(!mentor_reg_num)return next(createError.BadRequest('mentor register number not found!'));
+  
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 // checks whether the student have already added the progress for the particular week
 
 // router.get("/student/gets_progress_of_mine/:week/:reg_num",(req,res,next) => {
@@ -845,7 +859,7 @@ router.post("/student/addproject/:project_type/:team_id/:reg_num", userAuth,(req
 router.post("/student/send_review_request/:team_id/:project_id", userAuth, (req, res, next) => {
   try {
     const { team_id, project_id } = req.params;
-    const { project_name, team_lead, review_date, start_time } = req.body;
+    const { project_name, team_lead, review_date, start_time, isOptional} = req.body;
 
     if (!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time) {
       return next(createError.BadRequest("Some parameters are missing!"));
@@ -879,6 +893,9 @@ router.post("/student/send_review_request/:team_id/:project_id", userAuth, (req,
       db.query(sql2, [team_id], (error, result1) => {
         if (error) return next(error);
         if (result1.length >= 2) return next(createError.BadRequest("Your team already completed 2 reviews."));
+        let review_number = result1.length + 1;
+        if(isOptional === 'optional' && result1.length !== 1)return next(createError.BadRequest(`you can't eligible to request for optional review!`))
+        else if(isOptional === 'optional') review_number = 'optional';
 
         // Eligibility check
         const weekToCheck = result1.length === 0 ? 3 : 6;
@@ -898,8 +915,8 @@ router.post("/student/send_review_request/:team_id/:project_id", userAuth, (req,
             }
 
             // Insert into review_requests
-            let insertSql = "INSERT INTO review_requests (team_id, project_id, project_name, team_lead, review_date, start_time, expert_reg_num, guide_reg_num) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            db.query(insertSql, [team_id, project_id, project_name, team_lead, formattedDate, start_time, expert_reg_num, guide_reg_num], (error, result) => {
+            let insertSql = "INSERT INTO review_requests (team_id, project_id, project_name, team_lead, review_date, start_time, expert_reg_num, guide_reg_num,review_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            db.query(insertSql, [team_id, project_id, project_name, team_lead, formattedDate, start_time, expert_reg_num, guide_reg_num,review_number], (error, result) => {
               if (error) return next(error);
               if (result.affectedRows === 0) return res.status(500).json({ message: "Insertion failed!" });
               return res.send(`${formattedDate} - ${start_time}: Review request submitted successfully.`);
@@ -912,7 +929,8 @@ router.post("/student/send_review_request/:team_id/:project_id", userAuth, (req,
     next(error);
   }
 });
-                             
+
+// fetches the scheduled reviews for my team                            
 
 router.get("/student/schedule_review/:project_id", userAuth, (req, res, next) => {
   try {
@@ -936,7 +954,44 @@ router.get("/student/schedule_review/:project_id", userAuth, (req, res, next) =>
   }
 });
 
+// fetches the upcoming meeting links for my team
 
+router.get('/student/fetch_upcoming_meeting_links/:team_id',(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id) return next(createError.BadRequest('team is undefined!'));
+    let sql = 'select meeting_link,review_no from meeting_links where team_id = ? and scheduled_at >= current_timestamp';
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound('meeting links not found!'));
+      return res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
+// fetches mentor-guide-expert for a particular team
+router.get('/student/get_mentor_guide_expert/:team_id/:role',(req,res,next) => {
+  try{
+    const{team_id,role} = req.params;
+    if(!team_id || !role)return next(createError.BadRequest('team id or role is undefined!'));
+    const safeRole = role.toLowerCase();
+    const validRoles = ['guide','sub_expert','mentor'];
+    if(!validRoles.includes(safeRole))return next(createError.BadRequest('invalid role!'));
+    let sql = `select ${role}_reg_num from teams where team_id = ?`;
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.BadRequest('register number not found!!'));
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 module.exports = router;

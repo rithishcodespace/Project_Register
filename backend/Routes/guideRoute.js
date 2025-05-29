@@ -202,9 +202,9 @@ router.patch("/guide/accept_reject/:status/:team_id/:semester/:my_id",userAuth, 
 // conforming review request -> sent by the team, both guide and expert should accept
 router.post("/guide/add_review_details/:request_id/:status/:guide_reg_num/:team_id",userAuth,(req,res,next) => {
     try{
-      const{project_id,project_name,team_lead,review_date,start_time} = req.body;
+      const{project_id,project_name,team_lead,review_date,start_time,review_no} = req.body;
       const{request_id,status,guide_reg_num,team_id} = req.params;
-      if(!project_id || !project_name || !team_lead || !review_date || !expert_reg_num || !start_time || !request_id || !status || !team_id)
+      if(!project_id || !project_name || !team_lead || !review_date || !expert_reg_num || !start_time || !request_id || !status || !team_id || !review_no)
       {
         return next(createError.BadRequest("data is missing!"));
       }
@@ -229,8 +229,8 @@ router.post("/guide/add_review_details/:request_id/:status/:guide_reg_num/:team_
             const expert_reg_num = result[0].expert_reg_num;
 
             // inserting into scheduled reivews
-            let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id) values(?,?,?,?,?,?,?,?)";
-            db.query(sql,[project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id],(error,result) => {
+            let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id,review_no) values(?,?,?,?,?,?,?,?,?)";
+            db.query(sql,[project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id,review_no],(error,result) => {
               if(error) return next(error);
               if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
               // removing request from the review requests
@@ -292,52 +292,69 @@ router.get("/guide/fetch_review_requests/:guide_reg_num",userAuth,(req,res,next)
 // adds detaied marks to rubix -> also inserts total mark for the review guide_mark and expert_mark to the scheduled_Review table
 // reivew no -> 1 or 2 -> get from input tag
 
-router.post("/guide/add_review_marks_rubix/:team_id/:review_id", userAuth, (req, res, next) => {
+router.post("/guide/add_review_marks_rubix/:team_id/:review_id/:guide_reg_num", userAuth, (req, res, next) => {
   try {
-    const { team_id,review_id } = req.params;
+    const { team_id,review_id,guide_reg_num } = req.params;
     const {review_no,review_date,guide_literature_survey,guide_aim,guide_scope,guide_need_for_study,guide_proposed_methodology,guide_work_plan,guide_oral_presentation,guide_viva_voce_and_ppt,guide_contributions,guide_remarks} = req.body;
 
-    if (!team_id || !review_id || !review_no || !review_date || !guide_literature_survey || !guide_aim || !guide_scope || !guide_need_for_study || !guide_proposed_methodology || !guide_work_plan || !guide_oral_presentation || !guide_viva_voce_and_ppt || !guide_contributions || !guide_remarks) {
+    if (!guide_reg_num || !team_id || !review_id || !review_no || !review_date || !guide_literature_survey || !guide_aim || !guide_scope || !guide_need_for_study || !guide_proposed_methodology || !guide_work_plan || !guide_oral_presentation || !guide_viva_voce_and_ppt || !guide_contributions || !guide_remarks) {
       return next(createError.BadRequest('Data not found!'));
     }
     if (review_no > 2 || review_no < 1) return next(createError.BadRequest('invalid review month!'));
 
-    // checking whether already added marks for this review
-    let sql = "select * from review_marks where team_id = ? and review_no = ?";
-    db.query(sql, [team_id, review_no], (error, result) => {
-      if (error) return next(error);
-      if (result.length > 0) return next(createError.BadRequest("Review marks already updated!"));
+    // marks can be entered only within 6 days after the review
+    let sql0 = "select review_date from scheduled_reviews where team_id = ? and review_id = ? and review_no = ? and guide_reg_num = ?";
+    db.query(sql0,[team_id,review_id,review_no,guide_reg_num],(error,date) => {
+      if(error)return next(error);
+      if(date.length === 0)return next(createError.BadRequest('review date not found!'));
+      
+      const reviewDate = new Date(date[0].review_date);
+      const currentDate = new Date();
 
-      const guide_inp_list = [guide_literature_survey,guide_aim,guide_scope,guide_need_for_study,guide_proposed_methodology,guide_work_plan,guide_oral_presentation,guide_viva_voce_and_ppt,guide_contributions];
-      let guide_marks = 0;
-      for(let i=0;i<guide_inp_list.length;i++)
-      {
-        guide_marks += parseInt(guide_inp_list[i], 10);
+      const diffInMs = currentDate - reviewDate;
+      const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+
+      if (diffInDays > 6) {
+        return next(createError.Forbidden('Marks can only be entered within 6 days after the review.'));
       }
 
-      // insert data into scheduled reveiws
-      let sql1 = "UPDATE scheduled_reviews SET guide_literature_survey = ?, guide_aim = ?, guide_scope = ?, guide_need_for_study = ?, guide_proposed_methodology = ?, guide_work_plan = ?, guide_oral_presentation = ?, guide_viva_voce_and_ppt = ?, guide_contributions = ?, total_guide_marks = ? WHERE review_id = ?"
-      db.query(sql1,[guide_literature_survey,guide_aim,guide_scope,guide_need_for_study,guide_proposed_methodology,guide_work_plan,guide_oral_presentation,guide_viva_voce_and_ppt,guide_contributions,guide_marks,review_id],(error,result) => {
-        if(error)return next(error);
-        if(result.affectedRows === 0)return next(createError.BadRequest('failed to update marks!'));
+      // checking whether already added marks for this review
+      let sql = "select * from review_marks where team_id = ? and review_no = ?";
+      db.query(sql, [team_id, review_no], (error, result) => {
+        if (error) return next(error);
+        if (result.length > 0) return next(createError.BadRequest("Review marks already updated!"));
 
-        //checks if expert also updated the marks -> to update total marks 
-        let sql2 = "select total_expert_marks from review_marks where review_id = ?";
-        db.query(sql2,[review_id],(error,result) => {
+        const guide_inp_list = [guide_literature_survey,guide_aim,guide_scope,guide_need_for_study,guide_proposed_methodology,guide_work_plan,guide_oral_presentation,guide_viva_voce_and_ppt,guide_contributions];
+        let guide_marks = 0;
+        for(let i=0;i<guide_inp_list.length;i++)
+        {
+          guide_marks += parseInt(guide_inp_list[i], 10);
+        }
+
+        // insert data into scheduled reveiws
+        let sql1 = "UPDATE scheduled_reviews SET guide_literature_survey = ?, guide_aim = ?, guide_scope = ?, guide_need_for_study = ?, guide_proposed_methodology = ?, guide_work_plan = ?, guide_oral_presentation = ?, guide_viva_voce_and_ppt = ?, guide_contributions = ?, total_guide_marks = ?, WHERE review_id = ?"
+        db.query(sql1,[guide_literature_survey,guide_aim,guide_scope,guide_need_for_study,guide_proposed_methodology,guide_work_plan,guide_oral_presentation,guide_viva_voce_and_ppt,guide_contributions,guide_marks,review_id],(error,result) => {
           if(error)return next(error);
-          if(result.length == 0)return res.send("marks updated successfully by guide!");
+          if(result.affectedRows === 0)return next(createError.BadRequest('failed to update marks!'));
 
-          // expert_total_marks is present we can calculate total_marks
-          const total_marks = result[0].total_expert_marks + guide_marks;
-          let updateTotalMarks = "update review_marks set total_marks = ? where review_id = ?";
-          db.query(updateTotalMarks,[total_marks,review_id],(error,markUpdated) => {
+          //checks if expert also updated the marks -> to update total marks 
+          let sql2 = "select total_expert_marks from review_marks where review_id = ?";
+          db.query(sql2,[review_id],(error,result) => {
             if(error)return next(error);
-            if(markUpdated.affectedRows === 0)return next(createError.BadRequest('total marks failed to be updated!'));
-            res.send('marks and total marks updated successfully!');
+            if(result.length == 0)return res.send("marks updated successfully by guide!");
+
+            // expert_total_marks is present we can calculate total_marks
+            const total_marks = result[0].total_expert_marks + guide_marks;
+            let updateTotalMarks = "update review_marks set total_marks = ? where review_id = ?";
+            db.query(updateTotalMarks,[total_marks,review_id],(error,markUpdated) => {
+              if(error)return next(error);
+              if(markUpdated.affectedRows === 0)return next(createError.BadRequest('total marks failed to be updated!'));
+              res.send('marks and total marks updated successfully!');
+            })
           })
         })
-      })
-    });
+      });
+    })
   } catch (error) {
     next(error);
   }
@@ -382,7 +399,7 @@ router.get("/guide/get_queries/:guide_reg_num",userAuth,(req,res,next) => {
 })
 
 // fetches team details mentored by me -> 1st
-router.get("/guide/fetch_mentoring_teams/:guide_id",userAuth,(req,res,next) => {
+router.get("/guide/fetch_guiding_teams/:guide_id",userAuth,(req,res,next) => {
     try{
       const{guide_id} = req.params;
       if(!guide_id)
@@ -390,9 +407,9 @@ router.get("/guide/fetch_mentoring_teams/:guide_id",userAuth,(req,res,next) => {
         return next(createError.BadRequest("guide id not found!"));
       }
     let sql = "select * from guide_requests where to_guide_reg_num = ? and status = 'accept'";
-    db.query(sql,[guide_id],(error,result) => {
+    db.query(sql,[guide_id],(error,teams) => {
         if(error)return next(error);
-        if(result.length == 0)return res.send("No Teams found!");
+        if(teams.length == 0)return res.send("No Teams found!");
         res.send(result);
     })
     }
@@ -400,6 +417,25 @@ router.get("/guide/fetch_mentoring_teams/:guide_id",userAuth,(req,res,next) => {
     {
        next(error);
     }
+})
+
+// fetches the no of weeks verified -> particular team_id
+
+router.get('/guide/no_of_weeks_verified/:team_id',(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest('team_id is not defined!'));
+    let sql = "SELECT MAX(week_number) AS max_week FROM weekly_logs_verification WHERE team_id = ?"
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound(`no have been verified for the team :-${team_id}`));
+      return res.send(result[0].max_week);
+    })
+  }
+  catch(error)
+  {   
+    next(error);
+  }
 })
 
 // fetches the team progress through project_id -> 2nd
@@ -500,6 +536,43 @@ router.get("/guide/fetchDeadlines/:team_id",(req,res,next) => {
     next(error);
   }
 })
+
+// meeting link
+// -> review number should come from frontend data =x= from the user input
+
+router.post('/guide/add_meeting_link/:guide_reg_num/:team_id/:review_no', (req, res, next) => {
+  try {
+    const { meetingLink, platform, scheduled_at } = req.body;
+    const { guide_reg_num, team_id, review_no } = req.params;
+
+    if (!meetingLink || !platform || !guide_reg_num || !team_id || !review_no || !scheduled_at)
+      return next(createError.BadRequest('Data is missing!'));
+
+    const sql = 'SELECT * FROM meeting_links WHERE team_id = ? AND review_no = ? and scheduled_at >= current_timestamp';
+
+    db.query(sql, [team_id, review_no], (error, result) => {
+      if (error) return next(error);
+
+      if (result.length > 0) {
+        return next(createError.BadRequest('Meeting link already exists!'));
+
+      } else {
+        // INSERT
+        const insertSql = `INSERT INTO meeting_links (team_id, review_no, meeting_link, platform, scheduled_at) VALUES (?, ?, ?, ?, ?)`;
+
+        db.query(insertSql, [team_id, review_no, meetingLink, platform, scheduled_at], (err, insertResult) => {
+          if (err) return next(err);
+          if (insertResult.affectedRows === 0) return next(createError.BadRequest('Insert failed!'));
+          return res.send('Meeting link added successfully!');
+        });
+      }
+    });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
 
 
 module.exports = router;
