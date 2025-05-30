@@ -8,7 +8,7 @@ import Project_Details from "./components/Students/Project_Details";
 import Student_Team from "./components/Students/Schedule_review";
 import Admin from "./components/Admin/Admin";
 import Add_Users from "./components/Admin/Add_Users";
-import Students_Progress from "./components/Admin/Students_Progress";
+import Students_Progress from "./acomponents/Admin/Students_Progress";
 import Posted_project from "./components/Admin/Posted_project";
 import Admin_Dashboard from "./components/Admin/Admin_Dashboard";
 import { Provider } from "react-redux";

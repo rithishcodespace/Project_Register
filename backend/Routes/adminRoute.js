@@ -8,7 +8,7 @@ const userAuth = require("../middlewares/userAuth")
 
 router.post("/admin/adduser",userAuth,(req,res,next) => {
    try{
-     const{name,emailId,password,role,dept,reg_num,phone_number,semester} = req.body;
+     const{name,emailId,password,role,dept,reg_num,phone_number,semester,mentor_name,mentor_reg_num,mentor_emailId} = req.body;
      if(!name || !emailId || !password || !role || !dept || !reg_num){ // not checking semester since it might be null other than students
       return next(createError.BadRequest("data is missing!"));
      }
@@ -30,7 +30,26 @@ router.post("/admin/adduser",userAuth,(req,res,next) => {
      db.query(sql,values,(error,result) => {
         if(error)return next(error);
         if(result.affectedRows === 0)return next(createError.BadRequest("rows are not affected!"));
-        res.send("user added successfully by admin!");
+        if(role == 'student')
+        {
+          if(!mentor_emailId || !mentor_name || !mentor_reg_num)return next(createError.BadRequest('mentor details are missing!'));
+          // check if mentor exist
+          let sql1 = "select * from users where role = 'staff' and reg_num = ? and name = ?";
+          db.query(sql1,[mentor_reg_num,mentor_name],(error,check) => {
+            if(error)return next(error);
+            if(check.length === 0)return next(createError.NotFound('mentor not found!'));
+            let sql2 = "insert into mentor_mentee (mentee_name,mentee_reg_num,mentee_emailId,mentee_sem,mentor_name,mentor_reg_num,mentor_emailId) values(?,?,?,?,?,?,?)";
+            db.query(sql2,[name,reg_num,emailId,safeSemester,mentor_name,mentor_reg_num,mentor_emailId],(error,result) => {
+              if(error)return next(error);
+              if(result.affectedRows === 0)return next('some rows are not affected!');
+              return res.send("user added successfully with mentor admin!");
+
+            })
+          })
+        }
+        else{
+          res.send("user added successfully admin!");
+        }
      })
    }
    catch(error)
@@ -292,31 +311,31 @@ router.patch("/admin/update_deadline/:week/:team_id",userAuth,(req,res,next) => 
 })
 
 // // assign or update -> guide or expert for a paritcular team 
-router.patch("/admin/assign_guide_expert_mentor/:team_id/:role", (req, res, next) => {
+router.patch("/admin/assign_guide_expert/:team_id/:role", (req, res, next) => {
   try {
     const { team_id, role } = req.params;
-    const { guideOrexpertOrmentor_reg_num } = req.body;
+    const { guideOrexpert_reg_num } = req.body;
 
-    if (!team_id || !guideOrexpertOrmentor_reg_num || !role) {
+    if (!team_id || !guideOrexpert_reg_num || !role) {
       return next(createError.BadRequest("Missing team_id, role, or registration number."));
     }
 
-    const validRoles = ['sub_expert', 'guide', 'mentor'];
+    const validRoles = ['sub_expert', 'guide'];
     if (!validRoles.includes(role)) {
       return next(createError.BadRequest("Invalid role!"));
     }
     
     // checks whether the person already acts as expert or mentor or guide for this particular team
-    let checkSql = "SELECT * FROM teams WHERE team_id = ? AND (guide_reg_num = ? OR sub_expert_reg_num = ? OR mentor_reg_num = ?)";
-    db.query(checkSql,[team_id,guideOrexpertOrmentor_reg_num,guideOrexpertOrmentor_reg_num,guideOrexpertOrmentor_reg_num],(error,result) => {
+    let checkSql = "SELECT * FROM teams WHERE team_id = ? AND (guide_reg_num = ? OR sub_expert_reg_num = ?)";
+    db.query(checkSql,[team_id,guideOrexpert_reg_num,guideOrexpert_reg_num],(error,result) => {
       if(error)return next(error);
       if(result.length >= 1)return next(createError.BadRequest('This staff already acts as guide or expert or mentor for this particular team!'));
       //updating
       let updateSql = `update teams set ${role}_reg_num = ? where team_id = ?`;
-      db.query(updateSql,[guideOrexpertOrmentor_reg_num,team_id],(error,result) => {
+      db.query(updateSql,[guideOrexpert_reg_num,team_id],(error,result) => {
         if(error)return next(error);
         if(result.affectedRows === 0)return next(createError.BadRequest('Reg_num not updated!'));
-        res.send(`${team_id} teams ${role} has updated as ${guideOrexpertOrmentor_reg_num}`);
+        res.send(`${team_id} teams ${role} has updated as ${guideOrexpert_reg_num}`);
       })  
     })
   } catch (error) {
