@@ -100,8 +100,8 @@ router.post("/student/join_request", userAuth, (req, res, next) => {
                 if(sem1 != sem2)return next(createError.BadRequest("You can't send requests to your seniors or juniors!"));
         
                 // inserts the request in the request db (only if no existing request)
-                let sql1 = "INSERT INTO team_requests (name, emailId, reg_num, dept, from_reg_num, to_reg_num) VALUES (?,?,?,?,?,?)";
-                let values = [name, emailId, reg_num, dept, from_reg_num, to_reg_num];
+                let sql1 = "INSERT INTO team_requests (name, emailId, reg_num, dept, from_reg_num, to_reg_num, status) VALUES (?,?,?,?,?,?,?)";
+                let values = [name, emailId, reg_num, dept, from_reg_num, to_reg_num,'pending'];
               
                 db.query(sql1, values, (error, result) => {
                   if (error) return next(error);  // Use return here to prevent further code execution
@@ -864,10 +864,11 @@ router.post("/student/addproject/:project_type/:team_id/:reg_num", userAuth,(req
 });
 
 // sends the review request to the expert and guide => once in a month
+// reason will be for optional review
 router.post("/student/send_review_request/:team_id/:project_id", userAuth, (req, res, next) => {
   try {
     const { team_id, project_id } = req.params;
-    const { project_name, team_lead, review_date, start_time, isOptional } = req.body;
+    const { project_name, team_lead, review_date, start_time, isOptional, reason, mentor_reg_num } = req.body;
 
     if (!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time) {
       return next(createError.BadRequest("Some parameters are missing!"));
@@ -918,16 +919,37 @@ router.post("/student/send_review_request/:team_id/:project_id", userAuth, (req,
                 return next(createError.BadRequest("Review request already exists for this slot!"));
               }
 
-              const insertSql = `
+              if(review_title !== 'optional')
+              {
+                const insertSql = `
                 INSERT INTO review_requests
                 F(team_id, project_id, project_name, team_lead, review_date, start_time, expert_reg_num, guide_reg_num, review_title)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-              `;
-              db.query(insertSql, [team_id, project_id, project_name, team_lead, formattedDate, start_time, expert_reg_num, guide_reg_num, review_title], (error, result) => {
-                if (error) return next(error);
-                if (result.affectedRows === 0) return res.status(500).json({ message: "Insertion failed!" });
-                return res.send(`${formattedDate} - ${start_time}: Review request submitted successfully.`);
-              });
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+                db.query(insertSql, [team_id, project_id, project_name, team_lead, formattedDate, start_time, expert_reg_num, guide_reg_num, review_title], (error, result) => {
+                  if (error) return next(error);
+                  if (result.affectedRows === 0) return res.status(500).json({ message: "Insertion failed!" });
+                  return res.send(`${formattedDate} - ${start_time}: Review request submitted successfully.`);
+                });
+              }
+              else if(review_title === 'optional'){
+                // send request to mentor to accept the genuie reason
+                
+                // checks already sent this request to the mentor
+                let sql = "select * from option_review_requests where team_id = ? review_date = ? start_time = ? and mentor_reg_num = ?";
+                db.query(sql,[team_id,review_date,start_time,mentor_reg_num],(error,checkResult) => {
+                  if(error)return next(error);
+                  if(checkResult.length > 0)return next(createError.BadRequest('already sent request for this same optional review!'));
+
+                  // insert into optional_review_request
+                  let sql1 = "insert into optional_review_requests (team_id,project_id,team_lead,review_date,start_time,mentor_reg_num) values(?,?,?,?,?,?)";
+                  db.query(sql1,[team_id,project_id,team_lead,review_date,start_time,mentor_reg_num],(error,result) => {
+                    if(error)return next(error);
+                    if(result.affectedRows === 0)return next(createError.BadRequest('an error occured while inserting into optional review requests!'));
+                    
+                  })
+                })
+              }
             });
           });
         };

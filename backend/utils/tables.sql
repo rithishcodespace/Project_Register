@@ -355,3 +355,15 @@ CREATE TABLE review_marks_individual (
 
   PRIMARY KEY (review_no, student_reg_num)
 );
+
+CREATE TABLE optional_review_requests (
+  request_id INT AUTO_INCREMENT PRIMARY KEY,
+  team_id VARCHAR(100) NOT NULL,
+  project_id VARCHAR(100) NOT NULL,
+  team_lead VARCHAR(100) NOT NULL,
+  review_date DATE NOT NULL,
+  start_time TIME NOT NULL,
+  mentor_reg_num VARCHAR(100) NOT NULL,
+  status VARCHAR(100) DEFAULT NULL
+);
+
