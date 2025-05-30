@@ -292,73 +292,239 @@ router.get("/guide/fetch_review_requests/:guide_reg_num",userAuth,(req,res,next)
 // adds detaied marks to rubix -> also inserts total mark for the review guide_mark and expert_mark to the scheduled_Review table
 // reivew no -> 1 or 2 -> get from input tag
 
-router.post("/guide/add_review_marks_rubix/:team_id/:review_id/:guide_reg_num", userAuth, (req, res, next) => {
-  try {
-    const { team_id,review_id,guide_reg_num } = req.params;
-    const {review_no,review_date,guide_literature_survey,guide_aim,guide_scope,guide_need_for_study,guide_proposed_methodology,guide_work_plan,guide_oral_presentation,guide_viva_voce_and_ppt,guide_contributions,guide_remarks} = req.body;
+router.post("/guide/review/add_team_marks/:guide_reg_num", userAuth, (req, res, next) => {
+  const { guide_reg_num } = req.params;
+  const {
+    review_title,
+    review_date,
+    team_id,
+    guide_literature_survey,
+    guide_aim,
+    guide_scope,
+    guide_need_for_study,
+    guide_proposed_methodology,
+    guide_work_plan,
+    guide_remarks
+  } = req.body;
 
-    if (!guide_reg_num || !team_id || !review_id || !review_no || !review_date || !guide_literature_survey || !guide_aim || !guide_scope || !guide_need_for_study || !guide_proposed_methodology || !guide_work_plan || !guide_oral_presentation || !guide_viva_voce_and_ppt || !guide_contributions || !guide_remarks) {
-      return next(createError.BadRequest('Data not found!'));
+  if (
+    !review_title || !review_date || !team_id ||
+    guide_reg_num == null ||
+    guide_literature_survey == null ||
+    guide_aim == null ||
+    guide_scope == null ||
+    guide_need_for_study == null ||
+    guide_proposed_methodology == null ||
+    guide_work_plan == null ||
+    guide_remarks == null
+  ) {
+    return next(createError.BadRequest("Missing required fields!"));
+  }
+
+  const validReview_titles = ['1st_review', '2nd_review', 'optional_review'];
+  if (!validReview_titles.includes(review_title))
+    return next(createError.BadRequest('Invalid review title!'));
+
+  // marks can be entered within 6 days
+  const reviewDate = new Date(review_date);
+  const currentDate = new Date();
+  const diffInMs = currentDate - reviewDate;
+  const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+  if (diffInDays > 6) {
+    return next(createError.Forbidden('Marks can only be entered within 6 days after the review.'));
+  }
+
+  // Check if already added
+  const checkSql = "SELECT * FROM review_marks_team WHERE team_id = ? AND review_date = ? AND review_title = ?";
+  db.query(checkSql, [team_id, review_date, review_title], (error, result) => {
+    if (error) return next(error);
+    if (result.length > 0 && result[0].total_guide_marks !== null) {
+      return next(createError.BadRequest("Review marks already updated!"));
     }
-    if (review_no > 2 || review_no < 1) return next(createError.BadRequest('invalid review month!'));
 
-    // marks can be entered only within 6 days after the review
-    let sql0 = "select review_date from scheduled_reviews where team_id = ? and review_id = ? and review_no = ? and guide_reg_num = ?";
-    db.query(sql0,[team_id,review_id,review_no,guide_reg_num],(error,date) => {
-      if(error)return next(error);
-      if(date.length === 0)return next(createError.BadRequest('review date not found!'));
-      
-      const reviewDate = new Date(date[0].review_date);
-      const currentDate = new Date();
+    const total_guide_marks =
+      parseInt(guide_literature_survey) +
+      parseInt(guide_aim) +
+      parseInt(guide_scope) +
+      parseInt(guide_need_for_study) +
+      parseInt(guide_proposed_methodology) +
+      parseInt(guide_work_plan);
 
-      const diffInMs = currentDate - reviewDate;
-      const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+    const fetchExpertSql = `SELECT * FROM review_marks_team WHERE review_title = ? AND review_date = ? AND team_id = ? and guide_reg_num = ?`;
 
-      if (diffInDays > 6) {
-        return next(createError.Forbidden('Marks can only be entered within 6 days after the review.'));
+    db.query(fetchExpertSql, [review_title, review_date, team_id,guide_reg_num], (err, result) => {
+      if (err) return next(err);
+      if (result.length === 0) {
+          // not present so insert
+          const insertSql = "insert into review_marks_team (review_title,review_date,team_id,guide_literature_survey,guide_aim,guide_scope,guide_need_for_study, guide_proposed_methodology,guide_work_plan,total_marks,total_guide_marks,guide_remarks) values (?,?,?,?,?,?,?,?,?,?,?,?)";
+          const values = [
+          review_title,
+          review_date,
+          team_id,
+          guide_literature_survey,
+          guide_aim,
+          guide_scope,
+          guide_need_for_study,
+          guide_proposed_methodology,
+          guide_work_plan,
+          total_guide_marks,
+          total_guide_marks, // since we are inserting no guide mark present
+          guide_remarks,
+        ];
+        db.query(insertSql,values,(error,result) => {
+          if(error)return next(error);
+          if(result.affectedRows === 0)return next(createError.InternalServerError("Failed to insert review marks."));
+          return res.send({ message: "Guide marks updated successfully!", total_marks: total_expert_marks });
+        })
+        return;
       }
 
-      // checking whether already added marks for this review
-      let sql = "select * from review_marks where team_id = ? and review_no = ?";
-      db.query(sql, [team_id, review_no], (error, result) => {
-        if (error) return next(error);
-        if (result.length > 0) return next(createError.BadRequest("Review marks already updated!"));
+      const total_expert_marks = result[0].total_expert_marks || 0;
+      const total_marks = total_guide_marks + total_expert_marks;
 
-        const guide_inp_list = [guide_literature_survey,guide_aim,guide_scope,guide_need_for_study,guide_proposed_methodology,guide_work_plan,guide_oral_presentation,guide_viva_voce_and_ppt,guide_contributions];
-        let guide_marks = 0;
-        for(let i=0;i<guide_inp_list.length;i++)
-        {
-          guide_marks += parseInt(guide_inp_list[i], 10);
+      const updateSql = `
+        UPDATE review_marks_team SET
+          guide_literature_survey = ?,
+          guide_aim = ?,
+          guide_scope = ?,
+          guide_need_for_study = ?,
+          guide_proposed_methodology = ?,
+          guide_work_plan = ?,
+          total_guide_marks = ?,
+          total_marks = ?,
+          guide_remarks = ?
+        WHERE review_title = ? AND review_date = ? AND team_id = ?
+      `;
+
+      const values = [
+        guide_literature_survey,
+        guide_aim,
+        guide_scope,
+        guide_need_for_study,
+        guide_proposed_methodology,
+        guide_work_plan,
+        total_guide_marks,
+        total_marks,
+        guide_remarks,
+        review_title,
+        review_date,
+        team_id
+      ];
+
+      db.query(updateSql, values, (err, result) => {
+        if (err) return next(err);
+        if (result.affectedRows === 0) {
+          return next(createError.BadRequest("No matching record found to update."));
         }
 
-        // insert data into scheduled reveiws
-        let sql1 = "UPDATE scheduled_reviews SET guide_literature_survey = ?, guide_aim = ?, guide_scope = ?, guide_need_for_study = ?, guide_proposed_methodology = ?, guide_work_plan = ?, guide_oral_presentation = ?, guide_viva_voce_and_ppt = ?, guide_contributions = ?, total_guide_marks = ?, WHERE review_id = ?"
-        db.query(sql1,[guide_literature_survey,guide_aim,guide_scope,guide_need_for_study,guide_proposed_methodology,guide_work_plan,guide_oral_presentation,guide_viva_voce_and_ppt,guide_contributions,guide_marks,review_id],(error,result) => {
+        res.send({ message: "Guide marks updated successfully!", total_marks });
+      });
+    });
+  });
+});
+
+// adds marks to a seperate individual
+
+router.post('/guide/review/add_marks_to_individual/:guide_reg_num/:reg_num',(req,res,next) => {
+  try{
+    const{guide_reg_num,reg_num} = req.params;
+    const{team_id,review_title,review_date,guide_oral_presentation,guide_viva_voce_and_ppt,guide_contributions,total_guide_marks,guide_remarks} = req.body;
+    if(!review_title || !review_date || !guide_reg_num || !reg_num || !team_id)return next(createError.BadRequest('guide register number or student register number is missing!'));
+    if(!guide_oral_presentation || !guide_viva_voce_and_ppt || !guide_contributions || !total_guide_marks || !guide_remarks){
+      return next(createError.BadRequest('data is missing!'));
+    }
+
+    const validReview_titles = ['1st_review', '2nd_review', 'optional_review'];
+    if (!validReview_titles.includes(review_title)){
+      return next(createError.BadRequest('Invalid review title!'));
+    }
+
+    const reviewDate = new Date(review_date);
+    const currentDate = new Date();
+    const diffInMs = currentDate - reviewDate;
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+    if (diffInDays > 6) {
+      return next(createError.Forbidden('Marks can only be entered within 6 days after the review.'));
+    }
+    
+    // check if already added
+    const checkSql = "SELECT * FROM review_marks_individual WHERE team_id = ? AND review_date = ? AND review_title = ? and guide_reg_num = ?";
+    db.query(checkSql, [team_id, review_date, review_title,guide_reg_num], (error, Checkresult) => {
+    if (error) return next(error);
+    if (Checkresult.length > 0 && Checkresult[0].total_guide_marks !== null) {
+      return next(createError.BadRequest("Review marks already updated!"));
+    }
+
+     const total_guide_marks = parseInt(guide_oral_presentation) + parseInt(guide_viva_voce_and_ppt) + parseInt(guide_contributions)
+
+    const fetchExpertSql = `SELECT * FROM review_marks_individual WHERE review_title = ? AND review_date = ? AND team_id = ? and guide_reg_num = ?`;
+    db.query(fetchExpertSql, [review_title, review_date, team_id,guide_reg_num], (err, result) => {
+      if (err) return next(err);
+      if (result.length === 0) {
+          // not present so insert
+          const insertSql = "insert into review_marks_individual (review_title,review_date,team_id, guide_oral_presentation,guide_viva_voce_and_ppt,guide_contributions,total_marks,total_guide_marks,guide_remarks) values (?,?,?,?,?,?,?,?,?)";
+          const values = [
+          review_title,
+          review_date,
+          team_id,
+          guide_oral_presentation,
+          guide_viva_voce_and_ppt,
+          guide_contributions,
+          total_guide_marks,
+          total_guide_marks, // since we are inserting no guide mark present
+          guide_remarks,
+        ];
+        db.query(insertSql,values,(error,result) => {
           if(error)return next(error);
-          if(result.affectedRows === 0)return next(createError.BadRequest('failed to update marks!'));
-
-          //checks if expert also updated the marks -> to update total marks 
-          let sql2 = "select total_expert_marks from review_marks where review_id = ?";
-          db.query(sql2,[review_id],(error,result) => {
-            if(error)return next(error);
-            if(result.length == 0)return res.send("marks updated successfully by guide!");
-
-            // expert_total_marks is present we can calculate total_marks
-            const total_marks = result[0].total_expert_marks + guide_marks;
-            let updateTotalMarks = "update review_marks set total_marks = ? where review_id = ?";
-            db.query(updateTotalMarks,[total_marks,review_id],(error,markUpdated) => {
-              if(error)return next(error);
-              if(markUpdated.affectedRows === 0)return next(createError.BadRequest('total marks failed to be updated!'));
-              res.send('marks and total marks updated successfully!');
-            })
-          })
+          if(result.affectedRows === 0)return next(createError.InternalServerError("Failed to insert review marks."));
+          return res.send({ message: "Guide marks updated successfully!", total_marks: total_expert_marks });
         })
+        return;
+      }
+      const total_expert_marks = result[0].total_expert_marks || 0;
+      const total_marks = total_guide_marks + total_expert_marks;
+
+      const updateSql = `
+        UPDATE review_marks_team SET
+          guide_oral_presentation,
+          guide_viva_voce_and_ppt,
+          guide_contributions,
+          total_guide_marks = ?,
+          total_marks = ?,
+          guide_remarks = ?
+        WHERE review_title = ? AND review_date = ? AND team_id = ?
+      `;
+
+      const values = [
+        guide_oral_presentation,
+        guide_viva_voce_and_ppt,
+        guide_contributions,
+        total_guide_marks,
+        total_guide_marks,
+        total_marks,
+        guide_remarks,
+        review_title,
+        review_date,
+        team_id
+      ];
+
+      db.query(updateSql, values, (err, result) => {
+        if (err) return next(err);
+        if (result.affectedRows === 0) {
+          return next(createError.BadRequest("No matching record found to update."));
+        }
+
+        res.send({ message: "Guide marks updated successfully!", total_marks });
       });
     })
-  } catch (error) {
+  })
+  }
+  catch(error)
+  {
     next(error);
   }
-});
+})
+
 
 // adds reply to the query
 

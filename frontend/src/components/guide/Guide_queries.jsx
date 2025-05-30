@@ -65,7 +65,7 @@ const Guide_queries = () => {
   };
 
   return (
-  <div className="p-6 min-h-screen">
+  <div className="p-6 min-h-">
     <h2 className="text-3xl text-center font-bold mb-6">Student Queries</h2>
 
     <div className="grid gap-6">

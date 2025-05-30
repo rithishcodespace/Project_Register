@@ -52,9 +52,8 @@ function Login() {
           }
         } else {
           if (role === "admin") navigate("/admin");
-          else if (role === "teacher") navigate("/teacher");
-          else if (role === "guide") navigate("/guide");
-          else if (role === "sub_expert") navigate("/subject_expert");
+          else if (role === "student") navigate("/student");
+          else if (role === "staff") navigate("/guide");
           else alert("Unknown role");
         }
       }
