@@ -95,13 +95,13 @@ const TimeLine = () => {
       <h2 className="text-3xl font-bold text-center mt-6 mb-6">Timeline Management</h2>
       <div className="w-full flex flex-end justify-between">
        <Link
-        to="/admin/change-timeline"
+        to="/admin/timeline/change-timeline"
         className="px-4 py-2 bg-purple-500 rounded hover:bg-purple-700 text-white"
       >
         Change Deadline
       </Link>
       <Link
-        to="/admin/assignguideexpert"
+        to="/admin/timeline/assignguideexpert"
         className="px-4 py-2 bg-purple-500 rounded hover:bg-purple-700 text-white"
       >
        Assign Guide or Expert

@@ -76,10 +76,10 @@ const teamselector = useSelector((state) => state.teamSlice);
 
           <Route path="/student" element={<Student />}>
             <Route index element={<Student_Dashboard />} />
+            <Route path="invitations" element={<InvitationPage />} />
               {teamselector ? (
             <>
               <Route path="Project_Details" element={<Project_Details />} />
-              <Route path="invitations" element={<InvitationPage />} />
               {teamselector[0].guide_reg_num ?(<>
               <Route path="queries" element={<Queries />} />
               <Route path="review" element={<Schedule_review />} />
@@ -105,11 +105,11 @@ const teamselector = useSelector((state) => state.teamSlice);
             <Route path="students_progress" element={<Students_Progress />} />
             <Route path="/admin/posted_projects/:project_id" element={<Admin_project_details />} />
             <Route path="student_progress/:cluster" element={<Admin_project_details />} />
-            <Route path="TimeLine" element={<TimeLine/>}/>
+            <Route path="timeline" element={<TimeLine/>}/>
             <Route path="team_list/:department" element={<TeamListByDepartment />} />
             <Route path="/admin/team_progress/:project_id" element={<Admin_project_details />} />
-            <Route path="change-timeline" element={<ChangeTimeLine/>} />
-            <Route path="assignguideexpert" element={<AssignGuideExpert/>} />
+            <Route path="timeline/change-timeline" element={<ChangeTimeLine/>} />
+            <Route path="timeline/assignguideexpert" element={<AssignGuideExpert/>} />
           </Route>
 
           <Route path="/subject_expert" element={<Subject_expert />}>

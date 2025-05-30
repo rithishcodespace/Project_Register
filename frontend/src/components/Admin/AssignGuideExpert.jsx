@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import instance from '../../utils/axiosInstance';
 
 const AssignGuideExpert = () => {
   const [teamId, setTeamId] = useState("");
@@ -15,9 +16,8 @@ const AssignGuideExpert = () => {
       setStatus({ loading: false, message: "All fields are required.", error: true });
       return;
     }
-
     try {
-      const res = await axios.patch(
+      const res = await instance.patch(
         `/admin/assign_guide_expert/${teamId}/${role}`,
         { guideOrexpert_reg_num: regNum }
       );
@@ -29,7 +29,7 @@ const AssignGuideExpert = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto mt-10 p-6 bg-purple-50 rounded-2xl shadow-lg border border-purple-200">
+    <div className="max-w-xl mx-auto mt-10 p-6 bg-white rounded-2xl shadow-lg border border-purple-200">
       <h2 className="text-2xl bg-white font-bold text-purple-700 mb-4 text-center">Assign Guide or Expert</h2>
       
       <form onSubmit={handleSubmit} className="space-y-4 bg-white">

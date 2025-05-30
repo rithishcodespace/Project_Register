@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import instance from '../../utils/axiosInstance';
 import { useSelector } from 'react-redux';
+import Select from 'react-select';
 
 // Helper component: Loading Spinner
 const LoadingSpinner = () => (
@@ -106,11 +107,49 @@ const Project_Details = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [projectData,setProjectData] = useState([])
 
+const expertOptions = expertsList.map((expert) => ({
+  value: expert.reg_num,
+  label: `${expert.name} (${expert.reg_num})`,
+}));
+
+// Custom filter to search by name or reg_num
+const customFilter = (option, inputValue) => {
+  const label = option.label.toLowerCase();
+  const value = option.value.toLowerCase();
+  const search = inputValue.toLowerCase();
+  return label.includes(search) || value.includes(search);
+};
+
+const handleExpertChange = (selectedOptions) => {
+  const selectedRegNums = selectedOptions.map(option => option.value);
+  setSelectedExperts(selectedRegNums);
+};
+
+const guideOptions = guidesList.map((guide) => ({
+  value: guide.reg_num,
+  label: `${guide.name} (${guide.reg_num})`,
+}));
+
+// Custom search filter (search by name or reg_num)
+const customGuideFilter = (option, inputValue) => {
+  const label = option.label.toLowerCase();
+  const value = option.value.toLowerCase();
+  const search = inputValue.toLowerCase();
+  return label.includes(search) || value.includes(search);
+};
+
+// Handle guide selection
+const handleGuideChange = (selectedOptions) => {
+  const selectedRegNums = selectedOptions.map(option => option.value);
+  setSelectedGuides(selectedRegNums);
+};
+
     useEffect(() => {
   if (!teamselector || !Array.isArray(teamselector) || !teamselector[0] || !teamselector[0].project_id) {
     console.log("Team selector not ready or missing project_id");
     return;
   }
+
 
   instance
     .get(`/student/get_project_details/${teamselector[0].project_id}`)
@@ -224,7 +263,8 @@ useEffect(() => {
       setSelectedGuides([]);
     } catch (error) {
       console.error('Submit Error:', error);
-      alert("Failed to submit project. Error: " + response.error.message);
+     alert("Failed to submit project. Error: " + (error?.response?.data?.message || error.message));
+
 
 
     }
@@ -325,46 +365,35 @@ return (
           </div>
 
           {/* Expert Selection */}
-          <div className="mb-6 bg-white ">
-            <h3 className="text-md  bg-white font- mb-2">Select Subject Experts:</h3>
-            <div className="flex flex-wrap bg-white  gap-2">
-              {expertsList.map((expert) => (
-                <button
-                  key={expert.reg_num}
-                  type="button"
-                  onClick={() => toggleExpertSelection(expert.reg_num)}
-                  className={`px-3 py-1 rounded-full border ${
-                    selectedExperts.includes(expert.reg_num)
-                      ? 'bg-purple-500 text-white border-purple-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
-                  }`}
-                >
-                  {expert.name}
-                </button>
-              ))}
-            </div>
-          </div>
+          <div className="mb-6 bg-white">
+    <h3 className="text-md bg-white font-medium mb-2">Select Subject Experts:</h3>
+    <Select
+      options={expertOptions}
+      isMulti
+      onChange={handleExpertChange}
+      value={expertOptions.filter(option => selectedExperts.includes(option.value))}
+      placeholder="Select experts..."
+      className="basic-multi-select"
+      classNamePrefix="select"
+      filterOption={customFilter} // custom search logic
+    />
+  </div>
 
           {/* Guide Selection */}
-          <div className="mb-6 bg-white ">
-            <h3 className="text-md bg-white  font- mb-2">Select Guides:</h3>
-            <div className="flex  bg-white flex-wrap gap-2">
-              {guidesList.map((guide) => (
-                <button
-                  key={guide.reg_num}
-                  type="button"
-                  onClick={() => toggleGuideSelection(guide.reg_num)}
-                  className={`px-3 py-1 rounded-full border ${
-                    selectedGuides.includes(guide.reg_num)
-                      ? 'bg-purple-500 text-white border-purple-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-green-100'
-                  }`}
-                >
-                  {guide.name}
-                </button>
-              ))}
-            </div>
-          </div>
+          <div className="mb-6 bg-white">
+    <h3 className="text-md bg-white font-medium mb-2">Select Guides:</h3>
+    <Select
+      options={guideOptions}
+      isMulti
+      onChange={handleGuideChange}
+      value={guideOptions.filter(option => selectedGuides.includes(option.value))}
+      placeholder="Select guides..."
+      className="basic-multi-select"
+      classNamePrefix="select"
+      filterOption={customGuideFilter}
+    />
+  </div>
+
 
           <div className="text-center bg-white ">
             <button
