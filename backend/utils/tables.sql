@@ -77,6 +77,7 @@ CREATE TABLE `scheduled_reviews` (
   `project_name` VARCHAR(500) DEFAULT NULL,
   `team_lead` VARCHAR(300) DEFAULT NULL,
   `review_date` DATE DEFAULT NULL,
+  `reveiw_title`VARCHAR(100) NOT NULL,
   `start_time` TIME DEFAULT NULL,
   `venue` varchar(200) DEFAULT NULL,
   `attendance` VARCHAR(255) DEFAULT null,
@@ -84,7 +85,7 @@ CREATE TABLE `scheduled_reviews` (
   `remarks` VARCHAR(5000) DEFAULT NULL,
   `team_id` VARCHAR(300) DEFAULT NULL,
   `expert_reg_num` varchar(100) not null,
-   `guide_reg_num` VARCHAR(100) NOT NULL,
+  `guide_reg_num` VARCHAR(100) NOT NULL,
   PRIMARY KEY (`review_id`)
 ) 
 
@@ -167,6 +168,7 @@ CREATE TABLE review_requests (
   project_name VARCHAR(100) NOT NULL,
   team_lead VARCHAR(50) NOT NULL,
   review_date DATE DEFAULT NULL,
+  reveiw_title VARCHAR(100) NOT NULL,
   start_time TIME DEFAULT NULL,
   guide_status VARCHAR (100) DEFAULT 'interested',
   expert_status VARCHAR(100) default 'interested'

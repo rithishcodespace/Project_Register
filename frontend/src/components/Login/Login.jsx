@@ -69,7 +69,7 @@ function Login() {
 
     try {
       await instance.patch(
-        `/student/alter_project_status/${reg_num}/${projectType}`,
+        `/student/alter_project_type/${reg_num}/${projectType}`,
         { "company_name": companyName, "company_address": companyAddress,"company_contact": contactNumber }
       );
 
