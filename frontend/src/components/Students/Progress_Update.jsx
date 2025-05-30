@@ -118,14 +118,14 @@ const Progress_Update = () => {
           {alreadyUpdated ? (
             <div className="flex justify-center mt-6">
               <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-900 p-6 rounded-xl shadow-md w-full max-w-2xl">
-                <div className="flex items-start space-x-4">
-                  <svg className="w-6 h-6 text-yellow-600 mt-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z" />
+                <div className="flex items-start bg-yellow-100 space-x-4">
+                  <svg className="w-6 h-6 text-yellow-600 bg-yellow-100 mt-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path className="bg-yellow-100" strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z" />
                   </svg>
-                  <div>
-                    <p className="text-lg font-semibold">Progress Already Verified</p>
-                    <p className="mt-1 text-sm">
-                      Your progress for <span className="font-semibold">{currentWeek}</span> has already been verified by the guide. No changes allowed.
+                  <div className="bg-yellow-100">
+                    <p className="text-lg font-semibold bg-yellow-100">Progress Already Verified</p>
+                    <p className="mt-1 text-sm bg-yellow-100">
+                      Your progress for <span className="font-semibold bg-yellow-100">{currentWeek}</span> has sent to the guide. Wait for guide Verification.
                     </p>
                   </div>
                 </div>

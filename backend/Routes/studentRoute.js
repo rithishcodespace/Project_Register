@@ -13,7 +13,7 @@ require("dotenv").config();
 // common to all route -> for jwt auth
 router.get("/profile/view", userAuth, (req, res, next) => {
   try {
-    const userId = req.user;
+    const userId = req.user.id;
     console.log("User ID from auth middleware:", userId);
     if(!userId)next(createError.BadRequest("userId not found!"))
     const sql = "SELECT * FROM users WHERE id = ?";
@@ -68,7 +68,7 @@ router.post("/student/join_request", userAuth, (req, res, next) => {
           // checks sender is in another team or team_leader
 
           let checkConnectionSender = "select * from team_requests where (to_reg_num = ? or from_reg_num = ?) and status = 'accept'";
-          db.query(checkConnection,[from_reg_num,from_reg_num],(error,result) => {
+          db.query(checkConnectionSender,[from_reg_num,from_reg_num],(error,result) => {
             if(error)return next(error);
             if(result.length > 0)return next(createError.BadRequest("sender is already a member of some other team!"));
 
@@ -77,7 +77,7 @@ router.post("/student/join_request", userAuth, (req, res, next) => {
               if(error)return next(error);
               if(result.length >= 3)return next(createError.BadRequest("You can't form a team more than 4 members1"));
                // validating project_type
-              let query = "SELECT project_type,company_name FROM users WHERE reg_num IN (?,?)";
+              let query = "SELECT project_type,company_name,semester FROM users WHERE reg_num IN (?,?)";
               db.query(query,[from_reg_num,to_reg_num],(error,result) => {
                 if(error)return next(error);
                 if (result.length != 2) {
@@ -87,6 +87,8 @@ router.post("/student/join_request", userAuth, (req, res, next) => {
                 const type2 = result[1].project_type;
                 const company1 = result[0].company_name;
                 const company2 = result[1].company_name;
+                const sem1 = result[0].semester;
+                const sem2 = result[1].semester;
                 if(type1 === null || type2 === null)return next(createError.BadRequest("User haven't entered his project_type yet!")); // should be handled by mathan
                 else if(type1.toLowerCase() !== type2.toLowerCase()) {
                 return res.status(500).send("BOTH MEMBERS SHOULD BE EITHER INTERNAL OR EXTERNAL!!");
@@ -94,6 +96,8 @@ router.post("/student/join_request", userAuth, (req, res, next) => {
                 else if(type1 === 'external' && type2 === 'external'){
                   if(company1 != company2)return res.status(500).send("BOTH MEMBERS SHOULD BE OF SAME COMPANY!");
                 }
+
+                if(sem1 != sem2)return next(createError.BadRequest("You can't send requests to your seniors or juniors!"));
         
                 // inserts the request in the request db (only if no existing request)
                 let sql1 = "INSERT INTO team_requests (name, emailId, reg_num, dept, from_reg_num, to_reg_num) VALUES (?,?,?,?,?,?)";
@@ -119,13 +123,21 @@ router.post("/student/join_request", userAuth, (req, res, next) => {
 
 // filters the request i received -> notification
 
-router.get("/student/request_recived/:regnum",userAuth,(req,res,next) => {
+router.get("/student/request_recived/:reg_num",userAuth,(req,res,next) => {
     try{
-      let sql = "select * from team_requests where to_reg_num = ? and status = 'interested'";
-      let reg_num = req.params.regnum;
-      db.query(sql,[reg_num],(error,result) => {
+      const{reg_num} = req.params;
+      if(!reg_num)return next(createError.BadRequest('reg_num not found!'));
+      // checks if he is already a team_member
+      let sql1 = "select * from team_requests where (from_reg_num = ? or to_reg_num = ?) and status = 'accept'";
+      db.query(sql1,[reg_num,reg_num],(error,result) => {
         if(error)return next(error);
-        res.send(result);
+        if(result.length > 0)return next('You are already a member of another team!')
+        // fetching the requests
+        let sql = "select * from team_requests where to_reg_num = ? and status = 'interested'";
+        db.query(sql,[reg_num],(error,result) => {
+          if(error)return next(error);
+          res.send(result);
+        })
       })
     }
     catch(error)
@@ -136,33 +148,36 @@ router.get("/student/request_recived/:regnum",userAuth,(req,res,next) => {
 
 // fetch all the invitations the loggedIn user received
 
-router.get("/student/team_request/:reg_num",userAuth,(req,res,next) => {
-  try{
-    const {reg_num} = req.params;
-    if(!reg_num)return next(createError.BadRequest("reg_num not found!"));
-    let sql1 = "SELECT * FROM team_requests WHERE (to_reg_num = ? OR from_reg_num = ?) AND status = 'accept'";
-    db.query(sql1,[reg_num,reg_num],(error,result) => {
-      if(error)return next(error);
-      if(result.length > 0){
-        return res.send("YOU ALREADY A TEAM MEMBER SO YOU CANT SEE THE REQUESTS SENT TO YOU!");
-      }
-      let sql = "select * from team_requests where to_reg_num = ? and status = 'interested'"
-      db.query(sql,[reg_num],(error,result) => {
-        if(error)return next(error);
-        return res.send(result);
-    })
-    })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
+// router.get("/student/team_request/:reg_num",userAuth,(req,res,next) => {
+//   try{
+//     const {reg_num} = req.params;
+//     if(!reg_num)return next(createError.BadRequest("reg_num not found!"));
+//     let sql1 = "SELECT * FROM team_requests WHERE (to_reg_num = ? OR from_reg_num = ?) AND status = 'accept'";
+//     db.query(sql1,[reg_num,reg_num],(error,result) => {
+//       if(error)return next(error);
+//       if(result.length > 0){
+//         return res.send("YOU ALREADY A TEAM MEMBER SO YOU CANT SEE THE REQUESTS SENT TO YOU!");
+//       }
+//       let sql = "select * from team_requests where to_reg_num = ? and status = 'interested'"
+//       db.query(sql,[reg_num],(error,result) => {
+//         if(error)return next(error);
+//         return res.send(result);
+//     })
+//     })
+//   }
+//   catch(error)
+//   {
+//     next(error);
+//   }
+// })
 
 // accept or reject request -> inside notification
 router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",userAuth, (req, res, next) => {
   try {
     const { from_reg_num, to_reg_num, status } = req.params;
+    let {reason} = req.body; // not validating since it might be null for accept
+
+    reason = reason ? reason : null;
 
     if (!from_reg_num || !to_reg_num || !status)
       return next(createError.BadRequest("Missing required parameters."));
@@ -172,16 +187,23 @@ router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",userAuth,
       return next(createError.BadRequest("Invalid status."));
     }
 
-    //  Update the request if it exists and is still 'interested'
-    const updateSQL = `UPDATE team_requests SET status = ? WHERE to_reg_num = ? AND from_reg_num = ? AND status = 'interested'`;
+    const safeStatus = status.toLowerCase();
 
-    db.query(updateSQL, [status, to_reg_num, from_reg_num], (err, result) => {
+    if(safeStatus === 'reject' && reason === null)return next(createError.BadRequest('reason not found for rejecting the connection request!'));
+    
+
+    //  Update the request if it exists and is still 'interested'
+    let updateSQL;
+    if(status === 'accept') updateSQL = `UPDATE team_requests SET status = ? WHERE to_reg_num = ? AND from_reg_num = ? AND status = 'interested'`;
+    else if(status === 'reject') updateSQL = `UPDATE team_requests SET status = ?,reason = ? WHERE to_reg_num = ? AND from_reg_num = ? AND status = 'interested'`;
+
+    db.query(updateSQL, [safeStatus, reason, to_reg_num, from_reg_num], (err, result) => {
       if (err) return next(err);
       if (result.affectedRows === 0)
         return next(createError.BadRequest("No matching pending request found or already processed."));
 
       // If accepted, check team size
-      if (status.toLowerCase() === 'accept') {
+      if (safeStatus === 'accept') {
         const countSQL = `SELECT COUNT(*) AS count FROM team_requests WHERE from_reg_num = ? AND status = 'accept'`;
         db.query(countSQL, [from_reg_num], (err1, result1) => {
           if (err1) return next(err1);
@@ -213,13 +235,7 @@ router.post("/student/fetch_team_status_and_invitations",userAuth, (req, res, ne
     if(!from_reg_num)next(createError.BadRequest("from_reg_num not found!"))
 
     // Step 1: Check if user is in any team (as leader or member)
-    const checkTeamSQL = `
-      SELECT team_id, team_conformed, from_reg_num AS teamLeader
-      FROM team_requests 
-      WHERE (from_reg_num = ? OR reg_num = ?)
-      AND status = 'accept'
-      LIMIT 1
-    `;
+    const checkTeamSQL = `SELECT team_id, team_conformed, from_reg_num AS teamLeader FROM team_requests WHERE (from_reg_num = ? OR reg_num = ?) AND status = 'accept' LIMIT 1`;
 
     db.query(checkTeamSQL, [from_reg_num, from_reg_num], (err1, result1) => {
       if (err1) return next(err1);
@@ -229,13 +245,11 @@ router.post("/student/fetch_team_status_and_invitations",userAuth, (req, res, ne
         const isTeamConfirmed = result1[0].team_conformed;
         const teamLeaderRegNum = result1[0].teamLeader;
 
-        // Step 2: Fetch all team members (confirmed or not)
-        const fetchTeamSQL = `
-          SELECT * FROM team_requests 
-          WHERE team_id = ? AND status = 'accept'
-        `;
+        // Step 2: Fetch all team members (confirmed or not conformed just accepted)
+        const fetchTeamSQL = `SELECT * FROM team_requests WHERE team_id = ? AND status = 'accept'`;
         db.query(fetchTeamSQL, [teamId], (err2, teamMembers) => {
           if (err2) return next(err2);
+          if(teamMembers.length === 0)return next(createError.NotFound("team members not found!"));
 
           const fetchLeaderSQL = "SELECT * FROM users WHERE reg_num = ?";
           db.query(fetchLeaderSQL, [teamLeaderRegNum], (err3, leaderDetails) => {
@@ -243,10 +257,7 @@ router.post("/student/fetch_team_status_and_invitations",userAuth, (req, res, ne
 
             // If team is not confirmed, fetch pending invitations
             if (!isTeamConfirmed) {
-              const fetchInvitesSQL = `
-                SELECT * FROM team_requests 
-                WHERE from_reg_num = ? AND team_conformed = 0
-              `;
+              const fetchInvitesSQL = `SELECT * FROM team_requests WHERE from_reg_num = ? AND team_conformed = 0`;
               db.query(fetchInvitesSQL, [from_reg_num], (err4, invites) => {
                 if (err4) return next(err4);
 
@@ -270,10 +281,7 @@ router.post("/student/fetch_team_status_and_invitations",userAuth, (req, res, ne
         });
       } else {
         // User is not in any confirmed team, fetch invitations they've sent
-        const fetchInvitesSQL = `
-          SELECT * FROM team_requests 
-          WHERE from_reg_num = ? AND team_conformed = 0
-        `;
+        const fetchInvitesSQL = `SELECT * FROM team_requests WHERE from_reg_num = ? AND team_conformed = 0`;
 
         db.query(fetchInvitesSQL, [from_reg_num], (err3, invites) => {
           if (err3) return next(err3);
@@ -300,117 +308,132 @@ router.post("/student/fetch_team_status_and_invitations",userAuth, (req, res, ne
 // if it should be solo team both reg_num should be sent same
 
 router.patch("/student/team_request/conform_team", userAuth, (req, res, next) => {
-  const { name, emailId, reg_num, dept, from_reg_num } = req.body;
+  try{
+     const { name, emailId, reg_num, dept, from_reg_num } = req.body;
 
-  if (!name || !emailId || !reg_num || !dept || !from_reg_num) {
-    return next(createError.BadRequest("Some required fields are missing!"));
+     if (!name || !emailId || !reg_num || !dept || !from_reg_num) {
+       return next(createError.BadRequest("Some required fields are missing!"));
+     }
+   
+     const countSql = "SELECT distinct COUNT(*) AS count FROM team_requests WHERE team_conformed = true";
+     db.query(countSql, (err, result) => {
+       if (err) return next(err);
+   
+       const teamNumber = result[0].count + 1;
+       const team_id = `TEAM-${String(teamNumber).padStart(4, "0")}`;
+   
+       // Step 2: Check if this user already has accepted requests
+       const checkSql = `SELECT * FROM team_requests WHERE (from_reg_num = ? OR to_reg_num = ?) AND status = 'accept'`;
+       db.query(checkSql, [from_reg_num, from_reg_num], (err, rows) => {
+         if (err) return next(err);
+   
+         // Case: No team members, solo team
+         if (rows.length === 0) {
+           const soloSql = `INSERT INTO team_requests (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status, team_conformed) VALUES (?, ?, ?, ?, ?, ?, ?, 'accept', true)`;
+           db.query(soloSql, [team_id, name, emailId, reg_num, dept, from_reg_num, from_reg_num], (err) => {
+             if (err) return next(err);
+             return res.send(`${from_reg_num} is the only member in their team.`);
+           });
+           return;
+         }
+   
+         // Step 3: Set team_conformed = true for accepted members
+         const updateConfirmSql = `UPDATE team_requests SET team_conformed = true WHERE from_reg_num = ? AND status = 'accept'`;
+         db.query(updateConfirmSql, [from_reg_num], (err, result1) => {
+           if (err) return next(err);
+           if (result1.affectedRows === 0) return res.status(500).send("Could not confirm team.");
+
+           // fetches the team members to be inserted into the teams table
+
+           let getSql = "select * from team_requests where WHERE from_reg_num = ? AND status = 'accept'";
+           db.query(getSql,[from_reg_num],(error4,teamMates) => {
+            if(error4)return next(error4);
+            if(teamMates.length === 0)return next('team mates not found!');
+            for(let i=0;i<teamMates.length;i++)
+            {
+              // insert into teams table
+              let insertSql = "insert into teams (team_id, reg_num, is_leader) values (?,?,?)";
+              db.query(insertSql,[team_id,teamMates[i].reg_num,0,],(error,result) => {
+                if(error)return next(error);
+                if(result.affectedRows === 0)return next(createError.BadRequest('teamMate is not inserted into the table1'));
+                
+              })
+            }
+
+             // Step 4: Set team_id for those members
+             const updateIdSql = `UPDATE team_requests SET team_id = ? WHERE from_reg_num = ? AND status = 'accept'`;
+             db.query(updateIdSql, [team_id, from_reg_num], (err, result2) => {
+               if (err) return next(err);
+               if (result2.affectedRows === 0) return res.status(500).send("Could not assign team ID.");
+
+               // insert leader into the team table
+               let insertTeamLeader = "insert into teams (team_id,reg_num,is_leader) values (?,?,?)";
+               db.query(insertTeamLeader,[team_id,reg_num,1],(error,result) => {
+                if(error)return error;
+                if(result.affectedRows === 0)return next(createError.BadRequest('some rows are not affected!'));
+
+                // Step 5: Insert leader row
+               const insertLeaderSql = `INSERT INTO team_requests (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status, team_conformed) VALUES (?, ?, ?, ?, ?, ?, ?, 'accept', true)`;
+               db.query(insertLeaderSql, [team_id, name, emailId, reg_num, dept, from_reg_num, from_reg_num], (err, result3) => {
+                 if (err) return next(err);
+                 if (result3.affectedRows === 0) return res.status(500).send("Could not insert team leader row.");
+     
+                 // Step 6: Get all members in the new team
+                 const getMembersSql = `
+                   SELECT to_reg_num FROM team_requests 
+                   WHERE team_id = ?
+                 `;
+                 db.query(getMembersSql, [team_id], (err, members) => {
+                   if (err) return next(err);
+                   if (members.length === 0) return next(createError.NotFound("No team members found."));
+     
+                   // Step 7: Cleanup pending requests of each team member
+                   let pending = members.length;
+                   members.forEach(({ to_reg_num }) => {
+                     const deleteSql = `
+                       DELETE FROM team_requests 
+                       WHERE (from_reg_num = ? OR to_reg_num = ?) 
+                       AND team_conformed = false 
+                       AND status <> 'accept' 
+                       AND team_id IS NULL
+                     `;
+                     db.query(deleteSql, [to_reg_num, to_reg_num], (err, delResult) => {
+                       if (err) return next(err);
+     
+                       pending--;
+                       if (pending === 0) {
+                         return res.send("Team confirmed and all pending requests cleaned.");
+                       }
+                     });
+                   });
+                 });
+               });
+
+               })
+             })
+  
+           })
+           
+         });
+       });
+     });
   }
-
-  const countSql = "SELECT distinct COUNT(*) AS count FROM team_requests WHERE team_conformed = true";
-  db.query(countSql, (err, result) => {
-    if (err) return next(err);
-
-    const teamNumber = result[0].count + 1;
-    const team_id = `TEAM-${String(teamNumber).padStart(4, "0")}`;
-
-    // Step 2: Check if this user already has accepted requests
-    const checkSql = `
-      SELECT * FROM team_requests
-      WHERE (from_reg_num = ? OR to_reg_num = ?) AND status = 'accept'
-    `;
-    db.query(checkSql, [from_reg_num, from_reg_num], (err, rows) => {
-      if (err) return next(err);
-
-      // Case: No team members, solo team
-      if (rows.length === 0) {
-        const soloSql = `
-          INSERT INTO team_requests 
-          (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status, team_conformed)
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'accept', true)
-        `;
-        db.query(soloSql, [team_id, name, emailId, reg_num, dept, from_reg_num, from_reg_num], (err) => {
-          if (err) return next(err);
-          return res.send(`${from_reg_num} is the only member in their team.`);
-        });
-        return;
-      }
-
-      // Step 3: Set team_conformed = true for accepted members
-      const updateConfirmSql = `
-        UPDATE team_requests 
-        SET team_conformed = true 
-        WHERE from_reg_num = ? AND status = 'accept'
-      `;
-      db.query(updateConfirmSql, [from_reg_num], (err, result1) => {
-        if (err) return next(err);
-        if (result1.affectedRows === 0) return res.status(500).send("Could not confirm team.");
-
-        // Step 4: Set team_id for those members
-        const updateIdSql = `
-          UPDATE team_requests 
-          SET team_id = ? 
-          WHERE from_reg_num = ? AND status = 'accept'
-        `;
-        db.query(updateIdSql, [team_id, from_reg_num], (err, result2) => {
-          if (err) return next(err);
-          if (result2.affectedRows === 0) return res.status(500).send("Could not assign team ID.");
-
-          // Step 5: Insert leader row
-          const insertLeaderSql = `
-            INSERT INTO team_requests 
-            (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status, team_conformed)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'accept', true)
-          `;
-          db.query(insertLeaderSql, [team_id, name, emailId, reg_num, dept, from_reg_num, from_reg_num], (err, result3) => {
-            if (err) return next(err);
-            if (result3.affectedRows === 0) return res.status(500).send("Could not insert team leader row.");
-
-            // Step 6: Get all members in the new team
-            const getMembersSql = `
-              SELECT to_reg_num FROM team_requests 
-              WHERE team_id = ?
-            `;
-            db.query(getMembersSql, [team_id], (err, members) => {
-              if (err) return next(err);
-              if (members.length === 0) return next(createError.NotFound("No team members found."));
-
-              // Step 7: Cleanup pending requests of each team member
-              let pending = members.length;
-              members.forEach(({ to_reg_num }) => {
-                const deleteSql = `
-                  DELETE FROM team_requests 
-                  WHERE (from_reg_num = ? OR to_reg_num = ?) 
-                  AND team_conformed = false 
-                  AND status <> 'accept' 
-                  AND team_id IS NULL
-                `;
-                db.query(deleteSql, [to_reg_num, to_reg_num], (err, delResult) => {
-                  if (err) return next(err);
-
-                  pending--;
-                  if (pending === 0) {
-                    return res.send("Team confirmed and all pending requests cleaned.");
-                  }
-                });
-              });
-            });
-          });
-        });
-      });
-    });
-  });
+  catch(error)
+  {
+    next(error);
+  }
 });
 
 // fetches team members
-router.get("/student/getTeamDetails/:reg_num",userAuth, (req, res, next) => {
-  const{reg_num} = req.params;
-  if(!reg_num)return next(createError.BadRequest("reg_num not found!"));
-  let sql = `SELECT * FROM team_requests WHERE (from_reg_num = ? OR to_reg_num = ?) AND team_conformed = true`;
-  db.query(sql,[reg_num,reg_num,],(error,result) => {
-    if(error)return next(error);
-    res.send(result);
-  })
-});
+// router.get("/student/getTeamDetails/:reg_num",userAuth, (req, res, next) => {
+//   const{reg_num} = req.params;
+//   if(!reg_num)return next(createError.BadRequest("reg_num not found!"));
+//   let sql = `SELECT * FROM team_requests WHERE (from_reg_num = ? OR to_reg_num = ?) AND team_conformed = true`;
+//   db.query(sql,[reg_num,reg_num,],(error,result) => {
+//     if(error)return next(error);
+//     res.send(result);
+//   })
+// });
 
 // updates the progress
 
@@ -432,7 +455,7 @@ router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, r
       }
 
       // checks if already submmited
-      let check = `SELECT ${week}_progress FROM team_requests WHERE reg_num = ? AND team_conformed = true AND team_id = ?`;
+      let check = `SELECT ${week}_progress FROM teams WHERE reg_num = ? AND team_id = ?`;
       db.query(check, [reg_num, team_id], (error, results) => {
         if (error) return next(error);
 
@@ -440,81 +463,89 @@ router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, r
           return res.status(200).send("YOU HAVE ALREADY SUBMITTED YOUR PROGRESS FOR THIS WEEK!");
         }
 
-      const sql = `UPDATE team_requests SET ${week}_progress = ? WHERE reg_num = ?`;
+      const sql = `UPDATE teams SET ${week}_progress = ? WHERE reg_num = ? and team_id = ?`;
 
-      db.query(sql, [progress, reg_num], (err, result) => {
+      db.query(sql, [progress, reg_num,team_id], (err, result) => {
         if (err) return next(err);
 
         if (result.affectedRows === 0) {
           return res.status(404).json({ message: "No record found for the provided reg_num." });
         }
-        let sql1 = `select ${week}_progress from team_requests where team_id = ?`;
+        let sql1 = `select ${week}_progress from teams where team_id = ?`;
         db.query(sql1,[team_id],(error,result) => {
           if(error)return next(error);
 
           const allMembersUpdated = result.every((member) => member[`${week}_progress`] !== null); // every -> checks whether every element satisfies the given condition, optimised instead of forEach // . -> [] alternative for . notation
           if(allMembersUpdated)
           {
-            let getGuide = "select guide_reg_num from team_requests where team_id = ?";
-            db.query(getGuide,[team_id],(error,result) => {
-             if(error)return next(error);
-             if(result.length === 0)return next(createError.NotFound("guide reg num not found!"));
-             let guide_reg_num = result[0].guide_reg_num;
-             let getGuideEmailStudentEmail = "SELECT emailId, role FROM users WHERE reg_num IN (?, ?) AND role IN ('guide', 'student');";
-              db.query(getGuideEmailStudentEmail,[guide_reg_num,reg_num],(error,result) => {
-                if(error)return next(error);
-                if(result.length === 0)return next(createError.NotFound("guide email not found!"));
-                 let guideEmail = null;
-                let studentEmail = null;
+            let weekNumber = week.replace(/\D/g, ''); 
+            let insertSql = "INSERT INTO weekly_logs_verification (team_id, week_number) VALUES (?, ?)";
+            db.query(insertSql,[team_id,weekNumber],(error,inserted) => {
+              if(error)return next(error);
+              if(inserted.affectedRows === 0)return next(createError.BadRequest('An error occured while inserting!'));
 
-                result.forEach(user => {
-                  if (user.role === 'guide') guideEmail = user.emailId;
-                  else if (user.role === 'student') studentEmail = user.emailId;
-                });
+              let getGuide = "select guide_reg_num from teams where team_id = ?";
+              db.query(getGuide,[team_id],(error,result) => {
+              if(error)return next(error);
+              if(result.length === 0)return next(createError.NotFound("guide reg num not found!"));
+              let guide_reg_num = result[0].guide_reg_num;
+              let getGuideEmailStudentEmail = "SELECT emailId, role FROM users WHERE reg_num IN (?, ?) AND role IN ('staff', 'student');";
+                db.query(getGuideEmailStudentEmail,[guide_reg_num,reg_num],(error,result) => {
+                  if(error)return next(error);
+                  if(result.length === 0)return next(createError.NotFound("guide email not found!"));
+                  let guideEmail = null;
+                  let studentEmail = null;
 
-                if (!guideEmail || !studentEmail) {
-                  return next(createError.InternalServerError("Could not resolve guide or student email."));
-                }
+                  result.forEach(user => {
+                    if (user.role === 'staff') guideEmail = user.emailId;
+                    else if (user.role === 'student') studentEmail = user.emailId;
+                  });
 
-                const transporter = nodemailer.createTransport({
-                  service: "gmail",
-                  auth: {
-                    user: process.env.EMAIL_USER, 
-                    pass: process.env.EMAIL_PASS,
-                  },
-                });
-
-                  const mailOptions = {
-                    from: `"No Reply" <${process.env.EMAIL_USER}>`,
-                    to: guideEmail,
-                    subject: `Progress update for ${week} by Team ${team_id}`,
-                    replyTo: studentEmail,  // Optional: replies go to student
-                    text: `Dear Guide,
-
-                    Team ${team_id} has completed their progress update for ${week}.
-                    This submission was triggered by the student with registration number: ${reg_num}.
-
-                    Please check the Project Register for more details.
-
-                    Best regards,
-                    Project Management System`
-                };
-                  transporter.sendMail(mailOptions, (error, info) => {
-                  if (error) {
-                    console.error("Email Error:", error);
-                    return res.status(500).send("Progress updated, but failed to send email.");
-                  } else {
-                    console.log("Email sent:", info.response);
-                    return res.send("Progress updated and email sent successfully!");
+                  if (!guideEmail || !studentEmail) {
+                    return next(createError.InternalServerError("Could not resolve guide or student email."));
                   }
-                }); 
-              
+
+                  const transporter = nodemailer.createTransport({
+                    service: "gmail",
+                    auth: {
+                      user: process.env.EMAIL_USER, 
+                      pass: process.env.EMAIL_PASS,
+                    },
+                  });
+
+                    const mailOptions = {
+                      from: `"No Reply" <${process.env.EMAIL_USER}>`,
+                      to: guideEmail,
+                      subject: `Progress update for ${week} by Team ${team_id}`,
+                      replyTo: studentEmail,  // Optional: replies go to student
+                      text: `Dear Guide,
+
+                      Team ${team_id} has completed their progress update for ${week}.
+                      This submission was triggered by the student with registration number: ${reg_num}.
+
+                      Please check the Project Register for more details.
+
+                      Best regards,
+                      Project Management System`
+                  };
+                    transporter.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                      console.error("Email Error:", error);
+                      return res.status(500).send("Progress updated, but failed to send email.");
+                    } else {
+                      console.log("Email sent:", info.response);
+                      return res.send("Progress updated and email sent successfully!");
+                    }
+                  }); 
+                
+                })
               })
+
             })
 
           }
           else {
-            res.send("Progress updated successfully for this member!");
+            return res.send("Progress updated successfully for this member!");
           }
         })
       });
@@ -527,35 +558,35 @@ router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, r
 
 
 // brings the details of the project through project_id 
-router.get("/student/get_project_details/:project_id",userAuth,(req,res,next) => {
-  try{
-     const {project_id} = req.params;
-     if(!project_id)next(createError.BadRequest("project_Id not found!"))
-     let sql = "select * from projects where project_id = ?";
-     db.query(sql,[project_id],(error,result) => {
-      if(error)next(error);
-      res.send(result);
-     })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
+// router.get("/student/get_project_details/:project_id",userAuth,(req,res,next) => {
+//   try{
+//      const {project_id} = req.params;
+//      if(!project_id)next(createError.BadRequest("project_Id not found!"))
+//      let sql = "select * from projects where project_id = ?";
+//      db.query(sql,[project_id],(error,result) => {
+//       if(error)next(error);
+//       res.send(result);
+//      })
+//   }
+//   catch(error)
+//   {
+//     next(error);
+//   }
+// })
 
 // updates the project type
 
-router.patch("/student/alter_project_status/:reg_num/:type",userAuth,(req,res,next) => {
+router.patch("/student/alter_project_type/:reg_num/:type",userAuth,(req,res,next) => {
   try{
-    let{type,reg_num} = req.params;
+    const{type,reg_num} = req.params;
     let{company_name,company_address,company_contact} = req.body;
-    type = type.toLowerCase();
+    const safeType = type.toLowerCase();
     const validTypes = ["internal","external"];
-    if(!type || !validTypes.includes(type))
+    if(!validTypes.includes(safeType))
     {
-      return next(createError.BadRequest("invalid type! or type is null!"))
+      return next(createError.BadRequest("invalid type!"))
     }
-    if(type == 'internal')
+    if(safeType == 'internal')
     {
       company_name = null,
       company_address = null,
@@ -565,7 +596,7 @@ router.patch("/student/alter_project_status/:reg_num/:type",userAuth,(req,res,ne
       if(!company_name.trim() || !company_address.trim() || !company_contact.trim()) return next(createError.BadRequest("External project requires complete company details."));
     }
     let sql = "update users set project_type = ?,company_name = ?,company_address = ?,company_contact = ? where reg_num = ?";
-    db.query(sql,[type,company_name,company_address,company_contact,reg_num],(error,result) => {
+    db.query(sql,[safeType,company_name,company_address,company_contact,reg_num],(error,result) => {
       if(error) return next(error);
       if(result.affectedRows === 0)return next(createError.BadRequest("changes not got updated!"));
       res.send(`Project Type updated successfully to ${type}`);
@@ -578,7 +609,7 @@ router.patch("/student/alter_project_status/:reg_num/:type",userAuth,(req,res,ne
 })
 
 // checks whether the user have given project_type -> INTERNAL OR EXTERNAL
-router.get("/student/get_project_type/:reg_num",userAuth,(req,res,next) => {
+router.get("/student/get_project_type/:reg_num",(req,res,next) => {
   try{
     const{reg_num} = req.params;
     if(!reg_num)
@@ -588,9 +619,23 @@ router.get("/student/get_project_type/:reg_num",userAuth,(req,res,next) => {
     let sql = "select project_type from users where reg_num = ?";
     db.query(sql,[reg_num],(error,result) => {
       if(error)return next(error);
-      res.send(result[0]);
+      if(result.length === 0)return res.send("user haven't set their register number!");
+      res.send(result[0].project_type);
     })
-    db.query(sql,[reg_num])
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+// send request to mentor for optional review -> if missed any one of the review
+
+router.post('/send_request_for_optional_review/:mentor_reg_num',(req,res,next) => {
+  try{
+    const{mentor_reg_num} = req.params;
+    if(!mentor_reg_num)return next(createError.BadRequest('mentor register number not found!'));
+  
   }
   catch(error)
   {
@@ -600,151 +645,151 @@ router.get("/student/get_project_type/:reg_num",userAuth,(req,res,next) => {
 
 // checks whether the student have already added the progress for the particular week
 
-router.get("/student/gets_progress_of_mine/:week/:reg_num",(req,res,next) => {
-  try{
-    const{week,reg_num} = req.params;
-    if(!week || !reg_num)return next(createError.BadRequest("week or reg_num not found!"));
-    const column = `week${week}_progress`;
-    const sql = `SELECT ?? FROM team_requests WHERE reg_num = ? AND team_conformed = 1`;
-    db.query(sql,[column,reg_num],(error,result) => {
-      if(error)return next(error);
-      if(result.length === 0)return next(createError.NotFound("progress not found!"));
-      res.send(result);
-    })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
+// router.get("/student/gets_progress_of_mine/:week/:reg_num",(req,res,next) => {
+//   try{
+//     const{week,reg_num} = req.params;
+//     if(!week || !reg_num)return next(createError.BadRequest("week or reg_num not found!"));
+//     const column = `week${week}_progress`;
+//     const sql = `SELECT ?? FROM team_requests WHERE reg_num = ? AND team_conformed = 1`;
+//     db.query(sql,[column,reg_num],(error,result) => {
+//       if(error)return next(error);
+//       if(result.length === 0)return next(createError.NotFound("progress not found!"));
+//       res.send(result);
+//     })
+//   }
+//   catch(error)
+//   {
+//     next(error);
+//   }
+// })
 
 // adds the query in the query table
 
-router.post("/student_query/:team_member/:guide_reg_num",userAuth, (req, res, next) => {
-  try {
-    const { team_id, project_id, query } = req.body;
-    const { team_member, guide_reg_num } = req.params;
+// router.post("/student_query/:team_member/:guide_reg_num",userAuth, (req, res, next) => {
+//   try {
+//     const { team_id, project_id, query } = req.body;
+//     const { team_member, guide_reg_num } = req.params;
 
-    if (!project_id || !team_id || !team_member || !query || !guide_reg_num) {
-      return next(createError.BadRequest("Required parameters are missing!"));
-    }
+//     if (!project_id || !team_id || !team_member || !query || !guide_reg_num) {
+//       return next(createError.BadRequest("Required parameters are missing!"));
+//     }
 
-    // Step 1: Fetch project name using project_id
-    const getProjectNameSql = "SELECT project_name FROM projects WHERE project_id = ?";
-    db.query(getProjectNameSql, [project_id], (err, rows) => {
-      if (err) return next(err);
+//     // Step 1: Fetch project name using project_id
+//     const getProjectNameSql = "SELECT project_name FROM projects WHERE project_id = ?";
+//     db.query(getProjectNameSql, [project_id], (err, rows) => {
+//       if (err) return next(err);
 
-      if (rows.length === 0) {
-        return next(createError.NotFound("Project not found!"));
-      }
+//       if (rows.length === 0) {
+//         return next(createError.NotFound("Project not found!"));
+//       }
 
-      const project_name = rows[0].project_name;
+//       const project_name = rows[0].project_name;
 
-      // Step 2: Insert the query into the queries table
-      const insertQuerySql = `
-        INSERT INTO queries (team_id, project_id, project_name, team_member, query, guide_reg_num)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `;
-      db.query(insertQuerySql, [team_id, project_id, project_name, team_member, query, guide_reg_num], (err, result) => {
-        if (err) return next(err);
+//       // Step 2: Insert the query into the queries table
+//       const insertQuerySql = `
+//         INSERT INTO queries (team_id, project_id, project_name, team_member, query, guide_reg_num)
+//         VALUES (?, ?, ?, ?, ?, ?)
+//       `;
+//       db.query(insertQuerySql, [team_id, project_id, project_name, team_member, query, guide_reg_num], (err, result) => {
+//         if (err) return next(err);
 
-        // Step 3: Delete older answered queries, keeping only the latest 5
-        const deleteOldSql = `
-          DELETE FROM queries 
-          WHERE query_id IN (
-            SELECT query_id FROM (
-              SELECT query_id 
-              FROM queries 
-              WHERE team_id = ? AND reply IS NOT NULL
-              ORDER BY created_at DESC
-              LIMIT 18446744073709551615 OFFSET 5
-            ) AS temp
-          )
-        `;
+//         // Step 3: Delete older answered queries, keeping only the latest 5
+//         const deleteOldSql = `
+//           DELETE FROM queries 
+//           WHERE query_id IN (
+//             SELECT query_id FROM (
+//               SELECT query_id 
+//               FROM queries 
+//               WHERE team_id = ? AND reply IS NOT NULL
+//               ORDER BY created_at DESC
+//               LIMIT 18446744073709551615 OFFSET 5
+//             ) AS temp
+//           )
+//         `;
 
-        db.query(deleteOldSql, [team_id], (err2) => {
-          if (err2) return next(err2);
+//         db.query(deleteOldSql, [team_id], (err2) => {
+//           if (err2) return next(err2);
 
-          // Step 4: Send a success response
-          res.send("Query added successfully!");
-        });
-      });
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+//           // Step 4: Send a success response
+//           res.send("Query added successfully!");
+//         });
+//       });
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 // gets student details by reg_num
 
-router.get("/student/get_student_details_by_regnum/:reg_num",userAuth,(req,res,next) => {
-  try{
-    const{reg_num} = req.params;
-    if(!reg_num)return next(createError.BadRequest("reg_num not found!!"));
-    let sql = "select * from users where reg_num = ?";
-    db.query(sql,[reg_num],(error,result) => {
-      if(error)return next(error);
-      res.send(result);
-    })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
+// router.get("/student/get_student_details_by_regnum/:reg_num",userAuth,(req,res,next) => {
+//   try{
+//     const{reg_num} = req.params;
+//     if(!reg_num)return next(createError.BadRequest("reg_num not found!!"));
+//     let sql = "select * from users where reg_num = ?";
+//     db.query(sql,[reg_num],(error,result) => {
+//       if(error)return next(error);
+//       res.send(result);
+//     })
+//   }
+//   catch(error)
+//   {
+//     next(error);
+//   }
+// })
 
 // gets team details using the team_id
 
-router.get("/student/getTeamdetails_using_team_id/:team_id",userAuth,(req,res,next) => {
-  try{
-    const{team_id} = req.body;
-    if(!team_id) return next(createError.BadRequest("team_id is not defined!!"));
-    let sql = "select * from team_request where team_id = ?";
-    db.query(sql,[team_id],(error,result) => {
-      if(error)return next(error);
-      res.send(result);
-    })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
+// router.get("/student/getTeamdetails_using_team_id/:team_id",userAuth,(req,res,next) => {
+//   try{
+//     const{team_id} = req.body;
+//     if(!team_id) return next(createError.BadRequest("team_id is not defined!!"));
+//     let sql = "select * from team_request where team_id = ?";
+//     db.query(sql,[team_id],(error,result) => {
+//       if(error)return next(error);
+//       res.send(result);
+//     })
+//   }
+//   catch(error)
+//   {
+//     next(error);
+//   }
+// })
 
 //fetch queries sent by my team
 
-router.get("/student/get_queries_sent_by_my_team/:team_id",userAuth,(req,res,next) => {
-  try{
-    const{team_id} = req.params;
-    if(!team_id)return next(createError.BadRequest("team_id not found!!"));
-    let sql = "select * from queries where team_id = ?";
-    db.query(sql,[team_id],(error,result) => {
-      if(error)return next(error);
-      res.send(result);
-    })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
+// router.get("/student/get_queries_sent_by_my_team/:team_id",userAuth,(req,res,next) => {
+//   try{
+//     const{team_id} = req.params;
+//     if(!team_id)return next(createError.BadRequest("team_id not found!!"));
+//     let sql = "select * from queries where team_id = ?";
+//     db.query(sql,[team_id],(error,result) => {
+//       if(error)return next(error);
+//       res.send(result);
+//     })
+//   }
+//   catch(error)
+//   {
+//     next(error);
+//   }
+// })
 
 // checks whether he is already a member of another team
 
-router.get("/student/check_accepted_status/:reg_num",userAuth,(req,res,next) => {
-  try{
-    const{reg_num} = req.params;
-    let sql = "SELECT * FROM team_requests WHERE (to_reg_num = ? OR from_reg_num = ?) AND status = 'accepted'";
-    db.query(sql,[reg_num,reg_num],(error,result) => {
-      if(error)return next(error);
-      res.send(result);
-    })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
+// router.get("/student/check_accepted_status/:reg_num",userAuth,(req,res,next) => {
+//   try{
+//     const{reg_num} = req.params;
+//     let sql = "SELECT * FROM team_requests WHERE (to_reg_num = ? OR from_reg_num = ?) AND status = 'accepted'";
+//     db.query(sql,[reg_num,reg_num],(error,result) => {
+//       if(error)return next(error);
+//       res.send(result);
+//     })
+//   }
+//   catch(error)
+//   {
+//     next(error);
+//   }
+// })
 
 
 // inserts the project into project table
@@ -752,9 +797,9 @@ router.get("/student/check_accepted_status/:reg_num",userAuth,(req,res,next) => 
 // only team_member can post the project
 // -> send the project_type from redux not input tag
 
-router.post("/student/addproject/:project_type/:reg_num", userAuth,(req, res, next) => {
+router.post("/student/addproject/:project_type/:team_id/:reg_num", userAuth,(req, res, next) => {
   try {
-    let { project_type,reg_num } = req.params;
+    let { project_type,reg_num,team_id } = req.params;
     let { project_name, cluster, description, outcome, hard_soft } = req.body;
 
     project_type = project_type.toLowerCase();
@@ -762,7 +807,7 @@ router.post("/student/addproject/:project_type/:reg_num", userAuth,(req, res, ne
 
     const validTypes = ['internal','external','hardware','software'];
 
-    if (!project_type.trim() || !project_name.trim() || !cluster.trim() || !description.trim() || !reg_num.trim()) {
+    if (!project_type.trim() || !project_name.trim() || !cluster.trim() || !description.trim() || !reg_num.trim() || !team_id) {
       return res.status(400).json({ message: "Required fields are missing." });
     }
 
@@ -770,8 +815,8 @@ router.post("/student/addproject/:project_type/:reg_num", userAuth,(req, res, ne
 
     // checks whether he is a team_leader -> to post project
 
-    let query = "select distinct team_id from team_requests where from_reg_num = ? and team_conformed = true";
-    db.query(query,[reg_num],(error,result) => {
+    let query = "select is_leader from teams where team_id = ? and reg_num = ?";
+    db.query(query,[team_id,reg_num],(error,result) => {
       if(error)return next(error);
       if(result.length === 0)return next(createError.BadRequest("You are not a TEAM LEADER!"));
       if(result.length > 1)return next(createError.BadRequest("You have more than one team!"));
@@ -792,7 +837,7 @@ router.post("/student/addproject/:project_type/:reg_num", userAuth,(req, res, ne
           const project_length = result[0].count + 1;
           const project_id = `P${String(project_length).padStart(4, "0")}`;
 
-          // inserting
+          // inserting into projects
   
           const sql1 = ` INSERT INTO projects (project_id,project_name,project_type,cluster,description,outcome,hard_soft,tl_reg_num) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
           const values = [project_id,project_name,project_type,cluster,description,outcome,hard_soft,reg_num];
@@ -800,14 +845,13 @@ router.post("/student/addproject/:project_type/:reg_num", userAuth,(req, res, ne
             if(error)return next(error);
             if(result.affectedRows === 0)return next(createError.BadRequest("an error occured silently!"));
 
-            // inserts the project_id to the whole team in team_requests table
-            let insertQuery = "update team_requests set project_id = ? where from_reg_num = ? and team_conformed = true";
-            db.query(insertQuery,[project_id,reg_num],(error,result) => {
+            // inserts the project_id to the team in teams table
+            let insertSql = "UPDATE teams SET project_id = ? WHERE team_id = ?";
+            db.query(insertSql,[team_id,project_id],(error,result) => {
               if(error)return next(error);
-              if(result.affectedRows === 0)return next(createError.BadRequest("no rows affected!"));
-              return res.status(200).json({"message":`${project_name} added successfully!`,"project_id":project_id});  
+              if(result.affectedRows === 0)return next(createError.BadRequest("no rows inserted!"));
+              res.send(`Project inserted successfully for the team :- ${team_id} -> project_id :- ${project_id}`);
 
-              // weekly logs date insertion pending
             })
           })
       });
@@ -819,66 +863,117 @@ router.post("/student/addproject/:project_type/:reg_num", userAuth,(req, res, ne
   }
 });
 
-// sends the review request to the expert => once in a month
-router.post("/student/send_review_request/:team_id/:project_id",userAuth,(req,res,next) => {
-  try{
-    const{team_id,project_id} = req.params;
-    const{project_name,team_lead,review_date,start_time,expert_reg_num} = req.body;
-    if(!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time || !expert_reg_num)return next(createError.BadRequest("some parameters are missing!"));
+// sends the review request to the expert and guide => once in a month
+router.post("/student/send_review_request/:team_id/:project_id", userAuth, (req, res, next) => {
+  try {
+    const { team_id, project_id } = req.params;
+    const { project_name, team_lead, review_date, start_time, isOptional} = req.body;
 
-   const today = new Date();
-   const reviewDate = new Date(review_date);
+    if (!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time) {
+      return next(createError.BadRequest("Some parameters are missing!"));
+    }
 
-   today.setHours(0, 0, 0, 0);
-   reviewDate.setHours(0, 0, 0, 0);
+    const today = new Date();
+    const reviewDate = new Date(review_date);
+    today.setHours(0, 0, 0, 0);
+    reviewDate.setHours(0, 0, 0, 0);
 
-  if (reviewDate < today) {
-    return next(createError.BadRequest("Invalid date! Review date cannot be in the past."));
-  }
+    if (reviewDate < today) {
+      return next(createError.BadRequest("Invalid date! Review date cannot be in the past."));
+    }
 
-   const formattedDate = reviewDate.toISOString().split('T')[0]; // YYYY-MM-DD
+    const formattedDate = reviewDate.toISOString().split('T')[0]; // YYYY-MM-DD
 
-   // checking already completed 3 reviews
+    //fetching expert and guide reg_num
 
-   let sql2 = "select * from scheduled_reviews where team_id = ? and attendance = 'present'";
-   db.query(sql2,[team_id],(error,result1) => {
-    if(error)return next(error);
-    if(result1.length >= 3)return(next(createError.BadRequest("Your team already completed 3 reviews")));
-
-    // checking time gap
-
-
-    
-   let sql3 = "select week1 from weekly_logs_deadlines where team_id = ?";
-   db.query(sql3,[team_id],(error,result2) => {
-    if(error)return next(error);
-    if(result2.length === 0)return next(createError.NotFound("week1 deadline for your teams not found!"));
-    let week1_deadline = result2[0].week1;
-    const diff_ms = week1_deadline - today
-    const diff_days = diff_ms / (1000 * 60 * 60 * 24);
-    // if ((result1.length === 1 && diff_days < 28) || (result1.length === 2 && diff_days < 56) || (result1.length === 3 && diff_days < 74)) {
-    //   return next(createError.BadRequest(`You haven't met the eligibility requirements for requesting ${result1.length + 1}th review`));
-    // }
-
-     //checking already requested for same date and time
-
-    let checkdate = "select * from review_requests where review_date = ? and start_time = ? and expert_reg_num = ?";
-    db.query(checkdate,[formattedDate,start_time,expert_reg_num],(error,result) => {
+    let sql = "select guide_reg_num, sub_expert_reg_num from teams where team_id = ?";
+    db.query(sql,[team_id],(error,result) => {
       if(error)return next(error);
-      if(result.length > 0)return next(createError.BadRequest("review request already exists!"));
+      if (!result || result.length === 0) {
+        return next(createError.BadRequest('Guide or expert reg_num not found!'));
+      }
 
-      // inserting into db
+      const expert_reg_num = result[0].sub_expert_reg_num;
+      const guide_reg_num = result[0].guide_reg_num;
 
-      let sql = "insert into review_requests (team_id,project_id,project_name,team_lead,review_date,start_time,expert_reg_num) values (?, ?, ?, ?, ?, ?, ?)";
-      db.query(sql,[team_id,project_id,project_name,team_lead,formattedDate,start_time,expert_reg_num],(error,result) => {
-        if(error)return next(error);
-        if(result.affectedRows === 0)return res.status(500).json({"message":"some rows are not affected!"});
-        return res.send(`${review_date}:-${start_time} request inserted successfully`)
-      })
+      // Check if already completed 2 reviews
+      let sql2 = "SELECT * FROM scheduled_reviews WHERE team_id = ?";
+      db.query(sql2, [team_id], (error, result1) => {
+        if (error) return next(error);
+        if (result1.length >= 2) return next(createError.BadRequest("Your team already completed 2 reviews."));
+        let review_number = result1.length + 1;
+        if(isOptional === 'optional' && result1.length !== 1)return next(createError.BadRequest(`you can't eligible to request for optional review!`))
+        else if(isOptional === 'optional') review_number = 'optional';
+
+        // Eligibility check
+        const weekToCheck = result1.length === 0 ? 3 : 6;
+        let weekSql = "SELECT * FROM weekly_logs_verifications WHERE week_number = ? AND is_verified = true AND team_id = ?";
+        db.query(weekSql, [weekToCheck, team_id], (error, verificationResult) => {
+          if (error) return next(error);
+          if (verificationResult.length === 0) {
+            return next(createError.BadRequest(`You are not eligible to apply for the review request. Week ${weekToCheck} log not verified.`));
+          }
+
+          // Check for duplicate review request for same date/time/expert
+          let checkSql = "SELECT * FROM review_requests WHERE review_date = ? AND start_time = ? AND expert_reg_num = ? and guide_reg_num = ? and team_id = ?";
+          db.query(checkSql, [formattedDate, start_time, expert_reg_num, guide_reg_num, team_id], (error, existingResult) => {
+            if (error) return next(error);
+            if (existingResult.length > 0) {
+              return next(createError.BadRequest("Review request already exists for this slot!"));
+            }
+
+            // Insert into review_requests
+            let insertSql = "INSERT INTO review_requests (team_id, project_id, project_name, team_lead, review_date, start_time, expert_reg_num, guide_reg_num,review_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            db.query(insertSql, [team_id, project_id, project_name, team_lead, formattedDate, start_time, expert_reg_num, guide_reg_num,review_number], (error, result) => {
+              if (error) return next(error);
+              if (result.affectedRows === 0) return res.status(500).json({ message: "Insertion failed!" });
+              return res.send(`${formattedDate} - ${start_time}: Review request submitted successfully.`);
+            });
+          });
+        });
+      });
     })
+  } catch (error) {
+    next(error);
+  }
+});
 
-   })
-   })
+// fetches the scheduled reviews for my team                            
+
+router.get("/student/schedule_review/:project_id", userAuth, (req, res, next) => {
+  try {
+    const project_id = req.params.project_id;
+
+    if (!project_id) {
+      return next(createError.BadRequest("Project ID is required"));
+    }
+
+    const query = `SELECT * FROM project_registor.scheduled_reviews WHERE project_id = ?`;
+
+    db.query(query, [project_id], (error, result) => {
+      if (error) return next(error);
+      if (result.length === 0) {
+        return res.status(404).json({ message: "No review found for the given project ID" });
+      }
+      return res.json(result);
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// fetches the upcoming meeting links for my team
+
+router.get('/student/fetch_upcoming_meeting_links/:team_id',(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id) return next(createError.BadRequest('team is undefined!'));
+    let sql = 'select meeting_link,review_no from meeting_links where team_id = ? and scheduled_at >= current_timestamp';
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound('meeting links not found!'));
+      return res.send(result);
+    })
   }
   catch(error)
   {
@@ -886,5 +981,32 @@ router.post("/student/send_review_request/:team_id/:project_id",userAuth,(req,re
   }
 })
 
+// fetches guide-expert for a particular team
+router.get('/student/get_guide_expert/:team_id/:role',(req,res,next) => {
+  try{
+    const{team_id,role} = req.params;
+    if(!team_id || !role)return next(createError.BadRequest('team id or role is undefined!'));
+    const safeRole = role.toLowerCase();
+    const validRoles = ['guide','sub_expert'];
+    if(!validRoles.includes(safeRole))return next(createError.BadRequest('invalid role!'));
+    let sql = `select ${role}_reg_num from teams where team_id = ?`;
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.BadRequest('register number not found!!'));
+      // gets the name from users table
+      let sql1 = "select name from users where reg_num = ?";
+      db.query(sql1,[reg_num],(error,result) => {
+        if(error)return next(error);
+        if(result.length === 0)return next(createError[404]);
+        res.send(result);
+      })
+    })
+    
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 module.exports = router;

@@ -29,10 +29,7 @@ router.post("/auth/login",(req,res,next) => {
         if(password != user.password)return next(createError.Unauthorized('Username/Password invalid'));
 
         // generating tokens
-        // const accessToken = jwt.sign({id:user.id},process.env.ACCESS_TOKEN_SECRET,{expiresIn:"1hr"});
-        // const refreshToken = jwt.sign({id:user.id},process.env.REFRESH_TOKEN_SECRET,{expiresIn:"7d"});
-        const token = jwt.sign(
-        {
+        const token = jwt.sign({
           id: user.id,
           role: user.role, 
           name: user.name, 
@@ -40,13 +37,13 @@ router.post("/auth/login",(req,res,next) => {
         },
         process.env.TOKEN_SECRET,
         {
-          expiresIn: "7d" 
+          expiresIn: "1h" 
         }
       );
+      
       console.log("Generated JWT Token:", token); 
       console.log("Secret Key:", process.env.TOKEN_SECRET);
 
-       // Set the cookie with secure and samesite settings
         res.cookie("token", token, {
           httpOnly: true,       // Makes it inaccessible to JavaScript (secure)
           secure: false,        // Set to false for localhost (development)
@@ -54,32 +51,19 @@ router.post("/auth/login",(req,res,next) => {
           maxAge: 60 * 60 * 1000 // 1 hour (in milliseconds)
         });
 
-        try{ // storing in redis
-
-          // await client.set(user.id.toString(), refreshToken,{
-          //   'EX': 604800 // 7 days
-          // })
-
-          res.status(200).json({
-            message:"user logged in successfull",
-            // "accessToken" : accessToken,
-            // "refreshToken" : refreshToken,
-            "id": result[0].id,
-            "emailId" : result[0].emailId,
-            "password" : result[0].password,
-            "role" : result[0].role,
-            "project_id" : result[0].project_id,
-            "reg_num" : result[0].reg_num,
-            "name" : result[0].name,
-            "dept" : result[0].dept,
-            "project_type":result[0].project_type
-          })
-        }
-        catch(redisError)
-        {
-            console.log(redisError.message);
-            next(createError.InternalServerError());
-        }
+        res.status(200).json({
+          "message":"user logged in successfull",
+          "id": result[0].id,
+          "emailId" : result[0].emailId,
+          "password" : result[0].password,
+          "role" : result[0].role,
+          "project_id" : result[0].project_id,
+          "reg_num" : result[0].reg_num,
+          "name" : result[0].name,
+          "dept" : result[0].dept,
+          "project_type":result[0].project_type,
+          "semester":result[0].semester
+        })        
      })
 
    }

@@ -77,7 +77,8 @@ function Guide_team_progress() {
       alert(`Week ${team.currentWeek} Verified Successfully!`);
       fetchTeams();
     } catch (err) {
-      alert("Error verifying progress. Check console.");
+      alert("Error verifying progres");
+      
       console.error(err);
     }
   };
@@ -115,7 +116,7 @@ function Guide_team_progress() {
                         const field = `week${team.currentWeek}_progress`;
                         return (
                           <li key={i} className="text-sm bg-white  text-gray-600   ">
-                            <strong>{member.name}:</strong>{' '}
+                            <strong className='bg-white'>{member.name}:</strong>{' '}
                             {member[field] ? member[field] : <em className="text-gray-400  bg-white ">No update</em>}
                           </li>
                         );

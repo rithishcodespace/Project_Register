@@ -3,8 +3,10 @@ CREATE TABLE guide_requests (
   `from_team_id` VARCHAR(200) NOT NULL,
   `project_id` VARCHAR(200) NOT NULL,
   `to_guide_reg_num` VARCHAR(200) NOT NULL,
-  status VARCHAR(200) DEFAULT 'interested',
+  `status` VARCHAR(200) DEFAULT 'interested',
+  `reason` TEXT DEFAULT NULL,
  `project_name` VARCHAR(500) DEFAULT NULL,
+ `team_semester` INT NOT NULL;
   PRIMARY KEY (`from_team_id, project_id, to_guide_reg_num`),
   INDEX `idx_status` (status)
 ) 
@@ -24,6 +26,7 @@ CREATE TABLE `project_files` (
 
 CREATE TABLE `projects` (
   `project_id` varchar(50) NOT NULL,
+  `team_id` VARCHAR(200) NOT NULL
   `project_name` varchar(500) DEFAULT NULL,
   `cluster` varchar(100) DEFAULT NULL,
   `description` text,
@@ -39,7 +42,7 @@ CREATE TABLE `projects` (
 
 
 CREATE TABLE team_requests (
-  team_id varchar(255) NULL,
+  team_id varchar(20),
   name varchar(255) DEFAULT NULL,
   emailId varchar(255) DEFAULT NULL,
   reg_num varchar(255) DEFAULT NULL,
@@ -47,24 +50,8 @@ CREATE TABLE team_requests (
   from_reg_num varchar(255) NOT NULL,
   to_reg_num varchar(255) NOT NULL,
   status varchar(255) DEFAULT 'interested',
+  reason TEXT DEFAULT NULL,
   team_conformed int DEFAULT '0',
-  project_id varchar(250) DEFAULT NULL,
-  guide_reg_num varchar(500) DEFAULT NULL,
-  sub_expert_reg_num varchar(500) DEFAULT NULL,
-  project_picked_date datetime DEFAULT CURRENT_TIMESTAMP,
-  guide_verified INT DEFAULT 0,
-  week1_progress varchar(200) DEFAULT NULL,
-  week2_progress varchar(200) DEFAULT NULL,
-  week3_progress varchar(200) DEFAULT NULL,
-  week4_progress varchar(200) DEFAULT NULL,
-  week5_progress varchar(200) DEFAULT NULL,
-  week6_progress varchar(200) DEFAULT NULL,
-  week7_progress varchar(200) DEFAULT NULL,
-  week8_progress varchar(200) DEFAULT NULL,
-  week9_progress varchar(200) DEFAULT NULL,
-  week10_progress varchar(200) DEFAULT NULL,
-  week11_progress varchar(200) DEFAULT NULL,
-  week12_progress varchar(200) DEFAULT NULL,
   UNIQUE KEY unique_request (from_reg_num,to_reg_num),
   PRIMARY KEY (from_reg_num, to_reg_num)
 )
@@ -96,7 +83,8 @@ CREATE TABLE `scheduled_reviews` (
   `marks` VARCHAR(20) DEFAULT NULL,
   `remarks` VARCHAR(5000) DEFAULT NULL,
   `team_id` VARCHAR(300) DEFAULT NULL,
-  expert_reg_num varchar(100) not null,
+  `expert_reg_num` varchar(100) not null,
+   `guide_reg_num` VARCHAR(100) NOT NULL,
   PRIMARY KEY (`review_id`)
 ) 
 
@@ -105,7 +93,9 @@ CREATE TABLE `sub_expert_requests` (
   `project_id` VARCHAR(200) NOT NULL,
   `to_expert_reg_num` VARCHAR(200) NOT NULL,
   `status` VARCHAR(200) DEFAULT 'interested',
+  `reason` TEXT DEFAULT NULL,
   `project_name` VARCHAR(500) DEFAULT NULL,
+  `team_semester` INT NOT NULL,
   PRIMARY KEY (`from_team_id`, `project_id`, `to_expert_reg_num`),
   INDEX `idx_status` (`status`)
 ) 
@@ -133,9 +123,10 @@ CREATE TABLE `users` (
   `emailId` VARCHAR(200) NOT NULL,
   `password` VARCHAR(200) DEFAULT NULL,
   `role` VARCHAR(200) DEFAULT NULL,
-  `reg_num` VARCHAR(200) DEFAULT NULL,
+  `reg_num` VARCHAR(200) NOT NULL UNIQUE,
   `name` VARCHAR(200) DEFAULT NULL,
   `dept` VARCHAR(200) DEFAULT NULL,
+  `semester` INT DEFAULT NULL
   `company_name` VARCHAR(300) DEFAULT NULL,
   `company_contact` VARCHAR(50) DEFAULT NULL,
   `company_address` VARCHAR(200) DEFAULT NULL,
@@ -162,7 +153,7 @@ CREATE TABLE weekly_logs_verification (
     team_id VARCHAR(100) NOT NULL,
     week_number INT NOT NULL CHECK (week_number BETWEEN 1 AND 12),
     is_verified BOOLEAN DEFAULT FALSE,
-    verified_by VARCHAR(100), -- e.g., guide's email or user ID
+    guide_reg_num VARCHAR(100), -- e.g., guide's email or user ID
     verified_at DATETIME DEFAULT NULL,
     remarks TEXT,
 
@@ -171,20 +162,127 @@ CREATE TABLE weekly_logs_verification (
 
 CREATE TABLE review_requests (
   request_id INT AUTO_INCREMENT PRIMARY KEY,
-  team_id VARCHAR(50) NOT NULL,
+  team_id VARCHAR(20),
   project_id VARCHAR(50) NOT NULL,
   project_name VARCHAR(100) NOT NULL,
   team_lead VARCHAR(50) NOT NULL,
   review_date DATE DEFAULT NULL,
   start_time TIME DEFAULT NULL,
-  status varchar(100) DEFAULT 'interested',
-  expert_reg_num varchar(100) NOT NULL
+  guide_status VARCHAR (100) DEFAULT 'interested',
+  expert_status VARCHAR(100) default 'interested'
+  expert_reg_num varchar(100) NOT NULL,
+  guide_reg_num VARCHAR(100) NOT NULL,
   
   INDEX idx_team_id (team_id),
   INDEX idx_project_id (project_id),
   INDEX idx_review_date (review_date)
 );
 
+CREATE TABLE review_marks (
+  review_no INT,
+  review_date DATE NOT NULL,
+  team_id INT,
+
+  guide_literature_survey INT NOT NULL CHECK (guide_literature_survey BETWEEN 0 AND 5),
+  expert_literature_survey INT NOT NULL CHECK (expert_literature_survey BETWEEN 0 AND 5),
+
+  guide_aim INT NOT NULL CHECK (guide_aim BETWEEN 0 AND 5),
+  expert_aim INT NOT NULL CHECK (expert_aim BETWEEN 0 AND 5),
+
+  guide_scope INT NOT NULL CHECK (guide_scope BETWEEN 0 AND 5),
+  expert_scope INT NOT NULL CHECK (expert_scope BETWEEN 0 AND 5),
+
+  guide_need_for_study INT NOT NULL CHECK (guide_need_for_study BETWEEN 0 AND 5),
+  expert_need_for_study INT NOT NULL CHECK (expert_need_for_study BETWEEN 0 AND 5),
+
+  guide_proposed_methodology INT NOT NULL CHECK (guide_proposed_methodology BETWEEN 0 AND 10),
+  expert_proposed_methodology INT NOT NULL CHECK (expert_proposed_methodology BETWEEN 0 AND 10),
+
+  guide_work_plan INT NOT NULL CHECK (guide_work_plan BETWEEN 0 AND 5),
+  expert_work_plan INT NOT NULL CHECK (expert_work_plan BETWEEN 0 AND 5),
+
+  guide_oral_presentation INT NOT NULL CHECK (guide_oral_presentation BETWEEN 0 AND 5),
+  expert_oral_presentation INT NOT NULL CHECK (expert_oral_presentation BETWEEN 0 AND 5),
+
+  guide_viva_voce_and_ppt INT NOT NULL CHECK (guide_viva_voce_and_ppt BETWEEN 0 AND 5),
+  expert_viva_voce_and_ppt INT NOT NULL CHECK (expert_viva_voce_and_ppt BETWEEN 0 AND 5),
+
+  guide_contributions INT NOT NULL CHECK (guide_contributions BETWEEN 0 AND 5),
+  expert_contributions INT NOT NULL CHECK (expert_contributions BETWEEN 0 AND 5),
+
+  guide_remarks TEXT NOT NULL,
+  expert_remarks TEXT NOT NULL,
+
+  total_expert_marks INT NOT NULL CHECK (total_expert_marks BETWEEN 0 AND 50),
+  total_guide_marks INT NOT NULL CHECK (total_guide_marks BETWEEN 0 AND 50),
+  total_marks INT NOT NULL CHECK (total_marks BETWEEN 0 AND 100),
+
+  PRIMARY KEY (review_no, team_id)
+);
 
 
+CREATE TABLE teams (
+  team_id VARCHAR(20),
+  reg_num VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, -- must match users.reg_num
+  is_leader BOOLEAN DEFAULT 0,
+  project_id VARCHAR(250),
+  guide_reg_num VARCHAR(500),
+  sub_expert_reg_num VARCHAR(500),
+  project_picked_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+  guide_verified INT DEFAULT 0,
+  week1_progress VARCHAR(200),
+  week2_progress VARCHAR(200),
+  week3_progress VARCHAR(200),
+  week4_progress VARCHAR(200),
+  week5_progress VARCHAR(200),
+  week6_progress VARCHAR(200),
+  week7_progress VARCHAR(200),
+  week8_progress VARCHAR(200),
+  week9_progress VARCHAR(200),
+  week10_progress VARCHAR(200),
+  week11_progress VARCHAR(200),
+  week12_progress VARCHAR(200),
 
+  PRIMARY KEY (team_id, reg_num),
+  FOREIGN KEY (reg_num) REFERENCES users(reg_num)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+CREATE TABLE `mentor_requests` (
+  `from_team_id` VARCHAR(200) NOT NULL,
+  `project_id` VARCHAR(200) NOT NULL,
+  `mentor_reg_num` VARCHAR(200) NOT NULL,
+  `status` VARCHAR(200) DEFAULT 'interested',
+  `reason` TEXT DEFAULT NULL,
+  `project_name` VARCHAR(500) DEFAULT NULL,
+  `team_semester` INT NOT NULL,
+  PRIMARY KEY (`from_team_id`, `project_id`, `mentor_reg_num`),
+  INDEX `idx_status` (`status`)
+) 
+
+CREATE TABLE meeting_links (
+  meeting_id INT AUTO_INCREMENT PRIMARY KEY,
+  team_id VARCHAR(20) NOT NULL,
+  review_no ENUM('1', '2', 'optional') NOT NULL,
+  meeting_link VARCHAR(500) NOT NULL,
+  platform ENUM('Google Meet', 'Zoom', 'Microsoft Teams') DEFAULT 'Google Meet',
+  scheduled_at DATETIME NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (team_id) REFERENCES teams(team_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+CREATE TABLE mentors_mentees (
+    mentee_name VARCHAR(100) NOT NULL,
+    mentee_reg_num VARCHAR(100) NOT NULL,
+    mentee_emailId VARCHAR(100) NOT NULL,
+    mentee_sem INT NOT NULL,
+    mentor_name VARCHAR(100) NOT NULL,
+    mentor_reg_num VARCHAR(100),
+    mentor_emailId VARCHAR(100),
+    PRIMARY KEY (mentee_reg_num)
+);
