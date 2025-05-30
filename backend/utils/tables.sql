@@ -286,3 +286,70 @@ CREATE TABLE mentors_mentees (
     mentor_emailId VARCHAR(100),
     PRIMARY KEY (mentee_reg_num)
 );
+
+CREATE TABLE review_marks_team (
+  review_no INT AUTO_INCREMENT,
+  review_title VARCHAR(100) not null,
+  review_date DATE NOT NULL,
+  team_id INT NOT NULL,
+
+  guide_literature_survey INT NOT NULL CHECK (guide_literature_survey BETWEEN 0 AND 5),
+  expert_literature_survey INT NOT NULL CHECK (expert_literature_survey BETWEEN 0 AND 5),
+
+  guide_aim INT NOT NULL CHECK (guide_aim BETWEEN 0 AND 5),
+  expert_aim INT NOT NULL CHECK (expert_aim BETWEEN 0 AND 5),
+
+  guide_scope INT NOT NULL CHECK (guide_scope BETWEEN 0 AND 5),
+  expert_scope INT NOT NULL CHECK (expert_scope BETWEEN 0 AND 5),
+
+  guide_need_for_study INT NOT NULL CHECK (guide_need_for_study BETWEEN 0 AND 5),
+  expert_need_for_study INT NOT NULL CHECK (expert_need_for_study BETWEEN 0 AND 5),
+
+  guide_proposed_methodology INT NOT NULL CHECK (guide_proposed_methodology BETWEEN 0 AND 10),
+  expert_proposed_methodology INT NOT NULL CHECK (expert_proposed_methodology BETWEEN 0 AND 10),
+
+  guide_work_plan INT NOT NULL CHECK (guide_work_plan BETWEEN 0 AND 5),
+  expert_work_plan INT NOT NULL CHECK (expert_work_plan BETWEEN 0 AND 5),
+
+  total_guide_marks INT NOT NULL CHECK (total_guide_marks BETWEEN 0 AND 50),
+  total_expert_marks INT NOT NULL CHECK (total_expert_marks BETWEEN 0 AND 50),
+  total_marks INT NOT NULL CHECK (total_marks BETWEEN 0 AND 100),
+
+  guide_remarks text default null,
+  expert_remarks text default null,
+
+  guide_reg_num varchar(100) default null,
+  expert_reg_num varchar(100) default null
+
+  PRIMARY KEY (review_no, team_id)
+);
+
+CREATE TABLE review_marks_individual (
+  review_no INT AUTO_INCREMENT,
+  reivew_title varchar(100) not null,
+  review_date DATE NOT NULL,
+  team_id INT NOT NULL,
+  student_reg_num VARCHAR(20) NOT NULL,
+
+  guide_oral_presentation INT NOT NULL CHECK (guide_oral_presentation BETWEEN 0 AND 5),
+  expert_oral_presentation INT NOT NULL CHECK (expert_oral_presentation BETWEEN 0 AND 5),
+
+  guide_viva_voce_and_ppt INT NOT NULL CHECK (guide_viva_voce_and_ppt BETWEEN 0 AND 5),
+  expert_viva_voce_and_ppt INT NOT NULL CHECK (expert_viva_voce_and_ppt BETWEEN 0 AND 5),
+
+  guide_contributions INT NOT NULL CHECK (guide_contributions BETWEEN 0 AND 5),
+  expert_contributions INT NOT NULL CHECK (expert_contributions BETWEEN 0 AND 5),
+
+  total_expert_marks INT NOT NULL CHECK (total_expert_marks BETWEEN 0 AND 50),
+  total_guide_marks INT NOT NULL CHECK (total_guide_marks BETWEEN 0 AND 50),
+  total_marks INT NOT NULL CHECK (total_marks BETWEEN 0 AND 100),
+
+  guide_remarks text default null,
+  expert_remarks text default null,
+
+  guide_reg_num varchar(100) default null,
+  expert_reg_num varchar(100) default null
+
+
+  PRIMARY KEY (review_no, student_reg_num)
+);
