@@ -923,10 +923,10 @@ router.post("/student/send_review_request/:team_id/:project_id", userAuth, (req,
               {
                 const insertSql = `
                 INSERT INTO review_requests
-                F(team_id, project_id, project_name, team_lead, review_date, start_time, expert_reg_num, guide_reg_num, review_title)
+                (team_id, project_id, project_name, team_lead, review_date, start_time, expert_reg_num, guide_reg_num, review_title)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-                db.query(insertSql, [team_id, project_id, project_name, team_lead, formattedDate, start_time, expert_reg_num, guide_reg_num, review_title], (error, result) => {
+                db.query(insertSql, [team_id, project_id, project_name, team_lead, formattedDate, start_time, expert_reg_num, guide_reg_num, 'optional_review'], (error, result) => {
                   if (error) return next(error);
                   if (result.affectedRows === 0) return res.status(500).json({ message: "Insertion failed!" });
                   return res.send(`${formattedDate} - ${start_time}: Review request submitted successfully.`);
@@ -942,11 +942,11 @@ router.post("/student/send_review_request/:team_id/:project_id", userAuth, (req,
                   if(checkResult.length > 0)return next(createError.BadRequest('already sent request for this same optional review!'));
 
                   // insert into optional_review_request
-                  let sql1 = "insert into optional_review_requests (team_id,project_id,team_lead,review_date,start_time,mentor_reg_num) values(?,?,?,?,?,?)";
-                  db.query(sql1,[team_id,project_id,team_lead,review_date,start_time,mentor_reg_num],(error,result) => {
+                  let sql1 = "insert into optional_review_requests (team_id,project_id,team_lead,review_date,start_time,mentor_reg_num,reason,status) values(?,?,?,?,?,?,?,?)";
+                  db.query(sql1,[team_id,project_id,team_lead,review_date,start_time,mentor_reg_num,reason,'pending'],(error,result) => {
                     if(error)return next(error);
                     if(result.affectedRows === 0)return next(createError.BadRequest('an error occured while inserting into optional review requests!'));
-                    
+                    res.send('optional review request sent successfully to the mentor')
                   })
                 })
               }

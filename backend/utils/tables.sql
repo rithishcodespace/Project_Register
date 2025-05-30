@@ -117,6 +117,8 @@ CREATE TABLE `weekly_logs_deadlines` (
   `week11` date DEFAULT NULL,
   `week12` date DEFAULT NULL,
   PRIMARY KEY (team_id, project_id);
+  INDEX idx_team (team_id)
+  INDEX idx_project (project_id);
 ) 
 
 CREATE TABLE `users` (
@@ -363,6 +365,7 @@ CREATE TABLE optional_review_requests (
   team_lead VARCHAR(100) NOT NULL,
   review_date DATE NOT NULL,
   start_time TIME NOT NULL,
+  reason text not null,
   mentor_reg_num VARCHAR(100) NOT NULL,
   status VARCHAR(100) DEFAULT NULL
 );

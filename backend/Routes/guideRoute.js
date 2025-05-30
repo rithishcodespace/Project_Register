@@ -486,13 +486,13 @@ router.post('/guide/review/add_marks_to_individual/:guide_reg_num/:reg_num',(req
 
       const updateSql = `
         UPDATE review_marks_team SET
-          guide_oral_presentation,
-          guide_viva_voce_and_ppt,
-          guide_contributions,
+          guide_oral_presentation = ?,
+          guide_viva_voce_and_ppt = ?,
+          guide_contributions = ?,
           total_guide_marks = ?,
           total_marks = ?,
           guide_remarks = ?
-        WHERE review_title = ? AND review_date = ? AND team_id = ?
+        WHERE review_title = ? AND review_date = ? AND team_id = ? and guide_reg_num = ?
       `;
 
       const values = [
@@ -505,7 +505,8 @@ router.post('/guide/review/add_marks_to_individual/:guide_reg_num/:reg_num',(req
         guide_remarks,
         review_title,
         review_date,
-        team_id
+        team_id,
+        guide_reg_num
       ];
 
       db.query(updateSql, values, (err, result) => {

@@ -58,6 +58,154 @@ router.post("/admin/adduser",userAuth,(req,res,next) => {
    }
 })
 
+// inserts deadlines for all teams at a time
+router.post('/admin/insert_deadlines_for_all_teams', async (req, res, next) => {
+  try {
+    const { week1, week2, week3, week4, week5, week6, week7, week8, week9, week10, week11, week12} = req.body;
+
+    const weeks = [week1, week2, week3, week4, week5, week6, week7, week8, week9, week10, week11, week12];
+
+    // Function to check if a string is a valid future date
+    function isValidFutureDate(dateStr) {
+      const date = new Date(dateStr);
+      const today = new Date();
+
+      // Check if it's a valid date and not in the past
+      return (
+        !isNaN(date.getTime()) &&  // Valid date
+        date.toDateString() !== "Invalid Date" &&
+        date >= new Date(today.toDateString()) // Not in the past
+      );
+    }
+
+    const allValid = weeks.every(isValidFutureDate);
+
+    if (!allValid) {
+      return next(createError.BadRequest('Some deadlines are invalid or in the past!'));
+    }
+
+
+    // Step 1: Fetch all team_id and project_id
+    const [teams] = await db.promise().query('SELECT team_id, project_id FROM teams');
+
+    if (teams.length === 0) {
+      return next(createError.NotFound('No team_id and project_id found!'));
+    }
+
+    // Step 2: Build insert queries
+    const insertPromises = teams.map(({ team_id, project_id }) => {
+      const sql = `
+        INSERT INTO weekly_logs_deadlines (
+          team_id, project_id,
+          week1, week2, week3, week4, week5, week6,
+          week7, week8, week9, week10, week11, week12
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      const values = [
+        team_id, project_id,
+        week1, week2, week3, week4, week5, week6,
+        week7, week8, week9, week10, week11, week12
+      ];
+      return db.promise().query(sql, values);
+    });
+
+    // Step 3: Wait for all insertions
+    await Promise.all(insertPromises);
+
+    res.status(200).send({ message: 'Deadlines inserted for all teams.' });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+// updates deadline for all teams
+router.patch('/admin/update_deadline_for_all_teams',(req,res,next) => {
+  try{
+    const { week1, week2, week3, week4, week5, week6, week7, week8, week9, week10, week11, week12} = req.body;
+
+    const weeks = [week1, week2, week3, week4, week5, week6, week7, week8, week9, week10, week11, week12];
+
+    // Function to check if a string is a valid future date
+    function isValidFutureDate(dateStr) {
+      const date = new Date(dateStr);
+      const today = new Date();
+
+      // Check if it's a valid date and not in the past
+      return (
+        !isNaN(date.getTime()) &&  // Valid date
+        date.toDateString() !== "Invalid Date" &&
+        date >= new Date(today.toDateString()) // Not in the past
+      );
+    }
+
+    const allValid = weeks.every(isValidFutureDate);
+
+    if (!allValid) {
+      return next(createError.BadRequest('Some deadlines are invalid or in the past!'));
+    }
+
+    let sql = "update weekly_logs_deadlines set week1 = ?, week2 = ?, week3 = ?, week4 = ?, week5 = ?, week6 = ?, week7 = ?, week8 = ?, week9 = ?, week10 = ?, week11 = ?, week12 = ?";
+    db.query(sql,[week1, week2, week3, week4, week5, week6, week7, week8, week9, week10, week11, week12],(error,result) => {
+      if(error)return next(error);
+      if(result.affectedRows === 0)return next(createError[402]('an error occured while updating!'));
+      res.send('deadlines updated successfully!');
+    
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+// updates the weekly deadlines for a specific team -> for a single week(all weeks wont be updated) ->  did'not updated weekly logs
+router.patch("/admin/update_deadline/:week/:team_id",userAuth,(req,res,next) => {
+  try{
+    const{week,team_id} = req.params;
+    let{newDeadline} = req.body;
+    if(!week || !team_id || !newDeadline)return next(createError.BadRequest("week, team_id, or newDeadline is missing!"));
+    // validating date and week
+    newDeadline = new Date(newDeadline);
+    let today = new Date();
+    today.setHours(0,0,0,0) //removes the time
+    newDeadline.setHours(0,0,0,0);
+     const allowedWeeks = [
+      "week1", "week2", "week3", "week4", "week5",
+      "week6", "week7", "week8", "week9", "week10",
+      "week11", "week12"
+    ];
+    if (!allowedWeeks.includes(week)) {
+      return next(createError.BadRequest("Invalid week column name!"));
+    }
+    if(today > newDeadline)return next(createError.BadRequest("Invalid date!"));
+    const year = newDeadline.getFullYear();
+    const month = String(newDeadline.getMonth() + 1).padStart(2, '0');
+    const day = String(newDeadline.getDate()).padStart(2, '0');
+    newDeadline = `${year}-${month}-${day}`;
+
+    // checks if deadlines exists -> to update
+    let sql1 = "select * from weekly_logs_deadlines where team_id = ?";
+    db.query(sql1,[team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.BadRequest(`deadlines not exist!`)); 
+      let sql = `update weekly_logs_deadlines set \`${week}\` = ? where team_id = ?`;
+      db.query(sql,[newDeadline,team_id],(error,result) => {
+        if(error)return next(error);
+        if(result.affectedRows === 0)return next(createError.BadRequest("some rows are not affected!"));
+        res.status(200).json({"message":`${week} deadline updated to ${newDeadline}`});
+      })
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+
+
+
 // get project through project_id
 
 // router.get("/admin/getproject_by_team_id/:project_id",userAuth,(req,res,next) => {
@@ -264,51 +412,6 @@ router.patch("/admin/update_team_timeline/:team_id/:timelinename",userAuth, (req
     next(error);
   }
 });
-
-
-// updates the weekly deadlines for a specific team -> for a single week(all weeks wont be updated) ->  did'not updated weekly logs
-router.patch("/admin/update_deadline/:week/:team_id",userAuth,(req,res,next) => {
-  try{
-    const{week,team_id} = req.params;
-    let{newDeadline} = req.body;
-    if(!week || !team_id || !newDeadline)return next(createError.BadRequest("week, team_id, or newDeadline is missing!"));
-    // validating date and week
-    newDeadline = new Date(newDeadline);
-    let today = new Date();
-    today.setHours(0,0,0,0) //removes the time
-    newDeadline.setHours(0,0,0,0);
-     const allowedWeeks = [
-      "week1", "week2", "week3", "week4", "week5",
-      "week6", "week7", "week8", "week9", "week10",
-      "week11", "week12"
-    ];
-    if (!allowedWeeks.includes(week)) {
-      return next(createError.BadRequest("Invalid week column name!"));
-    }
-    if(today > newDeadline)return next(createError.BadRequest("Invalid date!"));
-    const year = newDeadline.getFullYear();
-    const month = String(newDeadline.getMonth() + 1).padStart(2, '0');
-    const day = String(newDeadline.getDate()).padStart(2, '0');
-    newDeadline = `${year}-${month}-${day}`;
-
-    // checks if deadlines exists -> to update
-    let sql1 = "select * from weekly_logs_deadlines where team_id = ?";
-    db.query(sql1,[team_id],(error,result) => {
-      if(error)return next(error);
-      if(result.length === 0)return next(createError.BadRequest(`deadlines not exist!`)); 
-      let sql = `update weekly_logs_deadlines set \`${week}\` = ? where team_id = ?`;
-      db.query(sql,[newDeadline,team_id],(error,result) => {
-        if(error)return next(error);
-        if(result.affectedRows === 0)return next(createError.BadRequest("some rows are not affected!"));
-        res.status(200).json({"message":`${week} deadline updated to ${newDeadline}`});
-      })
-    })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
 
 // // assign or update -> guide or expert for a paritcular team 
 router.patch("/admin/assign_guide_expert/:team_id/:role", (req, res, next) => {
