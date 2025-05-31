@@ -327,12 +327,38 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
    
          // Case: No team members, solo team
          if (rows.length === 0) {
-           const soloSql = `INSERT INTO team_requests (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status, team_conformed) VALUES (?, ?, ?, ?, ?, ?, ?, 'accept', true)`;
-           db.query(soloSql, [team_id, name, emailId, reg_num, dept, from_reg_num, from_reg_num], (err) => {
-             if (err) return next(err);
-             return res.send(`${from_reg_num} is the only member in their team.`);
-           });
-           return;
+            const team_id = `TEAM-${String(result[0].count + 1).padStart(4, "0")}`;
+
+            // 1. Insert leader into teams table
+            const insertLeaderIntoTeams = `INSERT INTO teams (team_id, reg_num, is_leader) VALUES (?, ?, 1)`;
+            db.query(insertLeaderIntoTeams, [team_id, reg_num], (err) => {
+              if (err) return next(err);
+
+              // 2. Insert leader row into team_requests table
+              const insertLeaderRequest = `
+                INSERT INTO team_requests (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status, team_conformed)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'accept', true)
+              `;
+              db.query(insertLeaderRequest, [team_id, name, emailId, reg_num, dept, from_reg_num, from_reg_num], (err) => {
+                if (err) return next(err);
+
+                // 3. Cleanup pending requests for solo member
+                const deletePending = `
+                  DELETE FROM team_requests 
+                  WHERE (from_reg_num = ? OR to_reg_num = ?) 
+                  AND team_conformed = false 
+                  AND status <> 'accept' 
+                  AND team_id IS NULL
+                `;
+                db.query(deletePending, [reg_num, reg_num], (err) => {
+                  if (err) return next(err);
+
+                  return res.send(`${reg_num} has been added as a solo team, and pending requests were cleaned.`);
+                });
+              });
+            });
+
+            return;
          }
    
          // Step 3: Set team_conformed = true for accepted members
@@ -423,15 +449,15 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
 });
 
 // fetches team members
-// router.get("/student/getTeamDetails/:reg_num",userAuth, (req, res, next) => {
-//   const{reg_num} = req.params;
-//   if(!reg_num)return next(createError.BadRequest("reg_num not found!"));
-//   let sql = `SELECT * FROM team_requests WHERE (from_reg_num = ? OR to_reg_num = ?) AND team_conformed = true`;
-//   db.query(sql,[reg_num,reg_num,],(error,result) => {
-//     if(error)return next(error);
-//     res.send(result);
-//   })
-// });
+router.get("/student/getTeamDetails/:reg_num",userAuth, (req, res, next) => {
+  const{reg_num} = req.params;
+  if(!reg_num)return next(createError.BadRequest("reg_num not found!"));
+  let sql = `SELECT * FROM team_requests WHERE (from_reg_num = ? OR to_reg_num = ?) AND team_conformed = true`;
+  db.query(sql,[reg_num,reg_num,],(error,result) => {
+    if(error)return next(error);
+    res.send(result);
+  })
+});
 
 // updates the progress
 
@@ -1195,7 +1221,7 @@ router.patch('/student/edit_submitted_progress/:team_id/:week/:reg_num',(req,res
     if (!allowedWeeks.includes(week)) {
       return next(createError.BadRequest("Invalid week field!"));
     }
-    
+
     let sql = `update teams set ${week} = ? where reg_num = ? and team_id = ?`;
     db.query(sql,[newProgress,reg_num,team_id],(error,result) => {
       if(error)return next(error);

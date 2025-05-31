@@ -14,7 +14,7 @@ import Admin_Dashboard from "./components/Admin/Admin_Dashboard";
 import { Provider } from "react-redux";
 import { Store } from "./utils/Store";
 import InvitationPage from "./components/Students/InvitationPage";
-import ProtectedRoute from "./utils/ProtectedRoute"; 
+import ProtectedRoute from "./utils/ProtectedRoute";
 import SubjectExpertDashboard from "./components/Subject_expert/Student_export_dashboard";
 import Subject_expert_remarks from "./components/Subject_expert/Subject_expert_remarks";
 import Subject_expert from "./components/Subject_expert/Subject_expert";
@@ -23,7 +23,7 @@ import Staff_dashboard from "./components/guide/Staff_dashboard";
 import Guide_queries from "./components/guide/Guide_queries";
 import Guide_team_progress from "./components/guide/Guide_team_progress";
 import Queries from "./components/Students/Queries";
-import {getProfile} from "./services/authService";
+import { getProfile } from "./services/authService";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import Proj_Details from "./components/Students/Proj_Details";
@@ -50,15 +50,15 @@ const Loader = () => {
   }, [dispatch, navigate]);
 
   return <div class="flex justify-center items-center h-40">
-  <div className="w-10 h-10 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
-</div>
-;
+    <div className="w-10 h-10 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+  </div>
+    ;
 };
 
 function App() {
 
-const userselector = useSelector((State) => State.userSlice);
-const teamselector = useSelector((state) => state.teamSlice);
+  const userselector = useSelector((State) => State.userSlice);
+  const teamselector = useSelector((state) => state.teamSlice);
 
   return (
     <Provider store={Store}>
@@ -71,32 +71,36 @@ const teamselector = useSelector((state) => state.teamSlice);
 
           <Route path="/student" element={<Student />}>
             <Route index element={<Student_Dashboard />} />
-              <Route path="invitations" element={<InvitationPage />} />
-              <Route path="Project_Details/proj_details/:id" element={<Proj_Details />} />
-              <Route path="upload-project-files" element={<ProjectFileUpload />} />
-              {teamselector ? (
-            <>
-              <Route path="Project_Details" element={<Project_Details />} />
-              {teamselector[0]?.guide_reg_num ?(<>
-              <Route path="queries" element={<Queries />} />
-              <Route path="review" element={<Schedule_review />} />
-              <Route path="Progress_update" element={<Progress_Update />} /></>):null}
-            </>
-          ) : null}
-           
+            <Route path="invitations" element={<InvitationPage />} />
+            <Route path="Project_Details/proj_details/:id" element={<Proj_Details />} />
+            <Route path="upload-project-files" element={<ProjectFileUpload />} />
+            {teamselector ? (
+              <>
+                <Route path="Project_Details" element={<Project_Details />} />
+                {teamselector?.[0]?.guide_reg_num && (
+                  <>
+                    <Route path="queries" element={<Queries />} />
+                    <Route path="review" element={<Schedule_review />} />
+                    <Route path="Progress_update" element={<Progress_Update />} />
+                  </>
+                )}
+              </>
+
+            ) : null}
+
           </Route>
 
           <Route path="/admin" element={<Admin />}>
-            <Route index element={<Admin_Dashboard />} /> 
+            <Route index element={<Admin_Dashboard />} />
             <Route path="add_users" element={<Add_Users />} />
             <Route path="posted_projects" element={<Posted_project />} />
             <Route path="students_progress" element={<Students_Progress />} />
             <Route path="/admin/posted_projects/:project_id" element={<Admin_project_details />} />
             <Route path="student_progress/:cluster" element={<Admin_project_details />} />
-            <Route path="TimeLine" element={<TimeLine/>}/>
+            <Route path="TimeLine" element={<TimeLine />} />
             <Route path="team_list/:department" element={<TeamListByDepartment />} />
             <Route path="/admin/team_progress/:project_id" element={<Admin_project_details />} />
-             <Route path="change-timeline" element={<ChangeTimeLine/>} />
+            <Route path="change-timeline" element={<ChangeTimeLine />} />
           </Route>
 
           <Route path="/subject_expert" element={<Subject_expert />}>
@@ -109,12 +113,12 @@ const teamselector = useSelector((state) => state.teamSlice);
             <Route index element={<Staff_dashboard />} />
             <Route path="queries" element={<Guide_queries />} />
             <Route path="team_progress" element={<Guide_team_progress />} />
-            <Route path="review_progress" element={<Review_projects/>} />
+            <Route path="review_progress" element={<Review_projects />} />
             <Route path="team-details/:teamId" element={<TeamDetails />} />
           </Route>
 
-          <Route path="*" element={<NotFound/>} />
-          
+          <Route path="*" element={<NotFound />} />
+
         </Routes>
 
       </BrowserRouter>
