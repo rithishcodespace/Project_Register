@@ -4,8 +4,8 @@ const createError = require("http-errors");
 const db = require("../db");
 const userAuth = require("../middlewares/userAuth")
 
-// add users
-
+//210
+//
 router.post("/admin/adduser",userAuth,(req,res,next) => {
    try{
      const{name,emailId,password,role,dept,reg_num,phone_number,semester,mentor_name,mentor_reg_num,mentor_emailId} = req.body;
