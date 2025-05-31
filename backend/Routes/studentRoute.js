@@ -101,7 +101,7 @@ router.post("/student/join_request", userAuth, (req, res, next) => {
         
                 // inserts the request in the request db (only if no existing request)
                 let sql1 = "INSERT INTO team_requests (name, emailId, reg_num, dept, from_reg_num, to_reg_num, status) VALUES (?,?,?,?,?,?,?)";
-                let values = [name, emailId, reg_num, dept, from_reg_num, to_reg_num,'pending'];
+                let values = [name, emailId, reg_num, dept, from_reg_num, to_reg_num,'interested'];
               
                 db.query(sql1, values, (error, result) => {
                   if (error) return next(error);  // Use return here to prevent further code execution
@@ -123,7 +123,7 @@ router.post("/student/join_request", userAuth, (req, res, next) => {
 
 // filters the request i received -> notification
 
-router.get("/student/request_recived/:reg_num",userAuth,(req,res,next) => {
+router.get("/student/request_recived/:reg_num",(req,res,next) => {
     try{
       const{reg_num} = req.params;
       if(!reg_num)return next(createError.BadRequest('reg_num not found!'));
@@ -722,21 +722,21 @@ router.post('/send_request_for_optional_review/:mentor_reg_num',(req,res,next) =
 
 // gets student details by reg_num
 
-// router.get("/student/get_student_details_by_regnum/:reg_num",userAuth,(req,res,next) => {
-//   try{
-//     const{reg_num} = req.params;
-//     if(!reg_num)return next(createError.BadRequest("reg_num not found!!"));
-//     let sql = "select * from users where reg_num = ?";
-//     db.query(sql,[reg_num],(error,result) => {
-//       if(error)return next(error);
-//       res.send(result);
-//     })
-//   }
-//   catch(error)
-//   {
-//     next(error);
-//   }
-// })
+router.get("/student/get_student_details_by_regnum/:reg_num",userAuth,(req,res,next) => {
+  try{
+    const{reg_num} = req.params;
+    if(!reg_num)return next(createError.BadRequest("reg_num not found!!"));
+    let sql = "select * from users where reg_num = ?";
+    db.query(sql,[reg_num],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 // gets team details using the team_id
 
@@ -776,20 +776,20 @@ router.post('/send_request_for_optional_review/:mentor_reg_num',(req,res,next) =
 
 // checks whether he is already a member of another team
 
-// router.get("/student/check_accepted_status/:reg_num",userAuth,(req,res,next) => {
-//   try{
-//     const{reg_num} = req.params;
-//     let sql = "SELECT * FROM team_requests WHERE (to_reg_num = ? OR from_reg_num = ?) AND status = 'accepted'";
-//     db.query(sql,[reg_num,reg_num],(error,result) => {
-//       if(error)return next(error);
-//       res.send(result);
-//     })
-//   }
-//   catch(error)
-//   {
-//     next(error);
-//   }
-// })
+router.get("/student/check_accepted_status/:reg_num",userAuth,(req,res,next) => {
+  try{
+    const{reg_num} = req.params;
+    let sql = "SELECT * FROM team_requests WHERE (to_reg_num = ? OR from_reg_num = ?) AND status = 'accepted'";
+    db.query(sql,[reg_num,reg_num],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 
 // inserts the project into project table
@@ -1120,8 +1120,73 @@ router.post('/student/challenge_review/request/:team_id/:project_id/:reg_num/:re
   }
 });
 
-// // edit already submitted progress
-// router.patch('/student/edit_submitted_progress')
+// show already submitted progress -> to update => 1st
+router.get('/student/view_submitted_progress/:team_id/:reg_num/:week',(req,res,next) => {
+  try{
+    const{reg_num,week} = req.params;
+    if(!team_id || !reg_num || !week)return next(createError.BadRequest('some parameters are missing!'));
+    let sql = `SELECT 
+                t.team_id,
+                t.reg_num,
+                CASE
+                  WHEN t.week12_progress IS NOT NULL AND (w12.is_verified IS NULL OR w12.is_verified = 0) THEN 'week12_progress'
+                  WHEN t.week11_progress IS NOT NULL AND (w11.is_verified IS NULL OR w11.is_verified = 0) THEN 'week11_progress'
+                  WHEN t.week10_progress IS NOT NULL AND (w10.is_verified IS NULL OR w10.is_verified = 0) THEN 'week10_progress'
+                  WHEN t.week9_progress IS NOT NULL AND (w9.is_verified IS NULL OR w9.is_verified = 0) THEN 'week9_progress'
+                  WHEN t.week8_progress IS NOT NULL AND (w8.is_verified IS NULL OR w8.is_verified = 0) THEN 'week8_progress'
+                  WHEN t.week7_progress IS NOT NULL AND (w7.is_verified IS NULL OR w7.is_verified = 0) THEN 'week7_progress'
+                  WHEN t.week6_progress IS NOT NULL AND (w6.is_verified IS NULL OR w6.is_verified = 0) THEN 'week6_progress'
+                  WHEN t.week5_progress IS NOT NULL AND (w5.is_verified IS NULL OR w5.is_verified = 0) THEN 'week5_progress'
+                  WHEN t.week4_progress IS NOT NULL AND (w4.is_verified IS NULL OR w4.is_verified = 0) THEN 'week4_progress'
+                  WHEN t.week3_progress IS NOT NULL AND (w3.is_verified IS NULL OR w3.is_verified = 0) THEN 'week3_progress'
+                  WHEN t.week2_progress IS NOT NULL AND (w2.is_verified IS NULL OR w2.is_verified = 0) THEN 'week2_progress'
+                  WHEN t.week1_progress IS NOT NULL AND (w1.is_verified IS NULL OR w1.is_verified = 0) THEN 'week1_progress'
+                  ELSE 'No unverified progress'
+                END AS last_unverified_week
+              FROM teams t
+              LEFT JOIN weekly_logs_verification w1 ON t.team_id = w1.team_id AND w1.week_number = 1
+              LEFT JOIN weekly_logs_verification w2 ON t.team_id = w2.team_id AND w2.week_number = 2
+              LEFT JOIN weekly_logs_verification w3 ON t.team_id = w3.team_id AND w3.week_number = 3
+              LEFT JOIN weekly_logs_verification w4 ON t.team_id = w4.team_id AND w4.week_number = 4
+              LEFT JOIN weekly_logs_verification w5 ON t.team_id = w5.team_id AND w5.week_number = 5
+              LEFT JOIN weekly_logs_verification w6 ON t.team_id = w6.team_id AND w6.week_number = 6
+              LEFT JOIN weekly_logs_verification w7 ON t.team_id = w7.team_id AND w7.week_number = 7
+              LEFT JOIN weekly_logs_verification w8 ON t.team_id = w8.team_id AND w8.week_number = 8
+              LEFT JOIN weekly_logs_verification w9 ON t.team_id = w9.team_id AND w9.week_number = 9
+              LEFT JOIN weekly_logs_verification w10 ON t.team_id = w10.team_id AND w10.week_number = 10
+              LEFT JOIN weekly_logs_verification w11 ON t.team_id = w11.team_id AND w11.week_number = 11
+              LEFT JOIN weekly_logs_verification w12 ON t.team_id = w12.team_id AND w12.week_number = 12
+              WHERE t.reg_num = '?';`;
+    db.query(sql,[reg_num],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(result[0].last_unverified_week);
+      let sql1 = `select ${result[0].last_unverified_week} where team_id = ?`;
+      db.query(sql)
+
+    })          
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+// edit already updated progress => 2nd
+
+router.patch('/student/edit_submitted_progress/:team_id/:week/:reg_num',(req,res,next) => {
+  try{
+    const{team_id,week,reg_num} = req.params;
+    if(!team_id || !week || !reg_num)
+    {
+      return next(createError.BadRequest('parameters not found!'));
+    }
+    let 
+  }
+  catch(error)
+  {
+
+  }
+})
 
 
 module.exports = router;
