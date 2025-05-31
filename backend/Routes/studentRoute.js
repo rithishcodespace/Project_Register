@@ -193,9 +193,7 @@ router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",userAuth,
     
 
     //  Update the request if it exists and is still 'interested'
-    let updateSQL;
-    if(status === 'accept') updateSQL = `UPDATE team_requests SET status = ? WHERE to_reg_num = ? AND from_reg_num = ? AND status = 'interested'`;
-    else if(status === 'reject') updateSQL = `UPDATE team_requests SET status = ?,reason = ? WHERE to_reg_num = ? AND from_reg_num = ? AND status = 'interested'`;
+    let updateSQL = `UPDATE team_requests SET status = ?,reason = ? WHERE to_reg_num = ? AND from_reg_num = ? AND status = 'interested'`;
 
     db.query(updateSQL, [safeStatus, reason, to_reg_num, from_reg_num], (err, result) => {
       if (err) return next(err);
