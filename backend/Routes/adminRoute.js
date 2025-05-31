@@ -253,17 +253,48 @@ router.get('/admin/challenge_review/get_available_guides_experts/:review_date',(
       if(staffs.length === 0)return next(createError.NotFound('staffs not found!'));
       // staffs who dont have slot on that day
       let sql1 = `SELECT name, reg_num FROM users WHERE role = 'staff' AND reg_num NOT IN (SELECT guide_reg_num FROM scheduled_reviews WHERE review_date = ? UNION SELECT expert_reg_num FROM scheduled_reviews WHERE review_date = ?)`;
-      db.query(sql1,[])
+      db.query(sql1,[review_date,review_date],(error,result) => {
+        if(error)return next(error);
+        if(result.length === 0)return res.send('No staffs are available');
+        res.send(result);
+      })
     })
   }
   catch(error)
   {
-
+    next(error);
   }
 })
 
 
 // assign expert and guide for challenge_review_requests
+router.patch('/admin/challenge_review/:request_id/:guide_reg_num/:expert_reg_num', (req, res, next) => {
+  try {
+    const { request_id, guide_reg_num, expert_reg_num } = req.params;
+    const { project_id, team_lead, review_date, start_time, team_id, review_title } = req.body;
+
+    if (!request_id || !guide_reg_num || !expert_reg_num || !project_id || !team_lead || !review_date || !start_time || !team_id || !review_title) {
+      return next(createError.BadRequest('Some required data is missing'));
+    }
+
+    // Assigning expert and guide
+    let sql = "UPDATE challenge_review_requests SET status = 'accept', date = ?, start_time = ?, temp_expert = ?, temp_guide = ? WHERE request_id = ?";
+    db.query(sql, [review_date, start_time, guide_reg_num, expert_reg_num, request_id], (error, result) => {
+      if (error) return next(error);
+      if (result.affectedRows === 0) return next(createError.BadRequest('An error occurred while updating the challenge review request!'));
+
+      // Insert into scheduled_reviews
+      let sql1 = "INSERT INTO scheduled_reviews (project_id, team_lead, review_date, start_time, team_id, expert_reg_num, guide_reg_num, review_title) VALUES (?,?,?,?,?,?,?,?)";
+      db.query(sql1, [project_id, team_lead, review_date, start_time, team_id, expert_reg_num, guide_reg_num, review_title], (error1, result1) => {
+        if (error1) return next(error1);
+        if (result1.affectedRows === 0) return next(createError.BadRequest('An error occurred while scheduling the review!'));
+        res.send(`Challenge request accepted and review scheduled with new guide and expert!`);
+      });
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 
 // get project through project_id
