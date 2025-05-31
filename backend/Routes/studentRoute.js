@@ -148,28 +148,28 @@ router.get("/student/request_recived/:reg_num",(req,res,next) => {
 
 // fetch all the invitations the loggedIn user received
 
-// router.get("/student/team_request/:reg_num",userAuth,(req,res,next) => {
-//   try{
-//     const {reg_num} = req.params;
-//     if(!reg_num)return next(createError.BadRequest("reg_num not found!"));
-//     let sql1 = "SELECT * FROM team_requests WHERE (to_reg_num = ? OR from_reg_num = ?) AND status = 'accept'";
-//     db.query(sql1,[reg_num,reg_num],(error,result) => {
-//       if(error)return next(error);
-//       if(result.length > 0){
-//         return res.send("YOU ALREADY A TEAM MEMBER SO YOU CANT SEE THE REQUESTS SENT TO YOU!");
-//       }
-//       let sql = "select * from team_requests where to_reg_num = ? and status = 'interested'"
-//       db.query(sql,[reg_num],(error,result) => {
-//         if(error)return next(error);
-//         return res.send(result);
-//     })
-//     })
-//   }
-//   catch(error)
-//   {
-//     next(error);
-//   }
-// })
+router.get("/student/team_request/:reg_num",userAuth,(req,res,next) => {
+  try{
+    const {reg_num} = req.params;
+    if(!reg_num)return next(createError.BadRequest("reg_num not found!"));
+    let sql1 = "SELECT * FROM team_requests WHERE (to_reg_num = ? OR from_reg_num = ?) AND status = 'accept'";
+    db.query(sql1,[reg_num,reg_num],(error,result) => {
+      if(error)return next(error);
+      if(result.length > 0){
+        return res.send("YOU ALREADY A TEAM MEMBER SO YOU CANT SEE THE REQUESTS SENT TO YOU!");
+      }
+      let sql = "select * from team_requests where to_reg_num = ? and status = 'interested'"
+      db.query(sql,[reg_num],(error,result) => {
+        if(error)return next(error);
+        return res.send(result);
+    })
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 // accept or reject request -> inside notification
 router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",userAuth, (req, res, next) => {
