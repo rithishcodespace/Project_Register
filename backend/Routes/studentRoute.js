@@ -1071,51 +1071,54 @@ router.get('/student/get_guide_expert/:team_id/:role',(req,res,next) => {
 
 // challenge review -> requested by the team_leader 
 // review_id -> not satisfied review's id
-router.post('student/challenge_review/request/:team_id/:project_id/:reg_num/:review_id',(req,res,next) => {
-  try{
-    const{team_id,reg_num,review_id} = req.params;
-    if(!team_id || !reg_num || !review_id)return next(createError.BadRequest('team_id or reg_num or review_id is not defined!'));
-    // checking whether he is a team leader
-    let sql0 = "select is_leader from teams where team_id = ? and reg_num = ?";
-    db.query(sql0,[team_id,reg_num],(error0,result0) => {
-      if(error0)return next(error0);
-      if(result0.length === 0)return next(createError.NotFound('student leader status not found!'));
-      if(!result0[0].is_leader)return res.send('YOU CANT REQUEST FOR CHALLENGE REVIEW, ONLY YOUR TEAM LEADER CAN APPLY FOR IT')
-    })
-    // Challenge review can be applied only within 7 days after each review
-    let sql1 = "SELECT * FROM scheduled_reviews WHERE review_id = ?";
-    db.query(sql1, [review_id], (error1, result1) => {
-      if (error1) return next(error1);
-      if (result1.length === 0) return next(createError.NotFound('review_date not found'));
+router.post('/student/challenge_review/request/:team_id/:project_id/:reg_num/:review_id', (req, res, next) => {
+  try {
+    const { team_id, project_id, reg_num, review_id } = req.params;
+    if (!team_id || !reg_num || !review_id) return next(createError.BadRequest('team_id or reg_num or review_id is not defined!'));
 
-      const review_date = new Date(result1[0].review_date);
-      const today = new Date();
+    // Step 1: Check if student is team leader
+    let sql0 = "SELECT is_leader FROM teams WHERE team_id = ? AND reg_num = ?";
+    db.query(sql0, [team_id, reg_num], (error0, result0) => {
+      if (error0) return next(error0);
+      if (result0.length === 0) return next(createError.NotFound('student leader status not found!'));
+      if (!result0[0].is_leader) return res.send('YOU CANT REQUEST FOR CHALLENGE REVIEW, ONLY YOUR TEAM LEADER CAN APPLY FOR IT');
 
-      // Normalize both dates to remove time component
-      review_date.setHours(0, 0, 0, 0);
-      today.setHours(0, 0, 0, 0);
+      // Step 2: Validate date (within 7 days)
+      let sql1 = "SELECT * FROM scheduled_reviews WHERE review_id = ?";
+      db.query(sql1, [review_id], (error1, result1) => {
+        if (error1) return next(error1);
+        if (result1.length === 0) return next(createError.NotFound('review_date not found'));
 
-      const diffInDays = (today - review_date) / (1000 * 60 * 60 * 24); // ms → days
+        const review_date = new Date(result1[0].review_date);
+        const today = new Date();
+        review_date.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        const diffInDays = (today - review_date) / (1000 * 60 * 60 * 24);
 
-      if (diffInDays > 7) {
-        return next(createError.BadRequest('Challenge review time limit exceeded!'));
-      }
+        if (diffInDays > 7) {
+          return next(createError.BadRequest('Challenge review time limit exceeded!'));
+        }
 
-      // checks whether marks updated for this review id so that only he can apply for challenge reivew -> marks dissatisfactory
-      let sql2 = 'select * from review_marks_team where team_id = ? and review_title = ? and review_date = ?';
-      db.query(sql2,[team_id,result1[0].review_title,result1[0].review_date],(error2,result2) => {
-        if(error2)return next(error2);
-        if(error2.length === 0)return next(createError.BadRequest('Since guide or expert have not updated marks for your team, you cannot request for challenge review'))
+        // Step 3: Check if marks were updated
+        let sql2 = 'SELECT * FROM review_marks_team WHERE team_id = ? AND review_title = ? AND review_date = ?';
+        db.query(sql2, [team_id, result1[0].review_title, result1[0].review_date], (error2, result2) => {
+          if (error2) return next(error2);
+          if (result2.length === 0) return next(createError.BadRequest('Since guide or expert have not updated marks for your team, you cannot request for challenge review'));
 
-        // insert into challenge review request
-        let sql3 = "insert into challenge_review_requests (team_id)"
-      })
-});
-  }
-  catch(error)
-  {
+          // Step 4: Insert into challenge_review_requests
+          let sql3 = "INSERT INTO challenge_review_requests (team_id, project_id, team_lead, status) VALUES (?, ?, ?, ?)";
+          db.query(sql3, [team_id, project_id, reg_num, 'pending'], (error3, result3) => {
+            if (error3) return next(error3);
+            if (result3.affectedRows === 0) return next(createError.BadRequest('error occurred while inserting for challenge review!'));
+            res.send(`Optional review request sent to admin`);
+          });
+        });
+      });
+    });
+  } catch (error) {
     next(error);
   }
-})
+});
+
 
 module.exports = router;
