@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import instance from '../../utils/axiosInstance';
 import { useSelector } from 'react-redux';
+import { Select } from '@mui/material';
 
 // Helper component: Loading Spinner
 const LoadingSpinner = () => (
@@ -122,17 +123,75 @@ const Project_Details = () => {
       });
   }, [teamselector]); // <-- important to add teamselector as dependency
 
-  function Detail({ label, value, fullWidth = false }) {
-    return (
-      <div className={`flex flex-col ${fullWidth ? 'md:col-span-2' : ''}`}>
-        <span className="text-sm bg-white text-gray-500 font-medium">{label}</span>
-        <span className="text-base bg-white text-gray-800 font-semibold">{value}</span>
-      </div>
-    );
+const expertOptions = expertsList.map((expert) => ({
+  value: expert.reg_num,
+  label: `${expert.name} (${expert.reg_num})`,
+}));
+
+// Custom filter to search by name or reg_num
+const customFilter = (option, inputValue) => {
+  const label = option.label.toLowerCase();
+  const value = option.value.toLowerCase();
+  const search = inputValue.toLowerCase();
+  return label.includes(search) || value.includes(search);
+};
+
+const handleExpertChange = (selectedOptions) => {
+  const selectedRegNums = selectedOptions.map(option => option.value);
+  setSelectedExperts(selectedRegNums);
+};
+
+const guideOptions = guidesList.map((guide) => ({
+  value: guide.reg_num,
+  label: `${guide.name} (${guide.reg_num})`,
+}));
+
+// Custom search filter (search by name or reg_num)
+const customGuideFilter = (option, inputValue) => {
+  const label = option.label.toLowerCase();
+  const value = option.value.toLowerCase();
+  const search = inputValue.toLowerCase();
+  return label.includes(search) || value.includes(search);
+};
+
+// Handle guide selection
+const handleGuideChange = (selectedOptions) => {
+  const selectedRegNums = selectedOptions.map(option => option.value);
+  setSelectedGuides(selectedRegNums);
+};
+
+    useEffect(() => {
+  if (!teamselector || !Array.isArray(teamselector) || !teamselector[0] || !teamselector[0].project_id) {
+    console.log("Team selector not ready or missing project_id");
+    return;
   }
 
-  useEffect(() => {
-    async function fetchExpertsAndGuides() {
+
+  instance
+    .get(`/student/get_project_details/${teamselector[0].project_id}`)
+    .then((res) => {
+      if (res.status === 200) {
+        setProjectData(res.data);
+        setIsSuccess(true);
+        console.log(res);
+      }
+    })
+    .catch((err) => {
+      console.error("Error fetching project details:", err);
+    });
+}, [teamselector]); // <-- important to add teamselector as dependency
+
+function Detail({ label, value, fullWidth = false }) {
+  return (
+    <div className={`flex flex-col ${fullWidth ? 'md:col-span-2' : ''}`}>
+      <span className="text-sm bg-white text-gray-500 font-medium">{label}</span>
+      <span className="text-base bg-white text-gray-800 font-semibold">{value}</span>
+    </div>
+  );
+}
+
+useEffect(() => {
+    async function fetchExpertsAndGuides() {  
       try {
         const [expertRes, guideRes] = await Promise.all([
           instance.get('http://localhost:1234/admin/get_users/sub_expert', { withCredentials: true }),
@@ -220,7 +279,8 @@ const Project_Details = () => {
       setSelectedGuides([]);
     } catch (error) {
       console.error('Submit Error:', error);
-      alert("Failed to submit project. Error: " + response.error.message);
+     alert("Failed to submit project. Error: " + (error?.response?.data?.message || error.message));
+
 
 
     }
@@ -264,7 +324,7 @@ const Project_Details = () => {
               />
             </div>
 
-            <div className='flex col-span-2 gap-4 bg-white'>
+            {/* <div className='flex col-span-2 gap-4 bg-white'> */}
               <div className="mb-4 w-[50%] bg-white ">
                 <label className="block mb-1  bg-white font-medium">Cluster Name</label>
                 <select
@@ -281,82 +341,36 @@ const Project_Details = () => {
 
               </div>
 
-              <div className="mb-4 bg-white w-[50%]">
-                <label className="block mb-1  bg-white  font-medim">Project Type</label>
-                <select
-                  value={core}
-                  onChange={(e) => setCore(e.target.value)}
-                  className="w-full bg-white  border px-3 py-2 rounded"
-                  required
-                >
-                  <option value="" disabled>Select</option>
-                  <option value="hardware">Hardware</option>
-                  <option value="software">Software</option>
-                </select>
-              </div>
-            </div>
+          {/* Expert Selection */}
+          <div className="mb-6 bg-white">
+    <h3 className="text-md bg-white font-medium mb-2">Select Subject Experts:</h3>
+    <Select
+      options={expertOptions}
+      isMulti
+      onChange={handleExpertChange}
+      value={expertOptions.filter(option => selectedExperts.includes(option.value))}
+      placeholder="Select experts..."
+      className="basic-multi-select"
+      classNamePrefix="select"
+      filterOption={customFilter} // custom search logic
+    />
+  </div>
 
-            <div className="mb-4 bg-white ">
-              <label className="block bg-white  mb-1 font-medium">Project Description</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full  bg-white border px-3 py-2 rounded"
-                rows={4}
-                required
-              />
-            </div>
+          {/* Guide Selection */}
+          <div className="mb-6 bg-white">
+    <h3 className="text-md bg-white font-medium mb-2">Select Guides:</h3>
+    <Select
+      options={guideOptions}
+      isMulti
+      onChange={handleGuideChange}
+      value={guideOptions.filter(option => selectedGuides.includes(option.value))}
+      placeholder="Select guides..."
+      className="basic-multi-select"
+      classNamePrefix="select"
+      filterOption={customGuideFilter}
+    />
+  </div>
 
-            <div className="mb-6 bg-white ">
-              <label className="block mb-1 bg-white  font-medium">Expected Outcome</label>
-              <textarea
-                value={outcome}
-                onChange={(e) => setOutcome(e.target.value)}
-                className="w-full border px-3 py-2 bg-white  rounded"
-                rows={3}
-                required
-              />
-            </div>
-
-            {/* Expert Selection */}
-            <div className="mb-6 bg-white ">
-              <h3 className="text-md  bg-white font- mb-2">Select Subject Experts:</h3>
-              <div className="flex flex-wrap bg-white  gap-2">
-                {expertsList.map((expert) => (
-                  <button
-                    key={expert.reg_num}
-                    type="button"
-                    onClick={() => toggleExpertSelection(expert.reg_num)}
-                    className={`px-3 py-1 rounded-full border ${selectedExperts.includes(expert.reg_num)
-                      ? 'bg-purple-500 text-white border-purple-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-100'
-                      }`}
-                  >
-                    {expert.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Guide Selection */}
-            <div className="mb-6 bg-white ">
-              <h3 className="text-md bg-white  font- mb-2">Select Guides:</h3>
-              <div className="flex  bg-white flex-wrap gap-2">
-                {guidesList.map((guide) => (
-                  <button
-                    key={guide.reg_num}
-                    type="button"
-                    onClick={() => toggleGuideSelection(guide.reg_num)}
-                    className={`px-3 py-1 rounded-full border ${selectedGuides.includes(guide.reg_num)
-                      ? 'bg-purple-500 text-white border-purple-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-green-100'
-                      }`}
-                  >
-                    {guide.name}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             <div className="text-center bg-white ">
               <button

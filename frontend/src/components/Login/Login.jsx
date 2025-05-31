@@ -69,7 +69,7 @@ function Login() {
 
     try {
       await instance.patch(
-        `/student/alter_project_status/${reg_num}/${projectType}`,
+        `/student/alter_project_type/${reg_num}/${projectType}`,
         { "company_name": companyName, "company_address": companyAddress,"company_contact": contactNumber }
       );
 
@@ -182,6 +182,7 @@ function Login() {
                   >
                     Internal
                   </button>
+
                   <button
                     onClick={() => setSelectedProjectType("external")}
                     className="px-6 py-3 w-[50%] bg-green-600 text-white rounded-xl shadow hover:bg-green-700"
@@ -220,6 +221,12 @@ function Login() {
                     onChange={(e) => setcontactNumber(e.target.value)}
                     required
                   />
+                  <button
+  onClick={() => setSelectedProjectType("")}
+  className="px-6 py-2 mt-2 bg-gray-300 text-black rounded hover:bg-gray-400"
+>
+  Back
+</button>
                   <button
                     type="submit"
                     className="px-6 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700"
