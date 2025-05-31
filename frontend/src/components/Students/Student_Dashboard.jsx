@@ -411,7 +411,8 @@ return (
           Confirm Team
         </button>
         
-      )}</div>
+       )} 
+      </div>
     </div>
 
     {isInviteOpen && (

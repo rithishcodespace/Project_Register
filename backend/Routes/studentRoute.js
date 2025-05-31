@@ -301,7 +301,7 @@ router.post("/student/fetch_team_status_and_invitations",userAuth, (req, res, ne
   }
 });
 
-//make the team status -> 1 and assings team id to the team
+// make the team status -> 1 and assings team id to the team
 
 // if it should be solo team both reg_num should be sent same
 
@@ -422,7 +422,7 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
                        AND team_id IS NULL
                      `;
                      db.query(deleteSql, [to_reg_num, to_reg_num], (err, delResult) => {
-                       if (err) return next(err);
+                       if (err) return next("hai hello"+err);
      
                        pending--;
                        if (pending === 0) {
