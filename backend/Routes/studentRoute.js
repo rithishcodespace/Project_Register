@@ -865,12 +865,12 @@ router.post("/student/addproject/:project_type/:team_id/:reg_num", userAuth,(req
 
 // sends the review request to the expert and guide => once in a month
 // reason will be for optional review
-router.post("/student/send_review_request/:team_id/:project_id", userAuth, (req, res, next) => {
+router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAuth, (req, res, next) => {
   try {
-    const { team_id, project_id } = req.params;
+    const { team_id, project_id, reg_num } = req.params;
     const { project_name, team_lead, review_date, start_time, isOptional, reason, mentor_reg_num } = req.body;
 
-    if (!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time) {
+    if (!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time || !reg_num) {
       return next(createError.BadRequest("Some parameters are missing!"));
     }
 
@@ -885,104 +885,113 @@ router.post("/student/send_review_request/:team_id/:project_id", userAuth, (req,
 
     const formattedDate = reviewDate.toISOString().split('T')[0];
 
-    // fetch expert and guide reg_num
-    const sql = "SELECT guide_reg_num, sub_expert_reg_num FROM teams WHERE team_id = ?";
-    db.query(sql, [team_id], (error, result) => {
-      if (error) return next(error);
-      if (!result || result.length === 0) {
-        return next(createError.BadRequest("Guide or expert reg_num not found!"));
-      }
+    // checks if he is the team leader
 
-      const expert_reg_num = result[0].sub_expert_reg_num;
-      const guide_reg_num = result[0].guide_reg_num;
+    let sql0 = "select is_leader from teams where team_id = ? and reg_num = ?";
+    db.query(sql0,[team_id,reg_num],(error0,result0) => {
+      if(error0)return next(error0);
+      if(result0.length === 0)return next(createError.NotFound('student leader status not found!'));
+      if(!result0[0].is_leader)return res.send('YOU CANT REQUEST FOR CHALLENGE REVIEW, ONLY YOUR TEAM LEADER CAN APPLY FOR IT');
 
-      // Check how many reviews already done
-      const sql2 = "SELECT * FROM scheduled_reviews WHERE team_id = ?";
-      db.query(sql2, [team_id], (error, result1) => {
+      // fetch expert and guide reg_num
+      const sql = "SELECT guide_reg_num, sub_expert_reg_num FROM teams WHERE team_id = ?";
+      db.query(sql, [team_id], (error, result) => {
         if (error) return next(error);
-        if (result1.length >= 2) return next(createError.BadRequest("Your team already completed 2 reviews."));
-
-        // Helper function for common flow after eligibility
-        const continueWithRequest = (review_title) => {
-          const weekToCheck = result1.length === 0 ? 3 : 6;
-          const weekSql = "SELECT * FROM weekly_logs_verifications WHERE week_number = ? AND is_verified = true AND team_id = ?";
-          db.query(weekSql, [weekToCheck, team_id], (error, verificationResult) => {
-            if (error) return next(error);
-            if (verificationResult.length === 0) {
-              return next(createError.BadRequest(`You are not eligible to apply for the review request. Week ${weekToCheck} log not verified.`));
-            }
-
-            const checkSql = "SELECT * FROM review_requests WHERE review_date = ? AND start_time = ? AND expert_reg_num = ? AND guide_reg_num = ? AND team_id = ?";
-            db.query(checkSql, [formattedDate, start_time, expert_reg_num, guide_reg_num, team_id], (error, existingResult) => {
-              if (error) return next(error);
-              if (existingResult.length > 0) {
-                return next(createError.BadRequest("Review request already exists for this slot!"));
-              }
-
-              if(review_title !== 'optional')
-              {
-                const insertSql = `
-                INSERT INTO review_requests
-                (team_id, project_id, project_name, team_lead, review_date, start_time, expert_reg_num, guide_reg_num, review_title)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-                db.query(insertSql, [team_id, project_id, project_name, team_lead, formattedDate, start_time, expert_reg_num, guide_reg_num, 'optional_review'], (error, result) => {
-                  if (error) return next(error);
-                  if (result.affectedRows === 0) return res.status(500).json({ message: "Insertion failed!" });
-                  return res.send(`${formattedDate} - ${start_time}: Review request submitted successfully.`);
-                });
-              }
-              else if(review_title === 'optional'){
-                // send request to mentor to accept the genuie reason
-                
-                // checks already sent this request to the mentor
-                let sql = "select * from option_review_requests where team_id = ? review_date = ? start_time = ? and mentor_reg_num = ?";
-                db.query(sql,[team_id,review_date,start_time,mentor_reg_num],(error,checkResult) => {
-                  if(error)return next(error);
-                  if(checkResult.length > 0)return next(createError.BadRequest('already sent request for this same optional review!'));
-
-                  // insert into optional_review_request
-                  let sql1 = "insert into optional_review_requests (team_id,project_id,team_lead,review_date,start_time,mentor_reg_num,reason,status) values(?,?,?,?,?,?,?,?)";
-                  db.query(sql1,[team_id,project_id,team_lead,review_date,start_time,mentor_reg_num,reason,'pending'],(error,result) => {
-                    if(error)return next(error);
-                    if(result.affectedRows === 0)return next(createError.BadRequest('an error occured while inserting into optional review requests!'));
-                    res.send('optional review request sent successfully to the mentor')
-                  })
-                })
-              }
-            });
-          });
-        };
-
-        // Optional path
-        if (isOptional === "optional") {
-          if (result1.length !== 1) {
-            return next(createError.BadRequest("You're not eligible for an optional review."));
-          }
-
-          const sql3 = "SELECT week8 FROM weekly_logs_deadlines WHERE team_id = ?";
-          db.query(sql3, [team_id], (error, week8Date) => {
-            if (error) return next(error);
-            if (!week8Date || week8Date.length === 0) return next(createError.NotFound("Week 8 deadline not found!"));
-
-            const week8 = new Date(week8Date[0].week8);
-            today.setHours(0, 0, 0, 0);
-            week8.setHours(0, 0, 0, 0);
-
-            if (today < week8) {
-              return next(createError.BadRequest("YOU CAN'T APPLY FOR OPTIONAL REVIEW BEFORE WEEK8 DEADLINE!"));
-            }
-
-            continueWithRequest("optional");
-          });
-
-        } else {
-          const review_title = result1.length === 0 ? "1st_review" : "2nd_review";
-          continueWithRequest(review_title);
+        if (!result || result.length === 0) {
+          return next(createError.BadRequest("Guide or expert reg_num not found!"));
         }
 
+        const expert_reg_num = result[0].sub_expert_reg_num;
+        const guide_reg_num = result[0].guide_reg_num;
+
+        // Check how many reviews already done
+        const sql2 = "SELECT * FROM scheduled_reviews WHERE team_id = ?";
+        db.query(sql2, [team_id], (error, result1) => {
+          if (error) return next(error);
+          if (result1.length >= 2) return next(createError.BadRequest("Your team already completed 2 reviews."));
+
+          // Helper function for common flow after eligibility
+          const continueWithRequest = (review_title) => {
+            const weekToCheck = result1.length === 0 ? 3 : 6;
+            const weekSql = "SELECT * FROM weekly_logs_verifications WHERE week_number = ? AND is_verified = true AND team_id = ?";
+            db.query(weekSql, [weekToCheck, team_id], (error, verificationResult) => {
+              if (error) return next(error);
+              if (verificationResult.length === 0) {
+                return next(createError.BadRequest(`You are not eligible to apply for the review request. Week ${weekToCheck} log not verified.`));
+              }
+
+              const checkSql = "SELECT * FROM review_requests WHERE review_date = ? AND start_time = ? AND expert_reg_num = ? AND guide_reg_num = ? AND team_id = ?";
+              db.query(checkSql, [formattedDate, start_time, expert_reg_num, guide_reg_num, team_id], (error, existingResult) => {
+                if (error) return next(error);
+                if (existingResult.length > 0) {
+                  return next(createError.BadRequest("Review request already exists for this slot!"));
+                }
+
+                if(review_title !== 'optional')
+                {
+                  const insertSql = `
+                  INSERT INTO review_requests
+                  (team_id, project_id, project_name, team_lead, review_date, start_time, expert_reg_num, guide_reg_num, review_title)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+                  db.query(insertSql, [team_id, project_id, project_name, team_lead, formattedDate, start_time, expert_reg_num, guide_reg_num, 'optional_review'], (error, result) => {
+                    if (error) return next(error);
+                    if (result.affectedRows === 0) return res.status(500).json({ message: "Insertion failed!" });
+                    return res.send(`${formattedDate} - ${start_time}: Review request submitted successfully.`);
+                  });
+                }
+                else if(review_title === 'optional'){
+                  // send request to mentor to accept the genuie reason
+                  
+                  // checks already sent this request to the mentor
+                  let sql = "select * from option_review_requests where team_id = ? review_date = ? start_time = ? and mentor_reg_num = ?";
+                  db.query(sql,[team_id,review_date,start_time,mentor_reg_num],(error,checkResult) => {
+                    if(error)return next(error);
+                    if(checkResult.length > 0)return next(createError.BadRequest('already sent request for this same optional review!'));
+
+                    // insert into optional_review_request
+                    let sql1 = "insert into optional_review_requests (team_id,project_id,team_lead,review_date,start_time,mentor_reg_num,reason,status) values(?,?,?,?,?,?,?,?)";
+                    db.query(sql1,[team_id,project_id,team_lead,review_date,start_time,mentor_reg_num,reason,'pending'],(error,result) => {
+                      if(error)return next(error);
+                      if(result.affectedRows === 0)return next(createError.BadRequest('an error occured while inserting into optional review requests!'));
+                      res.send('optional review request sent successfully to the mentor')
+                    })
+                  })
+                }
+              });
+            });
+          };
+
+          // Optional path
+          if (isOptional === "optional") {
+            if (result1.length !== 1) {
+              return next(createError.BadRequest("You're not eligible for an optional review."));
+            }
+
+            const sql3 = "SELECT week8 FROM weekly_logs_deadlines WHERE team_id = ?";
+            db.query(sql3, [team_id], (error, week8Date) => {
+              if (error) return next(error);
+              if (!week8Date || week8Date.length === 0) return next(createError.NotFound("Week 8 deadline not found!"));
+
+              const week8 = new Date(week8Date[0].week8);
+              today.setHours(0, 0, 0, 0);
+              week8.setHours(0, 0, 0, 0);
+
+              if (today < week8) {
+                return next(createError.BadRequest("YOU CAN'T APPLY FOR OPTIONAL REVIEW BEFORE WEEK8 DEADLINE!"));
+              }
+
+              continueWithRequest("optional");
+            });
+
+          } else {
+            const review_title = result1.length === 0 ? "1st_review" : "2nd_review";
+            continueWithRequest(review_title);
+          }
+
+        });
       });
-    });
+      })
 
   } catch (error) {
     next(error);
@@ -1053,6 +1062,55 @@ router.get('/student/get_guide_expert/:team_id/:role',(req,res,next) => {
       })
     })
     
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+// challenge review -> requested by the team_leader 
+// review_id -> not satisfied review's id
+router.post('student/challenge_review/request/:team_id/:project_id/:reg_num/:review_id',(req,res,next) => {
+  try{
+    const{team_id,reg_num,review_id} = req.params;
+    if(!team_id || !reg_num || !review_id)return next(createError.BadRequest('team_id or reg_num or review_id is not defined!'));
+    // checking whether he is a team leader
+    let sql0 = "select is_leader from teams where team_id = ? and reg_num = ?";
+    db.query(sql0,[team_id,reg_num],(error0,result0) => {
+      if(error0)return next(error0);
+      if(result0.length === 0)return next(createError.NotFound('student leader status not found!'));
+      if(!result0[0].is_leader)return res.send('YOU CANT REQUEST FOR CHALLENGE REVIEW, ONLY YOUR TEAM LEADER CAN APPLY FOR IT')
+    })
+    // Challenge review can be applied only within 7 days after each review
+    let sql1 = "SELECT * FROM scheduled_reviews WHERE review_id = ?";
+    db.query(sql1, [review_id], (error1, result1) => {
+      if (error1) return next(error1);
+      if (result1.length === 0) return next(createError.NotFound('review_date not found'));
+
+      const review_date = new Date(result1[0].review_date);
+      const today = new Date();
+
+      // Normalize both dates to remove time component
+      review_date.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+
+      const diffInDays = (today - review_date) / (1000 * 60 * 60 * 24); // ms → days
+
+      if (diffInDays > 7) {
+        return next(createError.BadRequest('Challenge review time limit exceeded!'));
+      }
+
+      // checks whether marks updated for this review id so that only he can apply for challenge reivew -> marks dissatisfactory
+      let sql2 = 'select * from review_marks_team where team_id = ? and review_title = ? and review_date = ?';
+      db.query(sql2,[team_id,result1[0].review_title,result1[0].review_date],(error2,result2) => {
+        if(error2)return next(error2);
+        if(error2.length === 0)return next(createError.BadRequest('Since guide or expert have not updated marks for your team, you cannot request for challenge review'))
+
+        // insert into challenge review request
+        let sql3 = "insert into challenge_review_requests (team_id)"
+      })
+});
   }
   catch(error)
   {
