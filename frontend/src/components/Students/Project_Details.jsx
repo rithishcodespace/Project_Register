@@ -179,8 +179,8 @@ useEffect(() => {
     async function fetchExpertsAndGuides() {  
       try {
         const [expertRes, guideRes] = await Promise.all([
-          instance.get('/admin/get_users/sub_expert',{withCredentials:true}),
-          instance.get('/admin/get_users/guide',{withCredentials:true}),
+          instance.get('/admin/get_users/staff',{withCredentials:true}),
+          instance.get('/admin/get_users/staff',{withCredentials:true}),
         ]);
 
         if (expertRes.status === 200) setExpertsList(expertRes.data);
@@ -219,7 +219,7 @@ useEffect(() => {
     try {
       // Step 1: Submit project
       const response = await instance.post(
-        `http://localhost:1234/student/addproject/${userselector.project_type}/${userselector.reg_num}`,
+        `/student/addproject/${userselector.project_type}/${teamselector[0].team_id}/${userselector.reg_num}`,
         {
           "project_name":projectName,
           "cluster":clusterName,
