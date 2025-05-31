@@ -12,8 +12,7 @@ function InviteForm({ inviteForm, handleInviteChange, setIsInviteOpen }) {
     const accessToken = localStorage.getItem("accessToken");
 
     try {
-      const response = await instance.post(
-        "/student/join_request",
+      const response = await instance.post("/student/join_request",
         {
           from_reg_num: selector.reg_num,           // sender
           to_reg_num: inviteForm.registerNumber     // receiver
