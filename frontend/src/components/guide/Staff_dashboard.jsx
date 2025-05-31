@@ -11,28 +11,37 @@ function Staff_dashboard() {
   const [reasonMap, setReasonMap] = useState({});
   const reg_num = useSelector((state) => state.userSlice.reg_num);
   const semester = 5; // You may dynamically get this from user or team info
+  const [Teams,setTeams] = useState([]);
 
   const fetchRequests = async () => {
     try {
-      const [guideRes, expertRes] = await Promise.all([
-        instance.get(`/guide/getrequests/${reg_num}`),
-        instance.get(`/expert/getrequests/${reg_num}`),
-      ]);
+      const results = await Promise.allSettled([
+  instance.get(`/guide/getrequests/${reg_num}`),
+  instance.get(`/expert/getrequests/${reg_num}`),
+  instance.get(`/guide/fetch_guiding_teams/${reg_num}`),
+]);
 
-      setGuideRequests(typeof guideRes.data === 'string' ? [] : guideRes.data);
-      setExpertRequests(typeof expertRes.data === 'string' ? [] : expertRes.data);
+const [guideRes, expertRes, teamRes] = results;
+
+if (guideRes.status === "fulfilled") {
+  setGuideRequests(typeof guideRes.value.data === 'string' ? [] : guideRes.value.data);
+}
+if (expertRes.status === "fulfilled") {
+  setExpertRequests(typeof expertRes.value.data === 'string' ? [] : expertRes.value.data);
+}
+if (teamRes.status === "fulfilled") {
+  setTeams(typeof teamRes.value.data === 'string' ? [] : teamRes.value.data);
+}
+
     } catch (error) {
       console.error("Error fetching requests:", error);
     }
   };
 
+useEffect(() => {
+  fetchRequests(); // Fetch all three APIs when component mounts
+}, []);
 
-
-  useEffect(() => {
-    if (showNotifications||!showNotifications) {
-      fetchRequests();
-    }
-  }, [showNotifications]);
 
   const handleAction = async (type, status, team_id) => {
     const reason = reasonMap[`${type}_${team_id}`];
@@ -96,7 +105,7 @@ function Staff_dashboard() {
       />
     </div>
   );
-
+console.log(Teams);
   return (
     <div className="p-6 relative">
       <div className="flex justify-between items-center">
