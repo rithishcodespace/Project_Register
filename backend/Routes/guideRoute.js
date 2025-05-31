@@ -5,7 +5,6 @@ const nodemailer = require("nodemailer");
 const db = require("../db");
 const userAuth = require("../middlewares/userAuth");
 
-// gets the request recevied by the guide
 
 router.get("/guide/getrequests/:reg_num",userAuth,(req,res,next) => {
     try{
@@ -23,7 +22,7 @@ router.get("/guide/getrequests/:reg_num",userAuth,(req,res,next) => {
     catch(error)
     {
        next(error);
-    }
+    } 
 })
 
 // update status -> accept or reject
@@ -567,7 +566,7 @@ router.get("/guide/get_queries/:guide_reg_num",userAuth,(req,res,next) => {
 
 // fetches team details mentored by me -> 1st
 router.get("/guide/fetch_guiding_teams/:guide_id",userAuth,(req,res,next) => {
-    try{
+    try{  
       const{guide_id} = req.params;
       if(!guide_id)
       {

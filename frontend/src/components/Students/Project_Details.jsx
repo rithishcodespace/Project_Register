@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import instance from '../../utils/axiosInstance';
 import { useSelector } from 'react-redux';
-import Select from 'react-select';
+import { Select } from '@mui/material';
 
 // Helper component: Loading Spinner
 const LoadingSpinner = () => (
