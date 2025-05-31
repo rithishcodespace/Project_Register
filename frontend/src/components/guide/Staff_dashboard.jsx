@@ -30,7 +30,7 @@ if (expertRes.status === "fulfilled") {
   setExpertRequests(typeof expertRes.value.data === 'string' ? [] : expertRes.value.data);
 }
 if (teamRes.status === "fulfilled") {
-  setTeams(typeof teamRes.value.data === 'string' ? [] : teamRes.value.data);
+  setTeams(res.data);
 }
 
     } catch (error) {
