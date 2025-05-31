@@ -1121,7 +1121,7 @@ router.post('/student/challenge_review/request/:team_id/:project_id/:reg_num/:re
 // show already submitted progress -> to update => 1st
 router.get('/student/view_submitted_progress/:team_id/:reg_num/:week',(req,res,next) => {
   try{
-    const{reg_num,week} = req.params;
+    const{reg_num,week,team_id} = req.params;
     if(!team_id || !reg_num || !week)return next(createError.BadRequest('some parameters are missing!'));
     let sql = `SELECT 
                 t.team_id,
@@ -1155,11 +1155,21 @@ router.get('/student/view_submitted_progress/:team_id/:reg_num/:week',(req,res,n
               LEFT JOIN weekly_logs_verification w11 ON t.team_id = w11.team_id AND w11.week_number = 11
               LEFT JOIN weekly_logs_verification w12 ON t.team_id = w12.team_id AND w12.week_number = 12
               WHERE t.reg_num = '?';`;
-    db.query(sql,[reg_num],(error,result) => {
+    db.query(sql,[reg_num],(error,result) => { // week name
       if(error)return next(error);
       if(result.length === 0)return next(result[0].last_unverified_week);
-      let sql1 = `select ${result[0].last_unverified_week} where team_id = ?`;
-      db.query(sql)
+      const progressColumn = result[0].last_unverified_week;
+
+      if (progressColumn === 'No unverified progress') {
+        return res.send({ message: 'All weeks verified or no progress submitted.' });
+      }
+
+      let sql1 = `SELECT ${progressColumn} AS progress FROM teams WHERE team_id = ?`;
+      db.query(sql,[team_id],(error1,result1) => { // week progress
+        if(error1)return next(error1);
+        if(result.length === 0)return next(createError.NotFound('weekly progress not found!'));
+        res.status(200).json({"message":"progress fetches successfully","progress":result1[0].progress,"week_name":progressColumn});
+      })
 
     })          
   }
@@ -1170,19 +1180,32 @@ router.get('/student/view_submitted_progress/:team_id/:reg_num/:week',(req,res,n
 })
 
 // edit already updated progress => 2nd
+// week will be from 1st api's response
 
 router.patch('/student/edit_submitted_progress/:team_id/:week/:reg_num',(req,res,next) => {
   try{
     const{team_id,week,reg_num} = req.params;
-    if(!team_id || !week || !reg_num)
+    const{newProgress} = req.body;
+    if(!team_id || !week || !reg_num || !newProgress)
     {
       return next(createError.BadRequest('parameters not found!'));
     }
-    let 
+    const allowedWeeks = ["week1_progress", "week2_progress", "week3_progress", "week4_progress", "week5_progress", "week6_progress", "week7_progress", "week8_progress", "week9_progress", "week10_progress", "week11_progress", "week12_progress"];
+
+    if (!allowedWeeks.includes(week)) {
+      return next(createError.BadRequest("Invalid week field!"));
+    }
+    
+    let sql = `update teams set ${week} = ? where reg_num = ? and team_id = ?`;
+    db.query(sql,[newProgress,reg_num,team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.affectedRows === 0)return next(createError.BadRequest('failed to update!'));
+      res.send('progress updated successfully!');
+    })
   }
   catch(error)
   {
-
+    next(error);
   }
 })
 
