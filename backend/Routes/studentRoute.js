@@ -863,15 +863,15 @@ router.post("/student/addproject/:project_type/:team_id/:reg_num", userAuth,(req
 
           // inserting into projects
   
-          const sql1 = ` INSERT INTO projects (project_id,project_name,project_type,cluster,description,outcome,hard_soft,tl_reg_num) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-          const values = [project_id,project_name,project_type,cluster,description,outcome,hard_soft,reg_num];
+          const sql1 = ` INSERT INTO projects (project_id,project_name,project_type,cluster,description,outcome,hard_soft,tl_reg_num,team_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+          const values = [project_id,project_name,project_type,cluster,description,outcome,hard_soft,reg_num,team_id];
           db.query(sql1,values,(error,result) => {
             if(error)return next(error);
             if(result.affectedRows === 0)return next(createError.BadRequest("an error occured silently!"));
 
             // inserts the project_id to the team in teams table
             let insertSql = "UPDATE teams SET project_id = ? WHERE team_id = ?";
-            db.query(insertSql,[team_id,project_id],(error,result) => {
+            db.query(insertSql,[project_id,team_id],(error,result) => {
               if(error)return next(error);
               if(result.affectedRows === 0)return next(createError.BadRequest("no rows inserted!"));
               res.send(`Project inserted successfully for the team :- ${team_id} -> project_id :- ${project_id}`);
