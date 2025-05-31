@@ -321,23 +321,142 @@ router.post("/sub_expert/add_review_details/:request_id/:status/:expert_reg_num/
     }
 })
 
-// marks attendance
-// router.patch("/sub_expert/mark_attendance/:team_id",userAuth,(req,res,send) => {
-//     try{
-//       const{team_id} = req.params;
-//       if(!team_id) return next(createError.BadRequest("team_id is missing!"));
-//       let sql = "update scheduled_reviews set attendance = 'present' where team_id = ?";
-//       db.query(sql,[team_id],(error,result) => {
-//         if(error) return next(error);
-//         if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
-//         res.send("attendance marked successfully!");
-//       })
-//     }
-//     catch(error)
-//     {
-//       next(error);
-//     }
-// })
+// adds marks for an individual person
+
+router.post('/guide/review/add_marks_to_individual/:expert_reg_num/:reg_num',(req,res,next) => {
+  try{
+    const{expert_reg_num,reg_num} = req.params;
+    const{team_id,review_title,review_date,expert_oral_presentation,expert_viva_voce_and_ppt,expert_contributions,expert_guide_marks,expert_remarks} = req.body;
+    if(!review_title || !review_date || !expert_reg_num || !reg_num || !team_id)return next(createError.BadRequest('guide register number or student register number is missing!'));
+    if(!expert_oral_presentation || !expert_viva_voce_and_ppt || !expert_contributions || !expert_guide_marks || !expert_remarks){
+      return next(createError.BadRequest('data is missing!'));
+    }
+
+    const validReview_titles = ['1st_review', '2nd_review', 'optional_review'];
+    if (!validReview_titles.includes(review_title)){
+      return next(createError.BadRequest('Invalid review title!'));
+    }
+
+    const reviewDate = new Date(review_date);
+    const currentDate = new Date();
+    const diffInMs = currentDate - reviewDate;
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+    if (diffInDays > 6) {
+      return next(createError.Forbidden('Marks can only be entered within 6 days after the review.'));
+    }
+    
+    // check if already added
+    const checkSql = "SELECT * FROM review_marks_individual WHERE team_id = ? AND review_date = ? AND review_title = ? and expert_reg_num = ?";
+    db.query(checkSql, [team_id, review_date, review_title,expert_reg_num], (error, Checkresult) => {
+    if (error) return next(error);
+    if (Checkresult.length > 0 && Checkresult[0].total_expert_marks !== null) {
+      return next(createError.BadRequest("Review marks already updated!"));
+    }
+
+     const total_expert_marks = parseInt(expert_oral_presentation) + parseInt(expert_viva_voce_and_ppt) + parseInt(expert_contributions)
+
+    const fetchGuideSql = `SELECT * FROM review_marks_individual WHERE review_title = ? AND review_date = ? AND team_id = ? and expert_reg_num = ?`;
+    db.query(fetchGuideSql, [review_title, review_date, team_id,expert_reg_num], (err, result) => {
+      if (err) return next(err);
+      if (result.length === 0) {
+          // not present so insert
+          const insertSql = "insert into review_marks_individual (review_title,review_date,team_id, expert_oral_presentation,expert_viva_voce_and_ppt,expert_contributions,total_marks,total_expert_marks,expert_remarks) values (?,?,?,?,?,?,?,?,?)";
+          const values = [
+          review_title,
+          review_date,
+          team_id,
+          expert_oral_presentation,
+          expert_viva_voce_and_ppt,
+          expert_contributions,
+          total_expert_marks,
+          total_expert_marks, // since we are inserting no guide mark present
+          expert_remarks,
+        ];
+        db.query(insertSql,values,(error,result) => {
+          if(error)return next(error);
+          if(result.affectedRows === 0)return next(createError.InternalServerError("Failed to insert review marks."));
+          return res.send({ message: "expert marks updated successfully!", total_marks: total_expert_marks });
+        })
+        return;
+      }
+      const total_guide_marks = result[0].total_guide_marks || 0;
+      const total_marks = total_guide_marks + total_expert_marks;
+
+      const updateSql = `
+        UPDATE review_marks_team SET
+          expert_oral_presentation = ?,
+          expert_viva_voce_and_ppt = ?,
+          expert_contributions = ?,
+          total_expert_marks = ?,
+          total_marks = ?,
+          expert_remarks = ?
+        WHERE review_title = ? AND review_date = ? AND team_id = ? and expert_reg_num = ?
+      `;
+
+      const values = [
+        expert_oral_presentation,
+        expert_viva_voce_and_ppt,
+        expert_contributions,
+        total_expert_marks,
+        total_expert_marks,
+        total_marks,
+        expert_remarks,
+        review_title,
+        review_date,
+        team_id,
+        expert_reg_num
+      ];
+
+      db.query(updateSql, values, (err, result) => {
+        if (err) return next(err);
+        if (result.affectedRows === 0) {
+          return next(createError.BadRequest("No matching record found to update."));
+        }
+
+        res.send({ message: "Expert marks updated successfully!", total_marks });
+      });
+    })
+  })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+
+// marks attendance -> can be marked withing two days of the review
+router.patch("/sub_expert/mark_attendance/:review_id",userAuth,(req,res,next) => {
+    try{
+      const{review_id} = req.params;
+      if(!review_id) return next(createError.BadRequest("review_id is missing!"));
+      // validating 2 days
+      let sql0 = "select review_date from scheduled_reviews where review_id = ?";
+      db.query(sql0,[review_id],(error0,result0) => {
+        if(error0)return next(error0);
+        if(result0.length === 0)return next(createError.NotFound('review_Date not found!'));
+        const review_date = new Date(result0[0].review_date);
+        const today = new Date();
+
+        review_date.setHours(0,0,0,0);
+        today.setHours(0,0,0,0);
+
+        const diffInDays = (today - review_date) / (1000 * 60 * 60 * 24); // convert ms to days
+
+        if (diffInDays > 2) return next(createError.BadRequest('Mark attendance time limit exceeded!'));
+        let sql = "update scheduled_reviews set attendance = 'present' where review_id = ?";
+        db.query(sql,[review_id],(error,result) => {
+          if(error) return next(error);
+          if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
+          res.send("attendance marked successfully!");
+        })
+      })
+    }
+    catch(error)
+    {
+      next(error);
+    }
+})
 
 
 // adds detaied marks to rubix -> also inserts total mark for the review guide_mark and expert_mark to the scheduled_Review table

@@ -202,9 +202,9 @@ router.patch("/guide/accept_reject/:status/:team_id/:semester/:my_id",userAuth, 
 // conforming review request -> sent by the team, both guide and expert should accept
 router.post("/guide/add_review_details/:request_id/:status/:guide_reg_num/:team_id",userAuth,(req,res,next) => {
     try{
-      const{project_id,project_name,team_lead,review_date,start_time,review_title} = req.body;
+      const{project_id,project_name,team_lead,review_date,start_time,review_no} = req.body;
       const{request_id,status,guide_reg_num,team_id} = req.params;
-      if(!project_id || !project_name || !team_lead || !review_date || !guide_reg_num || !start_time || !request_id || !status || !team_id || !review_title)
+      if(!project_id || !project_name || !team_lead || !review_date || !expert_reg_num || !start_time || !request_id || !status || !team_id || !review_no)
       {
         return next(createError.BadRequest("data is missing!"));
       }
@@ -229,8 +229,8 @@ router.post("/guide/add_review_details/:request_id/:status/:guide_reg_num/:team_
             const expert_reg_num = result[0].expert_reg_num;
 
             // inserting into scheduled reivews
-            let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id,review_title) values(?,?,?,?,?,?,?,?,?)";
-            db.query(sql,[project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id,review_title],(error,result) => {
+            let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id,review_no) values(?,?,?,?,?,?,?,?,?)";
+            db.query(sql,[project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id,review_no],(error,result) => {
               if(error) return next(error);
               if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
               // removing request from the review requests
@@ -278,7 +278,7 @@ router.get("/guide/fetch_review_requests/:guide_reg_num",userAuth,(req,res,next)
   try{
     const{guide_reg_num} = req.params;
     if(!guide_reg_num)return next(createError.BadRequest("guide id is undefined!"));
-    let sql = "select * from review_requests where guide_reg_num = ? and status = 'interested' and current_timestamp() <= reveiw_date";
+    let sql = "select * from review_requests where guide_reg_num = ? and status = 'interested'";
     db.query(sql,[guide_reg_num],(error,result) => {
       if(error)return next(error);
       return res.send(result);
@@ -631,7 +631,7 @@ router.get('/guide/gets_the_progress_updated_team_members/:team_id',(req,res,nex
   try{
     const{team_id} = req.params;
     if(!team_id)return next(createError.BadRequest('team_id not found!'));
-    let sql = "SELECT MAX(week_number) AS latest_week FROM weekly_logs_verification WHERE team_id = ? and is_verified = false";
+    let sql = "SELECT MAX(week_number) AS latest_week FROM weekly_logs_verification WHERE team_id = ?";
     db.query(sql,[team_id],(error,week_number) => {
       if(error)return next(error);
       if(week_number.length === 0)return next(createError.BadRequest('week_no not found!'));

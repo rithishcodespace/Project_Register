@@ -111,19 +111,19 @@ function sendReminderToTeam(team_id) {
 
 
 // cron to mark attendence as absent
-// runs at 10:00 PM every day
-cron.schedule('0 22 * * *', () => {
-  const sql = `
-    UPDATE scheduled_reviews SET attendance = 'absent' WHERE attendance IS NULL AND review_date = CURDATE() AND TIMESTAMP(review_date, start_time) < NOW()
-  `;
+// Run every 10 minutes
+
+cron.schedule("*/10 * * * *", () => {
+  console.log("Running cron job to mark absent...");
+
+  const sql = `UPDATE scheduled_reviews SET attendance = 'absent' WHERE attendance IS NULL AND (review_date < CURDATE() OR (review_date = CURDATE() AND start_time < CURTIME()))`;
 
   db.query(sql, (err, result) => {
     if (err) {
-      console.error("Failed to mark absentees:", err.message);
-    } else if (result.affectedRows > 0) {
-      console.log(`Marked ${result.affectedRows} teams as absent.`);
+      console.error("Error running absentee cron job:", err);
+    } else {
+      console.log("Absent marking complete. Rows affected:", result.affectedRows);
     }
   });
-},{
-  timezone: "Asia/Kolkata"
 });
+
