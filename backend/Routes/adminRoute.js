@@ -203,7 +203,67 @@ router.patch("/admin/update_deadline/:week/:team_id",userAuth,(req,res,next) => 
   }
 })
 
+// fetches the challenge_review_request sent by teams
+router.get('/admin/challenge_review/get_requests',(req,res,next) => {
+  try{
+    let sql = "select * from challenge_review_requests where status = 'pending'";
+    db.query(sql,(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return res.send(`No pending review requests found!`);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
+// accept or reject the challenge review
+router.patch('/admin/challenge_review/accept_or_reject/:status/:request_id',(req,res,next) => {
+  try{
+    const{status,request_id} = req.params;
+    if(!status || !request_id)return next(createError.BadRequest('status or request id not found!'));
+    const safeStatus = status.toLowerCase();
+    const validStatus = ['accept','reject'];
+    if(!validStatus.includes(safeStatus))return next(createError.BadRequest('invalid status!'));
+    let sql = "update challenge_review_requests set status = ? where request_id = ?";
+    db.query(sql,[status,request_id],(error,result) => {
+      if(error)return next(error);
+      if (result.affectedRows === 0) return next(createError.BadRequest('No rows were affected!'));
+      res.send(`${request_id} :- ${status}ed`);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+//fetches the available guides and experts who does not have slot on that day
+// once the admin selects the date -> this api should be immediately called =x=
+router.get('/admin/challenge_review/get_available_guides_experts/:review_date',(req,res,next) => {
+  try{
+    const{review_date} = req.params;
+    if(!review_date)return next(createError.BAd)
+    // fetch all guides and experts
+    let sql = "select name,reg_num from users where role = 'staff'";
+    db.query(sql,(error,staffs) => {
+      if(error)return next(error);
+      if(staffs.length === 0)return next(createError.NotFound('staffs not found!'));
+      // staffs who dont have slot on that day
+      let sql1 = `SELECT name, reg_num FROM users WHERE role = 'staff' AND reg_num NOT IN (SELECT guide_reg_num FROM scheduled_reviews WHERE review_date = ? UNION SELECT expert_reg_num FROM scheduled_reviews WHERE review_date = ?)`;
+      db.query(sql1,[])
+    })
+  }
+  catch(error)
+  {
+
+  }
+})
+
+
+// assign expert and guide for challenge_review_requests
 
 
 // get project through project_id

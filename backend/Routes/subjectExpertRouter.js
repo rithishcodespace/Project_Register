@@ -425,23 +425,38 @@ router.post('/guide/review/add_marks_to_individual/:expert_reg_num/:reg_num',(re
 })
 
 
-// marks attendance
-// router.patch("/sub_expert/mark_attendance/:team_id",userAuth,(req,res,send) => {
-//     try{
-//       const{team_id} = req.params;
-//       if(!team_id) return next(createError.BadRequest("team_id is missing!"));
-//       let sql = "update scheduled_reviews set attendance = 'present' where team_id = ?";
-//       db.query(sql,[team_id],(error,result) => {
-//         if(error) return next(error);
-//         if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
-//         res.send("attendance marked successfully!");
-//       })
-//     }
-//     catch(error)
-//     {
-//       next(error);
-//     }
-// })
+// marks attendance -> can be marked withing two days of the review
+router.patch("/sub_expert/mark_attendance/:review_id",userAuth,(req,res,next) => {
+    try{
+      const{review_id} = req.params;
+      if(!review_id) return next(createError.BadRequest("review_id is missing!"));
+      // validating 2 days
+      let sql0 = "select review_date from scheduled_reviews where review_id = ?";
+      db.query(sql0,[review_id],(error0,result0) => {
+        if(error0)return next(error0);
+        if(result0.length === 0)return next(createError.NotFound('review_Date not found!'));
+        const review_date = new Date(result0[0].review_date);
+        const today = new Date();
+
+        review_date.setHours(0,0,0,0);
+        today.setHours(0,0,0,0);
+
+        const diffInDays = (today - review_date) / (1000 * 60 * 60 * 24); // convert ms to days
+
+        if (diffInDays > 2) return next(createError.BadRequest('Mark attendance time limit exceeded!'));
+        let sql = "update scheduled_reviews set attendance = 'present' where review_id = ?";
+        db.query(sql,[review_id],(error,result) => {
+          if(error) return next(error);
+          if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
+          res.send("attendance marked successfully!");
+        })
+      })
+    }
+    catch(error)
+    {
+      next(error);
+    }
+})
 
 
 // adds detaied marks to rubix -> also inserts total mark for the review guide_mark and expert_mark to the scheduled_Review table
