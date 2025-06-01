@@ -144,6 +144,22 @@ const handleGuideChange = (selectedOptions) => {
   setSelectedGuides(selectedRegNums);
 };
 
+// Filtered options to ensure no overlap
+const filteredExpertOptions = expertsList
+  .filter(expert => !selectedGuides.includes(expert.reg_num)) // exclude selected guides
+  .map((expert) => ({
+    value: expert.reg_num,
+    label: `${expert.name} (${expert.reg_num})`,
+  }));
+
+const filteredGuideOptions = guidesList
+  .filter(guide => !selectedExperts.includes(guide.reg_num)) // exclude selected experts
+  .map((guide) => ({
+    value: guide.reg_num,
+    label: `${guide.name} (${guide.reg_num})`,
+  }));
+
+
 
 
     useEffect(() => {
@@ -364,35 +380,36 @@ return (
             />
           </div>
 
-          {/* Expert Selection */}
-           <div className="mb-6 bg-white">
-    <h3 className="text-md bg-white font-medium mb-2">Select Subject Experts:</h3>
-    <Select
-      options={expertOptions}
-      isMulti
-      onChange={handleExpertChange}
-      value={expertOptions.filter(option => selectedExperts.includes(option.value))}
-      placeholder="Select experts..."
-      className="basic-multi-select"
-      classNamePrefix="select"
-      filterOption={customFilter} // custom search logic
-    />
-  </div>
+          {/* Subject Experts Dropdown */}
+<div className="mb-6 bg-white">
+  <h3 className="text-md bg-white font-medium mb-2">Select Subject Experts:</h3>
+  <Select
+    options={filteredExpertOptions}
+    isMulti
+    onChange={handleExpertChange}
+    value={filteredExpertOptions.filter(option => selectedExperts.includes(option.value))}
+    placeholder="Select experts..."
+    className="basic-multi-select"
+    classNamePrefix="select"
+    filterOption={customFilter}
+  />
+</div>
 
-          {/* Guide Selection */}
-         <div className="mb-6 bg-white">
-    <h3 className="text-md bg-white font-medium mb-2">Select Guides:</h3>
-    <Select
-      options={guideOptions}
-      isMulti
-      onChange={handleGuideChange}
-      value={guideOptions.filter(option => selectedGuides.includes(option.value))}
-      placeholder="Select guides..."
-      className="basic-multi-select"
-      classNamePrefix="select"
-      filterOption={customGuideFilter}
-    />
-  </div>
+{/* Guides Dropdown */}
+<div className="mb-6 bg-white">
+  <h3 className="text-md bg-white font-medium mb-2">Select Guides:</h3>
+  <Select
+    options={filteredGuideOptions}
+    isMulti
+    onChange={handleGuideChange}
+    value={filteredGuideOptions.filter(option => selectedGuides.includes(option.value))}
+    placeholder="Select guides..."
+    className="basic-multi-select"
+    classNamePrefix="select"
+    filterOption={customGuideFilter}
+  />
+</div>
+
 
           <div className="text-center bg-white ">
             <button

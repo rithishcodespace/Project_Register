@@ -565,25 +565,24 @@ router.get("/guide/get_queries/:guide_reg_num",userAuth,(req,res,next) => {
 })
 
 // fetches team details mentored by me -> 1st
-router.get("/guide/fetch_guiding_teams/:guide_id",userAuth,(req,res,next) => {
-    try{
-      const{guide_id} = req.params;
-      if(!guide_id)
-      {
-        return next(createError.BadRequest("guide id not found!"));
-      }
+router.get("/guide/fetch_guiding_teams/:guide_id", userAuth, (req, res, next) => {
+  try {
+    const { guide_id } = req.params;
+    if (!guide_id) {
+      return next(createError.BadRequest("guide id not found!"));
+    }
+
     let sql = "select * from guide_requests where to_guide_reg_num = ? and status = 'accept'";
-    db.query(sql,[guide_id],(error,teams) => {
-        if(error)return next(error);
-        if(teams.length == 0)return res.send("No Teams found!");
-        res.send(result);
-    })
-    }
-    catch(error)
-    {
-       next(error);
-    }
-})
+    db.query(sql, [guide_id], (error, teams) => {
+      if (error) return next(error);
+      if (teams.length === 0) return res.send("No Teams found!");
+      res.send(teams); // ✅ fixed this line
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 
 // fetches the no of weeks verified -> particular team_id
 

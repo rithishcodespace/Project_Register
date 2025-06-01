@@ -219,7 +219,7 @@ router.get("/sub_expert/fetch_teams/:expert_id",(req,res,next) => {
     let sql = "select * from sub_expert_requests where to_expert_reg_num = ? and status = 'accept'";
     db.query(sql,[expert_id],(error,result) => {
         if(error)return next(error);
-        if(result.length == 0)res.send("No Teams found!");
+        if(result.length == 0) return res.send("No Teams found!");
         res.send(result);
     })
     }
