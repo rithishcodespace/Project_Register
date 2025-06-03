@@ -172,7 +172,7 @@ CREATE TABLE review_requests (
   project_name VARCHAR(100) NOT NULL,
   team_lead VARCHAR(50) NOT NULL,
   review_date DATE DEFAULT NULL,
-  reveiw_title VARCHAR(100) NOT NULL,
+  review_title VARCHAR(100) NOT NULL,
   start_time TIME DEFAULT NULL,
   guide_status VARCHAR (100) DEFAULT 'interested',
   expert_status VARCHAR(100) default 'interested'
