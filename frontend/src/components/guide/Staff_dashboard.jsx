@@ -215,13 +215,13 @@ function Staff_dashboard() {
               </thead>
               <tbody>
                 {GuideTeams.map((team) => (
-<tr
-  key={team.from_team_id}
-  className="bg-white hover:bg-gray-100 cursor-pointer"
-  onClick={() => navigate(`team-details/${team.from_team_id}`)}
->
+                  <tr
+                    key={team.from_team_id}
+                    className="bg-white hover:bg-gray-100 cursor-pointer"
+                    onClick={() => navigate(`team-details/${team.from_team_id}`)}
+                  >
 
-                    <td className="px-4 py-2 border-b bg-white">{team.from_team_id}</td> 
+                    <td className="px-4 py-2 border-b bg-white">{team.from_team_id}</td>
                     <td className="px-4 py-2 border-b bg-white">{team.project_name}</td>
                     <td className="px-4 py-2 border-b bg-white">{team.team_semester}</td>
                     <td className="px-4 py-2 gap-10 flex  border-b bg-white">

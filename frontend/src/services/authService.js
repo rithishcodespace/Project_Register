@@ -18,10 +18,10 @@ export const getProfile = async (dispatch, navigate) => {
       }
     } else {
       console.error("Failed to fetch profile:", response.status);
-      navigate("/login");
     }
   } catch (error) {
     console.error("Error fetching profile:", error.response?.data?.message || error.message);
+      navigate("/login");
   }
 };
 
