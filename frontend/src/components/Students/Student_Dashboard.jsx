@@ -366,7 +366,7 @@ return (
         <p className=' bg-white '><strong className=' bg-white '>Leader:</strong> {selector.name}</p>
         <p className=' bg-white '><strong className=' bg-white '>Email:</strong> {selector.emailId}</p>
         <p className=' bg-white '><strong className=' bg-white '>Register Number:</strong> {selector.reg_num}</p>
-        <p className="text-green-600  bg-white  font-semibold">Status: Accepted</p>
+        <p className=' bg-white '><strong className=' bg-white '>Department:</strong> {selector.dept}</p>
       </div>
 
       {acceptedMembers.map((member, idx) => (
@@ -394,6 +394,7 @@ return (
           </p>
         </div>
       ))}
+
        <div className='flex gap-40'>
       {(acceptedMembers.length + 1 < totalMembersAllowed) && timeline && (
         <button
