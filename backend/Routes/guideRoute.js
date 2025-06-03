@@ -630,7 +630,7 @@ router.get('/guide/gets_the_progress_updated_team_members/:team_id',(req,res,nex
   try{
     const{team_id} = req.params;
     if(!team_id)return next(createError.BadRequest('team_id not found!'));
-    let sql = "SELECT MAX(week_number) AS latest_week FROM weekly_logs_verification WHERE team_id = ?";
+    let sql = "SELECT MAX(week_number) AS latest_week FROM weekly_logs_verification WHERE team_id = ? and is_verified = false";
     db.query(sql,[team_id],(error,week_number) => {
       if(error)return next(error);
       if(week_number.length === 0)return next(createError.BadRequest('week_no not found!'));
