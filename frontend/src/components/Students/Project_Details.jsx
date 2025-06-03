@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import instance from '../../utils/axiosInstance';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 
 // Helper component: Loading Spinner
@@ -93,6 +94,7 @@ const SelectorButtons = ({
 const Project_Details = () => {
   const userselector = useSelector((State) => State.userSlice);
   const teamselector = useSelector((State) => State.teamSlice);
+  const teamstatusselector = useSelector((State) => State.teamStatusSlice);
   const [projectName, setProjectName] = useState('');
   const [clusterName, setClusterName] = useState('');
   const [core, setCore] = useState('');
@@ -105,7 +107,8 @@ const Project_Details = () => {
   const [selectedGuides, setSelectedGuides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [projectData,setProjectData] = useState([])
+  const [projectData,setProjectData] = useState([]);
+  const navigate = useNavigate();
 
   const expertOptions = expertsList.map((expert) => ({
   value: expert.reg_num,
@@ -163,13 +166,13 @@ const filteredGuideOptions = guidesList
 
 
     useEffect(() => {
-  if (!teamselector || !Array.isArray(teamselector) || !teamselector[0] || !teamselector[0].project_id) {
+  if (!teamselector || !Array.isArray(teamselector) || !teamselector[0] || !teamstatusselector.projectId) {
     console.log("Team selector not ready or missing project_id");
     return;
   }
 
   instance
-    .get(`/student/get_project_details/${teamselector[0].project_id}`)
+    .get(`/student/get_project_details/${teamstatusselector.projectId}`)
     .then((res) => {
       if (res.status === 200) {
         setProjectData(res.data);
@@ -247,6 +250,7 @@ useEffect(() => {
       console.log(response.data); 
 
       const { message, project_id } = response.data;
+      console.log(project_id)
 
       if (!project_id) throw new Error('Project ID not returned.');
 
@@ -278,12 +282,17 @@ useEffect(() => {
       setOutcome('');
       setSelectedExperts([]);
       setSelectedGuides([]);
+
+      navigate('/student');
+      
     } catch (error) {
       console.error('Submit Error:', error);
       alert("Failed to submit project. Error: " + response.error.message);
 
 
     }
+    
+
   };
 
   if (loading) return <div className="p-4">Loading...</div>;
@@ -297,7 +306,7 @@ return (
         </h2>
         <div className="bg-white shadow-lg rounded-xl p-5 border border-gray-200 max-w-5xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-x-14 gap-y-4 text-gray-700 bg-white p-4 rounded-lg">
-            <Detail label="Project ID" value={projectData[0].project_id} />
+            <Detail label="Project ID" value={projectData[0].projectId} />
             <Detail label="Project Name" value={projectData[0].project_name} />
             <Detail label="Project Type" value={projectData[0].project_type} />
             <Detail label="Cluster" value={projectData[0].cluster} />

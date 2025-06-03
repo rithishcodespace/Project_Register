@@ -90,7 +90,7 @@ const Guide_queries = () => {
               <div className="mt-4 flex rounded-lg bg-white flex-col sm:flex-row items-center gap-2">
                 <input
                   type="text"
-                  className="flex-1 p-2 border rounded-lg bg-white focus:ring-2 focus:ring-purple-500"
+                  className="flex-1 p-2 border border-white rounded-lg bg-white"
                   placeholder="Type your reply here..."
                   value={replyInputs[q.query_id] || ''}
                   onChange={(e) => handleReplyChange(q.query_id, e.target.value)}

@@ -718,8 +718,7 @@ router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:status/:team_id",u
         })
       })
       }
-
-    });
+     });
   } catch (error) {
     next(error);
   }
