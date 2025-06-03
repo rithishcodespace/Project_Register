@@ -87,11 +87,6 @@ function Guide_navbar({ isOpen, toggleSidebar }) {
           <p className={navText("queries")}>Queries</p>
         </Link>
 
-        <Link to="team_progress" className={`${navDiv("team_progress")} group`}>
-          <FileText size={24} className={navIcon("team_progress")} />
-          <p className={navText("team_progress")}>Team Project</p>
-        </Link>
-
         <Link to="review_progress" className={`${navDiv("review_progress")} group`}>
           <FileText size={24} className={navIcon("review_progress")} />
           <p className={navText("review_progress")}>Review Progress</p>

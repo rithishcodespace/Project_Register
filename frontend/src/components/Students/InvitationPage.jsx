@@ -81,10 +81,12 @@ const InvitationPage = () => {
               <td className="px-4 py-2 border">{invite.emailId}</td>
               <td className="px-4 py-2 border">{invite.reg_num}</td>
               <td className="px-4 py-2 border">{invite.dept}</td>
+
               <td className="px-4 py-2 border text-center">
                 {invite.status === 'interested' ? (
                   rejectingId === invite.reg_num ? (
                     <div className="space-y-2">
+
                       <textarea
                         className="w-full border px-2 py-1 rounded resize-none"
                         rows={3}
@@ -93,6 +95,8 @@ const InvitationPage = () => {
                         onChange={e => onReasonChange(invite.reg_num, e.target.value)}
                       />
                       <div className="flex justify-end space-x-2">
+
+
                         <button
                           className="px-4 py-2 bg-gray-300 rounded"
                           onClick={() => setRejectingId(null)}
@@ -108,6 +112,8 @@ const InvitationPage = () => {
                         >
                           {loadingId === invite.reg_num ? 'Rejecting…' : 'Submit'}
                         </button>
+
+
                       </div>
                     </div>
                   ) : (
@@ -119,6 +125,7 @@ const InvitationPage = () => {
                       >
                         {loadingId === invite.reg_num ? 'Accepting…' : 'Accept'}
                       </button>
+                      
                       <button
                         onClick={() => setRejectingId(invite.reg_num)}
                         className="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50"
