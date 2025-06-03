@@ -295,14 +295,6 @@ router.post("/student/fetch_team_status_and_invitations",(req, res, next) => {
                     });
                   }
 
-
-                  res.json({
-                  teamConformationStatus: 1,
-                  teamMembers,
-                  "projectId":project_id,
-                  pendingInvitations: [],
-                  teamLeader: leaderDetails[0] || null
-              });
               })
               }
             }
@@ -400,7 +392,7 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
 
            // fetches the team members to be inserted into the teams table
 
-           let getSql = "select * from team_requests where WHERE from_reg_num = ? AND status = 'accept'";
+           let getSql = "select * from team_requests where from_reg_num = ? AND status = 'accept'";
            db.query(getSql,[from_reg_num],(error4,teamMates) => {
             if(error4)return next(error4);
             if(teamMates.length === 0)return next('team mates not found!');
