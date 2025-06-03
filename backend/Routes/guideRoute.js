@@ -603,7 +603,7 @@ router.get('/guide/no_of_weeks_verified/:team_id',(req,res,next) => {
   }
 })
 
-// fetches the pending verifications that needs to be done by me -> gives only team_id
+// fetches the pending verifications that needs to be done by me -> gives only team_id -> 1st
 // finds the team_id that is ready for weekly_log verification
 
 router.get('/guide/fetching_pending_verifications/:guide_reg_num',(req,res,next) => {
@@ -623,7 +623,7 @@ router.get('/guide/fetching_pending_verifications/:guide_reg_num',(req,res,next)
   }
 })
 
-// finds the latest week and gives the progress entered by each member
+// finds the latest week and gives the progress entered by each member -> 2nd
 // fetches the progress submitted by the particular team
 
 router.get('/guide/gets_the_progress_updated_team_members/:team_id',(req,res,next) => {
@@ -651,13 +651,19 @@ router.get('/guide/gets_the_progress_updated_team_members/:team_id',(req,res,nex
 
 // verify weekly logs -> 3rd
 
-router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:team_id",userAuth, (req, res, next) => {
+router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:status/:team_id",userAuth, (req, res, next) => {
   try {
-    const { guide_reg_num, team_id, week } = req.params;
+    const { guide_reg_num, team_id, week,status } = req.params;
     const { remarks } = req.body;
 
     if (!guide_reg_num || !team_id || !remarks || !week)
       return next(createError.BadRequest("guide_reg_num, team_id, week, or remarks is missing!"));
+
+    const safeStatus = status.toLowerCase();
+    const validStatus = ['accept','reject'];
+    if(!validStatus.includes(safeStatus)){
+      return next(createError.BadRequest('invalid status!'));
+    }
 
     const weekNum = parseInt(week);
     if (isNaN(weekNum) || weekNum < 1 || weekNum > 12)
