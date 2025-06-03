@@ -38,6 +38,7 @@ import ChangeTimeLine from "./components/Admin/ChangeTimeLine";
 import { useSelector } from "react-redux";
 import Review_projects from "./components/guide/Review_projects";
 import TeamDetails from "./components/guide/Team_Details";
+import ChallengeReviewAdmin from "./components/Students/ChallengeReview";
 
 
 
@@ -100,7 +101,8 @@ function App() {
             <Route path="TimeLine" element={<TimeLine />} />
             <Route path="team_list/:department" element={<TeamListByDepartment />} />
             <Route path="/admin/team_progress/:project_id" element={<Admin_project_details />} />
-            <Route path="change-timeline" element={<ChangeTimeLine />} />
+            <Route path="TimeLine/change-timeline" element={<ChangeTimeLine />} />
+            <Route path="TimeLine/challenge-review" element={<ChallengeReviewAdmin />} />
           </Route>
 
           <Route path="/subject_expert" element={<Subject_expert />}>

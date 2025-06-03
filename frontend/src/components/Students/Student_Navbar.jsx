@@ -128,8 +128,7 @@ function Student_navbar({ isOpen, toggleSidebar }) {
     <FileText size={24} className={navIcon("Project_Details")} />
     <p className={navText("Project_Details")}>Project Details</p>
   </Link>
-)}
-      
+)}   
 
         <Link
           to="queries"
