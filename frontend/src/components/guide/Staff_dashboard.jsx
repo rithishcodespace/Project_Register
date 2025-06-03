@@ -23,6 +23,7 @@ function Staff_dashboard() {
       teams.map(async (team) => {
         try {
           const res = await instance.get(`/guide/no_of_weeks_verified/${team.from_team_id}`);
+          console.log(res.data)
           return { ...team, verifiedWeeks: res.data || 0 };
         } catch {
           return { ...team, verifiedWeeks: 0 };
@@ -37,7 +38,7 @@ function Staff_dashboard() {
     const map = {};
     for (const team of teams) {
       try {
-        const res = await instance.get(`/guide/gets_the_progress_updated_team_members/${team.from_team_id}`);
+        const res = await instance.get(`/guide/gets_entire_team/${team.from_team_id}`);
         map[team.from_team_id] = res.data || null;
         console.log(` Progress for team ${team.from_team_id}:`, res.data);
       } catch (err) {
@@ -47,6 +48,27 @@ function Staff_dashboard() {
     }
     setProgressMap(map);
   };
+
+useEffect(() => {
+  const fetchExtraReviews = async () => {
+    try {
+      const expertReviews = await instance.get(`/sub_expert/fetch_review_requests/${reg_num}`);
+      console.log(" Expert Review Requests:", expertReviews.data);
+    } catch (error) {
+      console.error(" Error fetching expert review requests:", error.response?.data || error.message);
+    }
+
+    try {
+      const upcomingReviews = await instance.get(`/guide/fetch_review_requests/${reg_num}`);
+      console.log(" Upcoming Guide Reviews:", upcomingReviews.data);
+    } catch (error) {
+      console.error(" Error fetching guide upcoming reviews:", error.response?.data || error.message);
+    }
+  };
+
+  fetchExtraReviews();
+}, [reg_num]);
+
 
   // Fetch all required data: requests, guide teams, subexpert teams
   const fetchRequests = async () => {
@@ -204,13 +226,14 @@ function Staff_dashboard() {
         <section className="bg-white rounded shadow p-6 overflow-x-auto">
           <h2 className="text-xl font-bold mb-4 text-gray-800 bg-white">Guide Teams</h2>
           {GuideTeams.length > 0 ? (
-            <table className="min-w-full border-t text-left p-2 text-md text-gray-700">
-              <thead className="bg-gray-100">
+            <table className="min-w-full border-t bg-white text-left p-2 text-md text-gray-700">
+              <thead className="bg-white">
                 <tr>
                   <th className="px-4 py-2 border-b bg-white">Team ID</th>
                   <th className="px-4 py-2 border-b bg-white">Project Name</th>
                   <th className="px-4 py-2 border-b bg-white">Semester</th>
                   <th className="px-4 py-2 border-b bg-white">Verified Weeks</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -224,12 +247,25 @@ function Staff_dashboard() {
                     <td className="px-4 py-2 border-b bg-white">{team.from_team_id}</td>
                     <td className="px-4 py-2 border-b bg-white">{team.project_name}</td>
                     <td className="px-4 py-2 border-b bg-white">{team.team_semester}</td>
-                    <td className="px-4 py-2 gap-10 flex  border-b bg-white">
-                      <p className='flex bg-white'>{team.verifiedWeeks}/12</p>
-                      {(team.verifiedWeeks) && progressMap[team.from_team_id] ? (
-                        <p className="flex  bg-white  text-green-600 text-sm mt-1">Weekly log Updated</p>
-                      ) : null}
+                    <td className="px-4 py-2 border-b bg-white">
+                      <span className='bg-white'>
+                        {team.verifiedWeeks}/12
+                      </span>
+                      {(() => {
+                        const progress = progressMap[team.from_team_id]?.[0];
+                        const nextWeek = `week${team.verifiedWeeks + 1}_progress`;
+                        if (progress && progress[nextWeek]) {
+                          return (
+                            <span className="ml-4 bg-white text-green-600 text-sm">
+                              Weekly log Updated
+                            </span>
+                          );
+                        }
+                        return null;
+                      })()}
                     </td>
+
+
                   </tr>
                 ))}
               </tbody>
