@@ -9,6 +9,7 @@
     "@mui/x-data-grid": "^8.3.0",
     "@mui/x-data-grid-generator": "^8.3.0",
     "appwrite": "^18.1.1",
-    "cookie-parser": "^1.4.7"
+    "cookie-parser": "^1.4.7",
+    "react-select": "^5.10.1"
   }
 }
