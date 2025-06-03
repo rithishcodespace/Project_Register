@@ -59,7 +59,7 @@ router.post("/student/join_request", userAuth, (req, res, next) => {
           return res.send(`Connection request already exists with status: ${result[0].status}`);
         }
   
-        // checks wheter he is in another team or team_leader  
+        // checks whether receiver is in another team or team_leader  
         let checkConnection = "select * from team_requests where (to_reg_num = ? or from_reg_num = ?) and status = 'accept'";
         db.query(checkConnection,[to_reg_num,to_reg_num],(error,result) => {
           if(error)return next(error);
@@ -67,8 +67,8 @@ router.post("/student/join_request", userAuth, (req, res, next) => {
 
           // checks sender is in another team or team_leader
 
-          let checkConnectionSender = "select * from team_requests where (to_reg_num = ? or from_reg_num = ?) and status = 'accept'";
-          db.query(checkConnectionSender,[from_reg_num,from_reg_num],(error,result) => {
+          let checkConnectionSender = "select * from team_requests where to_reg_num = ? and status = 'accept'";
+          db.query(checkConnectionSender,[from_reg_num],(error,result) => {
             if(error)return next(error);
             if(result.length > 0)return next(createError.BadRequest("sender is already a member of some other team!"));
 
@@ -226,7 +226,7 @@ router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",userAuth,
 });
 
 // it checks whether he sent invitations and if sent it is conformed
-router.post("/student/fetch_team_status_and_invitations",userAuth, (req, res, next) => {
+router.post("/student/fetch_team_status_and_invitations",(req, res, next) => {
   try {
     const { from_reg_num } = req.body; // logged user's reg num
 
@@ -269,13 +269,42 @@ router.post("/student/fetch_team_status_and_invitations",userAuth, (req, res, ne
               });
             } else {
               // team conformed checking whether they got a team id if id exist fetch it
-              let getProject_id = "select "
-              res.json({
-                teamConformationStatus: 1,
-                teamMembers,
-                pendingInvitations: [],
-                teamLeader: leaderDetails[0] || null
+              if (teamMembers[0].team_id ) {
+                    let getProject_id = "select project_id from projects where team_id = ?";
+                db.query(getProject_id,[teamMembers[0].team_id],(error,results) => {
+                  if(error)return next(error);
+                  
+                  if(results.length === 0){
+
+                    const project_id = results[0].project_id;
+
+                    res.json({
+                    teamConformationStatus: 1,
+                    teamMembers,
+                    "projectId":project_id,
+                    pendingInvitations: [],
+                    teamLeader: leaderDetails[0] || null
+                    });
+                  }
+                  else{
+                    res.json({
+                      teamConformationStatus: 1,
+                      teamMembers,
+                      pendingInvitations: [],
+                      teamLeader: leaderDetails[0] || null
+                    });
+                  }
+
+
+                  res.json({
+                  teamConformationStatus: 1,
+                  teamMembers,
+                  "projectId":project_id,
+                  pendingInvitations: [],
+                  teamLeader: leaderDetails[0] || null
               });
+              })
+              }
             }
           });
         });
