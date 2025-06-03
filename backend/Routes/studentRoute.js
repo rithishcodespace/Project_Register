@@ -608,21 +608,22 @@ router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, r
 
 
 // brings the details of the project through project_id 
-// router.get("/student/get_project_details/:project_id",userAuth,(req,res,next) => {
-//   try{
-//      const {project_id} = req.params;
-//      if(!project_id)next(createError.BadRequest("project_Id not found!"))
-//      let sql = "select * from projects where project_id = ?";
-//      db.query(sql,[project_id],(error,result) => {
-//       if(error)next(error);
-//       res.send(result);
-//      })
-//   }
-//   catch(error)
-//   {
-//     next(error);
-//   }
-// })
+router.get("/student/get_project_details/:project_id",userAuth,(req,res,next) => {
+  try{
+     const {project_id} = req.params;
+     if(!project_id)next(createError.BadRequest("project_Id not found!"))
+     let sql = "select * from projects where project_id = ?";
+     db.query(sql,[project_id],(error,result) => {
+      if(error)next(error);
+      if(result.length === 0)return next(createError.NotFound('project details not found!'));
+      res.send(result);
+     })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 // updates the project type
 
@@ -900,7 +901,11 @@ router.post("/student/addproject/:project_type/:team_id/:reg_num", userAuth,(req
             db.query(insertSql,[project_id,team_id],(error,result) => {
               if(error)return next(error);
               if(result.affectedRows === 0)return next(createError.BadRequest("no rows inserted!"));
-              res.send(`Project inserted successfully for the team :- ${team_id} -> project_id :- ${project_id}`);
+              res.json({
+                "message":"project added successfully!",
+                "team_id":team_id,
+                "project_id":project_id
+              });
 
             })
           })
