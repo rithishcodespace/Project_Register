@@ -555,5 +555,38 @@ router.patch("/admin/assign_guide_expert/:team_id/:role", (req, res, next) => {
 //   }
 // });
 
+// gets the upcoming reviews
+
+router.get('/admin/gets_all_the_upcoming_scheduled_review',(req,res,next) => {
+  try{
+    let sql= "select * from scheduled_reviews and review_date >= current_date()";
+    db.query(sql,(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound('review details not found!'));
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+// fetches the reviews that are happening now ==> as a filter
+router.get('/admin/fet_current_reviews',(req,res,next) => {
+  try{
+    let sql = `SELECT * FROM scheduled_reviews WHERE review_date = CURRENT_DATE AND start_time BETWEEN CURRENT_TIMESTAMP() AND DATE_ADD(CURRENT_TIMESTAMP(), INTERVAL 2 HOUR);`
+    db.query(sql,(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound('reveiws not found!'));
+      return res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+}) 
+
 
 module.exports = router;
