@@ -608,21 +608,21 @@ router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, r
 
 
 // brings the details of the project through project_id 
-// router.get("/student/get_project_details/:project_id",userAuth,(req,res,next) => {
-//   try{
-//      const {project_id} = req.params;
-//      if(!project_id)next(createError.BadRequest("project_Id not found!"))
-//      let sql = "select * from projects where project_id = ?";
-//      db.query(sql,[project_id],(error,result) => {
-//       if(error)next(error);
-//       res.send(result);
-//      })
-//   }
-//   catch(error)
-//   {
-//     next(error);
-//   }
-// })
+router.get("/student/get_project_details/:project_id",userAuth,(req,res,next) => {
+  try{
+     const {project_id} = req.params;
+     if(!project_id)next(createError.BadRequest("project_Id not found!"))
+     let sql = "select * from projects where project_id = ?";
+     db.query(sql,[project_id],(error,result) => {
+      if(error)next(error);
+      res.send(result);
+     })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 // updates the project type
 
