@@ -59,7 +59,7 @@ router.post("/student/join_request", userAuth, (req, res, next) => {
           return res.send(`Connection request already exists with status: ${result[0].status}`);
         }
   
-        // checks wheter he is in another team or team_leader  
+        // checks whether receiver is in another team or team_leader  
         let checkConnection = "select * from team_requests where (to_reg_num = ? or from_reg_num = ?) and status = 'accept'";
         db.query(checkConnection,[to_reg_num,to_reg_num],(error,result) => {
           if(error)return next(error);
@@ -67,8 +67,8 @@ router.post("/student/join_request", userAuth, (req, res, next) => {
 
           // checks sender is in another team or team_leader
 
-          let checkConnectionSender = "select * from team_requests where (to_reg_num = ? or from_reg_num = ?) and status = 'accept'";
-          db.query(checkConnectionSender,[from_reg_num,from_reg_num],(error,result) => {
+          let checkConnectionSender = "select * from team_requests where to_reg_num = ? and status = 'accept'";
+          db.query(checkConnectionSender,[from_reg_num],(error,result) => {
             if(error)return next(error);
             if(result.length > 0)return next(createError.BadRequest("sender is already a member of some other team!"));
 
@@ -226,7 +226,7 @@ router.patch("/student/team_request/:status/:to_reg_num/:from_reg_num",userAuth,
 });
 
 // it checks whether he sent invitations and if sent it is conformed
-router.post("/student/fetch_team_status_and_invitations",userAuth, (req, res, next) => {
+router.post("/student/fetch_team_status_and_invitations",(req, res, next) => {
   try {
     const { from_reg_num } = req.body; // logged user's reg num
 
@@ -269,13 +269,33 @@ router.post("/student/fetch_team_status_and_invitations",userAuth, (req, res, ne
               });
             } else {
               // team conformed checking whether they got a team id if id exist fetch it
-              let getProject_id = "select "
-              res.json({
-                teamConformationStatus: 1,
-                teamMembers,
-                pendingInvitations: [],
-                teamLeader: leaderDetails[0] || null
-              });
+              if (teamMembers[0].team_id ) {
+                let getProject_id = "select project_id from projects where team_id = ?";
+                db.query(getProject_id,[teamMembers[0].team_id],(error,results) => {
+                  if(error)return next(error);
+                  
+                  if(results.length > 0){
+
+                    const project_id = results[0].project_id;
+
+                    res.json({
+                    teamConformationStatus: 1,
+                    teamMembers,
+                    "projectId":project_id,
+                    pendingInvitations: [],
+                    teamLeader: leaderDetails[0] || null
+                    });
+                  }
+                  else{
+                    res.json({
+                      teamConformationStatus: 1,
+                      teamMembers,
+                      pendingInvitations: [],
+                      teamLeader: leaderDetails[0] || null
+                    });
+                  }
+              })
+              }
             }
           });
         });
@@ -322,36 +342,36 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
        const teamNumber = result[0].count + 1;
        const team_id = `TEAM-${String(teamNumber).padStart(4, "0")}`;
    
-       // Step 2: Check if this user already has accepted requests
+       // Check if this user already has accepted requests 
        const checkSql = `SELECT * FROM team_requests WHERE (from_reg_num = ? OR to_reg_num = ?) AND status = 'accept'`;
        db.query(checkSql, [from_reg_num, from_reg_num], (err, rows) => {
          if (err) return next(err);
    
          // Case: No team members, solo team
          if (rows.length === 0) {
-            const team_id = `TEAM-${String(result[0].count + 1).padStart(4, "0")}`;
 
-            // 1. Insert leader into teams table
+            // Insert leader into teams table
             const insertLeaderIntoTeams = `INSERT INTO teams (team_id, reg_num, is_leader) VALUES (?, ?, 1)`;
             db.query(insertLeaderIntoTeams, [team_id, reg_num], (err) => {
               if (err) return next(err);
+              if (result.affectedRows === 0) return next(createError.BadRequest('some rows are not affected!'));
 
-              // 2. Insert leader row into team_requests table
+              // Insert leader row into team_requests table
               const insertLeaderRequest = `
                 INSERT INTO team_requests (team_id, name, emailId, reg_num, dept, from_reg_num, to_reg_num, status, team_conformed)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'accept', true)
-              `;
-              db.query(insertLeaderRequest, [team_id, name, emailId, reg_num, dept, from_reg_num, from_reg_num], (err) => {
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'accept', true)`;
+              
+                db.query(insertLeaderRequest, [team_id, name, emailId, reg_num, dept, from_reg_num, from_reg_num], (err) => {
                 if (err) return next(err);
 
-                // 3. Cleanup pending requests for solo member
+                // Cleanup pending requests for solo member
                 const deletePending = `
                   DELETE FROM team_requests 
                   WHERE (from_reg_num = ? OR to_reg_num = ?) 
                   AND team_conformed = false 
                   AND status <> 'accept' 
-                  AND team_id IS NULL
-                `;
+                  AND team_id IS NULL`;
+
                 db.query(deletePending, [reg_num, reg_num], (err) => {
                   if (err) return next(err);
 
@@ -363,7 +383,7 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
             return;
          }
    
-         // Step 3: Set team_conformed = true for accepted members
+         // Set team_conformed = true for accepted members
          const updateConfirmSql = `UPDATE team_requests SET team_conformed = true WHERE from_reg_num = ? AND status = 'accept'`;
          db.query(updateConfirmSql, [from_reg_num], (err, result1) => {
            if (err) return next(err);
@@ -371,7 +391,7 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
 
            // fetches the team members to be inserted into the teams table
 
-           let getSql = "select * from team_requests where WHERE from_reg_num = ? AND status = 'accept'";
+           let getSql = "select * from team_requests where from_reg_num = ? AND status = 'accept'";
            db.query(getSql,[from_reg_num],(error4,teamMates) => {
             if(error4)return next(error4);
             if(teamMates.length === 0)return next('team mates not found!');
@@ -395,7 +415,7 @@ router.patch("/student/team_request/conform_team", userAuth, (req, res, next) =>
                // insert leader into the team table
                let insertTeamLeader = "insert into teams (team_id,reg_num,is_leader) values (?,?,?)";
                db.query(insertTeamLeader,[team_id,reg_num,1],(error,result) => {
-                if(error)return error;
+                if(error)return next(error);
                 if(result.affectedRows === 0)return next(createError.BadRequest('some rows are not affected!'));
 
                 // Step 5: Insert leader row
@@ -465,7 +485,7 @@ router.get("/student/getTeamDetails/:reg_num",userAuth, (req, res, next) => {
 
 router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, res, next) => {
   try {
-    let { week, reg_num, team_id } = req.params;
+    const { week, reg_num, team_id } = req.params;
     const { progress } = req.body;
 
       const validPhases = [
@@ -473,23 +493,24 @@ router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, r
         "week7", "week8", "week9", "week10", "week11", "week12"
       ];
 
-      week = week.toLowerCase();
+      const safeweek = week.toLowerCase();
 
       // Validation Check
-      if (!validPhases.includes(week) || !reg_num || !team_id) {
+      if (!validPhases.includes(safeweek) || !reg_num || !team_id) {
         return res.status(400).json({ message: "Invalid week name or reg_num missing" });
       }
 
       // checks if already submmited
-      let check = `SELECT ${week}_progress FROM teams WHERE reg_num = ? AND team_id = ?`;
+      let check = `SELECT ${safeweek}_progress FROM teams WHERE reg_num = ? AND team_id = ?`;
       db.query(check, [reg_num, team_id], (error, results) => {
         if (error) return next(error);
 
-        if (results[0] && results[0][`${week}_progress`] !== null) {
+        if (results[0] && results[0][`${safeweek}_progress`] !== null) {
           return res.status(200).send("YOU HAVE ALREADY SUBMITTED YOUR PROGRESS FOR THIS WEEK!");
         }
 
-      const sql = `UPDATE teams SET ${week}_progress = ? WHERE reg_num = ? and team_id = ?`;
+      // updating progress
+      const sql = `UPDATE teams SET ${safeweek}_progress = ? WHERE reg_num = ? and team_id = ?`;
 
       db.query(sql, [progress, reg_num,team_id], (err, result) => {
         if (err) return next(err);
@@ -497,14 +518,17 @@ router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, r
         if (result.affectedRows === 0) {
           return res.status(404).json({ message: "No record found for the provided reg_num." });
         }
-        let sql1 = `select ${week}_progress from teams where team_id = ?`;
+        let sql1 = `select ${safeweek}_progress from teams where team_id = ?`;
         db.query(sql1,[team_id],(error,result) => {
           if(error)return next(error);
 
-          const allMembersUpdated = result.every((member) => member[`${week}_progress`] !== null); // every -> checks whether every element satisfies the given condition, optimised instead of forEach // . -> [] alternative for . notation
+          // checks whether all members updated progress -> safeweek
+
+          const allMembersUpdated = result.every((member) => member[`${safeweek}_progress`] !== null); // every -> checks whether every element satisfies the given condition, optimised instead of forEach // . -> [] alternative for . notation
           if(allMembersUpdated)
           {
-            let weekNumber = week.replace(/\D/g, ''); 
+            // inserts into weekly_logs_verification
+            let weekNumber = safeweek.replace(/\D/g, ''); 
             let insertSql = "INSERT INTO weekly_logs_verification (team_id, week_number) VALUES (?, ?)";
             db.query(insertSql,[team_id,weekNumber],(error,inserted) => {
               if(error)return next(error);
@@ -542,11 +566,11 @@ router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, r
                     const mailOptions = {
                       from: `"No Reply" <${process.env.EMAIL_USER}>`,
                       to: guideEmail,
-                      subject: `Progress update for ${week} by Team ${team_id}`,
+                      subject: `Progress update for ${safeweek} by Team ${team_id}`,
                       replyTo: studentEmail,  // Optional: replies go to student
                       text: `Dear Guide,
 
-                      Team ${team_id} has completed their progress update for ${week}.
+                      Team ${team_id} has completed their progress update for ${safeweek}.
                       This submission was triggered by the student with registration number: ${reg_num}.
 
                       Please check the Project Register for more details.
@@ -584,21 +608,22 @@ router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, r
 
 
 // brings the details of the project through project_id 
-// router.get("/student/get_project_details/:project_id",userAuth,(req,res,next) => {
-//   try{
-//      const {project_id} = req.params;
-//      if(!project_id)next(createError.BadRequest("project_Id not found!"))
-//      let sql = "select * from projects where project_id = ?";
-//      db.query(sql,[project_id],(error,result) => {
-//       if(error)next(error);
-//       res.send(result);
-//      })
-//   }
-//   catch(error)
-//   {
-//     next(error);
-//   }
-// })
+router.get("/student/get_project_details/:project_id",userAuth,(req,res,next) => {
+  try{
+     const {project_id} = req.params;
+     if(!project_id)next(createError.BadRequest("project_Id not found!"))
+     let sql = "select * from projects where project_id = ?";
+     db.query(sql,[project_id],(error,result) => {
+      if(error)next(error);
+      if(result.length === 0)return next(createError.NotFound('project details not found!'));
+      res.send(result);
+     })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 // updates the project type
 
@@ -876,7 +901,11 @@ router.post("/student/addproject/:project_type/:team_id/:reg_num", userAuth,(req
             db.query(insertSql,[project_id,team_id],(error,result) => {
               if(error)return next(error);
               if(result.affectedRows === 0)return next(createError.BadRequest("no rows inserted!"));
-              res.send(`Project inserted successfully for the team :- ${team_id} -> project_id :- ${project_id}`);
+              res.json({
+                "message":"project added successfully!",
+                "team_id":team_id,
+                "project_id":project_id
+              });
 
             })
           })

@@ -576,7 +576,7 @@ router.get("/guide/fetch_guiding_teams/:guide_id", userAuth, (req, res, next) =>
     db.query(sql, [guide_id], (error, teams) => {
       if (error) return next(error);
       if (teams.length === 0) return res.send("No Teams found!");
-      res.send(teams); // ✅ fixed this line
+      res.send(teams); 
     });
   } catch (error) {
     next(error);
@@ -603,7 +603,7 @@ router.get('/guide/no_of_weeks_verified/:team_id',(req,res,next) => {
   }
 })
 
-// fetches the pending verifications that needs to be done by me -> gives only team_id
+// fetches the pending verifications that needs to be done by me -> gives only team_id -> 1st
 // finds the team_id that is ready for weekly_log verification
 
 router.get('/guide/fetching_pending_verifications/:guide_reg_num',(req,res,next) => {
@@ -623,7 +623,7 @@ router.get('/guide/fetching_pending_verifications/:guide_reg_num',(req,res,next)
   }
 })
 
-// finds the latest week and gives the progress entered by each member
+// finds the latest week and gives the progress entered by each member -> 2nd
 // fetches the progress submitted by the particular team
 
 router.get('/guide/gets_the_progress_updated_team_members/:team_id',(req,res,next) => {
@@ -651,17 +651,29 @@ router.get('/guide/gets_the_progress_updated_team_members/:team_id',(req,res,nex
 
 // verify weekly logs -> 3rd
 
-router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:team_id",userAuth, (req, res, next) => {
+router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:status/:team_id",userAuth, (req, res, next) => {
   try {
-    const { guide_reg_num, team_id, week } = req.params;
-    const { remarks } = req.body;
+    const { guide_reg_num, team_id, week,status } = req.params;
+    const { remarks,reason } = req.body;
 
     if (!guide_reg_num || !team_id || !remarks || !week)
       return next(createError.BadRequest("guide_reg_num, team_id, week, or remarks is missing!"));
 
+    const safeStatus = status.toLowerCase();
+    const validStatus = ['accept','reject'];
+    if(!validStatus.includes(safeStatus)){
+      return next(createError.BadRequest('invalid status!'));
+    }
+
+    if(status === 'reject' && reason.length === 0){
+      return next(createError.BadRequest('reason not found!'));
+    }
+
     const weekNum = parseInt(week);
     if (isNaN(weekNum) || weekNum < 1 || weekNum > 12)
       return next(createError.BadRequest("Invalid week number!"));
+
+    // validating guide register number
 
     const sql = `SELECT guide_reg_num, week${weekNum}_progress AS week_progress FROM team_requests WHERE team_id = ?`;
     db.query(sql, [team_id], (error, result) => {
@@ -671,24 +683,42 @@ router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:team_id",userAuth,
       if (result[0].guide_reg_num !== guide_reg_num)
         return res.status(403).json({ message: "Guide is not assigned to this team" });
 
-      // Check if already verified
-      const checkSql = `SELECT * FROM weekly_logs_verification WHERE team_id = ? AND week_number = ?`;
-      db.query(checkSql, [team_id, weekNum], (error, found) => {
-        if (error) return next(error);
-        if (found.length > 0)
-          return next(createError.Conflict(`Week ${weekNum} has already been verified`));
-
-        const verifiedAt = new Date();
-        const insertSql = `INSERT INTO weekly_logs_verification (team_id, week_number, is_verified, verified_by, verified_at, remarks) VALUES (?, ?, ?, ?, ?, ?)`;
-        db.query(insertSql, [team_id, weekNum, true, guide_reg_num, verifiedAt, remarks], (error, result) => {
+      if(status === 'accept'){
+        // Check if already verified
+        const checkSql = `SELECT * FROM weekly_logs_verification WHERE team_id = ? AND week_number = ?`;
+        db.query(checkSql, [team_id, weekNum], (error, found) => {
           if (error) return next(error);
-          if (result.affectedRows === 0)
-            return next(createError.BadRequest("Failed to verify week progress"));
+          if (found.length > 0)
+            return next(createError.Conflict(`Week ${weekNum} has already been verified`));
 
-          return res.send(`Week ${weekNum} successfully verified by ${guide_reg_num}`);
+          const verifiedAt = new Date();
+          const insertSql = "update weekly_logs_verifications set is_verified = ?,verified_by = ?,verified_at = ?,remarks = ?,status = ? where team_id = ? and week_number = ?";
+          db.query(insertSql, [true,guide_reg_num,verifiedAt,remarks,safeStatus,team_id,weekNum], (error, result) => {
+            if (error) return next(error);
+            if (result.affectedRows === 0)
+              return next(createError.BadRequest("Failed to verify week progress"));
+
+            return res.send(`Week ${weekNum} successfully verified by ${guide_reg_num}`);
+          });
         });
-      });
-    });
+      }
+      else if(status === 'reject'){
+      // update reject status
+      let rejectSql = "update weekly_logs_verifications set status = ?,reason = ? where team_id = ? and week_number = ?";
+      db.query(rejectSql,[safeStatus,reason,team_id,weekNum],(error1,result1) => {
+        if(error1)return next(error1);
+        if(result1.affectedRows === 0)return next(createError.BadRequest('some rows not selected!'));
+        
+        // clear the progress in the teams -> for each person
+        const clearSql = `update teams set ${weekNum}_progress = null where team_id  = ?`;
+        db.query(clearSql,[team_id],(error2,result2) => {
+          if(error2)return next(error2);
+          if(result2.affectedRows === 0)return next(createError.BadRequest('some rows not affected!'));
+          return res.send(`Week ${weekNum} rejected and progress cleared for team ${team_id}`);
+        })
+      })
+      }
+     });
   } catch (error) {
     next(error);
   }

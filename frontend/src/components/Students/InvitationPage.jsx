@@ -107,7 +107,7 @@ const InvitationPage = () => {
                           className="px-4 py-2 bg-red-500 text-white rounded disabled:opacity-50"
                           disabled={loadingId === invite.reg_num}
                           onClick={() =>
-                            handleAction(invite, 'reject', rejectionReasons[invite.reg_num] || '')
+                            handleAction(invite, 'reject',rejectionReasons[invite.reg_num] || '')
                           }
                         >
                           {loadingId === invite.reg_num ? 'Rejecting…' : 'Submit'}
@@ -125,7 +125,7 @@ const InvitationPage = () => {
                       >
                         {loadingId === invite.reg_num ? 'Accepting…' : 'Accept'}
                       </button>
-                      
+
                       <button
                         onClick={() => setRejectingId(invite.reg_num)}
                         className="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50"

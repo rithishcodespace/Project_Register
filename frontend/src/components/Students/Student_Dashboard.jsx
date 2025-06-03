@@ -11,6 +11,7 @@ import { addTeamStatus } from '../../utils/teamStatus';
 function Student_Dashboard() {
   const userSlice = useSelector((State) => State.userSlice);
   const teamSelector = useSelector((State) => State.teamSlice);
+  const teamstatusSelector = useSelector((State) => State.teamStatusSlice);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [reInviteOpen, setReInviteOpen] = useState(false);
   const [teamConformationPending, setteamConformationPending] = useState(false);
@@ -29,11 +30,13 @@ const [project, setProject] = useState(null);
 useEffect(() => {
   const fetchProjectDetails = async () => {
     try {
-      const projectId = teamSelector?.[0]?.project_id;
+      const projectId = teamstatusSelector?.projectId;
       if (!projectId) return; // Exit if no project_id
 
       const response = await instance.get(`/student/get_project_details/${projectId}`);
       setProject(response.data);
+      console.log(response.data);
+      
       console.log("Fetched Project ID:", projectId);
     } catch (error) {
       console.error("Error fetching project details:", error);
@@ -352,9 +355,8 @@ return (
       <h2 className="absolute text-2xl left-1/2 transform -translate-x-1/2 font-bold text-black">
         Your Team
       </h2>
-
       <button
-        className="px-4 py-2 border border-purple-500 text-white bg-purple-500 rounded hover:bg-purple-600 "
+        className="px-4 py-2 border border-purple-500 text-white bg-purple-500 rounded hover:bg-purple-600"
         onClick={() => navigate('/student/invitations')}
       >
         Invitations
@@ -363,10 +365,10 @@ return (
 
     <div className="w-[95%] max-w-[60rem] rounded-xl flex flex-col items-center gap-4 p-3 overflow-y-auto">
       <div className="border w-full p-4 bg-white rounded-xl">
-        <p className=' bg-white '><strong className=' bg-white '>Leader:</strong> {selector.name}</p>
+        <p className=' bg-white '><strong className=' bg-white '>Name:</strong> {selector.name}</p>
         <p className=' bg-white '><strong className=' bg-white '>Email:</strong> {selector.emailId}</p>
         <p className=' bg-white '><strong className=' bg-white '>Register Number:</strong> {selector.reg_num}</p>
-        <p className="text-green-600  bg-white  font-semibold">Status: Accepted</p>
+        <p className=' bg-white '><strong className=' bg-white '>Department:</strong> {selector.dept}</p>
       </div>
 
       {acceptedMembers.map((member, idx) => (

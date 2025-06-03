@@ -19,6 +19,7 @@ function Student_navbar({ isOpen, toggleSidebar }) {
   const dispatch = useDispatch();
   const userSelector = useSelector((State) => State.userSlice);
   const teamSelector = useSelector((State) => State.teamSlice);
+  const teamstatusSelector = useSelector((State) => State.teamStatusSlice);
   const a = teamSelector?.[0]?.guide_reg_num || null;
   const b = teamSelector?.[0]?.sub_expert_reg_num || null;
 
@@ -120,7 +121,7 @@ function Student_navbar({ isOpen, toggleSidebar }) {
           <p className={navText("")}>Dashboard</p>
         </Link>
 
-        {teamSelector && !teamSelector[0]?.project_id && (
+        {teamSelector && !teamstatusSelector?.projectId && (
   <Link
     to="Project_Details"
     className={`${navDiv("Project_Details")} group ${!hasTeam ? disabledClass : ""}`}
