@@ -573,7 +573,7 @@ router.get('/admin/gets_all_the_upcoming_scheduled_review',(req,res,next) => {
 })
 
 // fetches the reviews that are happening now ==> as a filter
-router.get('/admin/fet_current_reviews',(req,res,next) => {
+router.get('/admin/fetch_current_reviews',(req,res,next) => {
   try{
     let sql = `SELECT * FROM scheduled_reviews WHERE review_date = CURRENT_DATE AND start_time BETWEEN CURRENT_TIMESTAMP() AND DATE_ADD(CURRENT_TIMESTAMP(), INTERVAL 2 HOUR);`
     db.query(sql,(error,result) => {

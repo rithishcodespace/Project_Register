@@ -615,6 +615,7 @@ router.get("/student/get_project_details/:project_id",userAuth,(req,res,next) =>
      let sql = "select * from projects where project_id = ?";
      db.query(sql,[project_id],(error,result) => {
       if(error)next(error);
+      if(result.length === 0)return next(createError.NotFound('project details not found!'));
       res.send(result);
      })
   }
@@ -900,7 +901,11 @@ router.post("/student/addproject/:project_type/:team_id/:reg_num", userAuth,(req
             db.query(insertSql,[project_id,team_id],(error,result) => {
               if(error)return next(error);
               if(result.affectedRows === 0)return next(createError.BadRequest("no rows inserted!"));
-              res.send(`Project inserted successfully for the team :- ${team_id} -> project_id :- ${project_id}`);
+              res.json({
+                "message":"project added successfully!",
+                "team_id":team_id,
+                "project_id":project_id
+              });
 
             })
           })
