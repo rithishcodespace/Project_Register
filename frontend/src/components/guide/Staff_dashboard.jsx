@@ -185,7 +185,7 @@ function Staff_dashboard() {
 
   {/* Guide - Semester 7 */}
   <section className="bg-white rounded shadow p-6">
-    <h2 className="text-xl font-bold mb-4 pointer bg-white text-gray-800">Guide - Semester 7</h2>
+    <h2 className="text-xl font-bold mb-4 pointer bg-white  text-gray-800">Guide - Semester 7</h2>
     {filterTeamsBySemester(GuideTeams, 7).length > 0 ? (
       <ul className="list-none list-inside space-y-1 text-gray-700">
         {filterTeamsBySemester(GuideTeams, 7).map((team) => (
