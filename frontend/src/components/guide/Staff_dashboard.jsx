@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import instance from '../../utils/axiosInstance';
 import { Bell } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 function Staff_dashboard() {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -11,6 +12,7 @@ function Staff_dashboard() {
   const [GuideTeams, setGuideTeams] = useState([]);
   const [SubTeams, setSubTeams] = useState([]);
   const [progressMap, setProgressMap] = useState({}); // For guide team progress
+  const navigate = useNavigate();
 
   const reg_num = useSelector((state) => state.userSlice.reg_num);
   const name = useSelector((state) => state.userSlice.name);
@@ -213,8 +215,13 @@ function Staff_dashboard() {
               </thead>
               <tbody>
                 {GuideTeams.map((team) => (
-                  <tr key={team.from_team_id} className="bg-white hover:bg-gray-50">
-                    <td className="px-4 py-2 border-b bg-white">{team.from_team_id}</td>
+<tr
+  key={team.from_team_id}
+  className="bg-white hover:bg-gray-100 cursor-pointer"
+  onClick={() => navigate(`team-details/${team.from_team_id}`)}
+>
+
+                    <td className="px-4 py-2 border-b bg-white">{team.from_team_id}</td> 
                     <td className="px-4 py-2 border-b bg-white">{team.project_name}</td>
                     <td className="px-4 py-2 border-b bg-white">{team.team_semester}</td>
                     <td className="px-4 py-2 gap-10 flex  border-b bg-white">

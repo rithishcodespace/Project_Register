@@ -39,6 +39,7 @@ import { useSelector } from "react-redux";
 import Review_projects from "./components/guide/Review_projects";
 import TeamDetails from "./components/guide/Team_Details";
 import ChallengeReviewAdmin from "./components/Students/ChallengeReview";
+import Team_Details from "./components/guide/Team_Details";
 
 
 
@@ -116,7 +117,7 @@ function App() {
             <Route path="queries" element={<Guide_queries />} />
             <Route path="team_progress" element={<Guide_team_progress />} />
             <Route path="review_progress" element={<Review_projects />} />
-            <Route path="team-details/:teamId" element={<TeamDetails />} />
+            <Route path="team-details/:teamId" element={<Team_Details />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
