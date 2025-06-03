@@ -623,32 +623,25 @@ router.get('/guide/fetching_pending_verifications/:guide_reg_num',(req,res,next)
   }
 })
 
-// finds the latest week and gives the progress entered by each member -> 2nd
-// fetches the progress submitted by the particular team
+// gets entire team -> details 
 
-router.get('/guide/gets_the_progress_updated_team_members/:team_id',(req,res,next) => {
-  try{
-    const{team_id} = req.params;
-    if(!team_id)return next(createError.BadRequest('team_id not found!'));
-    let sql = "SELECT MAX(week_number) AS latest_week FROM weekly_logs_verification WHERE team_id = ? and is_verified = false";
-    db.query(sql,[team_id],(error,week_number) => {
-      if(error)return next(error);
-      if(week_number.length === 0)return next(createError.BadRequest('week_no not found!'));
-      if(week_number[0] == null)return res.send('no teams updated!');
+router.get('/guide/gets_entire_team/:team_id', (req, res, next) => {
+  try {
+    const { team_id } = req.params;
+    if (!team_id) return next(createError.BadRequest('team_id not found!'));
 
-      let sql1 = `select week${week_number[0].latest_week}_progress from teams where team_id = ?`;
-      db.query(sql1,[team_id],(error,result) => {
-        if(error)return next(error);
-        if(result.length === 0)return next(createError.NotFound('progress not found!'));
-        return res.send(result);
-      })
-    })
-  }
-  catch(error)
-  {
+    const sql = `select * from teams where team_id = ?`;
+
+    db.query(sql, [team_id], (error, result) => {
+      if (error) return next(error);
+      if(result.length === 0)return next(createError.NotFound('data not found'));
+      res.send(result);
+    });
+  } catch (error) {
     next(error);
   }
-})
+});
+
 
 // verify weekly logs -> 3rd
 
