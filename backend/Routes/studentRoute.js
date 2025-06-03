@@ -269,6 +269,7 @@ router.post("/student/fetch_team_status_and_invitations",userAuth, (req, res, ne
               });
             } else {
               // team conformed checking whether they got a team id if id exist fetch it
+              let getProject_id = "select "
               res.json({
                 teamConformationStatus: 1,
                 teamMembers,
