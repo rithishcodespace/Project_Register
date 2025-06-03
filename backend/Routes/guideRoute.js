@@ -634,6 +634,7 @@ router.get('/guide/gets_the_progress_updated_team_members/:team_id',(req,res,nex
     db.query(sql,[team_id],(error,week_number) => {
       if(error)return next(error);
       if(week_number.length === 0)return next(createError.BadRequest('week_no not found!'));
+      if(week_number[0] == null)return res.send('no teams updated!');
 
       let sql1 = `select week${week_number[0].latest_week}_progress from teams where team_id = ?`;
       db.query(sql1,[team_id],(error,result) => {
