@@ -148,7 +148,7 @@ router.patch("/guide/accept_reject/:status/:team_id/:semester/:my_id",userAuth, 
           let errors = false;
 
           validGuides.forEach((guide) => {
-            const insertSql = "INSERT INTO guide_requests (from_team_id, project_id, project_name, to_guide_reg_num,team_semester) VALUES (?, ?, ?, ?)";
+            const insertSql = "INSERT INTO guide_requests (from_team_id, project_id, project_name, to_guide_reg_num,team_semester) VALUES (?, ?, ?, ?, ?)";
             db.query(insertSql, [from_team_id, project_id, project_name, guide,semester], (error, insertResult) => {
               if (error || insertResult.affectedRows === 0) {
                 console.error("Insert failed for:", guide, error || "No rows inserted");
