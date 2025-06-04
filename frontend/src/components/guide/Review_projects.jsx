@@ -9,6 +9,8 @@ function ReviewProjects() {
   const [expertReviewRequests, setExpertReviewRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [guideTeams,setGuideTeams] = useState([])
+  const [ExpertTeams,setExpertTeams] = useState([])
 
   const [acceptingRequestId, setAcceptingRequestId] = useState(null);
   const [meetingLink, setMeetingLink] = useState('');
@@ -35,6 +37,38 @@ function ReviewProjects() {
       setLoading(false);
     }
   };
+
+useEffect(() => {
+  const fetchGuideRequests = async () => {
+    try {
+      const res = await instance.get(`/guide/fetch_guiding_teams/${guideRegNum}`);
+      setGuideTeams(res.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  if (guideRegNum) {
+    fetchGuideRequests();
+  }
+}, [guideRegNum]); 
+
+
+useEffect(() => {
+  const fetchExpertRequests = async () => {
+    try {
+      const res = await instance.get(`/sub_expert/fetch_teams/${guideRegNum}`);
+      setExpertTeams(res.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  if (guideRegNum) {
+    fetchExpertRequests();
+  }
+}, [guideRegNum]);
+
 
   useEffect(() => {
     if (guideRegNum) fetchReviewRequests();

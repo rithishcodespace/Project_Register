@@ -219,7 +219,7 @@ router.post("/guide/add_review_details/:request_id/:status/:guide_reg_num/:team_
         if(safeStatus === 'accept')
         {
           // checking whether expert accepted the review request
-          let sql1 = "select expert_status,expert_reg_num from review_requests where request_id = ?";
+          let sql1 = "select expert_status,expert_reg_num,temp_meeting_link from review_requests where request_id = ?";
           db.query(sql1,[request_id],(error,result) => {
             if(error)return next(error);
             if(result.length === 0)return next(createError.BadRequest('expert status not found!'));
@@ -227,10 +227,11 @@ router.post("/guide/add_review_details/:request_id/:status/:guide_reg_num/:team_
               return res.send('Guide accepted, but expert has not yet accepted the request!');
             }
             const expert_reg_num = result[0].expert_reg_num;
+            const meeting_link = result[0].temp_meeting_link;
 
             // inserting into scheduled reivews
-            let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id,review_title) values(?,?,?,?,?,?,?,?,?)";
-            db.query(sql,[project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id,review_title],(error,result) => {
+            let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id,review_title,meeting_link) values(?,?,?,?,?,?,?,?,?,?)";
+            db.query(sql,[project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id,review_title,meeting_link],(error,result) => {
               if(error) return next(error);
               if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
               // removing request from the review requests

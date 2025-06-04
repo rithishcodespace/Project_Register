@@ -271,7 +271,7 @@ router.post("/sub_expert/add_review_details/:request_id/:status/:expert_reg_num/
     try{
       const{project_id,project_name,team_lead,review_date,start_time,review_title,reason,temp_meeting_link} = req.body;
       const{request_id,status,expert_reg_num,team_id} = req.params;
-      if(!project_id || !project_name || !team_lead || !review_date || !expert_reg_num || !start_time || !request_id || !status || !team_id || !review_title || !temp_meeting_link)
+      if(!project_id || !project_name || !team_lead || !review_date || !expert_reg_num || !start_time || !request_id || !status || !team_id || !review_title || (status.toLowerCase() == 'accept' && !temp_meeting_link))
       {
         return next(createError.BadRequest("data is missing!"));
       }
