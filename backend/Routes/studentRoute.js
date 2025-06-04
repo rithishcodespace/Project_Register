@@ -1093,13 +1093,13 @@ router.get("/student/schedule_review/:project_id", userAuth, (req, res, next) =>
   }
 });
 
-// fetches the upcoming meeting links for my team
+// fetches the upcoming reviews for my team
 
-router.get('/student/fetch_upcoming_meeting_links/:team_id',(req,res,next) => {
+router.get('/student/fetch_upcoming_reviews/:team_id',(req,res,next) => {
   try{
     const{team_id} = req.params;
     if(!team_id) return next(createError.BadRequest('team is undefined!'));
-    let sql = 'select meeting_link,review_no from meeting_links where team_id = ? and scheduled_at >= current_timestamp';
+    let sql = `SELECT * FROM scheduled_reviews WHERE team_id = ? AND attendance IS NULL AND TIMESTAMP(review_date, start_time) >= CURRENT_TIMESTAMP`
     db.query(sql,[team_id],(error,result) => {
       if(error)return next(error);
       if(result.length === 0)return next(createError.NotFound('meeting links not found!'));
