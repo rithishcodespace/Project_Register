@@ -15,8 +15,8 @@ function Queries() {
       alert("Query field is empty!");
       return;
     }
-
     try {
+
       const token = localStorage.getItem("accessToken");
       await instance.post(
         `/student_query/${name.name}/${selector[0].guide_reg_num}`,

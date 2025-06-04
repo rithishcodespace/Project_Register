@@ -78,13 +78,13 @@ function App() {
             {teamselector ? (
               <>
                 <Route path="Project_Details" element={<Project_Details />} />
-                {teamselector?.[0]?.guide_reg_num && (
+                {/* {teamselector?.[0]?.guide_reg_num && ( */}
                   <>
                     <Route path="queries" element={<Queries />} />
                     <Route path="review" element={<Schedule_review />} />
                     <Route path="Progress_update" element={<Progress_Update />} />
                   </>
-                )} 
+                {/* )}  */}
               </>
 
             ) : null}
