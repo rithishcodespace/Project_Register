@@ -2,170 +2,114 @@ import React, { useEffect, useState } from 'react';
 import instance from '../../utils/axiosInstance';
 import { useSelector } from 'react-redux';
 
-function Review_projects() {
+function ReviewProjects() {
   const guideRegNum = useSelector((state) => state.userSlice.reg_num);
-  const [reviewRequests, setReviewRequests] = useState([]);
+
+  const [guideReviewRequests, setGuideReviewRequests] = useState([]);
+  const [expertReviewRequests, setExpertReviewRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [rejectReason, setRejectReason] = useState('');
-  const [rejectingRequestId, setRejectingRequestId] = useState(null);
 
-  // Helper function to check if review_date is in the future
-  const isFutureDate = (dateStr) => {
-    const now = new Date();
-    const reviewDate = new Date(dateStr);
-    return reviewDate > now;
+  const [rejectingRequestId, setRejectingRequestId] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+
+  // Fetch review requests from both endpoints and store separately
+  const fetchReviewRequests = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [guideRes, expertRes] = await Promise.all([
+        instance.get(`/guide/fetch_review_requests/${guideRegNum}`),
+        instance.get(`/sub_expert/fetch_review_requests/${guideRegNum}`)
+      ]);
+
+      setGuideReviewRequests(guideRes.data);
+      setExpertReviewRequests(expertRes.data);
+    } catch (err) {
+      setError('Failed to fetch review requests');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    const fetchAllReviewRequests = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        // Fetch guide review requests
-        const guideRes = await instance.get(`/guide/fetch_review_requests/${guideRegNum}`);
-        // Fetch subject expert review requests
-        const subExpertRes = await instance.get(`/sub_expert/fetch_review_requests/${guideRegNum}`);
-
-        // Combine results
-        const combined = [...guideRes.data, ...subExpertRes.data];
-
-        // Filter to future review dates only
-        const filtered = combined.filter(req => isFutureDate(req.review_date));
-
-        setReviewRequests(filtered);
-      } catch (err) {
-        console.error('Error fetching review requests:', err);
-        setError('Failed to load review requests.');
-      }
-      setLoading(false);
-    };
-
-    if (guideRegNum) {
-      fetchAllReviewRequests();
-    }
+    if (guideRegNum) fetchReviewRequests();
   }, [guideRegNum]);
 
-  // Handler for Accept / Reject button click
-  const handleAction = async (request, status) => {
-    setError(null);
-
-    // If reject, require reason first
-    if (status === 'reject') {
-      setRejectingRequestId(request.request_id);
-      setRejectReason('');
-      return;
-    }
-
-    // For accept, directly send the request
-    await submitReviewStatus(request, status);
-  };
-
-  // Function to submit review status (accept/reject) to backend
-  const submitReviewStatus = async (request, status) => {
-    setActionLoading(true);
-    setError(null);
-
-    // Extract needed params from request
-    const {
-      request_id,
-      project_id,
-      project_name,
-      team_lead,
-      review_date,
-      start_time,
-      review_no,
-      team_id,
-      guideRegNum,
-    } = request;
-
-    // Prepare payload body
-    const body = {
-      project_id,
-      project_name,
-      team_lead,
-      review_date,
-      start_time,
-      review_no,
-      ...(status === 'reject' ? { reject_reason: rejectReason } : {})
-    };
-
+  // Unified accept/reject handler
+  const handleReviewAction = async (request, status, isGuide) => {
     try {
-      let url = '';
-      let paramRegNum = '';
+      setLoading(true);
+      setError(null);
 
-      if (guideRegNum === guideRegNum) {
-        url = `/guide/add_review_details/${request_id}/${status}/${guideRegNum}/${team_id}`;
-        paramRegNum = guideRegNum;
-      } else {
-        url = `/sub_expert/add_review_details/${request_id}/${status}/${guideRegNum}/${team_id}`;
-        paramRegNum = guideRegNum;
-      }
+      const {
+        request_id,
+        project_id,
+        project_name,
+        team_lead,
+        review_date,
+        start_time,
+        review_title,
+        team_id,
+      } = request;
 
-      // POST request
+      const url = isGuide
+        ? `/guide/add_review_details/${request_id}/${status}/${guideRegNum}/${team_id}`
+        : `/sub_expert/add_review_details/${request_id}/${status}/${guideRegNum}/${team_id}`;
+
+      const body = {
+        project_id,
+        project_name,
+        team_lead,
+        review_date: new Date(review_date).toISOString().slice(0, 10), // 👈 Fix here
+        start_time,
+        review_title,
+        reason: status === 'reject' ? rejectReason : '',
+      };
+
+
       const res = await instance.post(url, body);
-
-      alert(res.data || 'Action completed successfully.');
-
-      // After action, remove this request from list or refresh list
-      setReviewRequests(prev =>
-        prev.filter(r => r.request_id !== request_id)
-      );
+      alert(res.data);
       setRejectingRequestId(null);
       setRejectReason('');
+      await fetchReviewRequests();
     } catch (err) {
-      console.error('Error submitting review status:', err);
-      setError('Failed to update review status.');
+      setError(`Failed to ${status} the request`);
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-
-    setActionLoading(false);
   };
 
-  // Submit reject reason form
-  const handleRejectSubmit = (request) => {
-    if (!rejectReason.trim()) {
-      alert('Please enter a reason for rejection.');
-      return;
-    }
-    submitReviewStatus(request, 'reject');
-  };
+  // Render UI for either guide or expert requests
+  const renderReviewRequests = (requests, title, isGuide) => (
+    <div className="mb-10" >
+      <h2 className="text-xl font-semibold mb-4">{title}</h2>
 
-  if (loading) return <div>Loading review requests...</div>;
-  if (error) return <div className="text-red-600">Error: {error}</div>;
+      {requests.length === 0 && <p>No requests found.</p>}
 
-  return (
-    <div>
-      <h1 className="text-xl font-bold mb-4">Review Projects</h1>
+      {requests.map((req) => (
+        <div key={req.request_id} className="border bg-white rounded p-4 mb-4 shadow-sm ">
+          <p className='bg-white'><strong className='bg-white'>Project:</strong> {req.project_name}</p>
+          <p className='bg-white'><strong className='bg-white'>Team Lead:</strong> {req.team_lead}</p>
+          <p className='bg-white'><strong className='bg-white'>Review Date:</strong> {req.review_date}</p>
+          <p className='bg-white'><strong className='bg-white'>Start Time:</strong> {req.start_time}</p>
+          <p className='bg-white'><strong className='bg-white'>Review Title:</strong> {req.review_title}</p>
 
-      {reviewRequests.length === 0 && <p>No review requests available.</p>}
-
-      {reviewRequests.map((req) => (
-        <div
-          key={req.request_id}
-          className="border p-4 mb-4 rounded shadow-md"
-        >
-          <p><strong>Project Name:</strong> {req.project_name}</p>
-          <p><strong>Project ID:</strong> {req.project_id}</p>
-          <p><strong>Team ID:</strong> {req.team_id}</p>
-          <p><strong>Team Lead:</strong> {req.team_lead}</p>
-          <p><strong>Review Date:</strong> {new Date(req.review_date).toLocaleDateString()}</p>
-          <p><strong>Start Time:</strong> {req.start_time}</p>
-          <p><strong>File:</strong> <a href={req.file} target="_blank" rel="noreferrer" className="text-blue-600 underline">Download/View</a></p>
-
-          {/* Show Accept and Reject buttons or reject reason form */}
           {rejectingRequestId === req.request_id ? (
-            <div className="mt-2">
+            <div className="mt-4 bg-white">
               <textarea
-                placeholder="Enter reason for rejection"
+                placeholder="Enter rejection reason"
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                className="border p-2 w-full mb-2"
+                className="border bg-white p-2 w-full mb-2"
                 rows={3}
               />
               <button
-                onClick={() => handleRejectSubmit(req)}
-                disabled={actionLoading}
+                onClick={() => handleReviewAction(req, 'reject', isGuide)}
+                disabled={!rejectReason.trim() || loading}
                 className="bg-red-600 text-white px-4 py-2 rounded mr-2"
               >
                 Submit Reject
@@ -175,24 +119,26 @@ function Review_projects() {
                   setRejectingRequestId(null);
                   setRejectReason('');
                 }}
-                disabled={actionLoading}
-                className="bg-gray-400 px-4 py-2 rounded"
+                className="bg-gray-400 text-white px-4 py-2 rounded"
               >
                 Cancel
               </button>
             </div>
           ) : (
-            <div className="mt-2">
+            <div className="mt-4 bg-white">
               <button
-                onClick={() => handleAction(req, 'accept')}
-                disabled={actionLoading}
+                onClick={() => handleReviewAction(req, 'accept', isGuide)}
+                disabled={loading}
                 className="bg-green-600 text-white px-4 py-2 rounded mr-2"
               >
                 Accept
               </button>
               <button
-                onClick={() => handleAction(req, 'reject')}
-                disabled={actionLoading}
+                onClick={() => {
+                  setRejectingRequestId(req.request_id);
+                  setRejectReason('');
+                }}
+                disabled={loading}
                 className="bg-red-600 text-white px-4 py-2 rounded"
               >
                 Reject
@@ -203,6 +149,18 @@ function Review_projects() {
       ))}
     </div>
   );
+
+  return (
+    <div className="p-6 max-w-5xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Review Projects</h1>
+
+      {loading && <p>Loading...</p>}
+      {error && <p className="text-red-600 mb-4">{error}</p>}
+
+      {renderReviewRequests(guideReviewRequests, 'Guide Review Requests', true)}
+      {renderReviewRequests(expertReviewRequests, 'Subject Expert Review Requests', false)}
+    </div>
+  );
 }
 
-export default Review_projects;
+export default ReviewProjects;

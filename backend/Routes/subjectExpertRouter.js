@@ -246,16 +246,16 @@ router.get("/sub_expert/fetch_review_requests/:expert_reg_num",userAuth,(req,res
   }
 })
 
+// fetch upcoming review
 
-// fetching the upcoming reviews -> mark attendence page
-
-router.get("/sub_expert/fetch_upcoming_reviews/:expert_reg_num",userAuth,(req,res,next) => {
+router.get('/sub_expert/fetch_upcoming_reviews/:team_id',(req,res,next) => {
   try{
-    const{expert_reg_num} = req.params;
-    if(!expert_reg_num)return next(createError.BadRequest("expert reg num missing!"));
-    let sql = "SELECT * FROM scheduled_reviews WHERE expert_reg_num = ? AND review_date >= CURRENT_DATE AND attendance IS NULL";
-    db.query(sql,[expert_reg_num],(error,result) => {
+    const{team_id} = req.params;
+    if(!team_id) return next(createError.BadRequest('team is undefined!'));
+    let sql = `SELECT * FROM scheduled_reviews WHERE team_id = ? AND attendance IS NULL AND TIMESTAMP(review_date, start_time) >= CURRENT_TIMESTAMP`
+    db.query(sql,[team_id],(error,result) => {
       if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound('meeting links not found!'));
       return res.send(result);
     })
   }
@@ -269,9 +269,9 @@ router.get("/sub_expert/fetch_upcoming_reviews/:expert_reg_num",userAuth,(req,re
 
 router.post("/sub_expert/add_review_details/:request_id/:status/:expert_reg_num/:team_id",userAuth,(req,res,next) => {
     try{
-      const{project_id,project_name,team_lead,review_date,start_time,review_no,reason} = req.body;
+      const{project_id,project_name,team_lead,review_date,start_time,review_title,reason,meeting_link} = req.body;
       const{request_id,status,expert_reg_num,team_id} = req.params;
-      if(!project_id || !project_name || !team_lead || !review_date || !expert_reg_num || !start_time || !request_id || !status || !team_id || !review_no)
+      if(!project_id || !project_name || !team_lead || !review_date || !expert_reg_num || !start_time || !request_id || !status || !team_id || !review_title)
       {
         return next(createError.BadRequest("data is missing!"));
       }
@@ -285,6 +285,7 @@ router.post("/sub_expert/add_review_details/:request_id/:status/:expert_reg_num/
         if(result.affectedRows === 0)return next(createError.BadRequest("some rows not affected!"));
         if(safeStatus === 'accept')
         {
+          if(!meeting_link)return next(createError.BadRequest('meeting link not found!'))
           //checking whether guide accepted the review request
           let sql1 = "select guide_status,guide_reg_num from review_requests where request_id = ?";
           db.query(sql1,[request_id],(error,result) => {
@@ -296,8 +297,8 @@ router.post("/sub_expert/add_review_details/:request_id/:status/:expert_reg_num/
             const guide_reg_num = result[0].guide_reg_num;
 
             // inserting into scheduled reivews
-            let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id,review_no) values(?,?,?,?,?,?,?,?,?)";
-            db.query(sql,[project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id,review_no],(error,result) => {
+            let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id,review_title,meeting_link) values(?,?,?,?,?,?,?,?,?,?)";
+            db.query(sql,[project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id,review_title,meeting_link],(error,result) => {
               if(error) return next(error);
               if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
               // removing request from the review requests
@@ -598,42 +599,5 @@ router.post("/expert/review/add_team_marks/:expert_reg_num", userAuth, (req, res
     });
   });
 });
-
-
-// meeting links
-
-router.post('/expert/add_meeting_link/:expert_reg_num/:team_id/:review_no', (req, res, next) => {
-  try {
-    const { meetingLink, platform, scheduled_at } = req.body;
-    const { expert_reg_num, team_id, review_no } = req.params;
-
-    if (!meetingLink || !platform || !expert_reg_num || !team_id || !review_no || !scheduled_at)
-      return next(createError.BadRequest('Data is missing!'));
-
-    const sql = 'SELECT * FROM meeting_links WHERE team_id = ? AND review_no = ? and scheduled_at >= current_timestamp';
-
-    db.query(sql, [team_id, review_no], (error, result) => {
-      if (error) return next(error);
-
-      if (result.length > 0) {
-        return next(createError.BadRequest('Meeting link already exists!'));
-      } else {
-        // INSERT
-        const insertSql = `INSERT INTO meeting_links (team_id, review_no, meeting_link, platform, scheduled_at) VALUES (?, ?, ?, ?, ?)`;
-
-        db.query(insertSql, [team_id, review_no, meetingLink, platform, scheduled_at], (err, insertResult) => {
-          if (err) return next(err);
-          if (insertResult.affectedRows === 0) return next(createError.BadRequest('Insert failed!'));
-          return res.send('Meeting link added successfully!');
-        });
-      }
-    });
-
-  } catch (error) {
-    next(error);
-  }
-});
-
-
 
 module.exports = router;

@@ -1,14 +1,14 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, CheckSquare, FileText, Calendar, BarChart2, Users, LogOut } from 'lucide-react';
+import { Home, CheckSquare, FileText, LogOut } from 'lucide-react';
 import college_img from "../../assets/college_img.png";
 import menu from "../../assets/menu.png";
 import wrong from "../../assets/wrong.png";
 import instance from '../../utils/axiosInstance';
 import { useDispatch } from 'react-redux';
-import { removeUser} from '../../utils/userSlice';
+import { removeUser } from '../../utils/userSlice';
 import { removeTeamMembers } from '../../utils/teamSlice';
-import {removeTeamStatus} from "../../utils/teamStatus";
+import { removeTeamStatus } from "../../utils/teamStatus";
 
 function Guide_navbar({ isOpen, toggleSidebar }) {
   const navigate = useNavigate();
@@ -18,13 +18,10 @@ function Guide_navbar({ isOpen, toggleSidebar }) {
   const handleLogout = async () => {
     try {
       localStorage.clear();
-      console.log("cleared all");
-      let token = localStorage.getItem("refreshToken");
       await instance.delete("/auth/logout");
       dispatch(removeUser());
       dispatch(removeTeamMembers());
       dispatch(removeTeamStatus());
-
       navigate("/login");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -34,7 +31,15 @@ function Guide_navbar({ isOpen, toggleSidebar }) {
 
   const isActive = (path) => {
     const currentPath = location.pathname;
-    if (path === "") return currentPath === "/guide";
+
+    // For Dashboard, include both /guide and /guide/team-details
+    if (path === "") {
+      return (
+        currentPath === "/guide" ||
+        currentPath.startsWith("/guide/team-details")
+      );
+    }
+
     return currentPath === `/guide/${path}` || currentPath.startsWith(`/guide/${path}/`);
   };
 
@@ -76,7 +81,6 @@ function Guide_navbar({ isOpen, toggleSidebar }) {
       </div>
 
       <div className="bg-white px-2">
-        
         <Link to="." className={`${navDiv("")} group`}>
           <Home size={24} className={navIcon("")} />
           <p className={navText("")}>Dashboard</p>
@@ -92,8 +96,6 @@ function Guide_navbar({ isOpen, toggleSidebar }) {
           <p className={navText("review_progress")}>Review Progress</p>
         </Link>
 
-    
-        {/* Logout Button */}
         <button
           onClick={handleLogout}
           className="ml-3 flex items-center mt-auto mb-5 px-3 py-2 text-gray-600 hover:text-red-500"

@@ -86,6 +86,7 @@ CREATE TABLE `scheduled_reviews` (
   `team_id` VARCHAR(300) DEFAULT NULL,
   `expert_reg_num` varchar(100) not null,
   `guide_reg_num` VARCHAR(100) NOT NULL,
+  `meeting_link` varchar(500) default null
   PRIMARY KEY (`review_id`)
 ) 
 
@@ -270,20 +271,6 @@ CREATE TABLE `mentor_requests` (
   INDEX `idx_status` (`status`)
 ) 
 
-CREATE TABLE meeting_links (
-  meeting_id INT AUTO_INCREMENT PRIMARY KEY,
-  team_id VARCHAR(20) NOT NULL,
-  review_no ENUM('1', '2', 'optional') NOT NULL,
-  meeting_link VARCHAR(500) NOT NULL,
-  platform ENUM('Google Meet', 'Zoom', 'Microsoft Teams') DEFAULT 'Google Meet',
-  scheduled_at DATETIME NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-  FOREIGN KEY (team_id) REFERENCES teams(team_id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
-);
 
 CREATE TABLE mentors_mentees (
     mentee_name VARCHAR(100) NOT NULL,
