@@ -19,12 +19,18 @@ function Team_Details() {
       try {
         const verifiedWeeksRes = await instance.get(`/guide/no_of_weeks_verified/${teamId}`);
         const verifiedWeekNum = parseInt(verifiedWeeksRes.data);
-        const nextWeek = verifiedWeekNum + 1;
+        
+       let nextWeek;
+
+if (isNaN(verifiedWeekNum)) {
+  nextWeek = 1;
+} else {
+  nextWeek = verifiedWeekNum + 1;
+}
 
         const teamRes = await instance.get(`/guide/gets_entire_team/${teamId}`);
         const team = teamRes.data;
         setTeamDetails(team);
-        console.log(teamRes.data);
 
 
         const progressField = `week${nextWeek}_progress`;
