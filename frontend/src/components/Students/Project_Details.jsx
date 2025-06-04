@@ -247,7 +247,7 @@ useEffect(() => {
           "hard_soft":core
         }
       );
-      console.log(response.data); 
+      console.log("response"+response.data); 
 
       const { message, project_id } = response.data;
       console.log(project_id)
@@ -257,7 +257,7 @@ useEffect(() => {
       alert(message || 'Project added.');
 
       // Step 2: Send guide requests
-      await instance.post('/guide/sent_request_to_guide', {
+      await instance.post(`/guide/sent_request_to_guide/${userselector.semester}`, {
         "from_team_id": teamselector[0].team_id,
         "project_id":project_id,
         "project_name": projectName.trim(),
@@ -265,7 +265,7 @@ useEffect(() => {
       });
 
       // Step 3: Send expert requests
-      await instance.post('/sub_expert/sent_request_to_expert', {
+      await instance.post(`/sub_expert/sent_request_to_expert/${userselector.semester}`, {
         "from_team_id": teamselector[0].team_id,
         "project_id":project_id,
         "project_name": projectName.trim(),
@@ -283,7 +283,7 @@ useEffect(() => {
       setSelectedExperts([]);
       setSelectedGuides([]);
 
-      navigate('/student');
+      // navigate('/student');
       
     } catch (error) {
       console.error('Submit Error:', error);

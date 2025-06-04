@@ -133,7 +133,8 @@ function Student_navbar({ isOpen, toggleSidebar }) {
 
         <Link
           to="queries"
-          className={`${navDiv("queries")} group ${!isTeamFullyAssigned ? disabledClass : ""}`}
+          className={`${navDiv("queries")} group ${!isTeamFullyAssigned ? disabledClass : ""} `}
+         
         >
           <MessagesSquare size={24} className={navIcon("queries")} />
           <p className={navText("queries")}>Queries</p>
