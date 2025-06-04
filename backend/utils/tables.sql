@@ -178,6 +178,8 @@ CREATE TABLE review_requests (
   expert_status VARCHAR(100) default 'interested'
   expert_reg_num varchar(100) NOT NULL,
   guide_reg_num VARCHAR(100) NOT NULL,
+  column guide_reason text default null,
+  column expert_reason text default null
   file text not null
   
   INDEX idx_team_id (team_id),

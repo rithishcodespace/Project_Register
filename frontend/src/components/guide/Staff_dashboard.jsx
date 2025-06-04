@@ -21,20 +21,21 @@ function Staff_dashboard() {
   const name = useSelector((state) => state.userSlice.name);
 
   // Fetch verified weeks for teams
-  const fetchVerifiedWeeks = async (teams) => {
-    const updated = await Promise.all(
-      teams.map(async (team) => {
-        try {
-          const res = await instance.get(`/guide/no_of_weeks_verified/${team.from_team_id}`);
-          console.log(res.data)
-          return { ...team, verifiedWeeks: res.data || 0 };
-        } catch {
-          return { ...team, verifiedWeeks: 0 };
-        }
-      })
-    );
-    return updated;
-  };
+const fetchVerifiedWeeks = async (teams) => {
+  if (!Array.isArray(teams)) return []; // prevent .map crash
+
+  const updated = await Promise.all(
+    teams.map(async (team) => {
+      try {
+        const res = await instance.get(`/guide/no_of_weeks_verified/${team.from_team_id}`);
+        return { ...team, verifiedWeeks: res.data || 0 };
+      } catch {
+        return { ...team, verifiedWeeks: 0 };
+      }
+    })
+  );
+  return updated;
+};
 
   // Fetch progress data ONLY for guide teams, store results in progressMap
   const fetchProgressForTeams = async (teams) => {
@@ -105,16 +106,23 @@ function Staff_dashboard() {
         setExpertRequests(typeof expertRes.value.data === 'string' ? [] : expertRes.value.data);
       }
       if (guideTeamsRes.status === "fulfilled") {
-        const updatedGuideTeams = await fetchVerifiedWeeks(guideTeamsRes.value.data);
-        setGuideTeams(updatedGuideTeams);
+  const rawGuideTeams = guideTeamsRes.value.data;
 
-        // Fetch progress ONLY for guide teams
-        fetchProgressForTeams(updatedGuideTeams);
-      }
+  // Check if the response is an array
+  const validGuideTeams = Array.isArray(rawGuideTeams) ? rawGuideTeams : [];
+
+  const updatedGuideTeams = await fetchVerifiedWeeks(validGuideTeams);
+  setGuideTeams(updatedGuideTeams);
+
+  // Fetch progress ONLY for guide teams
+  fetchProgressForTeams(updatedGuideTeams);
+}
+
       if (subTeamsRes.status === "fulfilled") {
         setSubTeams(subTeamsRes.value.data);
+        console.log(SubTeams);
+        
 
-        // No progress fetch for subTeams (per your requirement)
       }
     } catch (error) {
       console.error("Error fetching requests:", error);

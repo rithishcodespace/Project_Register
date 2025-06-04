@@ -231,7 +231,7 @@ router.post("/student/fetch_team_status_and_invitations",(req, res, next) => {
   try {
     const { from_reg_num } = req.body; // logged user's reg num
 
-    if(!from_reg_num)next(createError.BadRequest("from_reg_num not found!"))
+    if(!from_reg_num)return next(createError.BadRequest("from_reg_num not found!"))
 
     // Step 1: Check if user is in any team (as leader or member)
     const checkTeamSQL = `SELECT team_id, team_conformed, from_reg_num AS teamLeader FROM team_requests WHERE (from_reg_num = ? OR reg_num = ?) AND status = 'accept' LIMIT 1`;
@@ -279,13 +279,21 @@ router.post("/student/fetch_team_status_and_invitations",(req, res, next) => {
 
                     const project_id = results[0].project_id;
 
-                    res.json({
-                    teamConformationStatus: 1,
-                    teamMembers,
-                    "projectId":project_id,
-                    pendingInvitations: [],
-                    teamLeader: leaderDetails[0] || null
-                    });
+                    // fetching the request sent to guide and expert
+                    let check = `(SELECT * FROM guide_requests WHERE from_team_id = ?) UNION ALL (SELECT * FROM sub_expert_requests WHERE from_team_id = ?);`
+
+                    db.query(check,[teamMembers[0].team_id,teamMembers[0].team_id],(error4,result4) => {
+                      if(error4)return next(error4);
+                      res.json({
+                        teamConformationStatus: 1,
+                        teamMembers,
+                        projectId: project_id,
+                        pendingInvitations: [],
+                        teamLeader: leaderDetails[0] || null,
+                        "history of requests -> expert and guide": result4
+                      });
+
+                    })
                   }
                   else{
                     res.json({
