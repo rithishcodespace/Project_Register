@@ -231,8 +231,8 @@ useEffect(() => {
             <p className='bg-white'><span className="font-medium bg-white text-gray-700">Email:</span> {userSlice.emailId}</p>
             <p className='bg-white'><span className="font-medium bg-white text-gray-700">Register Number:</span> {userSlice.reg_num}</p>
             <p className='bg-white'><span className="font-medium bg-white text-gray-700">Department:</span> {userSlice.dept}</p>
-            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Guide :</span>{teamSelector && teamSelector[0]?.guide_reg_num ? teamSelector[0].guide_reg_num : "Not Assigned"}</p>
-            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Subject Exper</span> {teamSelector && teamSelector[0]?.sub_expert_reg_num? teamSelector[0].sub_expert_reg_num : "Not Assigned"}</p>
+            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Guide :</span>{teamSelector && userSlice?.guide_reg_num ?userSlice.guide_reg_num : "Not Assigned"}</p>
+            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Subject Exper</span> {teamSelector && userSlice?.sub_expert_reg_num ? userSlice.sub_expert_reg_num : "Not Assigned"}</p>
           </div></div>
 
           <div className="mt-10 bg-white p-6 rounded-lg shadow ">

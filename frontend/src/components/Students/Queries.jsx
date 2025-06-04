@@ -8,6 +8,7 @@ function Queries() {
   const chatEndRef = useRef(null);
   const selector = useSelector((Store) => Store.teamSlice);
   const name = useSelector((Store) => Store.userSlice);
+   const statusSelector = useSelector((Store) => Store.teamStatusSlice);
 
   async function submitQuery(event) {
     event.preventDefault();
@@ -19,10 +20,10 @@ function Queries() {
 
       const token = localStorage.getItem("accessToken");
       await instance.post(
-        `/student_query/${name.name}/${selector[0].guide_reg_num}`,
+        `/student_query/${name.name}/${name.guide_reg_num}`,
         {
           team_id: selector[0].team_id,
-          project_id: selector[0].project_id,
+          project_id: statusSelector.projectId,
           query: newQuery,
         }
       );

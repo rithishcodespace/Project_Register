@@ -281,6 +281,25 @@ router.get('/guide/fetch_upcoming_reviews/:team_id',(req,res,next) => {
   }
 })
 
+// fetch completed reviews
+
+router.get("/guide/fetch_completed_reviews/:team_id",(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest('team_id number not found!'));
+    let sql = `SELECT * FROM scheduled_reviews WHERE team_id = ? AND attendance IS NULL AND TIMESTAMP(review_date, start_time) <= CURRENT_TIMESTAMP AND review_date >= CURDATE() - INTERVAL 2 DAY`;
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return res.send('No completed reviews within a time internal of 2!');
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 // fetching the review requests sent by teams
 
 router.get("/guide/fetch_review_requests/:guide_reg_num",userAuth,(req,res,next) => {

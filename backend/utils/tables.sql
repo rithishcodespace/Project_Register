@@ -19,6 +19,7 @@ CREATE TABLE `project_completion_files` (
   `outcome` varchar(255) DEFAULT NULL,
   `report` varchar(255) DEFAULT NULL,
   `ppt` varchar(255) DEFAULT NULL,
+  `column file_classification` varchar(100) not null
   `uploaded_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   INDEX `idx_team_id` (`team_id`),

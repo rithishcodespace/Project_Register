@@ -20,8 +20,8 @@ function Student_navbar({ isOpen, toggleSidebar }) {
   const userSelector = useSelector((State) => State.userSlice);
   const teamSelector = useSelector((State) => State.teamSlice);
   const teamstatusSelector = useSelector((State) => State.teamStatusSlice);
-  const a = teamSelector?.[0]?.guide_reg_num || null;
-  const b = teamSelector?.[0]?.sub_expert_reg_num || null;
+  const a = userSelector?.guide_reg_num || null;
+  const b = userSelector?.sub_expert_reg_num || null;
 
 
   const handleLogout = async () => {
@@ -133,7 +133,7 @@ function Student_navbar({ isOpen, toggleSidebar }) {
 
         <Link
           to="queries"
-          className={`${navDiv("queries")} group `}
+          className={`${navDiv("queries")} group  ${!isTeamFullyAssigned ? disabledClass : ""}`}
           //  ${!isTeamFullyAssigned ? disabledClass : ""}
          
         >
@@ -143,7 +143,7 @@ function Student_navbar({ isOpen, toggleSidebar }) {
         
         <Link
           to="review"
-          className={`${navDiv("review")} group `}
+          className={`${navDiv("review")} group ${!isTeamFullyAssigned ? disabledClass : ""} `}
           // ${!isTeamFullyAssigned ? disabledClass : ""}
         >
           <Users size={24} className={navIcon("review")} />
@@ -152,7 +152,7 @@ function Student_navbar({ isOpen, toggleSidebar }) {
         
         <Link
           to="Progress_update"
-          className={`${navDiv("Progress_update")} group `}
+          className={`${navDiv("Progress_update")} group ${!isTeamFullyAssigned ? disabledClass : ""}`}
           // ${!isTeamFullyAssigned ? disabledClass : ""}
         >
           <BarChart2 size={24} className={navIcon("Progress_update")} />
