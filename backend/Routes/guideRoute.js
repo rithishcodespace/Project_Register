@@ -281,6 +281,18 @@ router.get('/guide/fetch_upcoming_reviews/:team_id',(req,res,next) => {
   }
 })
 
+// fetch completed reviews
+
+router.get("/guide/fetch_completed_reviews/:guide_reg_num",(req,res,next) => {
+  try{
+    
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 // fetching the review requests sent by teams
 
 router.get("/guide/fetch_review_requests/:guide_reg_num",userAuth,(req,res,next) => {
