@@ -86,7 +86,7 @@ router.patch("/guide/accept_reject/:status/:team_id/:semester/:my_id",userAuth, 
           });
         } else if (status === "reject") {
           // Handle rejection: status already updated in sub_expert_requests
-          let rejectSql = "guide_requests set reason = ? where team_id = ?";
+          let rejectSql = "Update guide_requests set reason = ? where from_team_id = ?";
             db.query(rejectSql,[reason,team_id],(error,result) => {
               if(error)return next(error);
               if(result.affectedRows === 0)return next(createError.BadRequest('reason not updated in requests table!'));
