@@ -279,21 +279,15 @@ router.post("/student/fetch_team_status_and_invitations",(req, res, next) => {
 
                     const project_id = results[0].project_id;
 
-                    // fetching the request sent to guide and expert
-                    let check = `(SELECT * FROM guide_requests WHERE from_team_id = ?) UNION ALL (SELECT * FROM sub_expert_requests WHERE from_team_id = ?);`
-
-                    db.query(check,[teamMembers[0].team_id,teamMembers[0].team_id],(error4,result4) => {
-                      if(error4)return next(error4);
-                      res.json({
+                    res.json({
                         teamConformationStatus: 1,
                         teamMembers,
                         projectId: project_id,
                         pendingInvitations: [],
                         teamLeader: leaderDetails[0] || null,
-                        "history of requests -> expert and guide": result4
-                      });
+                    });
 
-                    })
+
                   }
                   else{
                     res.json({
