@@ -676,7 +676,7 @@ router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:status/:team_id",u
 
     // validating guide register number
 
-    const sql = `SELECT guide_reg_num, week${weekNum}_progress AS week_progress FROM team_requests WHERE team_id = ?`;
+    const sql = `SELECT guide_reg_num, week${weekNum}_progress AS week_progress FROM teams WHERE team_id = ?`;
     db.query(sql, [team_id], (error, result) => {
       if (error) return next(error);
       if (result.length === 0)
@@ -693,7 +693,7 @@ router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:status/:team_id",u
             return next(createError.Conflict(`Week ${weekNum} has already been verified`));
 
           const verifiedAt = new Date();
-          const insertSql = "update weekly_logs_verifications set is_verified = ?,verified_by = ?,verified_at = ?,remarks = ?,status = ? where team_id = ? and week_number = ?";
+          const insertSql = "update weekly_logs_verification set is_verified = ?,verified_by = ?,verified_at = ?,remarks = ?,status = ? where team_id = ? and week_number = ?";
           db.query(insertSql, [true,guide_reg_num,verifiedAt,remarks,safeStatus,team_id,weekNum], (error, result) => {
             if (error) return next(error);
             if (result.affectedRows === 0)
