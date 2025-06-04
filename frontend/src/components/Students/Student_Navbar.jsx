@@ -133,7 +133,8 @@ function Student_navbar({ isOpen, toggleSidebar }) {
 
         <Link
           to="queries"
-          className={`${navDiv("queries")} group ${!isTeamFullyAssigned ? disabledClass : ""} `}
+          className={`${navDiv("queries")} group `}
+          //  ${!isTeamFullyAssigned ? disabledClass : ""}
          
         >
           <MessagesSquare size={24} className={navIcon("queries")} />
@@ -142,7 +143,8 @@ function Student_navbar({ isOpen, toggleSidebar }) {
         
         <Link
           to="review"
-          className={`${navDiv("review")} group ${!isTeamFullyAssigned ? disabledClass : ""}`}
+          className={`${navDiv("review")} group `}
+          // ${!isTeamFullyAssigned ? disabledClass : ""}
         >
           <Users size={24} className={navIcon("review")} />
           <p className={navText("review")}>Schedule Review</p>
@@ -150,7 +152,8 @@ function Student_navbar({ isOpen, toggleSidebar }) {
         
         <Link
           to="Progress_update"
-          className={`${navDiv("Progress_update")} group ${!isTeamFullyAssigned ? disabledClass : ""}`}
+          className={`${navDiv("Progress_update")} group `}
+          // ${!isTeamFullyAssigned ? disabledClass : ""}
         >
           <BarChart2 size={24} className={navIcon("Progress_update")} />
           <p className={navText("Progress_update")}>Progress Update</p>
