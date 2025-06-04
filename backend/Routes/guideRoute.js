@@ -39,7 +39,7 @@ router.patch("/guide/accept_reject/:status/:team_id/:semester/:my_id",userAuth, 
     if(!team_id || !my_id || !semester || !reason)return next(createError.BadRequest("data is missing!"));
 
     //checks whether he acts as expert or mentor to that particular team
-    let sql = "SELECT * FROM sub_expert_requests WHERE to_expert_reg_num = ? AND from_team_id = ? AND status = 'accept' UNION SELECT * FROM mentor_requests WHERE to_mentor_reg_num = ? AND from_team_id = ? AND status = 'accept'";
+    let sql = "SELECT * FROM sub_expert_requests WHERE to_expert_reg_num = ? AND from_team_id = ? AND status = 'accept' UNION SELECT * FROM guide_requests WHERE to_guide_reg_num = ? AND from_team_id = ? AND status = 'accept'";
     db.query(sql, [my_id,team_id,my_id,team_id], (error, result) => {
       if (error) return next(error);
       if (result.length > 0) return res.status(404).send('Your are already acting as guide or mentor to this team, so you cant accept or reject this request!');
@@ -202,7 +202,7 @@ router.patch("/guide/accept_reject/:status/:team_id/:semester/:my_id",userAuth, 
 // conforming review request -> sent by the team, both guide and expert should accept
 router.post("/guide/add_review_details/:request_id/:status/:guide_reg_num/:team_id",userAuth,(req,res,next) => {
     try{
-      const{project_id,project_name,team_lead,review_date,start_time,review_no} = req.body;
+      const{project_id,project_name,team_lead,review_date,start_time,review_no,reason} = req.body;
       const{request_id,status,guide_reg_num,team_id} = req.params;
       if(!project_id || !project_name || !team_lead || !review_date || !expert_reg_num || !start_time || !request_id || !status || !team_id || !review_no)
       {
@@ -244,7 +244,14 @@ router.post("/guide/add_review_details/:request_id/:status/:guide_reg_num/:team_
         }
         else if(safeStatus == 'reject')
         {
-          return res.send(`${request_id} :- ${status}ed successfully`)
+          if(!reason)return next(createError.BadRequest('reason not found!'));
+          let rejectSql = "update review_requests set guide_reason = ? where request_id = ?";
+          db.query(rejectSql,[reason,request_id],(error,result) => {
+            if(error)return next(error);
+            if(result.affectedRows === 0)return next(createError.BadRequest('some rows not got affected'));
+            return res.send(`${request_id} :- ${status}ed successfully`)
+
+          })
         }
       })
     }
