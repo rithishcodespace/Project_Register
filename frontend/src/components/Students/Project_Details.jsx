@@ -110,6 +110,11 @@ const Project_Details = () => {
   const [projectData,setProjectData] = useState([]);
   const navigate = useNavigate();
 
+  const uniqueDepartments = [...new Set(teamselector
+  .filter(team => Boolean(team.dept))
+  .map(team => team.dept))];
+
+
   const expertOptions = expertsList.map((expert) => ({
   value: expert.reg_num,
   label: `${expert.name} (${expert.reg_num})`,
@@ -283,7 +288,7 @@ useEffect(() => {
       setSelectedExperts([]);
       setSelectedGuides([]);
 
-      // navigate('/student');
+      navigate('/student');
       
     } catch (error) {
       console.error('Submit Error:', error);
@@ -328,7 +333,7 @@ return (
               type="text"
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
-              className="w-full bg-white  border px-3 py-2 rounded"
+              className="w-full bg-white  border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
               required
             />
           </div>
@@ -344,12 +349,11 @@ return (
                 defaultValue=""
               >
                 <option value="" disabled>Select cluster</option>
-                {teamselector
-                  .filter(team => Boolean(team.dept))
-                  .map((team, i) => (
-                    <option key={i} value={team.dept}>{team.dept}</option>
-                  ))}
+                {uniqueDepartments.map((dept, i) => (
+                  <option key={i} value={dept}>{dept}</option>
+                ))}
               </select>
+
             </div>
 
             <div className="mb-4 bg-white w-[50%]">
@@ -357,7 +361,7 @@ return (
               <select
                 value={core}
                 onChange={(e) => setCore(e.target.value)}
-                className="w-full bg-white  border px-3 py-2 rounded"
+                className="w-full bg-white  border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
                 required
               >
                 <option value="" disabled>Select</option>
@@ -372,7 +376,7 @@ return (
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full  bg-white border px-3 py-2 rounded"
+              className="w-full  bg-white border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
               rows={4}
               required
             />
@@ -383,41 +387,45 @@ return (
             <textarea
               value={outcome}
               onChange={(e) => setOutcome(e.target.value)}
-              className="w-full border px-3 py-2 bg-white  rounded"
+              className="w-full border px-3 py-2 bg-white  rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
               rows={3}
               required
             />
           </div>
 
-          {/* Subject Experts Dropdown */}
-<div className="mb-6 bg-white">
-  <h3 className="text-md bg-white font-medium mb-2">Select Subject Experts:</h3>
-  <Select
-    options={filteredExpertOptions}
-    isMulti
-    onChange={handleExpertChange}
-    value={filteredExpertOptions.filter(option => selectedExperts.includes(option.value))}
-    placeholder="Select experts..."
-    className="basic-multi-select"
-    classNamePrefix="select"
-    filterOption={customFilter}
-  />
-</div>
+         {/* Subject Experts Dropdown */}
+      <div className="mb-6 bg-white">
+        <h3 className="text-md bg-white font-medium mb-2">Select Subject Experts:</h3>
+        <Select
+          options={filteredExpertOptions}
+          isMulti
+          onChange={handleExpertChange}
+          value={filteredExpertOptions.filter(option => selectedExperts.includes(option.value))}
+          placeholder="Select experts..."
+          className="basic-multi-select"
+          classNamePrefix="select"
+          filterOption={customFilter}
+          closeMenuOnSelect={false} 
+           // <-- keep dropdown open after selection
+        />
+      </div>
 
-{/* Guides Dropdown */}
-<div className="mb-6 bg-white">
-  <h3 className="text-md bg-white font-medium mb-2">Select Guides:</h3>
-  <Select
-    options={filteredGuideOptions}
-    isMulti
-    onChange={handleGuideChange}
-    value={filteredGuideOptions.filter(option => selectedGuides.includes(option.value))}
-    placeholder="Select guides..."
-    className="basic-multi-select"
-    classNamePrefix="select"
-    filterOption={customGuideFilter}
-  />
-</div>
+      {/* Guides Dropdown */}
+      <div className="mb-6 bg-white">
+        <h3 className="text-md bg-white font-medium mb-2">Select Guides:</h3>
+        <Select
+          options={filteredGuideOptions}
+          isMulti
+          onChange={handleGuideChange}
+          value={filteredGuideOptions.filter(option => selectedGuides.includes(option.value))}
+          placeholder="Select guides..."
+          className="basic-multi-select"
+          classNamePrefix="select"
+          filterOption={customGuideFilter}
+          closeMenuOnSelect={false}  // <-- keep dropdown open after selection
+        />
+      </div>
+
 
 
           <div className="text-center bg-white ">
