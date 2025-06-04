@@ -109,7 +109,7 @@ router.patch("/sub_expert/accept_reject/:status/:team_id/:semester/:my_id",userA
 
 // sends request to expert
 
-router.post("/sub_expert/sent_request_to_expert",userAuth, (req, res, next) => {
+router.post("/sub_expert/sent_request_to_expert/:semester",userAuth, (req, res, next) => {
       try {
         const { semester } = req.params;
         const { from_team_id, project_id, project_name, to_expert_reg_num } = req.body;
