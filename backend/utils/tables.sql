@@ -156,7 +156,7 @@ CREATE TABLE weekly_logs_verification (
     team_id VARCHAR(100) NOT NULL,
     week_number INT NOT NULL CHECK (week_number BETWEEN 1 AND 12),
     is_verified BOOLEAN DEFAULT FALSE,
-    guide_reg_num VARCHAR(100), -- e.g., guide's email or user ID
+    verified_by VARCHAR(100), -- e.g., guide's email or user ID
     verified_at DATETIME DEFAULT NULL,
     remarks TEXT,
     status varchar(50) text default null,
