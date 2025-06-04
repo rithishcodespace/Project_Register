@@ -12,42 +12,42 @@ function Team_Details() {
   const [remarks, setRemarks] = useState('');
   const [reason, setReason] = useState('');
   const [status, setStatus] = useState('');
+  const [isWeekComplete, setIsWeekComplete] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const verifiedWeeksRes = await instance.get(`/guide/no_of_weeks_verified/${teamId}`);
-        const verifiedWeekNum = parseInt(verifiedWeeksRes.data);
-        
-       let nextWeek;
+  const fetchData = async () => {
+    try {
+      const verifiedWeeksRes = await instance.get(`/guide/no_of_weeks_verified/${teamId}`);
+      const verifiedWeekNum = parseInt(verifiedWeeksRes.data);
+      let nextWeek = isNaN(verifiedWeekNum) ? 1 : verifiedWeekNum + 1;
 
-if (isNaN(verifiedWeekNum)) {
-  nextWeek = 1;
-} else {
-  nextWeek = verifiedWeekNum + 1;
-}
+      const teamRes = await instance.get(`/guide/gets_entire_team/${teamId}`);
+      const team = teamRes.data;
+      setTeamDetails(team);
 
-        const teamRes = await instance.get(`/guide/gets_entire_team/${teamId}`);
-        const team = teamRes.data;
-        setTeamDetails(team);
+      const progressField = `week${nextWeek}_progress`;
 
+      const allSubmitted = team.every(
+        (member) => member[progressField] && member[progressField].trim() !== ''
+      );
 
-        const progressField = `week${nextWeek}_progress`;
-        if (teamRes.data[0][progressField]) {
-          setCurrentWeek(nextWeek);
-        } else {
-          setCurrentWeek(null);
-        }
-
-      } catch (error) {
-        console.error(error);
-        alert('Error fetching team data');
+      setIsWeekComplete(allSubmitted);
+      if (team.length > 0 && team[0][progressField]) {
+        setCurrentWeek(nextWeek);
+      } else {
+        setCurrentWeek(null);
       }
-    };
+    } catch (error) {
+      console.error(error);
+      alert('Error fetching team data');
+    }
+  };
 
-    fetchData();
-  }, [teamId, guideRegNum]);
+  fetchData();
+}, [teamId, guideRegNum]);
+
 
   const handleSubmit = async () => {
     if (status === 'accept' && !remarks) {
@@ -118,19 +118,22 @@ if (isNaN(verifiedWeekNum)) {
 
           {!status && (
             <div className="flex gap-4 bg-white mt-4">
-              <button
-                onClick={() => setStatus('accept')}
-                className="px-4 py-2 bg-green-600  text-white rounded"
-              >
-                Accept
-              </button>
-              <button
-                onClick={() => setStatus('reject')}
-                className="px-4 py-2 bg-red-600 text-white rounded"
-              >
-                Reject
-              </button>
-            </div>
+  <button
+    onClick={() => setStatus('accept')}
+    disabled={!isWeekComplete}
+    className={`px-4 py-2 rounded text-white ${isWeekComplete ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`}
+  >
+    Accept
+  </button>
+  <button
+    onClick={() => setStatus('reject')}
+    disabled={!isWeekComplete}
+    className={`px-4 py-2 rounded text-white ${isWeekComplete ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400 cursor-not-allowed'}`}
+  >
+    Reject
+  </button>
+</div>
+
           )}
 
           {status === 'accept' && (
