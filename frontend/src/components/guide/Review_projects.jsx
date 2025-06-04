@@ -10,10 +10,12 @@ function ReviewProjects() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const [acceptingRequestId, setAcceptingRequestId] = useState(null);
+  const [meetingLink, setMeetingLink] = useState('');
+
   const [rejectingRequestId, setRejectingRequestId] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
 
-  // Fetch review requests from both endpoints and store separately
   const fetchReviewRequests = async () => {
     try {
       setLoading(true);
@@ -38,7 +40,6 @@ function ReviewProjects() {
     if (guideRegNum) fetchReviewRequests();
   }, [guideRegNum]);
 
-  // Unified accept/reject handler
   const handleReviewAction = async (request, status, isGuide) => {
     try {
       setLoading(true);
@@ -63,17 +64,19 @@ function ReviewProjects() {
         project_id,
         project_name,
         team_lead,
-        review_date: new Date(review_date).toISOString().slice(0, 10), // 👈 Fix here
+        review_date: new Date(review_date).toISOString().slice(0, 10),
         start_time,
         review_title,
         reason: status === 'reject' ? rejectReason : '',
+        ...(status === 'accept' && !isGuide ? { temp_meeting_link: meetingLink } : {}),
       };
-
 
       const res = await instance.post(url, body);
       alert(res.data);
       setRejectingRequestId(null);
+      setAcceptingRequestId(null);
       setRejectReason('');
+      setMeetingLink('');
       await fetchReviewRequests();
     } catch (err) {
       setError(`Failed to ${status} the request`);
@@ -83,70 +86,113 @@ function ReviewProjects() {
     }
   };
 
-  // Render UI for either guide or expert requests
   const renderReviewRequests = (requests, title, isGuide) => (
-    <div className="mb-10" >
+    <div className="mb-10">
       <h2 className="text-xl font-semibold mb-4">{title}</h2>
 
       {requests.length === 0 && <p>No requests found.</p>}
 
-      {requests.map((req) => (
-        <div key={req.request_id} className="border bg-white rounded p-4 mb-4 shadow-sm ">
-          <p className='bg-white'><strong className='bg-white'>Project:</strong> {req.project_name}</p>
-          <p className='bg-white'><strong className='bg-white'>Team Lead:</strong> {req.team_lead}</p>
-          <p className='bg-white'><strong className='bg-white'>Review Date:</strong> {req.review_date}</p>
-          <p className='bg-white'><strong className='bg-white'>Start Time:</strong> {req.start_time}</p>
-          <p className='bg-white'><strong className='bg-white'>Review Title:</strong> {req.review_title}</p>
+      {requests.map((req) => {
+        const isRejecting = rejectingRequestId === req.request_id;
+        const isAccepting = acceptingRequestId === req.request_id;
 
-          {rejectingRequestId === req.request_id ? (
-            <div className="mt-4 bg-white">
-              <textarea
-                placeholder="Enter rejection reason"
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                className="border bg-white p-2 w-full mb-2"
-                rows={3}
-              />
-              <button
-                onClick={() => handleReviewAction(req, 'reject', isGuide)}
-                disabled={!rejectReason.trim() || loading}
-                className="bg-red-600 text-white px-4 py-2 rounded mr-2"
-              >
-                Submit Reject
-              </button>
-              <button
-                onClick={() => {
-                  setRejectingRequestId(null);
-                  setRejectReason('');
-                }}
-                className="bg-gray-400 text-white px-4 py-2 rounded"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <div className="mt-4 bg-white">
-              <button
-                onClick={() => handleReviewAction(req, 'accept', isGuide)}
-                disabled={loading}
-                className="bg-green-600 text-white px-4 py-2 rounded mr-2"
-              >
-                Accept
-              </button>
-              <button
-                onClick={() => {
-                  setRejectingRequestId(req.request_id);
-                  setRejectReason('');
-                }}
-                disabled={loading}
-                className="bg-red-600 text-white px-4 py-2 rounded"
-              >
-                Reject
-              </button>
-            </div>
-          )}
-        </div>
-      ))}
+        return (
+          <div key={req.request_id} className="border bg-white rounded p-4 mb-4 shadow-sm">
+            <p><strong>Project:</strong> {req.project_name}</p>
+            <p><strong>Team Lead:</strong> {req.team_lead}</p>
+            <p><strong>Review Date:</strong> {req.review_date}</p>
+            <p><strong>Start Time:</strong> {req.start_time}</p>
+            <p><strong>Review Title:</strong> {req.review_title}</p>
+
+            {/* Reject Flow */}
+            {isRejecting && (
+              <div className="mt-4">
+                <textarea
+                  placeholder="Enter rejection reason"
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  className="border p-2 w-full mb-2"
+                  rows={3}
+                />
+                <button
+                  onClick={() => handleReviewAction(req, 'reject', isGuide)}
+                  disabled={!rejectReason.trim() || loading}
+                  className="bg-red-600 text-white px-4 py-2 rounded mr-2"
+                >
+                  Submit Reject
+                </button>
+                <button
+                  onClick={() => {
+                    setRejectingRequestId(null);
+                    setRejectReason('');
+                  }}
+                  className="bg-gray-400 text-white px-4 py-2 rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            {/* Accept Flow for Expert */}
+            {isAccepting && !isGuide && (
+              <div className="mt-4">
+                <input
+                  type="text"
+                  placeholder="Enter meeting link"
+                  value={meetingLink}
+                  onChange={(e) => setMeetingLink(e.target.value)}
+                  className="border p-2 w-full mb-2"
+                />
+                <button
+                  onClick={() => handleReviewAction(req, 'accept', isGuide)}
+                  disabled={!meetingLink.trim() || loading}
+                  className="bg-green-600 text-white px-4 py-2 rounded mr-2"
+                >
+                  Submit Accept
+                </button>
+                <button
+                  onClick={() => {
+                    setAcceptingRequestId(null);
+                    setMeetingLink('');
+                  }}
+                  className="bg-gray-400 text-white px-4 py-2 rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            {!isRejecting && !isAccepting && (
+              <div className="mt-4">
+                <button
+                  onClick={() => {
+                    if (isGuide) {
+                      handleReviewAction(req, 'accept', true);
+                    } else {
+                      setAcceptingRequestId(req.request_id);
+                    }
+                  }}
+                  disabled={loading}
+                  className="bg-green-600 text-white px-4 py-2 rounded mr-2"
+                >
+                  Accept
+                </button>
+                <button
+                  onClick={() => {
+                    setRejectingRequestId(req.request_id);
+                    setRejectReason('');
+                  }}
+                  disabled={loading}
+                  className="bg-red-600 text-white px-4 py-2 rounded"
+                >
+                  Reject
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 
