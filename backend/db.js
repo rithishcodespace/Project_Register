@@ -34,7 +34,7 @@ const pool = mysql.createPool({
 // const pool = mysql.createPool({
 //     host:"localhost",
 //     user:"root",
-//     password:"prakashbit",
+//     password:"Mathan@2007",
 //     database:"project_registor",
 //     waitForConnections:true,
 //     connectionLimit:10, 
