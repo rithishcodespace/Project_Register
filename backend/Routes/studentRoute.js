@@ -721,60 +721,60 @@ router.post('/send_request_for_optional_review/:mentor_reg_num',(req,res,next) =
 
 // adds the query in the query table
 
-// router.post("/student_query/:team_member/:guide_reg_num",userAuth, (req, res, next) => {
-//   try {
-//     const { team_id, project_id, query } = req.body;
-//     const { team_member, guide_reg_num } = req.params;
+router.post("/student_query/:team_member/:guide_reg_num",userAuth, (req, res, next) => {
+  try {
+    const { team_id, project_id, query } = req.body;
+    const { team_member, guide_reg_num } = req.params;
 
-//     if (!project_id || !team_id || !team_member || !query || !guide_reg_num) {
-//       return next(createError.BadRequest("Required parameters are missing!"));
-//     }
+    if (!project_id || !team_id || !team_member || !query || !guide_reg_num) {
+      return next(createError.BadRequest("Required parameters are missing!"));
+    }
 
-//     // Step 1: Fetch project name using project_id
-//     const getProjectNameSql = "SELECT project_name FROM projects WHERE project_id = ?";
-//     db.query(getProjectNameSql, [project_id], (err, rows) => {
-//       if (err) return next(err);
+    // Step 1: Fetch project name using project_id
+    const getProjectNameSql = "SELECT project_name FROM projects WHERE project_id = ?";
+    db.query(getProjectNameSql, [project_id], (err, rows) => {
+      if (err) return next(err);
 
-//       if (rows.length === 0) {
-//         return next(createError.NotFound("Project not found!"));
-//       }
+      if (rows.length === 0) {
+        return next(createError.NotFound("Project not found!"));
+      }
 
-//       const project_name = rows[0].project_name;
+      const project_name = rows[0].project_name;
 
-//       // Step 2: Insert the query into the queries table
-//       const insertQuerySql = `
-//         INSERT INTO queries (team_id, project_id, project_name, team_member, query, guide_reg_num)
-//         VALUES (?, ?, ?, ?, ?, ?)
-//       `;
-//       db.query(insertQuerySql, [team_id, project_id, project_name, team_member, query, guide_reg_num], (err, result) => {
-//         if (err) return next(err);
+      // Step 2: Insert the query into the queries table
+      const insertQuerySql = `
+        INSERT INTO queries (team_id, project_id, project_name, team_member, query, guide_reg_num)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `;
+      db.query(insertQuerySql, [team_id, project_id, project_name, team_member, query, guide_reg_num], (err, result) => {
+        if (err) return next(err);
 
-//         // Step 3: Delete older answered queries, keeping only the latest 5
-//         const deleteOldSql = `
-//           DELETE FROM queries 
-//           WHERE query_id IN (
-//             SELECT query_id FROM (
-//               SELECT query_id 
-//               FROM queries 
-//               WHERE team_id = ? AND reply IS NOT NULL
-//               ORDER BY created_at DESC
-//               LIMIT 18446744073709551615 OFFSET 5
-//             ) AS temp
-//           )
-//         `;
+        // Step 3: Delete older answered queries, keeping only the latest 5
+        const deleteOldSql = `
+          DELETE FROM queries 
+          WHERE query_id IN (
+            SELECT query_id FROM (
+              SELECT query_id 
+              FROM queries 
+              WHERE team_id = ? AND reply IS NOT NULL
+              ORDER BY created_at DESC
+              LIMIT 18446744073709551615 OFFSET 5
+            ) AS temp
+          )
+        `;
 
-//         db.query(deleteOldSql, [team_id], (err2) => {
-//           if (err2) return next(err2);
+        db.query(deleteOldSql, [team_id], (err2) => {
+          if (err2) return next(err2);
 
-//           // Step 4: Send a success response
-//           res.send("Query added successfully!");
-//         });
-//       });
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// });
+          // Step 4: Send a success response
+          res.send("Query added successfully!");
+        });
+      });
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // gets student details by reg_num
 
@@ -814,21 +814,21 @@ router.get("/student/get_student_details_by_regnum/:reg_num",userAuth,(req,res,n
 
 //fetch queries sent by my team
 
-// router.get("/student/get_queries_sent_by_my_team/:team_id",userAuth,(req,res,next) => {
-//   try{
-//     const{team_id} = req.params;
-//     if(!team_id)return next(createError.BadRequest("team_id not found!!"));
-//     let sql = "select * from queries where team_id = ?";
-//     db.query(sql,[team_id],(error,result) => {
-//       if(error)return next(error);
-//       res.send(result);
-//     })
-//   }
-//   catch(error)
-//   {
-//     next(error);
-//   }
-// })
+router.get("/student/get_queries_sent_by_my_team/:team_id",userAuth,(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest("team_id not found!!"));
+    let sql = "select * from queries where team_id = ?";
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 // checks whether he is already a member of another team
 

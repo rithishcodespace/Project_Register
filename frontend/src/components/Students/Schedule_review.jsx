@@ -13,12 +13,26 @@ function Schedule_review() {
 
   const userselector = useSelector((state) => state.userSlice);
   const teamselector = useSelector((state) => state.teamSlice);
+  const statusSelector = useSelector((state) => state.teamStatusSlice);
+  
 
+  const reg_num = userselector.reg_num
   const team_id = teamselector.length > 0 ? teamselector[0].team_id : null;
-  const project_id = teamselector.length > 0 ? teamselector[0].project_id : null;
-  const project_name = teamselector.length > 0 ? teamselector[0].name : null;
+  const project_id = teamselector.length > 0 ? statusSelector.project_id : null;
+  const project_name= teamselector.length > 0 ? statusSelector.project_name : null;
   const team_lead = teamselector[0]?.from_reg_num;
-  const expert_reg_num = teamselector.length > 0 ? teamselector[0].sub_expert_reg_num : null;
+  const expert_reg_num = teamselector.length > 0 ? userselector.sub_expert_reg_num : null;
+  const guide_reg_num = teamselector.length > 0 ? userselector.guide_reg_num : null;
+  const mentor_reg_num = teamselector.length > 0 ? userselector.mentor_reg_num : null;
+
+ useEffect(() => {
+  const print = () => {
+    console.log("hai");
+  };
+  print(); 
+}, []); 
+
+
 
   useEffect(() => {
     const fetchReviewRequests = async () => {
@@ -30,6 +44,7 @@ function Schedule_review() {
 
         if (existingRequest) {
           console.log('Review request already sent for this team.');
+  
           setAlreadyRequested(true);
         }
       } catch (err) {
@@ -48,14 +63,15 @@ function Schedule_review() {
 
     try {
       const res = await instance.post(
-        `/student/send_review_request/${team_id}/${project_id}`,
+        `/student/send_review_request/${team_id}/${project_id}/${reg_num}`,
         {
           project_name,
           team_lead,
           review_date: reviewDate,
           start_time: startTime,
-          expert_reg_num,
-        }
+          isOptional,
+          reason,
+          mentor_reg_num         }
       );
       console.log(team_id);
       
