@@ -278,7 +278,7 @@ router.get("/guide/fetch_review_requests/:guide_reg_num",userAuth,(req,res,next)
   try{
     const{guide_reg_num} = req.params;
     if(!guide_reg_num)return next(createError.BadRequest("guide id is undefined!"));
-    let sql = "select * from review_requests where guide_reg_num = ? and status = 'interested'";
+    let sql = "select * from review_requests where guide_reg_num = ? and guide_status = 'interested'";
     db.query(sql,[guide_reg_num],(error,result) => {
       if(error)return next(error);
       return res.send(result);

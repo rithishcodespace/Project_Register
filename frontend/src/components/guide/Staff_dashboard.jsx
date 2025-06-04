@@ -13,6 +13,9 @@ function Staff_dashboard() {
   const [SubTeams, setSubTeams] = useState([]);
   const [progressMap, setProgressMap] = useState({}); // For guide team progress
   const navigate = useNavigate();
+  const [upcomingGuideReviews, setUpcomingGuideReviews] = useState([]);
+  const [upcomingExpertReviews, setUpcomingExpertReviews] = useState([]);
+
 
   const reg_num = useSelector((state) => state.userSlice.reg_num);
   const name = useSelector((state) => state.userSlice.name);
@@ -23,6 +26,7 @@ function Staff_dashboard() {
       teams.map(async (team) => {
         try {
           const res = await instance.get(`/guide/no_of_weeks_verified/${team.from_team_id}`);
+          console.log(res.data)
           return { ...team, verifiedWeeks: res.data || 0 };
         } catch {
           return { ...team, verifiedWeeks: 0 };
@@ -37,7 +41,7 @@ function Staff_dashboard() {
     const map = {};
     for (const team of teams) {
       try {
-        const res = await instance.get(`/guide/gets_the_progress_updated_team_members/${team.from_team_id}`);
+        const res = await instance.get(`/guide/gets_entire_team/${team.from_team_id}`);
         map[team.from_team_id] = res.data || null;
         console.log(` Progress for team ${team.from_team_id}:`, res.data);
       } catch (err) {
@@ -47,6 +51,40 @@ function Staff_dashboard() {
     }
     setProgressMap(map);
   };
+  useEffect(() => {
+    const fetchExtraReviews = async () => {
+      try {
+        const expertReviewsRes = await instance.get(`/sub_expert/fetch_review_requests/${reg_num}`);
+        const expertReviews = expertReviewsRes.data || [];
+        const upcoming = expertReviews.filter(
+          (r) =>
+            new Date(r.review_date) > new Date() &&
+            r.expert_status === "interested"
+        );
+        setUpcomingExpertReviews(upcoming);
+        console.log("Filtered Expert Reviews:", upcoming);
+      } catch (error) {
+        console.error("Error fetching expert review requests:", error.response?.data || error.message);
+      }
+
+      try {
+        const guideReviewsRes = await instance.get(`/guide/fetch_review_requests/${reg_num}`);
+        const guideReviews = guideReviewsRes.data || [];
+        const upcoming = guideReviews.filter(
+          (r) =>
+            new Date(r.review_date) > new Date() &&
+            r.guide_status === "interested"
+        );
+        setUpcomingGuideReviews(upcoming);
+        console.log("Filtered Guide Reviews:", upcoming);
+      } catch (error) {
+        console.error("Error fetching guide upcoming reviews:", error.response?.data || error.message);
+      }
+    };
+
+    fetchExtraReviews();
+  }, [reg_num]);
+
 
   // Fetch all required data: requests, guide teams, subexpert teams
   const fetchRequests = async () => {
@@ -167,11 +205,12 @@ function Staff_dashboard() {
             aria-label="Toggle notifications"
           >
             <Bell className="w-7 h-7" />
-            {(guideRequests.length + expertRequests.length) > 0 && (
+            {(guideRequests.length + expertRequests.length + upcomingGuideReviews.length + upcomingExpertReviews.length) > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-semibold">
-                {guideRequests.length + expertRequests.length}
+                {guideRequests.length + expertRequests.length + upcomingGuideReviews.length + upcomingExpertReviews.length}
               </span>
             )}
+
           </button>
         </div>
       </header>
@@ -187,7 +226,10 @@ function Staff_dashboard() {
             ×
           </button>
 
-          {(guideRequests.length === 0 && expertRequests.length === 0) ? (
+          {(guideRequests.length === 0 &&
+            expertRequests.length === 0 &&
+            upcomingGuideReviews.length === 0 &&
+            upcomingExpertReviews.length === 0) ? (
             <p className="text-center bg-white text-gray-500">No pending requests</p>
           ) : (
             <>
@@ -195,6 +237,31 @@ function Staff_dashboard() {
               {expertRequests.map((req) => renderRequestCard(req, "expert"))}
             </>
           )}
+
+          {upcomingGuideReviews.map((review) => (
+            <div
+              key={`guide_review_${review.request_id}`}
+              onClick={() => navigate("/guide/review_progress")}
+              className="bg-blue-100  border-l-4 mt-5 border-blue-500 p-3 mb-2 cursor-pointer"
+            >
+              <p className="text-blue-800 bg-blue-100 font-semibold">Upcoming Guide Review</p>
+              <p className="text-gray-700 bg-blue-100">Team: {review.team_id} | Project: {review.project_name}</p>
+              <p className="text-sm bg-blue-100 text-gray-500">Review Date: {new Date(review.review_date).toLocaleDateString()}</p>
+            </div>
+          ))}
+
+          {upcomingExpertReviews.map((review) => (
+            <div
+              key={`expert_review_${review.request_id}`}
+              onClick={() => navigate("/guide/review_progress")}
+              className="bg-purple-100 border-l-4 mt-5 border-purple-500 p-3 mb-2 cursor-pointer"
+            >
+              <p className="text-purple-800 bg-purple-100 font-semibold">Upcoming Expert Review</p>
+              <p className="text-gray-700 bg-purple-100">Team: {review.team_id} | Project: {review.project_name}</p>
+              <p className="text-sm text-gray-500 bg-purple-100">Review Date: {new Date(review.review_date).toLocaleDateString()}</p>
+            </div>
+          ))}
+
         </div>
       )}
 
@@ -204,9 +271,9 @@ function Staff_dashboard() {
         <section className="bg-white rounded shadow p-6 overflow-x-auto">
           <h2 className="text-xl font-bold mb-4 text-gray-800 bg-white">Guide Teams</h2>
           {GuideTeams.length > 0 ? (
-            <table className="min-w-full border-t text-left p-2 text-md text-gray-700">
-              <thead className="bg-gray-100">
-                <tr>
+            <table className="min-w-full border-t bg-white text-left p-2 text-md text-gray-700">
+              <thead className="bg-white">
+                <tr className='bg-white'>
                   <th className="px-4 py-2 border-b bg-white">Team ID</th>
                   <th className="px-4 py-2 border-b bg-white">Project Name</th>
                   <th className="px-4 py-2 border-b bg-white">Semester</th>
@@ -224,12 +291,25 @@ function Staff_dashboard() {
                     <td className="px-4 py-2 border-b bg-white">{team.from_team_id}</td>
                     <td className="px-4 py-2 border-b bg-white">{team.project_name}</td>
                     <td className="px-4 py-2 border-b bg-white">{team.team_semester}</td>
-                    <td className="px-4 py-2 gap-10 flex  border-b bg-white">
-                      <p className='flex bg-white'>{team.verifiedWeeks}/12</p>
-                      {(team.verifiedWeeks) && progressMap[team.from_team_id] ? (
-                        <p className="flex  bg-white  text-green-600 text-sm mt-1">Weekly log Updated</p>
-                      ) : null}
+                    <td className="px-4 py-2 border-b bg-white">
+                      <span className='bg-white'>
+                        {team.verifiedWeeks}/12
+                      </span>
+                      {(() => {
+                        const progress = progressMap[team.from_team_id]?.[0];
+                        const nextWeek = `week${team.verifiedWeeks + 1}_progress`;
+                        if (progress && progress[nextWeek]) {
+                          return (
+                            <span className="ml-4 bg-white text-green-600 text-sm">
+                              Weekly log Updated
+                            </span>
+                          );
+                        }
+                        return null;
+                      })()}
                     </td>
+
+
                   </tr>
                 ))}
               </tbody>

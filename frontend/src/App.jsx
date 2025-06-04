@@ -20,7 +20,6 @@ import Subject_expert_remarks from "./components/Subject_expert/Subject_expert_r
 import Subject_expert from "./components/Subject_expert/Subject_expert";
 import Guide from "./components/guide/guide";
 import Staff_dashboard from "./components/guide/Staff_dashboard";
-import Guide_queries from "./components/guide/Guide_queries";
 import Guide_team_progress from "./components/guide/Guide_team_progress";
 import Queries from "./components/Students/Queries";
 import { getProfile } from "./services/authService";
@@ -40,7 +39,7 @@ import Review_projects from "./components/guide/Review_projects";
 import TeamDetails from "./components/guide/Team_Details";
 import ChallengeReviewAdmin from "./components/Students/ChallengeReview";
 import Team_Details from "./components/guide/Team_Details";
-
+import Guide_queries from "./components/guide/Guide_queries";
 
 
 const Loader = () => {
