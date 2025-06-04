@@ -149,6 +149,8 @@ useEffect(() => {
     }
   };
 
+  
+
   const renderReviewRequests = (requests, title, isGuide) => (
     <div className="mb-10">
       <h2 className="text-xl font-semibold mb-4">{title}</h2>
@@ -270,16 +272,15 @@ useEffect(() => {
       {renderReviewRequests(expertReviewRequests, 'Subject Expert Review Requests', false)}
  {Object.entries(upcomingReviews).map(([teamId, reviews]) =>
   reviews.map((rev, index) => {
-  
- const reviewDateTime = new Date(rev.review_date);
+const reviewDateTime = new Date(`${rev.review_date}T${rev.start_time}`);
 const deadline = new Date(reviewDateTime);
 deadline.setDate(deadline.getDate() + 1);
 deadline.setHours(23, 59, 59, 999);
 
+
 const now = new Date();
 const isWithinAttendancePeriod = now >= reviewDateTime && now <= deadline;
 const isAbsent = now > deadline;
-
 
 
     return (
@@ -290,14 +291,13 @@ const isAbsent = now > deadline;
         <p><strong>Time:</strong> {rev.start_time}</p>
         <p><strong>Meeting Link:</strong> <a href={rev.meeting_link} target="_blank" rel="noreferrer" className="text-blue-600 underline">{rev.meeting_link}</a></p>
 
-       {isWithinAttendancePeriod && (
-  <button
-    onClick={() => handleMarkAttendance(rev.review_id)}
-    className="mt-3 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
-  >
-    Mark Attendance
-  </button>
-)}
+       <button
+  onClick={() => handleMarkAttendance(rev.review_id)}
+  className="mt-3 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+>
+  Mark Attendance
+</button>
+
 
 {isAbsent && (
   <p className="mt-3 text-red-600 font-semibold">Attendance: Absent</p>
