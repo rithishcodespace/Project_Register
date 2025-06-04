@@ -265,6 +265,25 @@ router.get('/sub_expert/fetch_upcoming_reviews/:team_id',(req,res,next) => {
   }
 })
 
+// fetch completed reviews
+
+router.get("/sub_expert/fetch_completed_reviews/:team_id",(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest('team_id number not found!'));
+    let sql = `SELECT * FROM scheduled_reviews WHERE team_id = ? AND attendance IS NULL AND TIMESTAMP(review_date, start_time) <= CURRENT_TIMESTAMP AND review_date >= CURDATE() - INTERVAL 2 DAY`;
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return res.send('No completed reviews within a time internal of 2!');
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 // conforming the review request by student
 
 router.post("/sub_expert/add_review_details/:request_id/:status/:expert_reg_num/:team_id",userAuth,(req,res,next) => {
