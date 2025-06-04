@@ -261,15 +261,16 @@ router.post("/guide/add_review_details/:request_id/:status/:guide_reg_num/:team_
     }
 })
 
-// fetching the upcoming reviews -> mark attendence page
+// fetching the upcoming reviews
 
-router.get("/guide/fetch_upcoming_reviews/:guide_reg_num",userAuth,(req,res,next) => {
+router.get('/guide/fetch_upcoming_reviews/:team_id',(req,res,next) => {
   try{
-    const{guide_reg_num} = req.params;
-    if(!guide_reg_num)return next(createError.BadRequest("guide reg num missing!"));
-    let sql = "SELECT * FROM scheduled_reviews WHERE guide_reg_num = ? AND review_date >= CURRENT_DATE AND attendance IS NULL";
-    db.query(sql,[guide_reg_num],(error,result) => {
+    const{team_id} = req.params;
+    if(!team_id) return next(createError.BadRequest('team is undefined!'));
+    let sql = `SELECT * FROM scheduled_reviews WHERE team_id = ? AND attendance IS NULL AND TIMESTAMP(review_date, start_time) >= CURRENT_TIMESTAMP`
+    db.query(sql,[team_id],(error,result) => {
       if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound('meeting links not found!'));
       return res.send(result);
     })
   }
@@ -597,7 +598,7 @@ router.get('/guide/no_of_weeks_verified/:team_id',(req,res,next) => {
   try{
     const{team_id} = req.params;
     if(!team_id)return next(createError.BadRequest('team_id is not defined!'));
-    let sql = "SELECT MAX(week_number) AS max_week FROM weekly_logs_verification WHERE team_id = ?"
+    let sql = "SELECT MAX(week_number) AS max_week FROM weekly_logs_verification WHERE team_id = ? and is_verified = true"
     db.query(sql,[team_id],(error,result) => {
       if(error)return next(error);
       if(result.length === 0)return next(createError.NotFound(`no have been verified for the team :-${team_id}`));
@@ -696,14 +697,6 @@ router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:status/:team_id",u
           const insertSql = "update weekly_logs_verification set is_verified = ?,verified_by = ?,verified_at = ?,remarks = ?,status = ? where team_id = ? and week_number = ?";
           db.query(insertSql, [true,guide_reg_num,verifiedAt,remarks,safeStatus,team_id,weekNum], (error, result) => {
             if (error) return next(error);
-            console.log({
-  guide_reg_num,
-  team_id,
-  verifiedAt,
-  remarks,
-  safeStatus,
-  weekNum
-});
             if (result.affectedRows === 0)
               return next(createError.BadRequest("Failed to verify week progress"));
 
@@ -768,43 +761,6 @@ router.get("/guide/fetchDeadlines/:team_id",(req,res,next) => {
     next(error);
   }
 })
-
-// meeting link
-// -> review number should come from frontend data =x= from the user input
-
-router.post('/guide/add_meeting_link/:guide_reg_num/:team_id/:review_no', (req, res, next) => {
-  try {
-    const { meetingLink, platform, scheduled_at } = req.body;
-    const { guide_reg_num, team_id, review_no } = req.params;
-
-    if (!meetingLink || !platform || !guide_reg_num || !team_id || !review_no || !scheduled_at)
-      return next(createError.BadRequest('Data is missing!'));
-
-    const sql = 'SELECT * FROM meeting_links WHERE team_id = ? AND review_no = ? and scheduled_at >= current_timestamp';
-
-    db.query(sql, [team_id, review_no], (error, result) => {
-      if (error) return next(error);
-
-      if (result.length > 0) {
-        return next(createError.BadRequest('Meeting link already exists!'));
-
-      } else {
-        // INSERT
-        const insertSql = `INSERT INTO meeting_links (team_id, review_no, meeting_link, platform, scheduled_at) VALUES (?, ?, ?, ?, ?)`;
-
-        db.query(insertSql, [team_id, review_no, meetingLink, platform, scheduled_at], (err, insertResult) => {
-          if (err) return next(err);
-          if (insertResult.affectedRows === 0) return next(createError.BadRequest('Insert failed!'));
-          return res.send('Meeting link added successfully!');
-        });
-      }
-    });
-
-  } catch (error) {
-    next(error);
-  }
-});
-
 
 
 module.exports = router;
