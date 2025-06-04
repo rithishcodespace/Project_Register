@@ -1020,15 +1020,17 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
 
                     const sqlInsertOptional = `
                       INSERT INTO optional_review_requests 
-                      (team_id, project_id, team_lead, review_date, start_time, mentor_reg_num, reason, status)
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                      (team_id, project_id, team_lead, review_date, start_time, mentor_reg_num, reason, status, file)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     `;
                     db.query(sqlInsertOptional, [
-                      team_id, project_id, team_lead, formattedDate, start_time, mentor_reg_num, reason, 'pending'
+                      team_id, project_id, team_lead, formattedDate, start_time,
+                      mentor_reg_num, reason, 'pending', filePath
                     ], (err7, result7) => {
                       if (err7) return next(err7);
                       return res.send("Optional review request sent successfully to mentor.");
                     });
+
                   });
                 }
               });
