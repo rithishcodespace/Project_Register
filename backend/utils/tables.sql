@@ -181,7 +181,8 @@ CREATE TABLE review_requests (
   guide_reg_num VARCHAR(100) NOT NULL,
   column guide_reason text default null,
   column expert_reason text default null
-  file text not null
+  file text not null,
+  temp_meeting_link varchar(500) default null
   
   INDEX idx_team_id (team_id),
   INDEX idx_project_id (project_id),

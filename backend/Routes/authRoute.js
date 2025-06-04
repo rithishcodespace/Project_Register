@@ -12,66 +12,80 @@ const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
-router.post("/auth/login",(req,res,next) => {
-   const{emailId,password} = req.body;
-   console.log(emailId +" " + password) ;
-   try{
-     if(!emailId || !password) throw createError.BadRequest();
-     validate(emailId,password);
-     let sql = "select * from users where emailId = ?";
-     const values = [emailId];
-     db.query(sql,values,async(error,result) => {
-        if(error)return next(error);
-        if(result.length === 0)return next(createError.Conflict("user does not exist"));
-        const user = result[0];
-        // const isMatch = await bcrypt.compare(password,user.password);
-        // if(!isMatch) next(createError.Unauthorized("EmailId/Password invalid"));
-        if(password != user.password)return next(createError.Unauthorized('Username/Password invalid'));
+router.post("/auth/login", (req, res, next) => {
+  const { emailId, password } = req.body;
+  try {
+    if (!emailId || !password) throw createError.BadRequest();
+    validate(emailId, password);
 
-        // generating tokens
-        const token = jwt.sign({
-          id: user.id,
-          role: user.role, 
-          name: user.name, 
-          email: user.emailId 
-        },
-        process.env.TOKEN_SECRET,
-        {
-          expiresIn: "1h" 
+    const sql = "SELECT * FROM users WHERE emailId = ?";
+    db.query(sql, [emailId], async (error, results) => {
+      if (error) return next(error);
+      if (results.length === 0) return next(createError.Conflict("User does not exist"));
+
+      const user = results[0];
+      const reg_num = user.reg_num;
+
+      if (password !== user.password) return next(createError.Unauthorized("Username/Password invalid"));
+
+      const roles = {
+        sub_expert_reg_num: null,
+        guide_reg_num: null,
+        mentor_reg_num: null
+      };
+
+      // Query teams
+      db.query("SELECT sub_expert_reg_num, guide_reg_num FROM teams WHERE reg_num = ?", [reg_num], (err1, teamRes) => {
+        if (err1) return next(err1);
+        if (teamRes.length > 0) {
+          roles.sub_expert_reg_num = teamRes[0].sub_expert_reg_num;
+          roles.guide_reg_num = teamRes[0].guide_reg_num;
         }
-      );
-      
-      console.log("Generated JWT Token:", token); 
-      console.log("Secret Key:", process.env.TOKEN_SECRET);
 
-        res.cookie("token", token, {
-          httpOnly: true,       // Makes it inaccessible to JavaScript (secure)
-          secure: false,        // Set to false for localhost (development)
-          sameSite: "lax",      // Allows cookies for same-site and top-level navigation
-          maxAge: 60 * 60 * 1000 // 1 hour (in milliseconds)
+        // Query mentors_mentees
+        db.query("SELECT mentor_reg_num FROM mentors_mentees WHERE mentee_reg_num = ?", [reg_num], (err2, mentorRes) => {
+          if (err2) return next(err2);
+          if (mentorRes.length > 0) {
+            roles.mentor_reg_num = mentorRes[0].mentor_reg_num;
+          }
+
+          // Generate JWT after both queries
+          const token = jwt.sign({
+            id: user.id,
+            role: user.role,
+            name: user.name,
+            email: user.emailId
+          }, process.env.TOKEN_SECRET, { expiresIn: "1h" });
+
+          res.cookie("token", token, {
+            httpOnly: true,
+            secure: false,
+            sameSite: "lax",
+            maxAge: 60 * 60 * 1000
+          });
+
+          res.status(200).json({
+            message: "User logged in successfully",
+            id: user.id,
+            emailId: user.emailId,
+            password: user.password,
+            role: user.role,
+            project_id: user.project_id,
+            reg_num: user.reg_num,
+            name: user.name,
+            dept: user.dept,
+            project_type: user.project_type,
+            semester: user.semester,
+            ...roles
+          });
         });
+      });
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
-        res.status(200).json({
-          "message":"user logged in successfull",
-          "id": result[0].id,
-          "emailId" : result[0].emailId,
-          "password" : result[0].password,
-          "role" : result[0].role,
-          "project_id" : result[0].project_id,
-          "reg_num" : result[0].reg_num,
-          "name" : result[0].name,
-          "dept" : result[0].dept,
-          "project_type":result[0].project_type,
-          "semester":result[0].semester
-        })        
-     })
-
-   }
-   catch(error)
-   {
-     next(error);
-   }
-})
 
 router.post("/auth/refresh-token",async(req,res,next) => {
    try{

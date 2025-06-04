@@ -269,9 +269,9 @@ router.get('/sub_expert/fetch_upcoming_reviews/:team_id',(req,res,next) => {
 
 router.post("/sub_expert/add_review_details/:request_id/:status/:expert_reg_num/:team_id",userAuth,(req,res,next) => {
     try{
-      const{project_id,project_name,team_lead,review_date,start_time,review_title,reason,meeting_link} = req.body;
+      const{project_id,project_name,team_lead,review_date,start_time,review_title,reason,temp_meeting_link} = req.body;
       const{request_id,status,expert_reg_num,team_id} = req.params;
-      if(!project_id || !project_name || !team_lead || !review_date || !expert_reg_num || !start_time || !request_id || !status || !team_id || !review_title)
+      if(!project_id || !project_name || !team_lead || !review_date || !expert_reg_num || !start_time || !request_id || !status || !team_id || !review_title || (status.toLowerCase() == 'accept' && !temp_meeting_link))
       {
         return next(createError.BadRequest("data is missing!"));
       }
@@ -279,15 +279,14 @@ router.post("/sub_expert/add_review_details/:request_id/:status/:expert_reg_num/
       const validStatus = ['accept','reject'];
       if(!validStatus.includes(safeStatus))return next(createError.BadRequest('invalid status!'));
       // updating status
-      let updatequery = "UPDATE review_requests SET expert_status = ? WHERE request_id = ?";
-      db.query(updatequery,[safeStatus,request_id],(error,result) => {
+      let updatequery = "UPDATE review_requests SET expert_status = ?,temp_meeting_link = ? WHERE request_id = ?";
+      db.query(updatequery,[safeStatus,temp_meeting_link,request_id],(error,result) => {
         if(error)return next(error);
         if(result.affectedRows === 0)return next(createError.BadRequest("some rows not affected!"));
         if(safeStatus === 'accept')
         {
-          if(!meeting_link)return next(createError.BadRequest('meeting link not found!'))
-          //checking whether guide accepted the review request
-          let sql1 = "select guide_status,guide_reg_num from review_requests where request_id = ?";
+          //checking whether guide accepted the review request -> and fetching temp_meeting_link
+          let sql1 = "select guide_status,guide_reg_num,temp_meeting_link from review_requests where request_id = ?";
           db.query(sql1,[request_id],(error,result) => {
             if(error)return next(error);
             if(result.length === 0)return next(createError.BadRequest('guide status not found!'));
@@ -295,6 +294,7 @@ router.post("/sub_expert/add_review_details/:request_id/:status/:expert_reg_num/
               return res.send('Expert accepted, but guide has not yet accepted the request!');
             }
             const guide_reg_num = result[0].guide_reg_num;
+            const meeting_link = result[0].temp_meeting_link
 
             // inserting into scheduled reivews
             let sql = "insert into scheduled_reviews(project_id,project_name,team_lead,review_date,start_time,expert_reg_num,guide_reg_num,team_id,review_title,meeting_link) values(?,?,?,?,?,?,?,?,?,?)";

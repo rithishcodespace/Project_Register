@@ -21,15 +21,35 @@ const mysql = require("mysql2");
 //     queueLimit:0
 // })
 
-    const pool = mysql.createPool({
-        host:"localhost",
-        user:"root",
-        password:"prakashbit",
-        database:"project_registor",
-        waitForConnections:true,
-        connectionLimit:10, 
-        queueLimit:0
-    })
+    // const pool = mysql.createPool({
+    //     host:"localhost",
+    //     user:"root",
+    //     password:"prakashbit",
+    //     database:"project_registor",
+    //     waitForConnections:true,
+    //     connectionLimit:10, 
+    //     queueLimit:0
+    // })
+
+// const pool = mysql.createPool({
+//     host:"localhost",
+//     user:"root",
+//     password:"Mathan@2007",
+//     database:"project_registor",
+//     waitForConnections:true,
+//     connectionLimit:10, 
+//     queueLimit:0
+// })
+
+    // const pool = mysql.createPool({
+    //     host:"localhost",
+    //     user:"root",
+    //     password:"prakashbit",
+    //     database:"project_registor",
+    //     waitForConnections:true,
+    //     connectionLimit:10, 
+    //     queueLimit:0
+    // })
 
 // const pool = mysql.createPool({
 //     host:"localhost",
