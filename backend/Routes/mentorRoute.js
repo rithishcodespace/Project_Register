@@ -45,7 +45,7 @@ router.get('mentor/optional_review/:mentor_reg_num',(req,res,next) => {
 router.patch('/mentor/accept_or_reject/:team_id/:mentor_reg_num/:request_id/:status',(req,res,next) => {
     try{
       const{request_id,status,mentor_reg_num,team_id} = req.params;
-      const{team_lead,project_id,review_date,start_time} = req.body;
+      const{team_lead,project_id,review_date,start_time,reason} = req.body;
       if(!request_id || !status || !mentor_reg_num || !team_id)return next(createError.BadRequest('request_id or team_id or status or mentor_reg_num not found!'));
       const safeStatus = status.toLowerCase();
       const validStatus = ['accept','reject'];
@@ -96,7 +96,13 @@ router.patch('/mentor/accept_or_reject/:team_id/:mentor_reg_num/:request_id/:sta
         }
         else
         {
-          res.send('optional review rejected successfully!')
+          if(!reason)return next(createError.BadRequest('reason not found!'));
+          let reject = "update optional_review_requests set status = 'reject',reason = ? where request_id = ?";
+          db.query(reject,[request_id],(error,result) => {
+            if(error)return next(error);
+            if(result.affectedRows === 0)return next(createError.BadRequest('an error occured while rejecting'))
+            res.send('optional review rejected successfully!')
+          })
         }
       })
     }
