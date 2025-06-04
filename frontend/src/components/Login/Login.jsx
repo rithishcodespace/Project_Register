@@ -43,6 +43,7 @@ function Login() {
         if (role === "student") {
           const projectTypeRes = await instance.get(`/student/get_project_type/${reg_num}`);
           const projectType = projectTypeRes.data?.project_type;
+          console.log(projectType)
 
           if (projectType === "internal" || projectType == "external") {
             navigate("/student");
@@ -222,11 +223,12 @@ function Login() {
                     required
                   />
                   <button
-  onClick={() => setSelectedProjectType("")}
-  className="px-6 py-2 mt-2 bg-gray-300 text-black rounded hover:bg-gray-400"
->
-  Back
-</button>
+                    onClick={() => setSelectedProjectType("")}
+                    className="px-6 py-2 mt-2 bg-gray-300 text-black rounded hover:bg-gray-400"
+                  >
+                    Back
+                  </button>
+
                   <button
                     type="submit"
                     className="px-6 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700"

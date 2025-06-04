@@ -672,7 +672,7 @@ router.get("/student/get_project_type/:reg_num",(req,res,next) => {
     db.query(sql,[reg_num],(error,result) => {
       if(error)return next(error);
       if(result.length === 0)return res.send("user haven't set their register number!");
-      res.send(result[0].project_type);
+      res.send(result.project_type);
     })
   }
   catch(error)
