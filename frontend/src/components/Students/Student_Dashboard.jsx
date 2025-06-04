@@ -230,7 +230,7 @@ useEffect(() => {
             <p className='bg-white'><span className="font-medium bg-white text-gray-700">Register Number:</span> {userSlice.reg_num}</p>
             <p className='bg-white'><span className="font-medium bg-white text-gray-700">Department:</span> {userSlice.dept}</p>
             <p className='bg-white'><span className="font-medium bg-white text-gray-700">Guide :</span>{teamSelector && teamSelector[0]?.guide_reg_num ? teamSelector[0].guide_reg_num : "Not Assigned"}</p>
-            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Subject Expert:</span> {teamSelector && teamSelector[0]?.sub_expert_reg_num? teamSelector[0].sub_expert_reg_num : "Not Assigned"}</p>
+            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Subject Exper</span> {teamSelector && teamSelector[0]?.sub_expert_reg_num? teamSelector[0].sub_expert_reg_num : "Not Assigned"}</p>
           </div></div>
 
           <div className="mt-10 bg-white p-6 rounded-lg shadow ">
@@ -258,6 +258,7 @@ useEffect(() => {
           {/* Upcoming Assignments */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4 text-black bg-white">Upcoming Deadline</h2><hr className='mb-4'/>
+
             <div className="space-y-4 bg-white">
               {studentInfo.upcomingAssignments.map((assignment, index) => (
                 <div key={index} className="border-l-4 bg-white border-blue-500 pl-4 py-2">
@@ -266,6 +267,7 @@ useEffect(() => {
                 </div>
               ))}
             </div>
+
           </div>
 
           {/* Teams Section */}

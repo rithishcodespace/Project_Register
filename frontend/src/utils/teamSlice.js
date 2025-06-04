@@ -9,7 +9,8 @@ const teamSlice = createSlice({
         },
         removeTeamMembers:(state,action) => {
             return null;
-        }
+        },
+        
     }
 })
 
