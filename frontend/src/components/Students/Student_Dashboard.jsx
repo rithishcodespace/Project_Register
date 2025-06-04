@@ -148,6 +148,8 @@ useEffect(() => {
         { withCredentials: true }
       );
 
+      console.log("response:",response.data)
+
       if (response.status === 200) {
         let { teamConformationStatus, teamMembers, pendingInvitations, teamLeader } = response.data;
         setTeamStatus(teamConformationStatus);
@@ -190,10 +192,10 @@ useEffect(() => {
         { withCredentials: true }
       );
 
-      if (response.status === 200) {
+      if(response.status === 200) {
         setTeamStatus(1);
         alert('Team confirmed successfully!');
-        navigate("/student")
+       window.location.reload();
       }
     } catch (error) {
       console.error('Error confirming team:', error.response ? error.response.data : error.message);
@@ -393,7 +395,14 @@ return (
             invitation.status === 'reject' ? 'text-red-500' :
             'text-yellow-500'
           }`}>
-            Status: {invitation.status}
+           Status: {
+  invitation.status === 'accept'
+    ? invitation.status
+    : invitation.status === 'reject'
+    ?`${invitation.status} (${invitation.reason})`
+    : 'pending'
+}
+
           </p>
         </div>
       ))}
