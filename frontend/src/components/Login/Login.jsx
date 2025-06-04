@@ -44,6 +44,7 @@ function Login() {
           const projectTypeRes = await instance.get(`/student/get_project_type/${reg_num}`);
           const projectType = projectTypeRes.data;
           console.log(projectType);
+          
 
           if (projectType === "internal" || projectType == "external") {
             navigate("/student");

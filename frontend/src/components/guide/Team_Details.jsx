@@ -6,9 +6,8 @@ import { useSelector } from 'react-redux';
 function Team_Details() {
   const { teamId } = useParams();
   const guideRegNum = useSelector((state) => state.userSlice).reg_num;
-  console.log(guideRegNum);
 
-  const [teamDetails, setTeamDetails] = useState(null);
+  const [teamDetails, setTeamDetails] = useState([]);
   const [currentWeek, setCurrentWeek] = useState(null);
   const [remarks, setRemarks] = useState('');
   const [reason, setReason] = useState('');
@@ -23,15 +22,18 @@ function Team_Details() {
         const nextWeek = verifiedWeekNum + 1;
 
         const teamRes = await instance.get(`/guide/gets_entire_team/${teamId}`);
-        const team = teamRes.data[0];
+        const team = teamRes.data;
         setTeamDetails(team);
+        console.log(teamRes.data);
+
 
         const progressField = `week${nextWeek}_progress`;
-        if (team[progressField]) {
+        if (teamRes.data[0][progressField]) {
           setCurrentWeek(nextWeek);
         } else {
           setCurrentWeek(null);
         }
+
       } catch (error) {
         console.error(error);
         alert('Error fetching team data');
@@ -86,23 +88,33 @@ function Team_Details() {
         Team ID: <span className="text-blue-600">{teamId}</span>
       </p>
 
-      {teamDetails && (
+      {teamDetails.length>0 && (
         <div className="mb-4 mt-5">
-          <p><strong>Guide RegNum:</strong> {teamDetails.guide_reg_num}</p>
-          <p><strong>Project ID:</strong> {teamDetails.project_id}</p>
+          <p><strong>Guide RegNum:</strong> {guideRegNum}</p>
+          <p><strong>Project ID:</strong> {teamDetails[0].project_id}</p>
         </div>
       )}
 
       {currentWeek ? (
         <div className="mt-4 p-4 border rounded-md bg-gray-50">
-          <h2 className="text-xl font-semibold mb-2">Week {currentWeek} Progress</h2>
-          <p className="mb-2">{teamDetails[`week${currentWeek}_progress`]}</p>
+          <h2 className="text-xl bg-white font-semibold mb-2">Week {currentWeek} Progress</h2>
+          {teamDetails.map((member, index) => (
+            <div key={index} className="mb- p-3 flex  rounded bg-white">
+              <h3 className="font-semibold flex mr-4 bg-white text-blue-700">
+                {member.name} ({member.reg_num}) : 
+              </h3>
+              <p className="text-black bg-white flex ">
+                {member[`week${currentWeek}_progress`] || 'No progress submitted.'}
+              </p>
+            </div>
+          ))}
+
 
           {!status && (
-            <div className="flex gap-4 mt-4">
+            <div className="flex gap-4 bg-white mt-4">
               <button
                 onClick={() => setStatus('accept')}
-                className="px-4 py-2 bg-green-600 text-white rounded"
+                className="px-4 py-2 bg-green-600  text-white rounded"
               >
                 Accept
               </button>
@@ -119,7 +131,7 @@ function Team_Details() {
             <>
               <textarea
                 placeholder="Enter remarks"
-                className="w-full p-2 border rounded mt-4"
+                className="w-full p-2 border bg-white rounded mt-4"
                 value={remarks}
                 onChange={(e) => setRemarks(e.target.value)}
               />
@@ -136,7 +148,7 @@ function Team_Details() {
             <>
               <textarea
                 placeholder="Enter reason for rejection"
-                className="w-full p-2 border rounded mt-4"
+                className="w-full p-2 bg-white border rounded mt-4"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
