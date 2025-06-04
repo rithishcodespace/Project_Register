@@ -193,6 +193,7 @@ useEffect(() => {
       if (response.status === 200) {
         setTeamStatus(1);
         alert('Team confirmed successfully!');
+        navigate("/student")
       }
     } catch (error) {
       console.error('Error confirming team:', error.response ? error.response.data : error.message);
