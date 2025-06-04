@@ -41,7 +41,7 @@ router.patch("/sub_expert/accept_reject/:status/:team_id/:semester/:my_id",userA
     if(!team_id || !my_id || !semester || !reason)return next(createError.BadRequest("data is missing!"));
 
     // checks whether he acts as guide or mentor to that particular team
-    let sql0 = "SELECT * FROM guide_requests WHERE to_guide_reg_num = ? AND from_team_id = ? AND status = 'accept' UNION SELECT * FROM expert_requests WHERE to_expert_reg_num = ? AND from_team_id = ? AND status = 'accept';"
+    let sql0 = "SELECT * FROM guide_requests WHERE to_guide_reg_num = ? AND from_team_id = ? AND status = 'accept' UNION SELECT * FROM sub_expert_requests WHERE to_expert_reg_num = ? AND from_team_id = ? AND status = 'accept';"
     db.query(sql0,[my_id,team_id,my_id,team_id],(error,my_teams) => {
       if(error)return next(error);
       if(my_teams.length > 0)return next(createError.BadRequest('Your are already acting as guide or mentor to this team, so you cant accept or reject this request!'));
@@ -61,7 +61,7 @@ router.patch("/sub_expert/accept_reject/:status/:team_id/:semester/:my_id",userA
                 const mentoringTeams = result.length;
                 if (mentoringTeams <= 3) {
                   // After accepting the request, update the expert in teams table
-                  let sql3 = "UPDATE teams SET sub_expert_reg_num = ? WHERE team_id = ?";
+                  let sql3 = "UPDATE teams SET sub_expert_reg_num = ? WHERE from_team_id = ?";
                   db.query(sql3, [my_id, team_id], (error, result) => {
                     if (error) return next(error);
                     if(result.affectedRows === 0)return res.status(500).send("no rows affected!")
@@ -90,7 +90,7 @@ router.patch("/sub_expert/accept_reject/:status/:team_id/:semester/:my_id",userA
             });
           } else if (status === "reject") {
             // Handle rejection: status already updated in sub_expert_requests
-            let rejectSql = "update sub_expert_requests set reason = ? where team_id = ?";
+            let rejectSql = "update sub_expert_requests set reason = ? where from_team_id = ?";
             db.query(rejectSql,[reason,team_id],(error,result) => {
               if(error)return next(error);
               if(result.affectedRows === 0)return next(createError.BadRequest('reason not updated in requests table!'));

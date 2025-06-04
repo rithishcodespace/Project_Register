@@ -119,11 +119,11 @@ const fetchVerifiedWeeks = async (teams) => {
 }
 
       if (subTeamsRes.status === "fulfilled") {
-        setSubTeams(subTeamsRes.value.data);
-        console.log(SubTeams);
-        
+  const rawSubTeams = subTeamsRes.value.data;
+  const validSubTeams = Array.isArray(rawSubTeams) ? rawSubTeams : [];
+  setSubTeams(validSubTeams);
+}
 
-      }
     } catch (error) {
       console.error("Error fetching requests:", error);
     }
