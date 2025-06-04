@@ -271,18 +271,20 @@ router.post("/student/fetch_team_status_and_invitations",(req, res, next) => {
             } else {
               // team conformed checking whether they got a team id if id exist fetch it
               if (teamMembers[0].team_id ) {
-                let getProject_id = "select project_id from projects where team_id = ?";
+                let getProject_id = "select project_id,project_name from projects where team_id = ?";
                 db.query(getProject_id,[teamMembers[0].team_id],(error,results) => {
                   if(error)return next(error);
                   
                   if(results.length > 0){
 
                     const project_id = results[0].project_id;
+                    const project_name = results[0].project_name;
 
                     res.json({
                         teamConformationStatus: 1,
                         teamMembers,
                         projectId: project_id,
+                        projectName: project_name,
                         pendingInvitations: [],
                         teamLeader: leaderDetails[0] || null,
                     });
@@ -907,7 +909,8 @@ router.post("/student/addproject/:project_type/:team_id/:reg_num", userAuth,(req
               res.json({
                 "message":"project added successfully!",
                 "team_id":team_id,
-                "project_id":project_id
+                "project_id":project_id,
+                "project_name":project_name
               });
 
             })
