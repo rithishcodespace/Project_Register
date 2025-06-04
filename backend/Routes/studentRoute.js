@@ -271,18 +271,20 @@ router.post("/student/fetch_team_status_and_invitations",(req, res, next) => {
             } else {
               // team conformed checking whether they got a team id if id exist fetch it
               if (teamMembers[0].team_id ) {
-                let getProject_id = "select project_id from projects where team_id = ?";
+                let getProject_id = "select project_id,project_name from projects where team_id = ?";
                 db.query(getProject_id,[teamMembers[0].team_id],(error,results) => {
                   if(error)return next(error);
                   
                   if(results.length > 0){
 
                     const project_id = results[0].project_id;
+                    const project_name = results[0].project_name;
 
                     res.json({
                         teamConformationStatus: 1,
                         teamMembers,
                         projectId: project_id,
+                        projectName: project_name,
                         pendingInvitations: [],
                         teamLeader: leaderDetails[0] || null,
                     });
@@ -907,7 +909,8 @@ router.post("/student/addproject/:project_type/:team_id/:reg_num", userAuth,(req
               res.json({
                 "message":"project added successfully!",
                 "team_id":team_id,
-                "project_id":project_id
+                "project_id":project_id,
+                "project_name":project_name
               });
 
             })
@@ -1020,15 +1023,17 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
 
                     const sqlInsertOptional = `
                       INSERT INTO optional_review_requests 
-                      (team_id, project_id, team_lead, review_date, start_time, mentor_reg_num, reason, status)
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                      (team_id, project_id, team_lead, review_date, start_time, mentor_reg_num, reason, status, file)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     `;
                     db.query(sqlInsertOptional, [
-                      team_id, project_id, team_lead, formattedDate, start_time, mentor_reg_num, reason, 'pending'
+                      team_id, project_id, team_lead, formattedDate, start_time,
+                      mentor_reg_num, reason, 'pending', filePath
                     ], (err7, result7) => {
                       if (err7) return next(err7);
                       return res.send("Optional review request sent successfully to mentor.");
                     });
+
                   });
                 }
               });

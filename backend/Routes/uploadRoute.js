@@ -12,11 +12,13 @@ router.post("/upload-files", (req, res) => {
       return res.status(500).json({ error: "File upload failed. " + err.message });
     }
 
-    const { team_id, project_id } = req.body;
+    const { team_id, project_id, reg_num, file_classification } = req.body;
 
-    if (!team_id || !project_id) {
-      return res.status(400).json({ error: "Team ID and Project ID are required" });
+    if (!team_id || !project_id || !reg_num || !file_classification) {
+      return res.status(400).json({ error: "Team ID and Project ID and register number and file_classification are required" });
     }
+
+    // const validClassification 
 
     const fileType = Object.keys(req.files)[0]; // Can be outcome, report, or ppt
     const filePath = req.files[fileType] ? req.files[fileType][0].path : null;
@@ -27,21 +29,23 @@ router.post("/upload-files", (req, res) => {
 
     try {
       const [existingRecord] = await pool.query(
-        "SELECT * FROM project_files WHERE team_id = ? AND project_id = ?",
-        [team_id, project_id]
+        "SELECT * FROM project_files WHERE team_id = ? AND project_id = ? and reg_num = ?",
+        [team_id, project_id, reg_num]
       );
 
       if (existingRecord.length > 0) {
         await pool.query(
-          `UPDATE project_files SET ${fileType} = ?, uploaded_at = CURRENT_TIMESTAMP WHERE team_id = ? AND project_id = ?`,
-          [filePath, team_id, project_id]
+          `UPDATE project_completion_files SET ${fileType} = ?, uploaded_at = CURRENT_TIMESTAMP WHERE team_id = ? AND project_id = ? and reg_num = ?`,
+          [filePath, team_id, project_id, reg_num]
         );
       } else {
         await pool.query(
-          "INSERT INTO project_files (team_id, project_id, outcome, report, ppt) VALUES (?, ?, ?, ?, ?)",
+          "INSERT INTO project_completion_files (team_id, project_id, reg_num, file_classification, outcome, report, ppt) VALUES (?, ?, ?, ?, ?, ?, ?)",
           [
             team_id,
             project_id,
+            reg_num,
+            file_classification,
             fileType === "outcome" ? filePath : null,
             fileType === "report" ? filePath : null,
             fileType === "ppt" ? filePath : null,

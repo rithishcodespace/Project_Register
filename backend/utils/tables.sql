@@ -11,13 +11,15 @@ CREATE TABLE guide_requests (
   INDEX `idx_status` (status)
 ) 
 
-CREATE TABLE `project_files` (
+CREATE TABLE `project_completion_files` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `reg_num` varchar(255) NOT NULL,
   `team_id` int NOT NULL,
   `project_id` int NOT NULL,
   `outcome` varchar(255) DEFAULT NULL,
   `report` varchar(255) DEFAULT NULL,
   `ppt` varchar(255) DEFAULT NULL,
+  `column file_classification` varchar(100) not null
   `uploaded_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   INDEX `idx_team_id` (`team_id`),
