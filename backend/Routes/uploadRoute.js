@@ -4,9 +4,10 @@ const fs = require("fs");
 const path = require("path");
 const upload = require("../utils/fileUpload");
 const pool = require("../db");
+const createError = require('http-errors');
 
 // Upload files for a team
-router.post("/upload-files", (req, res) => {
+router.post("/upload-files", (req, res, next) => {
   upload(req, res, async (err) => {
     if (err) {
       return res.status(500).json({ error: "File upload failed. " + err.message });
@@ -18,7 +19,11 @@ router.post("/upload-files", (req, res) => {
       return res.status(400).json({ error: "Team ID and Project ID and register number and file_classification are required" });
     }
 
-    // const validClassification 
+    const validClassification = ['individual_file', 'team_file'];
+    if (!validClassification.includes(file_classification)) {
+      return next(createError.BadRequest('Invalid file_classification!'));
+    }
+
 
     const fileType = Object.keys(req.files)[0]; // Can be outcome, report, or ppt
     const filePath = req.files[fileType] ? req.files[fileType][0].path : null;
@@ -29,7 +34,7 @@ router.post("/upload-files", (req, res) => {
 
     try {
       const [existingRecord] = await pool.query(
-        "SELECT * FROM project_files WHERE team_id = ? AND project_id = ? and reg_num = ?",
+        "SELECT * FROM project_completion_files WHERE team_id = ? AND project_id = ? and reg_num = ?",
         [team_id, project_id, reg_num]
       );
 

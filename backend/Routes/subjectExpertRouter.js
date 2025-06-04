@@ -452,38 +452,51 @@ router.post('/guide/review/add_marks_to_individual/:expert_reg_num/:reg_num',(re
 })
 
 
-// marks attendance -> can be marked withing two days of the review
-router.patch("/sub_expert/mark_attendance/:review_id",userAuth,(req,res,next) => {
-    try{
-      const{review_id} = req.params;
-      if(!review_id) return next(createError.BadRequest("review_id is missing!"));
-      // validating 2 days
-      let sql0 = "select review_date from scheduled_reviews where review_id = ?";
-      db.query(sql0,[review_id],(error0,result0) => {
-        if(error0)return next(error0);
-        if(result0.length === 0)return next(createError.NotFound('review_Date not found!'));
-        const review_date = new Date(result0[0].review_date);
-        const today = new Date();
+// sets end time
+router.patch("/sub_expert/mark_attendance/:review_id", userAuth, (req, res, next) => {
+  try {
+    const { review_id } = req.params;
+    const { end_time } = req.body;
 
-        review_date.setHours(0,0,0,0);
-        today.setHours(0,0,0,0);
+    if (!review_id) return next(createError.BadRequest("review_id is missing!"));
+    if (!end_time) return next(createError.BadRequest("end_time is required!"));
 
-        const diffInDays = (today - review_date) / (1000 * 60 * 60 * 24); // convert ms to days
-
-        if (diffInDays > 2) return next(createError.BadRequest('Mark attendance time limit exceeded!'));
-        let sql = "update scheduled_reviews set attendance = 'present' where review_id = ?";
-        db.query(sql,[review_id],(error,result) => {
-          if(error) return next(error);
-          if(result.affectedRows === 0)return next(createError.BadRequest("no rows got affected!"));
-          res.send("attendance marked successfully!");
-        })
-      })
+    // Validate time format (HH:MM:SS)
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/;
+    if (!timeRegex.test(end_time)) {
+      return next(createError.BadRequest("Invalid time format. Use HH:MM:SS"));
     }
-    catch(error)
-    {
-      next(error);
-    }
-})
+
+    const sql0 = "SELECT review_date, start_time FROM scheduled_reviews WHERE review_id = ?";
+    db.query(sql0, [review_id], (error0, result0) => {
+      if (error0) return next(error0);
+      if (result0.length === 0) return next(createError.NotFound("Review not found!"));
+
+      const { review_date, start_time } = result0[0];
+      const scheduledTime = new Date(`${review_date}T${start_time}`);
+      const now = new Date();
+
+      const diffInMs = now - scheduledTime;
+      const threeHoursInMs = 3 * 60 * 60 * 1000;
+
+      if (diffInMs > threeHoursInMs) {
+        return next(createError.BadRequest("Cannot update end time. Time window exceeded!"));
+      }
+
+      // Set the provided end_time (in HH:MM:SS format)
+      const sql = "UPDATE scheduled_reviews SET end_time = ? WHERE review_id = ?";
+      db.query(sql, [end_time, review_id], (error, result) => {
+        if (error) return next(error);
+        if (result.affectedRows === 0) return next(createError.BadRequest("No rows updated!"));
+
+        res.send("End time updated successfully!");
+      });
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 
 
 // adds detaied marks to rubix -> also inserts total mark for the review guide_mark and expert_mark to the scheduled_Review table

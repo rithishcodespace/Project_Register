@@ -177,6 +177,7 @@ CREATE TABLE review_requests (
   review_date DATE DEFAULT NULL,
   review_title VARCHAR(100) NOT NULL,
   start_time TIME DEFAULT NULL,
+  end_time TIME DEFAULT NULL,
   guide_status VARCHAR (100) DEFAULT 'interested',
   expert_status VARCHAR(100) default 'interested'
   expert_reg_num varchar(100) NOT NULL,
