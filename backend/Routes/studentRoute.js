@@ -611,6 +611,25 @@ router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, r
     }
   });
 
+// brings whether weekly logs accepted or not
+// filter recent status through verified at date and time
+router.get("/student/get_accept_or_reject_status/:team_id/:week_number",(req,res,next) => {
+  try{
+    const{team_id,week_number} = req.params;
+    if(!team_id || !week_number)return next(createError.BadRequest('team_id or week number is not defined!'));
+    let sql = "select * from weekly_logs_verification where team_id = ? and week_number = ?";
+    db.query(sql,[team_id,week_number],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound('status not found!'));
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 
 // brings the details of the project through project_id 
 router.get("/student/get_project_details/:project_id",userAuth,(req,res,next) => {
