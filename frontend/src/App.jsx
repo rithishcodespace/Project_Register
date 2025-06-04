@@ -20,7 +20,6 @@ import Subject_expert_remarks from "./components/Subject_expert/Subject_expert_r
 import Subject_expert from "./components/Subject_expert/Subject_expert";
 import Guide from "./components/guide/guide";
 import Staff_dashboard from "./components/guide/Staff_dashboard";
-import Guide_queries from "./components/guide/Guide_queries";
 import Guide_team_progress from "./components/guide/Guide_team_progress";
 import Queries from "./components/Students/Queries";
 import { getProfile } from "./services/authService";
@@ -39,7 +38,8 @@ import { useSelector } from "react-redux";
 import Review_projects from "./components/guide/Review_projects";
 import TeamDetails from "./components/guide/Team_Details";
 import ChallengeReviewAdmin from "./components/Students/ChallengeReview";
-
+import Team_Details from "./components/guide/Team_Details";
+import Guide_queries from "./components/guide/Guide_queries";
 
 
 const Loader = () => {
@@ -50,7 +50,7 @@ const Loader = () => {
     getProfile(dispatch, navigate);
   }, [dispatch, navigate]);
 
-  return <div class="flex justify-center items-center h-40">
+  return <div className="flex justify-center items-center h-40">
     <div className="w-10 h-10 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
   </div>
     ;
@@ -116,7 +116,7 @@ function App() {
             <Route path="queries" element={<Guide_queries />} />
             <Route path="team_progress" element={<Guide_team_progress />} />
             <Route path="review_progress" element={<Review_projects />} />
-            <Route path="team-details/:teamId" element={<TeamDetails />} />
+            <Route path="team-details/:teamId" element={<Team_Details />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

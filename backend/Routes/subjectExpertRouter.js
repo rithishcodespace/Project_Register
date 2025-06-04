@@ -235,7 +235,7 @@ router.get("/sub_expert/fetch_review_requests/:expert_reg_num",userAuth,(req,res
   try{
     const{expert_reg_num} = req.params;
     if(!expert_reg_num)return next(createError.BadRequest("expert id is undefined!"));
-    let sql = "select * from review_requests where expert_reg_num = ? and status = 'interested'";
+    let sql = "select * from review_requests where expert_reg_num = ? and expert_status = 'interested'";
     db.query(sql,[expert_reg_num],(error,result) => {
       if(error)return next(error);
       return res.send(result);
