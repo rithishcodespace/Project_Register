@@ -249,18 +249,6 @@ CREATE TABLE teams (
   week10_progress VARCHAR(200),
   week11_progress VARCHAR(200),
   week12_progress VARCHAR(200),
-  week1_file TEXT,
-  week2_file TEXT,
-  week3_file TEXT,
-  week4_file TEXT,
-  week5_file TEXT,
-  week6_file TEXT,
-  week7_file TEXT,
-  week8_file TEXT,
-  week9_file TEXT,
-  week10_file TEXT,
-  week11_file TEXT,
-  week12_file TEXT,
 
   PRIMARY KEY (team_id, reg_num),
   FOREIGN KEY (reg_num) REFERENCES users(reg_num)
