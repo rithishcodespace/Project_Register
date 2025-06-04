@@ -15,6 +15,7 @@ function Staff_dashboard() {
   const navigate = useNavigate();
   const [upcomingGuideReviews, setUpcomingGuideReviews] = useState([]);
   const [upcomingExpertReviews, setUpcomingExpertReviews] = useState([]);
+  const [completedReviewMap, setCompletedReviewMap] = useState({});
 
 
   const reg_num = useSelector((state) => state.userSlice.reg_num);
@@ -36,6 +37,25 @@ function Staff_dashboard() {
     );
     return updated;
   };
+
+  const fetchCompletedReviews = async (teams) => {
+    const reviewMap = {};
+    for (const team of teams) {
+      try {
+        const res = await instance.get(`/sub_expert/fetch_completed_reviews/${team.from_team_id}`);
+        if (Array.isArray(res.data)) {
+          reviewMap[team.from_team_id] = res.data.length;
+        } else {
+          reviewMap[team.from_team_id] = 0;
+        }
+      } catch (err) {
+        console.error(`Error fetching completed reviews for ${team.from_team_id}:`, err.response?.data || err.message);
+        reviewMap[team.from_team_id] = 0;
+      }
+    }
+    setCompletedReviewMap(reviewMap);
+  };
+
 
   // Fetch progress data ONLY for guide teams, store results in progressMap
   const fetchProgressForTeams = async (teams) => {
@@ -122,6 +142,8 @@ function Staff_dashboard() {
         const rawSubTeams = subTeamsRes.value.data;
         const validSubTeams = Array.isArray(rawSubTeams) ? rawSubTeams : [];
         setSubTeams(validSubTeams);
+
+        fetchCompletedReviews(validSubTeams);
       }
 
     } catch (error) {
@@ -345,6 +367,8 @@ function Staff_dashboard() {
                   <th className="px-4 py-2 border-b bg-white">Team ID</th>
                   <th className="px-4 py-2 border-b bg-white">Project Name</th>
                   <th className="px-4 py-2 border-b bg-white">Semester</th>
+                  <th className="px-4 py-2 border-b bg-white">Completed Reviews</th>
+
                 </tr>
               </thead>
               <tbody>
@@ -353,7 +377,11 @@ function Staff_dashboard() {
                     <td className="px-4 py-2 border-b bg-white">{team.from_team_id}</td>
                     <td className="px-4 py-2 border-b bg-white">{team.project_name}</td>
                     <td className="px-4 py-2 border-b bg-white">{team.team_semester}</td>
+                    <td className="px-4 py-2 border-b bg-white">
+                      {completedReviewMap[team.from_team_id] || 0}/2
+                    </td>
                   </tr>
+
                 ))}
               </tbody>
             </table>
