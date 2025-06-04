@@ -155,7 +155,7 @@ router.post("/sub_expert/sent_request_to_expert/:semester",userAuth, (req, res, 
               let errors = false;
     
               validExperts.forEach((expert) => {
-                const insertSql = "INSERT INTO sub_expert_requests (from_team_id, project_id, project_name, to_expert_reg_num,team_semester) VALUES (?, ?, ?, ?)";
+                const insertSql = "INSERT INTO sub_expert_requests (from_team_id, project_id, project_name, to_expert_reg_num,team_semester) VALUES (?, ?, ?, ?, ?  )";
                 db.query(insertSql, [from_team_id, project_id, project_name, expert,semester], (error, insertResult) => {
                   if (error || insertResult.affectedRows === 0) {
                     console.error("Insert failed for:", expert, error || "No rows inserted");
