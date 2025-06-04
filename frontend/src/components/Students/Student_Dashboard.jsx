@@ -84,7 +84,9 @@ useEffect(() => {
     try {
       const response = await instance.get('/admin/get_timelines');        
       if (response.status === 200 && response.data.length > 0) {
+        
         const current = new Date();
+        console.log(response.data);
         const active = response.data.find(t => {
           const start = new Date(t.start_date);
           const end = new Date(t.end_date);
