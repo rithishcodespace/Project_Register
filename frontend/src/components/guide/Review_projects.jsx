@@ -78,7 +78,6 @@ function Review_projects() {
       review_no,
       team_id,
       guideRegNum,
-      expert_reg_num
     } = request;
 
     // Prepare payload body
@@ -93,8 +92,6 @@ function Review_projects() {
     };
 
     try {
-      // Determine the API and params based on if guide or expert (based on presence of guideRegNum or expert_reg_num)
-      // Here, I assume if guideRegNum === current guideRegNum => it's a guide request; else expert request
       let url = '';
       let paramRegNum = '';
 
@@ -103,7 +100,7 @@ function Review_projects() {
         paramRegNum = guideRegNum;
       } else {
         url = `/sub_expert/add_review_details/${request_id}/${status}/${guideRegNum}/${team_id}`;
-        paramRegNum = expert_reg_num;
+        paramRegNum = guideRegNum;
       }
 
       // POST request
