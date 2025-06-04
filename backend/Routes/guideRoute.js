@@ -696,6 +696,14 @@ router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:status/:team_id",u
           const insertSql = "update weekly_logs_verification set is_verified = ?,verified_by = ?,verified_at = ?,remarks = ?,status = ? where team_id = ? and week_number = ?";
           db.query(insertSql, [true,guide_reg_num,verifiedAt,remarks,safeStatus,team_id,weekNum], (error, result) => {
             if (error) return next(error);
+            console.log({
+  guide_reg_num,
+  team_id,
+  verifiedAt,
+  remarks,
+  safeStatus,
+  weekNum
+});
             if (result.affectedRows === 0)
               return next(createError.BadRequest("Failed to verify week progress"));
 
@@ -705,7 +713,7 @@ router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:status/:team_id",u
       }
       else if(status === 'reject'){
       // update reject status
-      let rejectSql = "update weekly_logs_verifications set status = ?,reason = ? where team_id = ? and week_number = ?";
+      let rejectSql = "update weekly_logs_verification set status = ?,reason = ? where team_id = ? and week_number = ?";
       db.query(rejectSql,[safeStatus,reason,team_id,weekNum],(error1,result1) => {
         if(error1)return next(error1);
         if(result1.affectedRows === 0)return next(createError.BadRequest('some rows not selected!'));
