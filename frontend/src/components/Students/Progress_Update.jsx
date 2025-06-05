@@ -6,6 +6,7 @@ import instance from "../../utils/axiosInstance";
 const Progress_Update = () => {
   const { reg_num } = useSelector((state) => state.userSlice);
   const teamSelector = useSelector((state) => state.teamSlice);
+  const statusSelector = useSelector((state) => state.teamStatusSlice);
 
   const [description, setDescription] = useState("");
   const [canUpdate, setCanUpdate] = useState(true);
@@ -111,7 +112,7 @@ const Progress_Update = () => {
         <ProjectFileUpload
           teamId={teamSelector[0]?.team_id}
           reg_num={reg_num}
-          project_id={teamSelector[0]?.project_id}
+          project_id={statusSelector?.projectId}
         />
       ) : (
         <>
