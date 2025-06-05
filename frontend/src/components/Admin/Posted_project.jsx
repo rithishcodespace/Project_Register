@@ -7,30 +7,67 @@ const Posted_project = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedProject, setSelectedProject] = useState(null);
+const getProjects = async () => {
+  try {
+    const res = await instance.get('/admin/get_all_projects');
+    const projects = res.data;
 
-  const getProjects = async () => {
-    try {
-      const res = await instance.get('/admin/get_all_projects');
-      const projects = res.data;
+    const enrichedProjects = await Promise.all(
+      projects.map(async (project) => {
+        try {
+          // ✅ Use your new backend API to fetch team info
+          const teamRes = await instance.get(`/admin/get_team_members/${project.team_id}`);
+          const team = teamRes.data;
 
-      const enrichedProjects = await Promise.all(
-        projects.map(async (project) => {
-          try {
-            const teamRes = await instance.get(`/guide/gets_entire_team/${project.team_id}`);
-            const team = teamRes.data;
-            return { ...project, team_members: team };
-          } catch (teamError) {
-            console.error(`Error fetching team for project ${project.project_id}:`, teamError.message);
-            return { ...project, team_members: [] };
+          let guideName = 'N/A';
+          let subExpertName = 'N/A';
+
+          const guideReg = team[0]?.guide_reg_num;
+          const subExpertReg = team[0]?.sub_expert_reg_num;
+
+          if (guideReg) {
+            try {
+              const guideRes = await instance.get(`/admin/get_name/${guideReg}`);
+              guideName = `${guideRes.data[0]?.name || 'Unknown'} (${guideReg})`;
+            } catch (err) {
+              console.error(`Failed to fetch guide name for ${guideReg}`);
+            }
           }
-        })
-      );
 
-      setProjectData(enrichedProjects);
-    } catch (error) {
-      console.error("Error fetching projects:", error.message);
-    }
-  };
+          if (subExpertReg) {
+            try {
+              const subExpertRes = await instance.get(`/admin/get_name/${subExpertReg}`);
+              subExpertName = `${subExpertRes.data[0]?.name || 'Unknown'} (${subExpertReg})`;
+            } catch (err) {
+              console.error(`Failed to fetch sub expert name for ${subExpertReg}`);
+            }
+          }
+
+          return {
+            ...project,
+            team_members: team,
+            guide_display: guideName,
+            sub_expert_display: subExpertName,
+          };
+        } catch (teamError) {
+          console.error(`Error fetching team for project ${project.project_id}:`, teamError.message);
+          return {
+            ...project,
+            team_members: [],
+            guide_display: 'N/A',
+            sub_expert_display: 'N/A',
+          };
+        }
+      })
+    );
+
+    setProjectData(enrichedProjects);
+  } catch (error) {
+    console.error("Error fetching projects:", error.message);
+  }
+};
+
+
 
   const handleViewProject = (project) => {
     setSelectedProject(project);
@@ -194,11 +231,11 @@ const Posted_project = () => {
 
           <thead className='bg-white m-5 border-b'>
             <tr className="bg-white m-5">
-              <th className="p-2 w-[15%] bg-white">Team ID</th>
-              <th className="p-2 w-[25%] bg-white">Project Name</th>
-              <th className="p-2 w-[12%] bg-white">Cluster</th>
+              <th className="p-2 w-[13%] bg-white">Team ID</th>
+              <th className="p-2 w-[20%] bg-white">Project Name</th>
+              <th className="p-2 w-[7%] bg-white">Cluster</th>
               <th className="p-2 w-[20%] bg-white">Subject Expert</th>
-              <th className="p-2 w-[18%] bg-white">Guide</th>
+              <th className="p-2 w-[20%] bg-white">Guide</th>
               <th className="p-2 w-[10%] bg-white">Action</th>
             </tr>
           </thead>
@@ -222,12 +259,12 @@ const Posted_project = () => {
                 </td>
                 <td className="p-2 bg-white h-[48px] align-middle">
                   <div className="flex justify-center bg-white items-center h-[36px]">
-                    {row.team_members[0]?.sub_expert_reg_num || 'N/A'}
+                    {row.sub_expert_display || 'N/A'}
                   </div>
                 </td>
                 <td className="p-2 bg-white h-[48px] align-middle">
                   <div className="flex justify-center bg-white items-center h-[36px]">
-                    {row.team_members[0]?.guide_reg_num || 'N/A'}
+                    {row.guide_display || 'N/A'}
                   </div>
                 </td>
                 <td className="p-2 bg-white h-[48px] align-middle">
