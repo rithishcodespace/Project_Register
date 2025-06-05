@@ -40,6 +40,7 @@ import TeamDetails from "./components/guide/Team_Details";
 import ChallengeReviewAdmin from "./components/Students/ChallengeReview";
 import Team_Details from "./components/guide/Team_Details";
 import Guide_queries from "./components/guide/Guide_queries";
+import WeeklyLogsHistory from "./components/Students/week";
 
 
 const Loader = () => {
@@ -83,6 +84,7 @@ function App() {
                     <Route path="queries" element={<Queries />} />
                     <Route path="review" element={<Schedule_review />} />
                     <Route path="Progress_update" element={<Progress_Update />} />
+                    <Route path="week" element={<WeeklyLogsHistory />} />
                   </>
                )}  
               </>

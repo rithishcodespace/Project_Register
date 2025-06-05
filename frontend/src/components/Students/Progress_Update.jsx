@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import ProjectFileUpload from "./ProjectFileUpload";
 import instance from "../../utils/axiosInstance";
+import { Link } from "react-router-dom";
 
 const Progress_Update = () => {
   const { reg_num } = useSelector((state) => state.userSlice);
@@ -17,6 +18,25 @@ const Progress_Update = () => {
   const [deadlines, setDeadlines] = useState({});
   const [loading, setLoading] = useState(true);
 
+  const [reviewHistory, setReviewHistory] = useState([]);
+
+  const fetchReviewHistory = async () => {
+  try {
+    const teamId = teamSelector[0].team_id;
+    
+    if (!teamId) return;
+
+    const response = await instance.get(`/student/get_review_history/${teamId}`);
+    if (typeof response.data !== "string") {
+      setReviewHistory(response.data);
+      console.log("hai"+reviewHistory.status)
+    }
+  } catch (error) {
+    console.error("Failed to fetch review history:", error);
+  }
+};
+
+
   const handleSubmit = async () => {
     try {
       let response = await instance.post(
@@ -25,33 +45,15 @@ const Progress_Update = () => {
       );
       if (response.data === 'YOU HAVE ALREADY SUBMITTED YOUR PROGRESS FOR THIS WEEK!') {
         alert('YOU HAVE ALREADY SUBMITTED YOUR PROGRESS FOR THIS WEEK!');
-        setAlreadyUpdated(true);
+       
         setDescription("");
       } else if (response.status === 200) {
         alert("Progress submitted");
-        setAlreadyUpdated(true);
+    
         setDescription("");
       }
     } catch (error) {
       console.error("Progress submission failed:", error);
-    }
-  };
-
-  const checkIfAlreadyVerified = async (teamId, weekKey) => {
-    try {
-      const response = await instance.get(
-        `/guide/checks_already_guide_updated_weekly_progress/${teamId}/${weekKey}`
-      );
-
-      if (response.data.length > 0 && response.data[0].is_verified === 1) {
-        setAlreadyUpdated(false);
-        setCanUpdate(false);
-      } else {
-        setAlreadyUpdated(false);
-        setCanUpdate(true);
-      }
-    } catch (error) {
-      console.error("Failed to check guide verification status:", error);
     }
   };
 
@@ -67,7 +69,7 @@ const Progress_Update = () => {
       if (today <= deadlineDate) {
         setCurrentWeek(`Week ${i}`);
         setNextWeekToUpdate(weekKey);
-        await checkIfAlreadyVerified(teamId, weekKey);
+        setCanUpdate(true);
         return;
       }
     }
@@ -80,6 +82,7 @@ const Progress_Update = () => {
     try {
       const teamId = teamSelector[0]?.team_id;
       if (!teamId) return;
+      console.log(teamId)
 
       const response = await instance.get(`/guide/fetchDeadlines/${teamId}`);
       const deadlineData = response.data[0];
@@ -92,9 +95,25 @@ const Progress_Update = () => {
     }
   };
 
-  useEffect(() => {
-    fetchDeadlinesAndDetermineWeek();
-  }, []);
+  const getPreviousWeekStatus = () => {
+  if (!nextWeekToUpdate || !reviewHistory.length) return null;
+
+  const weekNum = parseInt(nextWeekToUpdate.replace("week", ""));
+  if (isNaN(weekNum) || weekNum <= 1) return null;
+
+  const prevWeek = `week${weekNum - 1}`;
+  const prevReview = reviewHistory.find(entry => entry.week_number === prevWeek);
+
+  return prevReview?.status || null;
+};
+
+
+
+useEffect(() => {
+  fetchReviewHistory(); 
+  fetchDeadlinesAndDetermineWeek();
+}, []);
+
 
   if (loading) {
     return (
@@ -107,34 +126,32 @@ const Progress_Update = () => {
   return (
     <div className="p-6 max-w-3xl mx-auto font-sans">
       <h1 className="text-4xl font-semibold text-center text-gray-900 mb-8">Progress Update</h1>
+      <Link
+  to="/student/week"
+  className="text-blue-600 hover:underline font-medium"
+>
+  View Weekly Logs History
+</Link>
+      
 
       {allWeeksCompleted ? (
         <ProjectFileUpload
           teamId={teamSelector[0]?.team_id}
           reg_num={reg_num}
-          project_id={statusSelector?.projectId}
+          project_id={statusSelector?.project_id}
         />
-      ) : (
-        <>
-          {alreadyUpdated ? (
-            <div className="flex justify-center mt-6">
-              <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-900 p-6 rounded-xl shadow-md w-full max-w-2xl">
-                <div className="flex items-start bg-yellow-100 space-x-4">
-                  <svg className="w-6 h-6 text-yellow-600 bg-yellow-100 mt-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path className="bg-yellow-100" strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z" />
-                  </svg>
-                  <div className="bg-yellow-100">
-                    <p className="text-lg font-semibold bg-yellow-100">Progress Already Verified</p>
-                    <p className="mt-1 text-sm bg-yellow-100">
-                      Your progress for <span className="font-semibold bg-yellow-100">{currentWeek}</span> has sent to the guide. Wait for guide Verification.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : canUpdate ? (
+      ) : canUpdate ? (
             <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-lg">
               <h2 className="text-2xl font-semibold bg-white text-gray-800 mb-3">{currentWeek}</h2>
+
+               {getPreviousWeekStatus() !== "accept" && (
+        <div className="text-yellow-600 font-medium mb-4">
+        You can only submit if last week's progress was <b>accepted</b>.
+        <br />
+        Last week's status: <b>{getPreviousWeekStatus() || "not submitted"}</b>.
+      </div>
+    )}
+
               <p className="text-sm text-gray-500 mb-4 bg-white">
                 Deadline: <span className="bg-white font-medium text-gray-700">{deadlines[nextWeekToUpdate] || "N/A"}</span>
               </p>
@@ -158,8 +175,7 @@ const Progress_Update = () => {
             <div className="text-center mt-10 text-red-600 font-semibold">
               No active deadline or previous week not verified yet.
             </div>
-          )}
-        </>
+          // )}
       )}
     </div>
   );
