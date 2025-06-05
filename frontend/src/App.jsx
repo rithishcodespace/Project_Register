@@ -25,7 +25,7 @@ import Queries from "./components/Students/Queries";
 import { getProfile } from "./services/authService";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
-import Proj_Details from "./components/Students/Proj_Details";
+// import Proj_Details from "./components/Students/Proj_Details";
 import ProjectFileUpload from "./components/Students/ProjectFileUpload";
 import Admin_project_details from "./components/Admin/Admin_project_details";
 import TimeLine from "./components/Admin/Timeline";
@@ -74,7 +74,7 @@ function App() {
           <Route path="/student" element={<Student />}>
             <Route index element={<Student_Dashboard />} />
             <Route path="invitations" element={<InvitationPage />} />
-            <Route path="Project_Details/proj_details/:id" element={<Proj_Details />} />
+            {/* <Route path="Project_Details/proj_details/:id" element={<Proj_Details />} /> */}
             <Route path="upload-project-files" element={<ProjectFileUpload />} />
             {teamselector ? (
               <>
