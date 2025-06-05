@@ -515,24 +515,6 @@ router.get('/expert/reivew/check_attendance/marked/:review_id',(req,res,next) =>
   }
 })
 
-// get name by register number
-router.get('/student/get_name_by_reg_number/:reg_num',(req,res,next) => {
-  try{
-    const{reg_num} = req.params;
-    if(!reg_num)return next(createError.BadRequest('registser number not found!'));
-    let sql = "select name from users where reg_num = ?";
-    db.query(sql,[reg_num],(error,result) => {
-      if(error)return next(error);
-      if(result.length === 0)return next(createError.NotFound('student name not found!'));
-      res.send(result[0].name);
-    })
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
-
 
 // adds detaied marks to rubix -> also inserts total mark for the review guide_mark and expert_mark to the scheduled_Review table
 // reivew no -> 1 or 2 -> get from input tag

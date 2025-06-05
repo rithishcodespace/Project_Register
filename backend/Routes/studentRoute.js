@@ -722,6 +722,24 @@ router.get('/student/get_review_history/:team_id',(req,res,next) => {
   }
 })
 
+// get name by register number
+router.get('/student/get_name_by_reg_number/:reg_num',(req,res,next) => {
+  try{
+    const{reg_num} = req.params;
+    if(!reg_num)return next(createError.BadRequest('registser number not found!'));
+    let sql = "select name from users where reg_num = ?";
+    db.query(sql,[reg_num],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound('student name not found!'));
+      res.send(result[0].name);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 // send request to mentor for optional review -> if missed any one of the review
 
 router.post('/send_request_for_optional_review/:mentor_reg_num',(req,res,next) => {
