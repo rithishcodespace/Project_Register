@@ -26,6 +26,28 @@ router.get("/guide/getrequests/:reg_num",userAuth,(req,res,next) => {
     }
 })
 
+// fetches team details, i am acting as the guide
+
+router.get("/guide/fetch_teams/:guide_reg_num",(req,res,next) => {
+    try{
+      const{guide_reg_num} = req.params;
+      if(!guide_reg_num)
+      {
+        return next(createError.BadRequest("guide reg num not found!"));
+      }
+    let sql = "select * from guide_requests where guide_reg_num = ? and status = 'accept'";
+    db.query(sql,[expert_id],(error,result) => {
+        if(error)return next(error);
+        if(result.length == 0) return res.send("No Teams found!");
+        res.send(result);
+    })
+    }
+    catch(error)
+    {
+       next(error);
+    }
+})
+
 // update status -> accept or reject
 router.patch("/guide/accept_reject/:status/:team_id/:semester/:my_id",userAuth, (req, res, next) => {
   try {
@@ -264,13 +286,13 @@ router.post("/guide/add_review_details/:request_id/:status/:guide_reg_num/:team_
 
 // fetching the upcoming reviews
 
-router.get('/guide/fetch_upcoming_reviews/:team_id',(req,res,next) => {
+router.get('/guide/fetch_upcoming_reviews/:guide_reg_num',(req,res,next) => {
   try{
-    const{team_id} = req.params;
-    if(!team_id) return next(createError.BadRequest('team is undefined!'));
-    let sql = `SELECT * FROM scheduled_reviews WHERE team_id = ? AND (attendance IS NULL OR attendance = '')AND CONCAT(review_date, ' ', start_time) >= NOW() - INTERVAL 3 HOUR;`;
+    const{guide_reg_num} = req.params;
+    if(!guide_reg_num) return next(createError.BadRequest('guide register number is undefined!'));
+    let sql = `SELECT * FROM scheduled_reviews WHERE guide_reg_num = ? AND (attendance IS NULL OR attendance = '')AND CONCAT(review_date, ' ', start_time) >= NOW() - INTERVAL 3 HOUR;`;
 
-    db.query(sql,[team_id],(error,result) => {
+    db.query(sql,[guide_reg_num],(error,result) => {
       if(error)return next(error);
       if(result.length === 0)return next(createError.NotFound('meeting links not found!'));
       return res.send(result);
@@ -363,9 +385,11 @@ router.post("/guide/review/add_team_marks/:guide_reg_num", userAuth, (req, res, 
     return next(createError.Forbidden('Marks can only be entered within 6 days after the review.'));
   }
 
+  const formattedDate = new Date(review_date).toISOString().split('T')[0];
+
   // Check if already added
   const checkSql = "SELECT * FROM review_marks_team WHERE team_id = ? AND review_date = ? AND review_title = ?";
-  db.query(checkSql, [team_id, review_date, review_title], (error, result) => {
+  db.query(checkSql, [team_id,  formattedDate, review_title], (error, result) => {
     if (error) return next(error);
     if (result.length > 0 && result[0].total_guide_marks !== null) {
       return next(createError.BadRequest("Review marks already updated!"));
@@ -381,14 +405,14 @@ router.post("/guide/review/add_team_marks/:guide_reg_num", userAuth, (req, res, 
 
     const fetchExpertSql = `SELECT * FROM review_marks_team WHERE review_title = ? AND review_date = ? AND team_id = ? and guide_reg_num = ?`;
 
-    db.query(fetchExpertSql, [review_title, review_date, team_id,guide_reg_num], (err, result) => {
+    db.query(fetchExpertSql, [review_title,  formattedDate, team_id,guide_reg_num], (err, result) => {
       if (err) return next(err);
       if (result.length === 0) {
           // not present so insert
           const insertSql = "insert into review_marks_team (review_title,review_date,team_id,guide_literature_survey,guide_aim,guide_scope,guide_need_for_study, guide_proposed_methodology,guide_work_plan,total_marks,total_guide_marks,guide_remarks) values (?,?,?,?,?,?,?,?,?,?,?,?)";
           const values = [
           review_title,
-          review_date,
+           formattedDate,
           team_id,
           guide_literature_survey,
           guide_aim,
@@ -403,7 +427,7 @@ router.post("/guide/review/add_team_marks/:guide_reg_num", userAuth, (req, res, 
         db.query(insertSql,values,(error,result) => {
           if(error)return next(error);
           if(result.affectedRows === 0)return next(createError.InternalServerError("Failed to insert review marks."));
-          return res.send({ message: "Guide marks updated successfully!", total_marks: total_expert_marks });
+          return res.send({ message: "Guide marks updated successfully!" });
         })
         return;
       }
@@ -436,7 +460,7 @@ router.post("/guide/review/add_team_marks/:guide_reg_num", userAuth, (req, res, 
         total_marks,
         guide_remarks,
         review_title,
-        review_date,
+        formattedDate,
         team_id
       ];
 
@@ -475,10 +499,12 @@ router.post('/guide/review/add_marks_to_individual/:guide_reg_num/:reg_num',(req
     if (diffInDays > 6) {
       return next(createError.Forbidden('Marks can only be entered within 6 days after the review.'));
     }
+
+    const formattedDate = new Date(review_date).toISOString().split('T')[0];
     
     // check if already added
     const checkSql = "SELECT * FROM review_marks_individual WHERE team_id = ? AND review_date = ? AND review_title = ? and guide_reg_num = ?";
-    db.query(checkSql, [team_id, review_date, review_title,guide_reg_num], (error, Checkresult) => {
+    db.query(checkSql, [team_id, formattedDate, review_title,guide_reg_num], (error, Checkresult) => {
     if (error) return next(error);
     if (Checkresult.length > 0 && Checkresult[0].total_guide_marks !== null) {
       return next(createError.BadRequest("Review marks already updated!"));
@@ -487,26 +513,55 @@ router.post('/guide/review/add_marks_to_individual/:guide_reg_num/:reg_num',(req
      const total_guide_marks = parseInt(guide_oral_presentation) + parseInt(guide_viva_voce_and_ppt) + parseInt(guide_contributions)
 
     const fetchExpertSql = `SELECT * FROM review_marks_individual WHERE review_title = ? AND review_date = ? AND team_id = ? and guide_reg_num = ?`;
-    db.query(fetchExpertSql, [review_title, review_date, team_id,guide_reg_num], (err, result) => {
+    db.query(fetchExpertSql, [review_title, formattedDate, team_id,guide_reg_num], (err, result) => {
       if (err) return next(err);
       if (result.length === 0) {
           // not present so insert
-          const insertSql = "insert into review_marks_individual (review_title,review_date,team_id, guide_oral_presentation,guide_viva_voce_and_ppt,guide_contributions,total_marks,total_guide_marks,guide_remarks) values (?,?,?,?,?,?,?,?,?)";
-          const values = [
-          review_title,
-          review_date,
-          team_id,
-          guide_oral_presentation,
-          guide_viva_voce_and_ppt,
-          guide_contributions,
-          total_guide_marks,
-          total_guide_marks, // since we are inserting no guide mark present
-          guide_remarks,
-        ];
+      const insertSql = `
+      INSERT INTO review_marks_individual (
+        review_title,
+        review_date,
+        team_id,
+        student_reg_num,
+        guide_oral_presentation,
+        expert_oral_presentation,
+        guide_viva_voce_and_ppt,
+        expert_viva_voce_and_ppt,
+        guide_contributions,
+        expert_contributions,
+        total_expert_marks,
+        total_guide_marks,
+        total_marks,
+        guide_remarks,
+        guide_reg_num,
+        expert_reg_num
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+      const values = [
+        review_title,
+        formattedDate,
+        team_id,
+        reg_num,
+        guide_oral_presentation,
+        0, // expert_oral_presentation default 0 at insert
+        guide_viva_voce_and_ppt,
+        0, // expert_viva_voce_and_ppt default 0 at insert
+        guide_contributions,
+        0, // expert_contributions default 0 at insert
+        0, // total_expert_marks default 0 at insert
+        total_guide_marks,
+        total_guide_marks, // total_marks = guide + expert = guide only now
+        guide_remarks,
+        guide_reg_num,
+        null // expert_reg_num unknown initially
+      ];
+
+
         db.query(insertSql,values,(error,result) => {
           if(error)return next(error);
           if(result.affectedRows === 0)return next(createError.InternalServerError("Failed to insert review marks."));
-          return res.send({ message: "Guide marks updated successfully!", total_marks: total_expert_marks });
+          return res.send({ message: "Guide marks updated successfully!"});
         })
         return;
       }
@@ -514,7 +569,7 @@ router.post('/guide/review/add_marks_to_individual/:guide_reg_num/:reg_num',(req
       const total_marks = total_guide_marks + total_expert_marks;
 
       const updateSql = `
-        UPDATE review_marks_team SET
+        UPDATE review_marks_individual SET
           guide_oral_presentation,
           guide_viva_voce_and_ppt,
           guide_contributions,
@@ -533,7 +588,7 @@ router.post('/guide/review/add_marks_to_individual/:guide_reg_num/:reg_num',(req
         total_marks,
         guide_remarks,
         review_title,
-        review_date,
+        formattedDate,
         team_id
       ];
 

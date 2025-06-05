@@ -79,7 +79,7 @@ CREATE TABLE `scheduled_reviews` (
   `project_name` VARCHAR(500) DEFAULT NULL,
   `team_lead` VARCHAR(300) DEFAULT NULL,
   `review_date` DATE DEFAULT NULL,
-  `reveiw_title`VARCHAR(100) NOT NULL,
+  `review_title`VARCHAR(100) NOT NULL,
   `start_time` TIME DEFAULT NULL,
   `venue` varchar(200) DEFAULT NULL,
   `attendance` VARCHAR(255) DEFAULT null,
@@ -291,29 +291,29 @@ CREATE TABLE review_marks_team (
   review_no INT AUTO_INCREMENT,
   review_title VARCHAR(100) not null,
   review_date DATE NOT NULL,
-  team_id INT NOT NULL,
+  team_id varchar(20),
 
   guide_literature_survey INT NOT NULL CHECK (guide_literature_survey BETWEEN 0 AND 5),
   expert_literature_survey INT NOT NULL CHECK (expert_literature_survey BETWEEN 0 AND 5),
 
-  guide_aim INT NOT NULL CHECK (guide_aim BETWEEN 0 AND 5),
-  expert_aim INT NOT NULL CHECK (expert_aim BETWEEN 0 AND 5),
+  guide_aim INT DEFAULT NULL CHECK (guide_aim BETWEEN 0 AND 5),
+  expert_aim INT DEFAULT NULL CHECK (expert_aim BETWEEN 0 AND 5),
 
-  guide_scope INT NOT NULL CHECK (guide_scope BETWEEN 0 AND 5),
-  expert_scope INT NOT NULL CHECK (expert_scope BETWEEN 0 AND 5),
+  guide_scope INT DEFAULT NULL CHECK (guide_scope BETWEEN 0 AND 5),
+  expert_scope INT DEFAULT NULL CHECK (expert_scope BETWEEN 0 AND 5),
 
-  guide_need_for_study INT NOT NULL CHECK (guide_need_for_study BETWEEN 0 AND 5),
-  expert_need_for_study INT NOT NULL CHECK (expert_need_for_study BETWEEN 0 AND 5),
+  guide_need_for_study INT DEFAULT NULL CHECK (guide_need_for_study BETWEEN 0 AND 5),
+  expert_need_for_study INT DEFAULT NULL CHECK (expert_need_for_study BETWEEN 0 AND 5),
 
-  guide_proposed_methodology INT NOT NULL CHECK (guide_proposed_methodology BETWEEN 0 AND 10),
-  expert_proposed_methodology INT NOT NULL CHECK (expert_proposed_methodology BETWEEN 0 AND 10),
+  guide_proposed_methodology INT DEFAULT NULL CHECK (guide_proposed_methodology BETWEEN 0 AND 10),
+  expert_proposed_methodology INT DEFAULT NULL CHECK (expert_proposed_methodology BETWEEN 0 AND 10),
 
-  guide_work_plan INT NOT NULL CHECK (guide_work_plan BETWEEN 0 AND 5),
-  expert_work_plan INT NOT NULL CHECK (expert_work_plan BETWEEN 0 AND 5),
+  guide_work_plan INT DEFAULT NULL CHECK (guide_work_plan BETWEEN 0 AND 5),
+  expert_work_plan INT DEFAULT NULL CHECK (expert_work_plan BETWEEN 0 AND 5),
 
-  total_guide_marks INT NOT NULL CHECK (total_guide_marks BETWEEN 0 AND 50),
-  total_expert_marks INT NOT NULL CHECK (total_expert_marks BETWEEN 0 AND 50),
-  total_marks INT NOT NULL CHECK (total_marks BETWEEN 0 AND 100),
+  total_guide_marks INT DEFAULT NULL CHECK (total_guide_marks BETWEEN 0 AND 50),
+  total_expert_marks INT DEFAULT NULL CHECK (total_expert_marks BETWEEN 0 AND 50),
+  total_marks INT DEFAULT NULL CHECK (total_marks BETWEEN 0 AND 100),
 
   guide_remarks text default null,
   expert_remarks text default null,
@@ -326,9 +326,9 @@ CREATE TABLE review_marks_team (
 
 CREATE TABLE review_marks_individual (
   review_no INT AUTO_INCREMENT,
-  reivew_title varchar(100) not null,
+  review_title varchar(100) not null,
   review_date DATE NOT NULL,
-  team_id INT NOT NULL,
+  team_id varchar(20),
   student_reg_num VARCHAR(20) NOT NULL,
 
   guide_oral_presentation INT NOT NULL CHECK (guide_oral_presentation BETWEEN 0 AND 5),
