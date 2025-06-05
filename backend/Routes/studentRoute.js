@@ -611,8 +611,6 @@ router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, r
     }
   });
 
-
-
 // brings whether weekly logs accepted or not
 // filter recent status through verified at date and time
 router.get("/student/get_accept_or_reject_status/:team_id/:week_number",(req,res,next) => {
@@ -714,13 +712,36 @@ router.get('/student/get_review_history/:team_id',(req,res,next) => {
     let sql = "select * from weekly_logs_verification where team_id = ?";
     db.query(sql,[team_id],(error,result) => {
       if(error)return next(error);
-      if(result.length === 0)return res.send('weekly logs history for your team is not found!');
       res.send(result);
     })
   }
   catch(error)
   {
     next(error);
+  }
+})
+
+// checks whether particular week progress is posted or not
+router.get('/student/checks_whether_log_updated/:team_id/:week/:reg_num',(req,res,next) => {
+  try{
+    const{team_id,week,reg_num} = req.params;
+    if(!team_id || !week || !reg_num)return next(createError.BadRequest('team_id or reg_num or week is not found!'));
+    const weekNumber = parseInt(week);
+    if (isNaN(weekNumber) || weekNumber < 1 || weekNumber > 12) {
+      return next(createError.BadRequest('Week number must be between 1 and 12'));
+    }
+    let sql = `select week${week}_progress from teams where team_id = ? and reg_num = ?`;
+    db.query(sql,[team_id,reg_num],(error,result) => {
+      if(error)return next(error);
+      if (result.length === 0 || result[0][`week${weekNumber}_progress`] === null) {
+        return res.send('Not updated!');
+      }
+      res.send('Already Updated!');
+    })
+  }
+  catch(error)
+  {
+    next(error)
   }
 })
 
@@ -1035,7 +1056,7 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
           // Main logic continues...
           const proceed = (review_title) => {
             const weekToCheck = pastReviews.length === 0 ? 3 : 6;
-            const sqlVerifyWeek = "SELECT * FROM weekly_logs_verification WHERE week_number = ? AND is_verified = true AND team_id = ?";
+            const sqlVerifyWeek = "SELECT * FROM weekly_logs_verifications WHERE week_number = ? AND is_verified = true AND team_id = ?";
             db.query(sqlVerifyWeek, [weekToCheck, team_id], (err3, verifyResult) => {
               if (err3) return next(err3);
               if (verifyResult.length === 0) {
