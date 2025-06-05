@@ -227,12 +227,12 @@ useEffect(() => {
         <div className=" ">
           <div className='bg-white rounded-lg shadow p-6'><h2 className="text-xl font-semibold mb-2 bg-white text-black">Student Information </h2><hr className='mb-4'/>
           <div className="space-y-3 bg-white">
-            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Name</span> {userSlice.name}</p>
-            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Email:</span> {userSlice.emailId}</p>
-            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Register Number:</span> {userSlice.reg_num}</p>
+            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Name :</span> {userSlice.name}</p>
+            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Email :</span> {userSlice.emailId}</p>
+            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Register Number :</span> {userSlice.reg_num}</p>
             <p className='bg-white'><span className="font-medium bg-white text-gray-700">Department:</span> {userSlice.dept}</p>
-            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Guide :</span>{teamSelector && userSlice?.guide_reg_num ?userSlice.guide_reg_num : "Not Assigned"}</p>
-            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Subject Exper</span> {teamSelector && userSlice?.sub_expert_reg_num ? userSlice.sub_expert_reg_num : "Not Assigned"}</p>
+            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Guide :</span> {teamSelector && userSlice?.guide_reg_num ?userSlice.guide_reg_num : "Not Assigned"}</p>
+            <p className='bg-white'><span className="font-medium bg-white text-gray-700">Subject Expert :</span> {teamSelector && userSlice?.sub_expert_reg_num ? userSlice.sub_expert_reg_num : "Not Assigned"}</p>
           </div></div>
 
           <div className="mt-10 bg-white p-6 rounded-lg shadow ">
@@ -241,9 +241,9 @@ useEffect(() => {
                 <div  className=" bg-white ">
                   <div className="flex bg-white justify-between items-start mb-1">
                     <ul className='bg-white'>
-                    <h3 className="text-lg bg-white font-medium  text-gray-800">  Project Name: {project && project.length > 0 && project[0].project_name ? project[0].project_name : "Project is not created yet ..."}</h3>
-                    <h3 className="text-lg bg-white font-medium text-gray-800">Project Id: {project && project.length > 0 && project[0].project_id?project[0].project_id:"Project is not create yet ..."}</h3>
-                    <h3 className="text-lg bg-white font-medium text-gray-800">Cluster  : {project && project.length > 0 && project[0]?.cluster?project[0].cluster:"Project is not create yet ..."}</h3>
+                    <h3 className="text-lg bg-white font-medium  text-gray-800">  Project Name : {project && project.length > 0 && project[0].project_name ? project[0].project_name : "Project is not created yet ..."}</h3>
+                    <h3 className="text-lg bg-white font-medium text-gray-800">Project Id : {project && project.length > 0 && project[0].project_id?project[0].project_id:"Project is not create yet ..."}</h3>
+                    <h3 className="text-lg bg-white font-medium text-gray-800">Cluster : {project && project.length > 0 && project[0]?.cluster?project[0].cluster:"Project is not create yet ..."}</h3>
                     <h3 className="text-lg bg-white font-medium text-gray-800">Outcome : {project && project.length > 0 && project[0].outcome?project[0].outcome:"Project is not create yet ..."}</h3>
                     <h3 className="text-lg bg-white font-medium text-gray-800">Project Taking Date : {readableDate ? readableDate : "Project is not created yet ..."}</h3>
                     </ul>
