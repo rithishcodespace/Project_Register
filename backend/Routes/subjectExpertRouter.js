@@ -64,7 +64,6 @@ router.patch("/sub_expert/accept_reject/:status/:team_id/:semester/:my_id",userA
                   let sql3 = "UPDATE teams SET sub_expert_reg_num = ? WHERE team_id = ?";
                   db.query(sql3, [my_id, team_id], (error, result) => {
                     if (error) return next(error);
-                    if(result.affectedRows === 0)return res.status(500).send("no rows affected!")
                     else {
                       res.send("Status updated successfully and guide assigned!");
                     }
@@ -74,7 +73,7 @@ router.patch("/sub_expert/accept_reject/:status/:team_id/:semester/:my_id",userA
                   let sql4 = "update users set available = false where reg_num = ? and role = 'staff'";
                   db.query(sql4, [my_id], (error, result) => {
                     if (error) return next(error);
-                    if(result.affectedRows === 0)return res.status(500).send("no rows affected!")
+                    if(result.affectedRows === 0)return res.status(500).send("no1 rows affected!")
                     else {
                       let sql5 = "DELETE FROM sub_expert_requests WHERE to_expert_reg_num = ? AND status = 'interested'";
                       db.query(sql5, [my_id], (error, result) => {

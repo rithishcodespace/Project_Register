@@ -167,7 +167,7 @@ function Staff_dashboard() {
         : `/sub_expert/accept_reject/${status}/${team_id}/${semester}/${reg_num}`;
 
     try {
-      const res = await instance.patch(endpoint, { reason: reason || "Accepted" });
+      const res = await instance.patch(endpoint, { reason: reason || "accept" });
       alert(res.data);
       fetchRequests();
       setReasonMap((prev) => {
