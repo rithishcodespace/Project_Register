@@ -26,6 +26,28 @@ router.get("/guide/getrequests/:reg_num",userAuth,(req,res,next) => {
     }
 })
 
+// fetches team details, i am acting as the guide
+
+router.get("/guide/fetch_teams/:guide_reg_num",(req,res,next) => {
+    try{
+      const{guide_reg_num} = req.params;
+      if(!guide_reg_num)
+      {
+        return next(createError.BadRequest("guide reg num not found!"));
+      }
+    let sql = "select * from guide_requests where guide_reg_num = ? and status = 'accept'";
+    db.query(sql,[expert_id],(error,result) => {
+        if(error)return next(error);
+        if(result.length == 0) return res.send("No Teams found!");
+        res.send(result);
+    })
+    }
+    catch(error)
+    {
+       next(error);
+    }
+})
+
 // update status -> accept or reject
 router.patch("/guide/accept_reject/:status/:team_id/:semester/:my_id",userAuth, (req, res, next) => {
   try {

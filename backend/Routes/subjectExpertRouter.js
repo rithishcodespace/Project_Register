@@ -498,22 +498,32 @@ router.patch("/sub_expert/mark_end_time/:review_id", userAuth, (req, res, next) 
 });
 
 // checks whether attendance marked already for that review_id
-router.get('/expert/reivew/check_attendance/marked/:review_id',(req,res,next) => {
-  try{
-    const{review_id} = req.params;
-    if(!review_id)return next(createError.BadRequest('review_id not found!'));
-    let sql = "select end_time from scheduled_reviews where review_id = ?";
-    db.query(sql,[review_id],(error,result) => {
-      if(error)return next(error);
-      if(result.length === 0)return res.send('end time not marked yet!');
-      res.send(result[0].end_time);
-    })
-  }
-  catch(error)
-  {
+router.get('/expert/reivew/check_attendance/marked/:review_id', (req, res, next) => {
+  try {
+    const { review_id } = req.params;
+    if (!review_id) return next(createError.BadRequest('review_id not found!'));
+
+    const sql = "SELECT end_time FROM scheduled_reviews WHERE review_id = ?";
+    db.query(sql, [review_id], (error, result) => {
+      if (error) return next(error);
+
+      if (result.length === 0) {
+        return res.status(404).send('No review found with that ID');
+      }
+
+      const endTime = result[0].end_time;
+
+      if (!endTime) {
+        return res.send('end time not marked yet!');
+      }
+
+      res.send(endTime);
+    });
+  } catch (error) {
     next(error);
   }
-})
+});
+
 
 
 // adds detaied marks to rubix -> also inserts total mark for the review guide_mark and expert_mark to the scheduled_Review table

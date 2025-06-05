@@ -79,7 +79,7 @@ CREATE TABLE `scheduled_reviews` (
   `project_name` VARCHAR(500) DEFAULT NULL,
   `team_lead` VARCHAR(300) DEFAULT NULL,
   `review_date` DATE DEFAULT NULL,
-  `reveiw_title`VARCHAR(100) NOT NULL,
+  `review_title`VARCHAR(100) NOT NULL,
   `start_time` TIME DEFAULT NULL,
   `venue` varchar(200) DEFAULT NULL,
   `attendance` VARCHAR(255) DEFAULT null,

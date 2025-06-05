@@ -15,12 +15,16 @@ function ReviewProjects() {
   const [meetingLink, setMeetingLink] = useState('');
   const [rejectingRequestId, setRejectingRequestId] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
-  const [upcomingReviews, setUpcomingReviews] = useState({});
+  
+  // Separate upcoming reviews for guide and expert roles
+  const [guideUpcomingReviews, setGuideUpcomingReviews] = useState({});
+  const [expertUpcomingReviews, setExpertUpcomingReviews] = useState({});
   
   // New states for meeting end time functionality
   const [clickedMeetings, setClickedMeetings] = useState(new Set());
   const [endTimes, setEndTimes] = useState({});
   const [submittingEndTime, setSubmittingEndTime] = useState(null);
+  const [markedEndTimes, setMarkedEndTimes] = useState({}); // Store already marked end times
 
   const fetchReviewRequests = async () => {
     try {
@@ -42,26 +46,53 @@ function ReviewProjects() {
     }
   };
 
-  const fetchUpcomingReviews = async (teams) => {
+  // Fetch upcoming reviews for guide teams
+  const fetchGuideUpcomingReviews = async (teams) => {
     const reviewMap = {};
     for (const team of teams) {
       try {
-        const teamId = team.from_team_id;
+        const teamId = team.team_id || team.from_team_id;
         const res = await instance.get(`/guide/fetch_upcoming_reviews/${teamId}`);
         reviewMap[teamId] = res.data;
+        
+        // Check end time status for each review
+        for (const review of res.data) {
+          checkEndTimeStatus(review.review_id || review.id);
+        }
       } catch (error) {
-        console.log(`No upcoming reviews for team ${team.from_team_id}`);
+        console.log(`No upcoming guide reviews for team ${team.team_id || team.from_team_id}`);
       }
     }
-    setUpcomingReviews(reviewMap);
+    setGuideUpcomingReviews(reviewMap);
   };
 
+  // Fetch upcoming reviews for expert teams
+  const fetchExpertUpcomingReviews = async (teams) => {
+    const reviewMap = {};
+    for (const team of teams) {
+      try {
+        const teamId = team.team_id || team.from_team_id;
+        const res = await instance.get(`/guide/fetch_upcoming_reviews/${teamId}`);
+        reviewMap[teamId] = res.data;
+        
+        // Check end time status for each review
+        for (const review of res.data) {
+          checkEndTimeStatus(review.review_id || review.id);
+        }
+      } catch (error) {
+        console.log(`No upcoming expert reviews for team ${team.team_id || team.from_team_id}`);
+      }
+    }
+    setExpertUpcomingReviews(reviewMap);
+  };
+
+  // Fetch guide teams using the corrected API
   useEffect(() => {
     const fetchGuideRequests = async () => {
       try {
         const res = await instance.get(`/guide/fetch_guiding_teams/${guideRegNum}`);
         setGuideTeams(res.data);
-        fetchUpcomingReviews(res.data);
+        fetchGuideUpcomingReviews(res.data);
       } catch (error) {
         console.log(error);
       }
@@ -72,11 +103,13 @@ function ReviewProjects() {
     }
   }, [guideRegNum]);
 
+  // Fetch expert teams
   useEffect(() => {
     const fetchExpertRequests = async () => {
       try {
         const res = await instance.get(`/sub_expert/fetch_teams/${guideRegNum}`);
         setExpertTeams(res.data);
+        fetchExpertUpcomingReviews(res.data);
       } catch (error) {
         console.log(error);
       }
@@ -142,6 +175,21 @@ function ReviewProjects() {
     setClickedMeetings(prev => new Set([...prev, reviewKey]));
   };
 
+  // Check if end time is already marked for a review
+  const checkEndTimeStatus = async (reviewId) => {
+    try {
+      const response = await instance.get(`/expert/reivew/check_attendance/marked/${reviewId}`);
+      if (response.data !== 'end time not marked yet!') {
+        setMarkedEndTimes(prev => ({
+          ...prev,
+          [reviewId]: response.data
+        }));
+      }
+    } catch (error) {
+      console.log(`Error checking end time status for review ${reviewId}:`, error);
+    }
+  };
+
   // Handle end time submission
   const handleEndTimeSubmit = async (review) => {
     const reviewKey = review.key;
@@ -155,7 +203,7 @@ function ReviewProjects() {
     try {
       setSubmittingEndTime(reviewKey);
       
-      
+      // Use the same API endpoint for both guide and expert roles
       const response = await instance.patch(`/sub_expert/mark_end_time/${review.review_id || review.id}`, {
         project_id: review.project_id,
         "end_time": endTime,
@@ -163,6 +211,12 @@ function ReviewProjects() {
       });
 
       alert('Mark end time updated!');
+      
+      // Update the markedEndTimes state to reflect the newly marked time
+      setMarkedEndTimes(prev => ({
+        ...prev,
+        [review.review_id || review.id]: endTime
+      }));
       
       // Clear the end time input and remove from clicked meetings
       setEndTimes(prev => {
@@ -315,7 +369,7 @@ function ReviewProjects() {
   };
 
   // Helper function to sort reviews by date and time
-  const sortReviewsByDateTime = () => {
+  const sortReviewsByDateTime = (upcomingReviews) => {
     const allReviews = [];
 
     Object.entries(upcomingReviews).forEach(([teamId, reviews]) => {
@@ -342,7 +396,121 @@ function ReviewProjects() {
     return allReviews;
   };
 
-  const sortedReviews = sortReviewsByDateTime();
+  // Render upcoming reviews section
+  const renderUpcomingReviews = (upcomingReviews, title, roleColor) => {
+    const sortedReviews = sortReviewsByDateTime(upcomingReviews);
+
+    if (sortedReviews.length === 0) {
+      return (
+        <div className="mb-8">
+          <h2 className={`text-xl font-semibold mb-4 ${roleColor}`}>{title}</h2>
+          <div className="text-center py-4">
+            <p className="text-gray-600">No upcoming reviews scheduled.</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mb-8">
+        <h2 className={`text-xl font-semibold mb-4 ${roleColor}`}>{title}</h2>
+        {sortedReviews.map((rev) => {
+          const isClicked = clickedMeetings.has(rev.key);
+          const endTime = endTimes[rev.key] || '';
+          const isSubmitting = submittingEndTime === rev.key;
+          const reviewId = rev.review_id || rev.id;
+          const isEndTimeMarked = markedEndTimes[reviewId];
+
+          return (
+            <div key={rev.key} className="p-4 border-2 border-blue-200 rounded-lg bg-blue-50 mb-4 shadow-sm">
+              <p><strong>Project:</strong> {rev.project_name}</p>
+              <p><strong>Review Title:</strong> {rev.review_title || 'N/A'}</p>
+              <p><strong>Date:</strong> {rev.review_date.split('T')[0]}</p>
+              <p><strong>Time:</strong> {rev.start_time}</p>
+              <p><strong>Google Meet Link:</strong> 
+                {rev.meeting_link ? (
+                  isReviewTimeReached(rev.review_date, rev.start_time) ? (
+                    <a 
+                      href={rev.meeting_link} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="text-blue-600 underline ml-2 hover:text-blue-800 font-medium"
+                      onClick={() => handleMeetingLinkClick(rev.key)}
+                    >
+                       Join Meeting
+                    </a>
+                  ) : (
+                    <span className="ml-2 text-gray-500 cursor-not-allowed">
+                      📅 Meeting starts at {rev.start_time} on {rev.review_date.split('T')[0]}
+                    </span>
+                  )
+                ) : (
+                  <span className="ml-2 text-gray-500">Google Meet link not available</span>
+                )}
+              </p>
+              
+              {/* Meeting End Time Section - Works for both Guide and Expert */}
+              {rev.meeting_link && isReviewTimeReached(rev.review_date, rev.start_time) && (
+                <div className="mt-4 p-3 bg-white border border-gray-200 rounded">
+                  {isEndTimeMarked ? (
+                    // Show already marked end time
+                    <div className="flex items-center text-green-700">
+                      <span className="text-lg mr-2">✅</span>
+                      <p className="font-medium">
+                        Meeting end time already marked: <strong>{isEndTimeMarked}</strong>
+                      </p>
+                    </div>
+                  ) : (
+                    // Show input form for marking end time
+                    <>
+                      <p className="text-sm text-yellow-800 mb-2">
+                        📝 <strong>Important:</strong> Please mark the meeting end time after completing the review session.
+                      </p>
+                      
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="text"
+                          placeholder="HH:MM:SS (e.g., 14:30:00)"
+                          value={endTime}
+                          onChange={(e) => setEndTimes(prev => ({
+                            ...prev,
+                            [rev.key]: e.target.value
+                          }))}
+                          className="border border-gray-300 rounded px-3 py-2 text-sm w-40"
+                          disabled={isSubmitting}
+                        />
+                        
+                        <button
+                          onClick={() => handleEndTimeSubmit(rev)}
+                          disabled={!isClicked || isSubmitting || !endTime.trim()}
+                          className={`px-4 py-2 rounded text-sm font-medium ${
+                            !isClicked || !endTime.trim()
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                              : isSubmitting
+                              ? 'bg-yellow-400 text-white cursor-wait'
+                              : 'bg-orange-600 text-white hover:bg-orange-700'
+                          }`}
+                          title={!isClicked ? 'Please join the meeting first to enable this button' : ''}
+                        >
+                          {isSubmitting ? 'Submitting...' : 'Mark End Time'}
+                        </button>
+                      </div>
+                      
+                      {!isClicked && (
+                        <p className="text-xs text-gray-600 mt-1">
+                          * Button will be enabled after you join the meeting
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -354,98 +522,9 @@ function ReviewProjects() {
       {renderReviewRequests(guideReviewRequests, 'Guide Review Requests', true)}
       {renderReviewRequests(expertReviewRequests, 'Subject Expert Review Requests', false)}
 
-      {/* Upcoming Reviews Section - Sorted by Date & Time */}
-      {sortedReviews.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-blue-700">Upcoming Reviews</h2>
-          {sortedReviews.map((rev) => {
-            const isClicked = clickedMeetings.has(rev.key);
-            const endTime = endTimes[rev.key] || '';
-            const isSubmitting = submittingEndTime === rev.key;
-
-            return (
-              <div key={rev.key} className="p-4 border-2 border-blue-200 rounded-lg bg-blue-50 mb-4 shadow-sm">
-                <p><strong>Project:</strong> {rev.project_name}</p>
-                <p><strong>Review Title:</strong> {rev.review_title || 'N/A'}</p>
-                <p><strong>Date:</strong> {rev.review_date.split('T')[0]}</p>
-                <p><strong>Time:</strong> {rev.start_time}</p>
-                <p><strong>Google Meet Link:</strong> 
-                  {rev.meeting_link ? (
-                    isReviewTimeReached(rev.review_date, rev.start_time) ? (
-                      <a 
-                        href={rev.meeting_link} 
-                        target="_blank" 
-                        rel="noreferrer" 
-                        className="text-blue-600 underline ml-2 hover:text-blue-800 font-medium"
-                        onClick={() => handleMeetingLinkClick(rev.key)}
-                      >
-                         Join Meeting
-                      </a>
-                    ) : (
-                      <span className="ml-2 text-gray-500 cursor-not-allowed">
-                        📅 Meeting starts at {rev.start_time} on {rev.review_date.split('T')[0]}
-                      </span>
-                    )
-                  ) : (
-                    <span className="ml-2 text-gray-500">Google Meet link not available</span>
-                  )}
-                </p>
-                
-                {/* Meeting End Time Section */}
-                {rev.meeting_link && isReviewTimeReached(rev.review_date, rev.start_time) && (
-                  <div className="mt-4 p-3 bg-white-50 border border-white-200 rounded">
-                    <p className="text-sm text-yellow-800 mb-2">
-                      📝 <strong>Important:</strong> Please mark the meeting end time after completing the review session.
-                    </p>
-                    
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="text"
-                        placeholder="HH:MM:SS (e.g., 14:30:00)"
-                        value={endTime}
-                        onChange={(e) => setEndTimes(prev => ({
-                          ...prev,
-                          [rev.key]: e.target.value
-                        }))}
-                        className="border border-gray-300 rounded px-3 py-2 text-sm w-40"
-                        disabled={isSubmitting}
-                      />
-                      
-                      <button
-                        onClick={() => handleEndTimeSubmit(rev)}
-                        disabled={!isClicked || isSubmitting || !endTime.trim()}
-                        className={`px-4 py-2 rounded text-sm font-medium ${
-                          !isClicked || !endTime.trim()
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                            : isSubmitting
-                            ? 'bg-white-400 text-white cursor-wait'
-                            : 'bg-orange-600 text-white hover:bg-orange-700'
-                        }`}
-                        title={!isClicked ? 'Please join the meeting first to enable this button' : ''}
-                      >
-                        {isSubmitting ? 'Submitting...' : 'Mark End Time'}
-                      </button>
-                    </div>
-                    
-                    {!isClicked && (
-                      <p className="text-xs text-gray-600 mt-1">
-                        * Button will be enabled after you join the meeting
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Show message if no upcoming reviews */}
-      {sortedReviews.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-gray-600">No upcoming reviews scheduled.</p>
-        </div>
-      )}
+      {/* Upcoming Reviews Sections - Separated by Role */}
+      {renderUpcomingReviews(guideUpcomingReviews, 'Guide - Upcoming Reviews', 'text-green-700')}
+      {renderUpcomingReviews(expertUpcomingReviews, 'Subject Expert - Upcoming Reviews', 'text-purple-700')}
     </div>
   );
 }
