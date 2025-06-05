@@ -704,6 +704,24 @@ router.get("/student/get_project_type/:reg_num",(req,res,next) => {
   }
 })
 
+// gets history of weekly_logs_verification
+router.get('/student/get_review_history/:team_id',(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest('team id not defined!'));
+    let sql = "select * from weekly_logs_verification where team_id = ?";
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound('weekly logs history for your team is not found!'));
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 // send request to mentor for optional review -> if missed any one of the review
 
 router.post('/send_request_for_optional_review/:mentor_reg_num',(req,res,next) => {
