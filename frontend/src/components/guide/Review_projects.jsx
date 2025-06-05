@@ -30,13 +30,13 @@ function ReviewProjects() {
   const [showMarksModal, setShowMarksModal] = useState(false);
   const [currentReviewForMarks, setCurrentReviewForMarks] = useState(null);
   const [teamMembers, setTeamMembers] = useState([]);
- const [teamMarks, setTeamMarks] = useState({
-  literature_survey: 0,
-  aim: 0,
-  scope: 0,
-  need_for_study: 0,
-  proposed_methodology: 0,
-  work_plan: 0,
+const [teamMarks, setTeamMarks] = useState({
+  literature_survey: "",
+  aim: "",
+  scope: "",
+  need_for_study: "",
+  proposed_methodology: "",
+  work_plan: "",
   remarks: ""
 });
  const [individualMarks, setIndividualMarks] = useState({});
@@ -304,59 +304,118 @@ function ReviewProjects() {
   };
 
   // Handle marks submission
-  const handleMarksSubmit = async () => {
-    if (!teamMarks.trim()) {
-      alert('Please enter team marks');
+const handleMarksSubmit = async () => {
+  const requiredFields = [
+    "literature_survey",
+    "aim",
+    "scope",
+    "need_for_study",
+    "proposed_methodology",
+    "work_plan"
+  ];
+
+  // Validate team-level marks
+  for (const field of requiredFields) {
+    if (!teamMarks[field] || teamMarks[field].toString().trim() === "") {
+      alert(`Please enter marks for ${field.replace(/_/g, ' ')}`);
       return;
     }
+  }
 
-    // Validate individual marks
-    for (const member of teamMembers) {
-      const memberId = member.reg_num || member.id;
-      if (!individualMarks[memberId] || !individualMarks[memberId].trim()) {
-        alert(`Please enter marks for ${member.name || member.student_name}`);
-        return;
-      }
+  // Validate individual marks
+  for (const member of teamMembers) {
+    const memberId = member.reg_num || member.id;
+    const marks = individualMarks[memberId];
+    if (
+      !marks ||
+      marks.oral_presentation === "" ||
+      marks.viva_voce_and_ppt === "" ||
+      marks.contributions === ""
+    ) {
+      alert(`Please fill in all marks for ${member.name || member.student_name}`);
+      return;
     }
+  }
 
-    try {
-      setSubmittingMarks(true);
-      
-      const marksData = {
-        review_id: currentReviewForMarks.review_id || currentReviewForMarks.id,
-        team_id: currentReviewForMarks.team_id,
-        project_id: currentReviewForMarks.project_id,
-        reviewer_reg_num: guideRegNum,
-        team_marks: parseFloat(teamMarks),
-        individual_marks: Object.entries(individualMarks).map(([memberId, marks]) => ({
-          student_reg_num: memberId,
-          marks: parseFloat(marks)
-        }))
+  try {
+    setSubmittingMarks(true);
+
+    const { review_title, review_date, team_id } = currentReviewForMarks;
+
+    //  Get role of the logged-in guide
+    const roleRes = await instance.get(`/user/getRole_guide_or_expert/${guideRegNum}/${team_id}`);
+    const role = roleRes.data; // 'guide' or 'sub_expert'
+
+    const rolePrefix = role === 'guide' ? 'guide_' : 'expert_';
+    const totalKey = role === 'guide' ? 'total_guide_marks' : 'total_expert_marks';
+
+    // Prepare team payload
+    const teamPayload = {
+      review_title,
+      review_date,
+      team_id,
+      [`${rolePrefix}remarks`]: teamMarks.remarks || ""
+    };
+    requiredFields.forEach(field => {
+      teamPayload[`${rolePrefix}${field}`] = Number(teamMarks[field]);
+    });
+
+    const teamApiUrl = `/${role}/review/add_team_marks/${guideRegNum}`;
+    const teamApiCall = instance.post(teamApiUrl, teamPayload);
+
+    // Prepare individual requests
+    const individualRequests = Object.entries(individualMarks).map(([reg_num, markSet]) => {
+      const oral = Number(markSet.oral_presentation || 0);
+      const ppt = Number(markSet.viva_voce_and_ppt || 0);
+      const contrib = Number(markSet.contributions || 0);
+      const total = oral + ppt + contrib;
+
+      const individualPayload = {
+        team_id,
+        review_title,
+        review_date,
+        [`${rolePrefix}oral_presentation`]: oral,
+        [`${rolePrefix}viva_voce_and_ppt`]: ppt,
+        [`${rolePrefix}contributions`]: contrib,
+        [totalKey]: total,
+        [`${rolePrefix}remarks`]: markSet.remarks || "",
       };
 
-      const response = await instance.post('/marks/submit', marksData);
-      alert('Marks submitted successfully!');
-      
-      // Update marks status
-      setMarksAlreadyEntered(prev => ({
-        ...prev,
-        [currentReviewForMarks.review_id || currentReviewForMarks.id]: true
-      }));
-      
-      // Close modal and reset state
-      setShowMarksModal(false);
-      setCurrentReviewForMarks(null);
-      setTeamMembers([]);
-      setTeamMarks('');
-      setIndividualMarks({});
-      
-    } catch (error) {
-      alert('Failed to submit marks. Please try again.');
-      console.error('Error submitting marks:', error);
-    } finally {
-      setSubmittingMarks(false);
-    }
-  };
+      const url = `/${role}/review/add_marks_to_individual/${guideRegNum}/${reg_num}`;
+      return instance.post(url, individualPayload);
+    });
+
+    // Send all requests
+    await Promise.all([teamApiCall, ...individualRequests]);
+
+    //  Cleanup
+    alert("Marks submitted successfully!");
+    setMarksAlreadyEntered(prev => ({
+      ...prev,
+      [currentReviewForMarks.review_id || currentReviewForMarks.id]: true
+    }));
+    setShowMarksModal(false);
+    setCurrentReviewForMarks(null);
+    setTeamMembers([]);
+    setTeamMarks({
+      literature_survey: "",
+      aim: "",
+      scope: "",
+      need_for_study: "",
+      proposed_methodology: "",
+      work_plan: "",
+      remarks: ""
+    });
+    setIndividualMarks({});
+
+  } catch (error) {
+    alert("Failed to submit marks. Please try again.");
+    console.error("Error submitting marks:", error);
+  } finally {
+    setSubmittingMarks(false);
+  }
+};
+
 
   const renderReviewRequests = (requests, title, isGuide) => (
     <div className="mb-10">
