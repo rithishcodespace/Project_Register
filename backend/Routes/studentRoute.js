@@ -1274,68 +1274,7 @@ router.post('/student/challenge_review/request/:team_id/:project_id/:reg_num/:re
   }
 });
 
-// show already submitted progress -> to update => 1st
-router.get('/student/view_submitted_progress/:team_id/:reg_num/:week',(req,res,next) => {
-  try{
-    const{reg_num,week,team_id} = req.params;
-    if(!team_id || !reg_num || !week)return next(createError.BadRequest('some parameters are missing!'));
-    let sql = `SELECT 
-                t.team_id,
-                t.reg_num,
-                CASE
-                  WHEN t.week12_progress IS NOT NULL AND (w12.is_verified IS NULL OR w12.is_verified = 0) THEN 'week12_progress'
-                  WHEN t.week11_progress IS NOT NULL AND (w11.is_verified IS NULL OR w11.is_verified = 0) THEN 'week11_progress'
-                  WHEN t.week10_progress IS NOT NULL AND (w10.is_verified IS NULL OR w10.is_verified = 0) THEN 'week10_progress'
-                  WHEN t.week9_progress IS NOT NULL AND (w9.is_verified IS NULL OR w9.is_verified = 0) THEN 'week9_progress'
-                  WHEN t.week8_progress IS NOT NULL AND (w8.is_verified IS NULL OR w8.is_verified = 0) THEN 'week8_progress'
-                  WHEN t.week7_progress IS NOT NULL AND (w7.is_verified IS NULL OR w7.is_verified = 0) THEN 'week7_progress'
-                  WHEN t.week6_progress IS NOT NULL AND (w6.is_verified IS NULL OR w6.is_verified = 0) THEN 'week6_progress'
-                  WHEN t.week5_progress IS NOT NULL AND (w5.is_verified IS NULL OR w5.is_verified = 0) THEN 'week5_progress'
-                  WHEN t.week4_progress IS NOT NULL AND (w4.is_verified IS NULL OR w4.is_verified = 0) THEN 'week4_progress'
-                  WHEN t.week3_progress IS NOT NULL AND (w3.is_verified IS NULL OR w3.is_verified = 0) THEN 'week3_progress'
-                  WHEN t.week2_progress IS NOT NULL AND (w2.is_verified IS NULL OR w2.is_verified = 0) THEN 'week2_progress'
-                  WHEN t.week1_progress IS NOT NULL AND (w1.is_verified IS NULL OR w1.is_verified = 0) THEN 'week1_progress'
-                  ELSE 'No unverified progress'
-                END AS last_unverified_week
-              FROM teams t
-              LEFT JOIN weekly_logs_verification w1 ON t.team_id = w1.team_id AND w1.week_number = 1
-              LEFT JOIN weekly_logs_verification w2 ON t.team_id = w2.team_id AND w2.week_number = 2
-              LEFT JOIN weekly_logs_verification w3 ON t.team_id = w3.team_id AND w3.week_number = 3
-              LEFT JOIN weekly_logs_verification w4 ON t.team_id = w4.team_id AND w4.week_number = 4
-              LEFT JOIN weekly_logs_verification w5 ON t.team_id = w5.team_id AND w5.week_number = 5
-              LEFT JOIN weekly_logs_verification w6 ON t.team_id = w6.team_id AND w6.week_number = 6
-              LEFT JOIN weekly_logs_verification w7 ON t.team_id = w7.team_id AND w7.week_number = 7
-              LEFT JOIN weekly_logs_verification w8 ON t.team_id = w8.team_id AND w8.week_number = 8
-              LEFT JOIN weekly_logs_verification w9 ON t.team_id = w9.team_id AND w9.week_number = 9
-              LEFT JOIN weekly_logs_verification w10 ON t.team_id = w10.team_id AND w10.week_number = 10
-              LEFT JOIN weekly_logs_verification w11 ON t.team_id = w11.team_id AND w11.week_number = 11
-              LEFT JOIN weekly_logs_verification w12 ON t.team_id = w12.team_id AND w12.week_number = 12
-              WHERE t.reg_num = '?';`;
-    db.query(sql,[reg_num],(error,result) => { // week name
-      if(error)return next(error);
-      if(result.length === 0)return next(result[0].last_unverified_week);
-      const progressColumn = result[0].last_unverified_week;
-
-      if (progressColumn === 'No unverified progress') {
-        return res.send({ message: 'All weeks verified or no progress submitted.' });
-      }
-
-      let sql1 = `SELECT ${progressColumn} AS progress FROM teams WHERE team_id = ?`;
-      db.query(sql,[team_id],(error1,result1) => { // week progress
-        if(error1)return next(error1);
-        if(result.length === 0)return next(createError.NotFound('weekly progress not found!'));
-        res.status(200).json({"message":"progress fetches successfully","progress":result1[0].progress,"week_name":progressColumn});
-      })
-
-    })          
-  }
-  catch(error)
-  {
-    next(error);
-  }
-})
-
-// edit already updated progress => 2nd
+// edit already updated progress 
 // week will be from 1st api's response
 
 router.patch('/student/edit_submitted_progress/:team_id/:week/:reg_num',(req,res,next) => {
@@ -1346,17 +1285,25 @@ router.patch('/student/edit_submitted_progress/:team_id/:week/:reg_num',(req,res
     {
       return next(createError.BadRequest('parameters not found!'));
     }
-    const allowedWeeks = ["week1_progress", "week2_progress", "week3_progress", "week4_progress", "week5_progress", "week6_progress", "week7_progress", "week8_progress", "week9_progress", "week10_progress", "week11_progress", "week12_progress"];
 
-    if (!allowedWeeks.includes(week)) {
+    const weekNumber = parseInt(week);
+
+    if (weekNumber < 1 || weekNumber > 12 || isNaN(weekNumber)) {
       return next(createError.BadRequest("Invalid week field!"));
     }
 
-    let sql = `update teams set ${week} = ? where reg_num = ? and team_id = ?`;
+    let sql = `update teams set week${weekNumber}_progress = ? where reg_num = ? and team_id = ?`;
     db.query(sql,[newProgress,reg_num,team_id],(error,result) => {
       if(error)return next(error);
       if(result.affectedRows === 0)return next(createError.BadRequest('failed to update!'));
-      res.send('progress updated successfully!');
+
+      // update progress, so again change guide status from rejected to interested
+      let sql0 = "update weekly_logs_verification set status = ? where team_id = ? and week_number = ?";
+      db.query(sql0,['interested',team_id,weekNumber],(error0,result0) => {
+        if(error0)return next(error0);
+        if(result0.affectedRows === 0)return next(createError.BadRequest('some rows not affected!'));
+        res.send('progress updated successfully!');
+      })
     })
   }
   catch(error)
