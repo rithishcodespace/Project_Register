@@ -380,10 +380,11 @@ router.post("/guide/review/add_team_marks/:guide_reg_num", userAuth, (req, res, 
   const reviewDate = new Date(review_date);
   const currentDate = new Date();
   const diffInMs = currentDate - reviewDate;
-  const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
-  if (diffInDays > 6) {
-    return next(createError.Forbidden('Marks can only be entered within 6 days after the review.'));
+  const diffInHours = diffInMs / (1000 * 60 * 60);
+  if (diffInHours > 3) {
+    return next(createError.Forbidden('Marks can only be entered within 3 hours after the review.'));
   }
+
 
   const formattedDate = new Date(review_date).toISOString().split('T')[0];
 
@@ -495,9 +496,9 @@ router.post('/guide/review/add_marks_to_individual/:guide_reg_num/:reg_num',(req
     const reviewDate = new Date(review_date);
     const currentDate = new Date();
     const diffInMs = currentDate - reviewDate;
-    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
-    if (diffInDays > 6) {
-      return next(createError.Forbidden('Marks can only be entered within 6 days after the review.'));
+    const diffInHours = diffInMs / (1000 * 60 * 60);
+    if (diffInHours > 3) {
+      return next(createError.Forbidden('Marks can only be entered within 3 hours after the review.'));
     }
 
     const formattedDate = new Date(review_date).toISOString().split('T')[0];
