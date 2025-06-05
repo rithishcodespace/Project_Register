@@ -15,12 +15,34 @@ function ReviewProjects() {
   const [meetingLink, setMeetingLink] = useState('');
   const [rejectingRequestId, setRejectingRequestId] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
-  const [upcomingReviews, setUpcomingReviews] = useState({});
   
-  // New states for meeting end time functionality
+  // Separate upcoming reviews for guide and expert roles
+  const [guideUpcomingReviews, setGuideUpcomingReviews] = useState({});
+  const [expertUpcomingReviews, setExpertUpcomingReviews] = useState({});
+  
+  // States for meeting end time functionality
   const [clickedMeetings, setClickedMeetings] = useState(new Set());
   const [endTimes, setEndTimes] = useState({});
   const [submittingEndTime, setSubmittingEndTime] = useState(null);
+  const [markedEndTimes, setMarkedEndTimes] = useState({});
+  
+  // New states for marks functionality
+  const [showMarksModal, setShowMarksModal] = useState(false);
+  const [currentReviewForMarks, setCurrentReviewForMarks] = useState(null);
+  const [teamMembers, setTeamMembers] = useState([]);
+const [teamMarks, setTeamMarks] = useState({
+  literature_survey: "",
+  aim: "",
+  scope: "",
+  need_for_study: "",
+  proposed_methodology: "",
+  work_plan: "",
+  remarks: ""
+});
+ const [individualMarks, setIndividualMarks] = useState({});
+
+  const [submittingMarks, setSubmittingMarks] = useState(false);
+  const [marksAlreadyEntered, setMarksAlreadyEntered] = useState({});
 
   const fetchReviewRequests = async () => {
     try {
@@ -42,26 +64,81 @@ function ReviewProjects() {
     }
   };
 
-  const fetchUpcomingReviews = async (teams) => {
+  // Check if marks are already entered for a review
+  const checkMarksStatus = async (reviewId) => {
+    try {
+      const response = await instance.get(`/marks/check_status/${reviewId}`);
+      if (response.data.marks_entered) {
+        setMarksAlreadyEntered(prev => ({
+          ...prev,
+          [reviewId]: true
+        }));
+      }
+    } catch (error) {
+      console.log(`Error checking marks status for review ${reviewId}:`, error);
+    }
+  };
+
+  // Fetch team members for marks entry
+  const fetchTeamMembers = async (teamId) => {
+    try {
+      const response = await instance.get(`/admin/get_team_members/${teamId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+      return [];
+    }
+  };
+
+  // Fetch upcoming reviews for guide teams
+  const fetchGuideUpcomingReviews = async (teams) => {
     const reviewMap = {};
     for (const team of teams) {
       try {
-        const teamId = team.from_team_id;
-        const res = await instance.get(`/guide/fetch_upcoming_reviews/${teamId}`);
+        const teamId = team.team_id || team.from_team_id;
+        const res = await instance.get(`/guide/fetch_upcoming_reviews/${guideRegNum}`);
         reviewMap[teamId] = res.data;
+        
+        // Check end time status and marks status for each review
+        for (const review of res.data) {
+          checkEndTimeStatus(review.review_id || review.id);
+          checkMarksStatus(review.review_id || review.id);
+        }
       } catch (error) {
-        console.log(`No upcoming reviews for team ${team.from_team_id}`);
+        console.log(`No upcoming guide reviews for team ${guideRegNum}`);
       }
     }
-    setUpcomingReviews(reviewMap);
+    setGuideUpcomingReviews(reviewMap);
   };
 
+  // Fetch upcoming reviews for expert teams
+  const fetchExpertUpcomingReviews = async (teams) => {
+    const reviewMap = {};
+    for (const team of teams) {
+      try {
+        const teamId = team.team_id || team.from_team_id;
+        const res = await instance.get(`/sub_expert/fetch_upcoming_reviews/${guideRegNum}`);
+        reviewMap[teamId] = res.data;
+        
+        // Check end time status and marks status for each review
+        for (const review of res.data) {
+          checkEndTimeStatus(review.review_id || review.id);
+          checkMarksStatus(review.review_id || review.id);
+        }
+      } catch (error) {
+        console.log(`No upcoming expert reviews for team ${team.team_id || team.from_team_id}`);
+      }
+    }
+    setExpertUpcomingReviews(reviewMap);
+  };
+
+  // Fetch guide teams using the corrected API
   useEffect(() => {
     const fetchGuideRequests = async () => {
       try {
         const res = await instance.get(`/guide/fetch_guiding_teams/${guideRegNum}`);
         setGuideTeams(res.data);
-        fetchUpcomingReviews(res.data);
+        fetchGuideUpcomingReviews(res.data);
       } catch (error) {
         console.log(error);
       }
@@ -72,11 +149,13 @@ function ReviewProjects() {
     }
   }, [guideRegNum]);
 
+  // Fetch expert teams
   useEffect(() => {
     const fetchExpertRequests = async () => {
       try {
         const res = await instance.get(`/sub_expert/fetch_teams/${guideRegNum}`);
         setExpertTeams(res.data);
+        fetchExpertUpcomingReviews(res.data);
       } catch (error) {
         console.log(error);
       }
@@ -142,7 +221,22 @@ function ReviewProjects() {
     setClickedMeetings(prev => new Set([...prev, reviewKey]));
   };
 
-  // Handle end time submission
+  // Check if end time is already marked for a review
+  const checkEndTimeStatus = async (reviewId) => {
+    try {
+      const response = await instance.get(`/expert/reivew/check_attendance/marked/${reviewId}`);
+      if (response.data !== 'end time not marked yet!') {
+        setMarkedEndTimes(prev => ({
+          ...prev,
+          [reviewId]: response.data
+        }));
+      }
+    } catch (error) {
+      console.log(`Error checking end time status for review ${reviewId}:`, error);
+    }
+  };
+
+  // Handle end time submission - Same API for both guide and expert
   const handleEndTimeSubmit = async (review) => {
     const reviewKey = review.key;
     const endTime = endTimes[reviewKey];
@@ -155,7 +249,7 @@ function ReviewProjects() {
     try {
       setSubmittingEndTime(reviewKey);
       
-      
+      // Using same API endpoint for both guide and expert roles
       const response = await instance.patch(`/sub_expert/mark_end_time/${review.review_id || review.id}`, {
         project_id: review.project_id,
         "end_time": endTime,
@@ -163,6 +257,12 @@ function ReviewProjects() {
       });
 
       alert('Mark end time updated!');
+      
+      // Update the markedEndTimes state to reflect the newly marked time
+      setMarkedEndTimes(prev => ({
+        ...prev,
+        [review.review_id || review.id]: endTime
+      }));
       
       // Clear the end time input and remove from clicked meetings
       setEndTimes(prev => {
@@ -184,6 +284,138 @@ function ReviewProjects() {
       setSubmittingEndTime(null);
     }
   };
+
+  // Handle opening marks modal
+  const handleOpenMarksModal = async (review) => {
+    setCurrentReviewForMarks(review);
+    setShowMarksModal(true);
+    
+    // Fetch team members
+    const members = await fetchTeamMembers(review.team_id);
+    setTeamMembers(members);
+    
+    // Initialize individual marks
+    const initialMarks = {};
+    members.forEach(member => {
+      initialMarks[member.reg_num || member.id] = '';
+    });
+    setIndividualMarks(initialMarks);
+    setTeamMarks('');
+  };
+
+  // Handle marks submission
+const handleMarksSubmit = async () => {
+  const requiredFields = [
+    "literature_survey",
+    "aim",
+    "scope",
+    "need_for_study",
+    "proposed_methodology",
+    "work_plan"
+  ];
+
+  // Validate team-level marks
+  for (const field of requiredFields) {
+    if (!teamMarks[field] || teamMarks[field].toString().trim() === "") {
+      alert(`Please enter marks for ${field.replace(/_/g, ' ')}`);
+      return;
+    }
+  }
+
+  // Validate individual marks
+  for (const member of teamMembers) {
+    const memberId = member.reg_num || member.id;
+    const marks = individualMarks[memberId];
+    if (
+      !marks ||
+      marks.oral_presentation === "" ||
+      marks.viva_voce_and_ppt === "" ||
+      marks.contributions === ""
+    ) {
+      alert(`Please fill in all marks for ${member.name || member.student_name}`);
+      return;
+    }
+  }
+
+  try {
+    setSubmittingMarks(true);
+
+    const { review_title, review_date, team_id } = currentReviewForMarks;
+
+    //  Get role of the logged-in guide
+    const roleRes = await instance.get(`/user/getRole_guide_or_expert/${guideRegNum}/${team_id}`);
+    const role = roleRes.data; // 'guide' or 'sub_expert'
+
+    const rolePrefix = role === 'guide' ? 'guide_' : 'expert_';
+    const totalKey = role === 'guide' ? 'total_guide_marks' : 'total_expert_marks';
+
+    // Prepare team payload
+    const teamPayload = {
+      review_title,
+      review_date,
+      team_id,
+      [`${rolePrefix}remarks`]: teamMarks.remarks || ""
+    };
+    requiredFields.forEach(field => {
+      teamPayload[`${rolePrefix}${field}`] = Number(teamMarks[field]);
+    });
+
+    const teamApiUrl = `/${role}/review/add_team_marks/${guideRegNum}`;
+    const teamApiCall = instance.post(teamApiUrl, teamPayload);
+
+    // Prepare individual requests
+    const individualRequests = Object.entries(individualMarks).map(([reg_num, markSet]) => {
+      const oral = Number(markSet.oral_presentation || 0);
+      const ppt = Number(markSet.viva_voce_and_ppt || 0);
+      const contrib = Number(markSet.contributions || 0);
+      const total = oral + ppt + contrib;
+
+      const individualPayload = {
+        team_id,
+        review_title,
+        review_date,
+        [`${rolePrefix}oral_presentation`]: oral,
+        [`${rolePrefix}viva_voce_and_ppt`]: ppt,
+        [`${rolePrefix}contributions`]: contrib,
+        [totalKey]: total,
+        [`${rolePrefix}remarks`]: markSet.remarks || "",
+      };
+
+      const url = `/${role}/review/add_marks_to_individual/${guideRegNum}/${reg_num}`;
+      return instance.post(url, individualPayload);
+    });
+
+    // Send all requests
+    await Promise.all([teamApiCall, ...individualRequests]);
+
+    //  Cleanup
+    alert("Marks submitted successfully!");
+    setMarksAlreadyEntered(prev => ({
+      ...prev,
+      [currentReviewForMarks.review_id || currentReviewForMarks.id]: true
+    }));
+    setShowMarksModal(false);
+    setCurrentReviewForMarks(null);
+    setTeamMembers([]);
+    setTeamMarks({
+      literature_survey: "",
+      aim: "",
+      scope: "",
+      need_for_study: "",
+      proposed_methodology: "",
+      work_plan: "",
+      remarks: ""
+    });
+    setIndividualMarks({});
+
+  } catch (error) {
+    alert("Failed to submit marks. Please try again.");
+    console.error("Error submitting marks:", error);
+  } finally {
+    setSubmittingMarks(false);
+  }
+};
+
 
   const renderReviewRequests = (requests, title, isGuide) => (
     <div className="mb-10">
@@ -315,7 +547,7 @@ function ReviewProjects() {
   };
 
   // Helper function to sort reviews by date and time
-  const sortReviewsByDateTime = () => {
+  const sortReviewsByDateTime = (upcomingReviews) => {
     const allReviews = [];
 
     Object.entries(upcomingReviews).forEach(([teamId, reviews]) => {
@@ -342,7 +574,144 @@ function ReviewProjects() {
     return allReviews;
   };
 
-  const sortedReviews = sortReviewsByDateTime();
+  // Render upcoming reviews section
+  const renderUpcomingReviews = (upcomingReviews, title, roleColor) => {
+    const sortedReviews = sortReviewsByDateTime(upcomingReviews);
+
+    if (sortedReviews.length === 0) {
+      return (
+        <div className="mb-8">
+          <h2 className={`text-xl font-semibold mb-4 ${roleColor}`}>{title}</h2>
+          <div className="text-center py-4">
+            <p className="text-gray-600">No upcoming reviews scheduled.</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mb-8">
+        <h2 className={`text-xl font-semibold mb-4 ${roleColor}`}>{title}</h2>
+        {sortedReviews.map((rev) => {
+          const isClicked = clickedMeetings.has(rev.key);
+          const endTime = endTimes[rev.key] || '';
+          const isSubmitting = submittingEndTime === rev.key;
+          const reviewId = rev.review_id || rev.id;
+          const isEndTimeMarked = markedEndTimes[reviewId];
+          const areMarksEntered = marksAlreadyEntered[reviewId];
+
+          return (
+            <div key={rev.key} className="p-4 border-2 border-blue-200 rounded-lg bg-blue-50 mb-4 shadow-sm">
+              <p><strong>Project:</strong> {rev.project_name}</p>
+              <p><strong>Review Title:</strong> {rev.review_title || 'N/A'}</p>
+              <p><strong>Date:</strong> {rev.review_date.split('T')[0]}</p>
+              <p><strong>Time:</strong> {rev.start_time}</p>
+              <p><strong>Google Meet Link:</strong> 
+                {rev.meeting_link ? (
+                  isReviewTimeReached(rev.review_date, rev.start_time) ? (
+                    <a 
+                      href={rev.meeting_link} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="text-blue-600 underline ml-2 hover:text-blue-800 font-medium"
+                      onClick={() => handleMeetingLinkClick(rev.key)}
+                    >
+                       Join Meeting
+                    </a>
+                  ) : (
+                    <span className="ml-2 text-gray-500 cursor-not-allowed">
+                      📅 Meeting starts at {rev.start_time} on {rev.review_date.split('T')[0]}
+                    </span>
+                  )
+                ) : (
+                  <span className="ml-2 text-gray-500">Google Meet link not available</span>
+                )}
+              </p>
+              
+              {/* Meeting End Time Section */}
+              {rev.meeting_link && isReviewTimeReached(rev.review_date, rev.start_time) && (
+                <div className="mt-4 p-3 bg-white border border-gray-200 rounded">
+                  {isEndTimeMarked ? (
+                    <div className="flex items-center text-green-700">
+                      <span className="text-lg mr-2">✅</span>
+                      <p className="font-medium">
+                        Meeting end time marked: <strong>{isEndTimeMarked}</strong>
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm text-yellow-800 mb-2">
+                        📝 <strong>Important:</strong> Please mark the meeting end time after completing the review session.
+                      </p>
+                      
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="text"
+                          placeholder="HH:MM:SS (e.g., 14:30:00)"
+                          value={endTime}
+                          onChange={(e) => setEndTimes(prev => ({
+                            ...prev,
+                            [rev.key]: e.target.value
+                          }))}
+                          className="border border-gray-300 rounded px-3 py-2 text-sm w-40"
+                          disabled={isSubmitting}
+                        />
+                        
+                        <button
+                          onClick={() => handleEndTimeSubmit(rev)}
+                          disabled={!isClicked || isSubmitting || !endTime.trim()}
+                          className={`px-4 py-2 rounded text-sm font-medium ${
+                            !isClicked || !endTime.trim()
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                              : isSubmitting
+                              ? 'bg-yellow-400 text-white cursor-wait'
+                              : 'bg-orange-600 text-white hover:bg-orange-700'
+                          }`}
+                          title={!isClicked ? 'Please join the meeting first to enable this button' : ''}
+                        >
+                          {isSubmitting ? 'Submitting...' : 'Mark End Time'}
+                        </button>
+                      </div>
+                      
+                      {!isClicked && (
+                        <p className="text-xs text-gray-600 mt-1">
+                          * Button will be enabled after you join the meeting
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Marks Entry Section */}
+              {isEndTimeMarked && (
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                  {areMarksEntered ? (
+                    <div className="flex items-center text-green-700">
+                      <span className="text-lg mr-2">🎯</span>
+                      <p className="font-medium">Marks have been entered for this review</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-sm text-blue-800 mb-3">
+                        📊 <strong>Next Step:</strong> Please enter marks for the team and individual members.
+                      </p>
+                      <button
+                        onClick={() => handleOpenMarksModal(rev)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700"
+                      >
+                        Enter Marks
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -354,96 +723,244 @@ function ReviewProjects() {
       {renderReviewRequests(guideReviewRequests, 'Guide Review Requests', true)}
       {renderReviewRequests(expertReviewRequests, 'Subject Expert Review Requests', false)}
 
-      {/* Upcoming Reviews Section - Sorted by Date & Time */}
-      {sortedReviews.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-blue-700">Upcoming Reviews</h2>
-          {sortedReviews.map((rev) => {
-            const isClicked = clickedMeetings.has(rev.key);
-            const endTime = endTimes[rev.key] || '';
-            const isSubmitting = submittingEndTime === rev.key;
+      {/* Upcoming Reviews Sections - Separated by Role */}
+      {renderUpcomingReviews(guideUpcomingReviews, 'Guide - Upcoming Reviews', 'text-green-700')}
+      {renderUpcomingReviews(expertUpcomingReviews, 'Subject Expert - Upcoming Reviews', 'text-purple-700')}
 
-            return (
-              <div key={rev.key} className="p-4 border-2 border-blue-200 rounded-lg bg-blue-50 mb-4 shadow-sm">
-                <p><strong>Project:</strong> {rev.project_name}</p>
-                <p><strong>Review Title:</strong> {rev.review_title || 'N/A'}</p>
-                <p><strong>Date:</strong> {rev.review_date.split('T')[0]}</p>
-                <p><strong>Time:</strong> {rev.start_time}</p>
-                <p><strong>Google Meet Link:</strong> 
-                  {rev.meeting_link ? (
-                    isReviewTimeReached(rev.review_date, rev.start_time) ? (
-                      <a 
-                        href={rev.meeting_link} 
-                        target="_blank" 
-                        rel="noreferrer" 
-                        className="text-blue-600 underline ml-2 hover:text-blue-800 font-medium"
-                        onClick={() => handleMeetingLinkClick(rev.key)}
-                      >
-                         Join Meeting
-                      </a>
-                    ) : (
-                      <span className="ml-2 text-gray-500 cursor-not-allowed">
-                        📅 Meeting starts at {rev.start_time} on {rev.review_date.split('T')[0]}
-                      </span>
-                    )
-                  ) : (
-                    <span className="ml-2 text-gray-500">Google Meet link not available</span>
-                  )}
-                </p>
-                
-                {/* Meeting End Time Section */}
-                {rev.meeting_link && isReviewTimeReached(rev.review_date, rev.start_time) && (
-                  <div className="mt-4 p-3 bg-white-50 border border-white-200 rounded">
-                    <p className="text-sm text-yellow-800 mb-2">
-                      📝 <strong>Important:</strong> Please mark the meeting end time after completing the review session.
-                    </p>
-                    
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="text"
-                        placeholder="HH:MM:SS (e.g., 14:30:00)"
-                        value={endTime}
-                        onChange={(e) => setEndTimes(prev => ({
-                          ...prev,
-                          [rev.key]: e.target.value
-                        }))}
-                        className="border border-gray-300 rounded px-3 py-2 text-sm w-40"
-                        disabled={isSubmitting}
-                      />
-                      
-                      <button
-                        onClick={() => handleEndTimeSubmit(rev)}
-                        disabled={!isClicked || isSubmitting || !endTime.trim()}
-                        className={`px-4 py-2 rounded text-sm font-medium ${
-                          !isClicked || !endTime.trim()
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                            : isSubmitting
-                            ? 'bg-white-400 text-white cursor-wait'
-                            : 'bg-orange-600 text-white hover:bg-orange-700'
-                        }`}
-                        title={!isClicked ? 'Please join the meeting first to enable this button' : ''}
-                      >
-                        {isSubmitting ? 'Submitting...' : 'Mark End Time'}
-                      </button>
-                    </div>
-                    
-                    {!isClicked && (
-                      <p className="text-xs text-gray-600 mt-1">
-                        * Button will be enabled after you join the meeting
-                      </p>
-                    )}
-                  </div>
-                )}
+      {/* Marks Entry Modal */}
+      {showMarksModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Enter Marks</h3>
+              <button
+                onClick={() => {
+                  setShowMarksModal(false);
+                  setCurrentReviewForMarks(null);
+                  setTeamMembers([]);
+                  setTeamMarks('');
+                  setIndividualMarks({});
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            {currentReviewForMarks && (
+              <div className="mb-4 p-3 bg-gray-50 rounded">
+                <p><strong>Project:</strong> {currentReviewForMarks.project_name}</p>
+                <p><strong>Review:</strong> {currentReviewForMarks.review_title}</p>
+                <p><strong>Date:</strong> {currentReviewForMarks.review_date.split('T')[0]}</p>
               </div>
-            );
-          })}
-        </div>
-      )}
+            )}
 
-      {/* Show message if no upcoming reviews */}
-      {sortedReviews.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-gray-600">No upcoming reviews scheduled.</p>
+            {/* Team Marks */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Team Marks (Overall)</label>
+
+              <input
+                type="number"
+                min="0"
+                max="5"
+                step="1"
+                placeholder="Literature Survey (0-5)"
+                value={teamMarks.literature_survey}
+                onChange={(e) => setTeamMarks({ ...teamMarks, literature_survey: Number(e.target.value) })}
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-2"
+              />
+
+              <input
+                type="number"
+                min="0"
+                max="5"
+                step="1"
+                placeholder="Aim (0-5)"
+                value={teamMarks.aim}
+                onChange={(e) => setTeamMarks({ ...teamMarks, aim: Number(e.target.value) })}
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-2"
+              />
+
+              <input
+                type="number"
+                min="0"
+                max="5"
+                step="1"
+                placeholder="Scope (0-5)"
+                value={teamMarks.scope}
+                onChange={(e) => setTeamMarks({ ...teamMarks, scope: Number(e.target.value) })}
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-2"
+              />
+
+              <input
+                type="number"
+                min="0"
+                max="5"
+                step="1"
+                placeholder="Need for Study (0-5)"
+                value={teamMarks.need_for_study}
+                onChange={(e) => setTeamMarks({ ...teamMarks, need_for_study: Number(e.target.value) })}
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-2"
+              />
+
+              <input
+                type="number"
+                min="0"
+                max="10"
+                step="1"
+                placeholder="Proposed Methodology (0-10)"
+                value={teamMarks.proposed_methodology}
+                onChange={(e) => setTeamMarks({ ...teamMarks, proposed_methodology: Number(e.target.value) })}
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-2"
+              />
+
+              <input
+                type="number"
+                min="0"
+                max="5"
+                step="1"
+                placeholder="Work Plan (0-5)"
+                value={teamMarks.work_plan}
+                onChange={(e) => setTeamMarks({ ...teamMarks, work_plan: Number(e.target.value) })}
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-2"
+              />
+
+              <input
+                type="text"
+                placeholder="Remarks"
+                value={teamMarks.remarks || ""}
+                onChange={(e) => setTeamMarks({ ...teamMarks, remarks: e.target.value })}
+                className="w-full border border-gray-300 rounded px-3 py-2"
+              />
+            </div>
+
+
+            {/* Individual Marks */}
+         <div className="mb-6">
+            <h4 className="text-sm font-medium text-gray-700 mb-3">Individual Member Marks</h4>
+
+            {teamMembers.map((member) => {
+              const memberId = member.reg_num || member.id;
+              const marks = individualMarks[memberId] || {
+                oral_presentation: "",
+                viva_voce_and_ppt: "",
+                contributions: "",
+                expert_guide_marks: "",
+                remarks: ""
+              };
+
+              return (
+                <div key={memberId} className="mb-4 border rounded p-3 bg-gray-50">
+                  <div className="font-medium mb-2">
+                    {member.name || member.student_name} ({memberId})
+                  </div>
+
+                  <input
+                    type="number"
+                    min="0"
+                    max="5"
+                    placeholder="Oral Presentation (0-5)"
+                    value={marks.oral_presentation}
+                    onChange={(e) =>
+                      setIndividualMarks((prev) => ({
+                        ...prev,
+                        [memberId]: { ...prev[memberId], oral_presentation: Number(e.target.value) }
+                      }))
+                    }
+                    className="w-full border border-gray-300 rounded px-3 py-2 mb-2"
+                  />
+
+                  <input
+                    type="number"
+                    min="0"
+                    max="5"
+                    placeholder="Viva Voce & PPT (0-5)"
+                    value={marks.viva_voce_and_ppt}
+                    onChange={(e) =>
+                      setIndividualMarks((prev) => ({
+                        ...prev,
+                        [memberId]: { ...prev[memberId], viva_voce_and_ppt: Number(e.target.value) }
+                      }))
+                    }
+                    className="w-full border border-gray-300 rounded px-3 py-2 mb-2"
+                  />
+
+                  <input
+                    type="number"
+                    min="0"
+                    max="5"
+                    placeholder="Contributions (0-5)"
+                    value={marks.contributions}
+                    onChange={(e) =>
+                      setIndividualMarks((prev) => ({
+                        ...prev,
+                        [memberId]: { ...prev[memberId], contributions: Number(e.target.value) }
+                      }))
+                    }
+                    className="w-full border border-gray-300 rounded px-3 py-2 mb-2"
+                  />
+
+                  <input
+                    type="number"
+                    min="0"
+                    max="5"
+                    placeholder="Expert/Guide Marks (0-5)"
+                    value={marks.expert_guide_marks}
+                    onChange={(e) =>
+                      setIndividualMarks((prev) => ({
+                        ...prev,
+                        [memberId]: { ...prev[memberId], expert_guide_marks: Number(e.target.value) }
+                      }))
+                    }
+                    className="w-full border border-gray-300 rounded px-3 py-2 mb-2"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Remarks"
+                    value={marks.remarks}
+                    onChange={(e) =>
+                      setIndividualMarks((prev) => ({
+                        ...prev,
+                        [memberId]: { ...prev[memberId], remarks: e.target.value }
+                      }))
+                    }
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowMarksModal(false);
+                  setCurrentReviewForMarks(null);
+                  setTeamMembers([]);
+                  setTeamMarks('');
+                  setIndividualMarks({});
+                }}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+                disabled={submittingMarks}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleMarksSubmit}
+                disabled={submittingMarks}
+                className={`px-4 py-2 rounded text-white font-medium ${
+                  submittingMarks
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-green-600 hover:bg-green-700'
+                }`}
+              >
+                {submittingMarks ? 'Submitting...' : 'Submit Marks'}
+              </button> 
+            </div>
+          </div>
         </div>
       )}
     </div>
