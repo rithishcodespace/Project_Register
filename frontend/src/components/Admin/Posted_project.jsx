@@ -1,66 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ArrowLeft, Users, User, Calendar, Settings, BookOpen, FileText } from 'lucide-react';
+import instance from '../../utils/axiosInstance';
 
 const Posted_project = () => {
-  const [projectData, setProjectData] = useState([
-    // Sample data for demonstration
-    {
-      team_id: 'T001',
-      project_id: 'P001',
-      project_name: 'AI-Powered Student Management System',
-      cluster: 'AI/ML',
-      subject_expert: 'Dr. Smith',
-      guide: 'Prof. Johnson',
-      team_members: [
-        { name: 'John Doe', reg_no: 'REG001', email: 'john@example.com', role: 'leader' },
-        { name: 'Jane Smith', reg_no: 'REG002', email: 'jane@example.com', role: 'member' },
-        { name: 'Jane Smith', reg_no: 'REG002', email: 'jane@example.com', role: 'member' },
-        { name: 'Jane Smith', reg_no: 'REG002', email: 'jane@example.com', role: 'member' }
-      ],
-      description: 'A comprehensive system to manage student data using artificial intelligence.',
-      completed_review: '2',
-      verified_week: '3/12'
-    },
-    {
-      team_id: 'T002',
-      project_id: 'P002',
-      project_name: 'IoT-Based Smart Home System',
-      cluster: 'IoT',
-      subject_expert: 'Dr. Wilson',
-      guide: 'Prof. Brown',
-      team_members: [
-        { name: 'Mike Johnson', reg_no: 'REG003', email: 'mike@example.com', role: 'leader' },
-        { name: 'Sarah Davis', reg_no: 'REG004', email: 'sarah@example.com', role: 'member' }
-      ],
-      description: 'An integrated IoT solution for home automation and security.',
-      completed_review: '1',
-      verified_week: '2/12'
-    }
-  ]);
+  const [projectData, setProjectData] = useState([]);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedProject, setSelectedProject] = useState(null);
 
-  // Simulated fetch function - replace with your actual API call
-  async function getProjects() {
+  const getProjects = async () => {
     try {
-      // const accessToken = localStorage.getItem("accessToken");
-      // const response = await instance.get("/teacher/getprojects");
-     
-      // For demo purposes, using sample data
-      // if (response.status === 200) {
-      //   setProjectData(response.data);
-      // } else {
-      //   alert("No projects found.");
-      // }
-    } catch (error) {
-      console.error("Fetch error:", error.message);
-    }
-  }
+      const res = await instance.get('/admin/get_all_projects');
+      const projects = res.data;
 
-  useEffect(() => {
-    getProjects();
-  }, []);
+      const enrichedProjects = await Promise.all(
+        projects.map(async (project) => {
+          try {
+            const teamRes = await instance.get(`/guide/gets_entire_team/${project.team_id}`);
+            const team = teamRes.data;
+            return { ...project, team_members: team };
+          } catch (teamError) {
+            console.error(`Error fetching team for project ${project.project_id}:`, teamError.message);
+            return { ...project, team_members: [] };
+          }
+        })
+      );
+
+      setProjectData(enrichedProjects);
+    } catch (error) {
+      console.error("Error fetching projects:", error.message);
+    }
+  };
 
   const handleViewProject = (project) => {
     setSelectedProject(project);
@@ -70,19 +40,24 @@ const Posted_project = () => {
     setSelectedProject(null);
   };
 
-  // Pagination logic
+  useEffect(() => {
+    getProjects();
+  }, []);
+
+  useEffect(() => {
+    console.log("Project data with teams:", projectData);
+  }, [projectData]);
+
   const startIndex = currentPage * rowsPerPage;
   const currentData = projectData.slice(startIndex, startIndex + rowsPerPage);
   const pageCount = Math.ceil(projectData.length / rowsPerPage);
 
-  // Project Details View
   if (selectedProject) {
     const leader = selectedProject.team_members?.find(member => member.role === 'leader');
-   
+
     return (
       <div className="min-h-screen p-6">
         <div className="max-w-6xl mx-auto">
-          {/* Header with Back Button */}
           <div className="mb-8">
             <button
               onClick={handleBackToList}
@@ -97,7 +72,6 @@ const Posted_project = () => {
             </div>
           </div>
 
-          {/* Project Header Card */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
             <div className="bg-white p-6 border-b border-gray-200">
               <h2 className="bg-white text-2xl font-bold text-gray-800 mb-3">{selectedProject.project_name}</h2>
@@ -117,13 +91,8 @@ const Posted_project = () => {
             </div>
           </div>
 
-          {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-           
-            {/* Project Information */}
             <div className="lg:col-span-2 space-y-6">
-             
-              {/* Description Card */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="bg-white flex items-center gap-2 mb-4">
                   <FileText className="bg-white text-gray-600" size={20} />
@@ -134,7 +103,6 @@ const Posted_project = () => {
                 </p>
               </div>
 
-              {/* Team Members Card */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="bg-white flex items-center gap-2 mb-4">
                   <Users className="bg-white text-gray-600" size={20} />
@@ -147,7 +115,7 @@ const Posted_project = () => {
                         <div className="bg-gray-50 flex items-center gap-2 mb-1">
                           <span className="bg-gray-50 font-medium text-gray-800">{member.name}</span>
                           {member.role === 'leader' && (
-                            <span className="bg-gray-300 bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-medium">
+                            <span className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs font-medium">
                               Team Leader
                             </span>
                           )}
@@ -165,10 +133,7 @@ const Posted_project = () => {
               </div>
             </div>
 
-            {/* Sidebar Information */}
             <div className="space-y-6">
-             
-              {/* Progress Card */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="bg-white flex items-center gap-2 mb-4">
                   <Calendar className="bg-white text-gray-600" size={20} />
@@ -178,19 +143,18 @@ const Posted_project = () => {
                   <div>
                     <div className="bg-white text-sm text-gray-600 font-medium ">Completed Review</div>
                     <div className="bg-white p-3 rounded border border-gray-200">
-                      <span className="bg-white text-gray-800 font-semibold">{selectedProject.completed_review}</span>
+                      <span className="bg-white text-gray-800 font-semibold">{selectedProject.completed_review}/2</span>
                     </div>
                   </div>
                   <div>
                     <div className="bg-white text-sm text-gray-600 font-medium ">Verified Week</div>
                     <div className="bg-white  p-3 rounded border border-gray-200">
-                      <span className="bg-white text-gray-800 font-semibold">{selectedProject.verified_week}</span>
+                      <span className="bg-white text-gray-800 font-semibold">{selectedProject.verified_week}/12</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Supervision Card */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="bg-white flex items-center gap-2 mb-4">
                   <BookOpen className="bg-white text-gray-600" size={20} />
@@ -200,13 +164,13 @@ const Posted_project = () => {
                   <div>
                     <div className="bg-white text-sm text-gray-600 font-medium ">Subject Expert</div>
                     <div className="bg-white  p-3 rounded border border-gray-200">
-                      <span className="bg-white text-gray-800 font-semibold">{selectedProject.subject_expert}</span>
+                      <span className="bg-white text-gray-800 font-semibold">{selectedProject.team_members[0].sub_expert_reg_num}</span>
                     </div>
                   </div>
                   <div>
                     <div className="bg-white text-sm text-gray-600 font-medium ">Project Guide</div>
                     <div className="bg-white  p-3 rounded border border-gray-200">
-                      <span className="bg-white text-gray-800 font-semibold">{selectedProject.guide}</span>
+                      <span className="bg-white text-gray-800 font-semibold">{selectedProject.team_members[0].guide_reg_num}</span>
                     </div>
                   </div>
                 </div>
@@ -218,15 +182,16 @@ const Posted_project = () => {
     );
   }
 
-  // Projects List View
   return (
     <div className="ml-10 mr-10 justify-center mt-5">
       <div className="relative mb-8 px-10">
         <h2 className="text-3xl font-bold text-center">Posted Projects</h2>
       </div>
 
-      <div className="w-full bg-white shadow-md rounded-lg p-5">
-        <table className="w-full border-none bg-white min-w-[800px]" style={{ tableLayout: 'fixed' }}>
+   <div className="w-full bg-white shadow-md rounded-lg p-5 overflow-x-auto">
+  <div className="min-w-[800px]">
+    <table className="w-full border-none bg-white" style={{ tableLayout: 'fixed' }}>
+
           <thead className='bg-white m-5 border-b'>
             <tr className="bg-white m-5">
               <th className="p-2 w-[15%] bg-white">Team ID</th>
@@ -257,12 +222,12 @@ const Posted_project = () => {
                 </td>
                 <td className="p-2 bg-white h-[48px] align-middle">
                   <div className="flex justify-center bg-white items-center h-[36px]">
-                    {row.subject_expert || 'N/A'}
+                    {row.team_members[0]?.sub_expert_reg_num || 'N/A'}
                   </div>
                 </td>
                 <td className="p-2 bg-white h-[48px] align-middle">
                   <div className="flex justify-center bg-white items-center h-[36px]">
-                    {row.guide || 'N/A'}
+                    {row.team_members[0]?.guide_reg_num || 'N/A'}
                   </div>
                 </td>
                 <td className="p-2 bg-white h-[48px] align-middle">
@@ -280,6 +245,7 @@ const Posted_project = () => {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       <div className="flex justify-between mr-0 mt-4 items-center p-4">

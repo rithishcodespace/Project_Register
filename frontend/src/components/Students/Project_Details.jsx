@@ -402,10 +402,11 @@ return (
           onChange={handleExpertChange}
           value={filteredExpertOptions.filter(option => selectedExperts.includes(option.value))}
           placeholder="Select experts..."
-          className="basic-multi-select"
+          className="basic-multi-select bg-white"
           classNamePrefix="select"
           filterOption={customFilter}
           closeMenuOnSelect={false} 
+          
            // <-- keep dropdown open after selection
         />
       </div>

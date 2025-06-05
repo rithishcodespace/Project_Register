@@ -7,7 +7,7 @@ const userAuth = require("../middlewares/userAuth")
 router.post("/admin/adduser",userAuth,(req,res,next) => {
    try{
      const{name,emailId,password,role,dept,reg_num,phone_number,semester,mentor_name,mentor_reg_num,mentor_emailId} = req.body;
-     if(!name || !emailId || !password || !role || !dept || !reg_num){ // not checking semester since it might be null other than students
+     if(!name || !emailId || !password ){ // not checking semester since it might be null other than students
       return next(createError.BadRequest("data is missing!"));
      }
      const normalRole = role.toLowerCase();
@@ -216,6 +216,23 @@ router.get('/admin/challenge_review/get_requests',(req,res,next) => {
     next(error);
   }
 })
+
+//get all projects
+router.get('/admin/get_all_projects',(req,res,next) => {
+  try{
+    let sql = "select * from projects";
+    db.query(sql,(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return res.send(`No projects are updated!`);
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 
 // accept or reject the challenge review
 router.patch('/admin/challenge_review/accept_or_reject/:status/:request_id',(req,res,next) => {
