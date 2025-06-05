@@ -268,7 +268,7 @@ router.get('/guide/fetch_upcoming_reviews/:team_id',(req,res,next) => {
   try{
     const{team_id} = req.params;
     if(!team_id) return next(createError.BadRequest('team is undefined!'));
-    let sql = `SELECT * FROM scheduled_reviews WHERE team_id = ? AND attendance is NULL AND CONCAT(review_date, ' ', start_time) >= NOW()`;
+    let sql = `SELECT * FROM scheduled_reviews WHERE team_id = ? AND (attendance IS NULL OR attendance = '')AND CONCAT(review_date, ' ', start_time) >= NOW() - INTERVAL 3 HOUR;`;
 
     db.query(sql,[team_id],(error,result) => {
       if(error)return next(error);
