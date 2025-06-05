@@ -71,7 +71,7 @@ router.get("/files/:team_id/:project_id", async (req, res) => {
 
   try {
     const [result] = await pool.query(
-      "SELECT outcome, report, ppt FROM project_files WHERE team_id = ? AND project_id = ?",
+      "SELECT outcome, report, ppt FROM project_completion_files WHERE team_id = ? AND project_id = ?",
       [team_id, project_id]
     );
 
@@ -95,5 +95,7 @@ router.get("/files/:team_id/:project_id", async (req, res) => {
     res.status(500).json({ error: "Database Error: " + error.message });
   }
 });
+
+// fetch the file uploaded for monthly review
 
 module.exports = router;
