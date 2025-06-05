@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import instance from '../../utils/axiosInstance';
-import { Bell } from 'lucide-react';
+import { Bell, Users, Calendar, CheckCircle, Clock, ChevronRight, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 function Staff_dashboard() {
@@ -11,12 +11,12 @@ function Staff_dashboard() {
   const [reasonMap, setReasonMap] = useState({});
   const [GuideTeams, setGuideTeams] = useState([]);
   const [SubTeams, setSubTeams] = useState([]);
-  const [progressMap, setProgressMap] = useState({}); // For guide team progress
-  const navigate = useNavigate();
+  const navigatee = useNavigate();
+  const [progressMap, setProgressMap] = useState({});
+  const navigate = (teamId) => {navigatee(`${teamId}`);};
   const [upcomingGuideReviews, setUpcomingGuideReviews] = useState([]);
   const [upcomingExpertReviews, setUpcomingExpertReviews] = useState([]);
   const [completedReviewMap, setCompletedReviewMap] = useState({});
-
 
   const reg_num = useSelector((state) => state.userSlice.reg_num);
   const name = useSelector((state) => state.userSlice.name);
@@ -56,7 +56,6 @@ function Staff_dashboard() {
     setCompletedReviewMap(reviewMap);
   };
 
-
   // Fetch progress data ONLY for guide teams, store results in progressMap
   const fetchProgressForTeams = async (teams) => {
     const map = {};
@@ -72,6 +71,7 @@ function Staff_dashboard() {
     }
     setProgressMap(map);
   };
+
   useEffect(() => {
     const fetchExtraReviews = async () => {
       try {
@@ -105,7 +105,6 @@ function Staff_dashboard() {
 
     fetchExtraReviews();
   }, [reg_num]);
-
 
   // Fetch all required data: requests, guide teams, subexpert teams
   const fetchRequests = async () => {
@@ -155,7 +154,6 @@ function Staff_dashboard() {
     fetchRequests();
   }, []);
 
-  // Handle accept/reject actions
   const handleAction = async (type, status, team_id, semester) => {
     const reason = reasonMap[`${type}_${team_id}`];
     if (status === "reject" && !reason) {
@@ -182,213 +180,377 @@ function Staff_dashboard() {
     }
   };
 
-  // Render notification request cards
+  const getProgressColor = (verifiedWeeks) => {
+    const percentage = (verifiedWeeks / 12) * 100;
+    if (percentage >= 80) return "bg-green-500";
+    if (percentage >= 60) return "bg-yellow-500";
+    if (percentage >= 40) return "bg-orange-500";
+    return "bg-red-500";
+  };
+
+  console.log(GuideTeams);
+
+
   const renderRequestCard = (req, type) => (
-    <div key={`${type}_${req.from_team_id}`} className="bg-white rounded p-3 mb-2">
-      <p className="font-semibold bg-white text-gray-900">
-        {type.charAt(0).toUpperCase() + type.slice(1)} request from team{" "}
-        <span className="text-blue-600 bg-white">{req.from_team_id}</span> for project:{" "}
-        <strong className='bg-white'>{req.project_name || req.project_id}</strong>
-      </p>
-      <div className="mt-3 bg-white flex items-center gap-3">
-        <button
-          onClick={() => handleAction(type, "accept", req.from_team_id, req.team_semester)}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded transition"
-        >
-          Accept
-        </button>
-        <button
-          onClick={() => handleAction(type, "reject", req.from_team_id, req.team_semester)}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded transition"
-        >
-          Reject
-        </button>
+    <div key={`${type}_${req.from_team_id}`} className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 mb-3 hover:shadow-md transition-all duration-200">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${type === 'guide' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+              }`}>
+              {type.charAt(0).toUpperCase() + type.slice(1)} Request
+            </span>
+          </div>
+          <p className="font-semibold text-gray-900 mb-1">
+            Team <span className="text-blue-600">{req.from_team_id}</span>
+          </p>
+          <p className="text-gray-700 text-sm mb-3">{req.project_name || req.project_id}</p>
+
+          <input
+            type="text"
+            placeholder="Reason (required if rejecting)"
+            value={reasonMap[`${type}_${req.from_team_id}`] || ""}
+            onChange={(e) =>
+              setReasonMap({
+                ...reasonMap,
+                [`${type}_${req.from_team_id}`]: e.target.value,
+              })
+            }
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent mb-3"
+          />
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleAction(type, "accept", req.from_team_id, req.team_semester)}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1"
+            >
+              <CheckCircle className="w-4 h-4" />
+              Accept
+            </button>
+            <button
+              onClick={() => handleAction(type, "reject", req.from_team_id, req.team_semester)}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+            >
+              Reject
+            </button>
+          </div>
+        </div>
       </div>
-      <input
-        type="text"
-        placeholder="Reason (required if rejecting)"
-        value={reasonMap[`${type}_${req.from_team_id}`] || ""}
-        onChange={(e) =>
-          setReasonMap({
-            ...reasonMap,
-            [`${type}_${req.from_team_id}`]: e.target.value,
-          })
-        }
-        className="mt-2 bg-white w-full border border-gray-300 rounded px-3 py-2 text-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-      />
     </div>
   );
 
+  const totalNotifications = guideRequests.length + expertRequests.length + upcomingGuideReviews.length + upcomingExpertReviews.length;
+
   return (
-    <div className="p-6 min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br">
       {/* Header */}
-      <header className="flex items-center justify-between mb-8">
-        <div className="flex-1 flex flex-col items-center">
-          <h1 className="text-3xl font-bold text-gray-900">
+      <header className=" sticky top-0 z-10  ">
+        <div className="max-w-7xl mx-auto px-6 py-4 mb-9 relative">
+          {/* Centered Welcome Text */}
+          <h1 className="absolute left-1/2 transform -translate-x-1/2 text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-900 bg-clip-text text-transparent">
             Welcome back, {name}!
           </h1>
-        </div>
-        <div className="relative">
-          <button
-            className="p-2 hover:text-blue-600"
-            onClick={() => setShowNotifications(!showNotifications)}
-            aria-label="Toggle notifications"
-          >
-            <Bell className="w-7 h-7" />
-            {(guideRequests.length + expertRequests.length + upcomingGuideReviews.length + upcomingExpertReviews.length) > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-semibold">
-                {guideRequests.length + expertRequests.length + upcomingGuideReviews.length + upcomingExpertReviews.length}
-              </span>
-            )}
 
-          </button>
+          {/* Notification Bell on Right */}
+          <div className="absolute right-0 top-1/2 -translate-y-1/2">
+            <button
+              className="relative p-3 hover:bg-white rounded-full transition-colors duration-200 group"
+              onClick={() => setShowNotifications(!showNotifications)}
+              aria-label="Toggle notifications"
+            >
+              <Bell className="w-6 h-6 text-gray-700   group-hover:text-blue-600 group-hover:bg-white transition-colors" />
+              {totalNotifications > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-6 h-6 flex items-center justify-center rounded-full font-semibold animate-pulse">
+                  {totalNotifications}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Notifications dropdown */}
-      {showNotifications && (
-        <div className="absolute right-14 top-28 w-96 bg-white shadow-lg border rounded-md z-20 max-h-96 overflow-y-auto p-5">
-          <button
-            className="absolute top-3 right-3 text-gray-600 hover:text-red-600 font-bold text-xl"
-            onClick={() => setShowNotifications(false)}
-            aria-label="Close notifications"
-          >
-            ×
-          </button>
 
-          {(guideRequests.length === 0 &&
-            expertRequests.length === 0 &&
-            upcomingGuideReviews.length === 0 &&
-            upcomingExpertReviews.length === 0) ? (
-            <p className="text-center bg-white text-gray-500">No pending requests</p>
-          ) : (
-            <>
-              {guideRequests.map((req) => renderRequestCard(req, "guide"))}
-              {expertRequests.map((req) => renderRequestCard(req, "expert"))}
-            </>
-          )}
-
-          {upcomingGuideReviews.map((review) => (
-            <div
-              key={`guide_review_${review.request_id}`}
-              onClick={() => navigate("/guide/review_progress")}
-              className="bg-blue-100  border-l-4 mt-5 border-blue-500 p-3 mb-2 cursor-pointer"
-            >
-              <p className="text-blue-800 bg-blue-100 font-semibold">Upcoming Guide Review</p>
-              <p className="text-gray-700 bg-blue-100">Team: {review.team_id} | Project: {review.project_name}</p>
-              <p className="text-sm bg-blue-100 text-gray-500">Review Date: {new Date(review.review_date).toLocaleDateString()}</p>
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Guide Teams - Semester 5 */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+            <div className="flex items-center bg-white justify-between">
+              <div className='bg-white'>
+                <p className="text-gray-600 text-sm bg-white font-medium">Guide Teams (S5)</p>
+                <p className="text-3xl font-bold bg-white text-gray-900 mt-1">
+                  {GuideTeams.filter((team) => team.team_semester === 5).length}
+                </p>
+              </div>
+              <div className="bg-blue-100 p-3 rounded-full">
+                <Users className="w-6 h-6 bg-blue-100 text-blue-600" />
+              </div>
             </div>
-          ))}
+          </div>
 
-          {upcomingExpertReviews.map((review) => (
-            <div
-              key={`expert_review_${review.request_id}`}
-              onClick={() => navigate("/guide/review_progress")}
-              className="bg-purple-100 border-l-4 mt-5 border-purple-500 p-3 mb-2 cursor-pointer"
-            >
-              <p className="text-purple-800 bg-purple-100 font-semibold">Upcoming Expert Review</p>
-              <p className="text-gray-700 bg-purple-100">Team: {review.team_id} | Project: {review.project_name}</p>
-              <p className="text-sm text-gray-500 bg-purple-100">Review Date: {new Date(review.review_date).toLocaleDateString()}</p>
+          {/* Guide Teams - Semester 7 */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+            <div className="flex items-center bg-white justify-between">
+              <div className='bg-white'>
+                <p className="text-gray-600 text-sm bg-white font-medium">Guide Teams (S7)</p>
+                <p className="text-3xl font-bold bg-white text-gray-900 mt-1">
+                  {GuideTeams.filter((team) => team.team_semester === 7).length}
+                </p>
+              </div>
+              <div className="bg-blue-100 p-3 rounded-full">
+                <Users className="w-6 h-6 bg-blue-100 text-blue-600" />
+              </div>
             </div>
-          ))}
+          </div>
 
+          {/* Expert Teams - Semester 5 */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+            <div className="flex items-center bg-white justify-between">
+              <div className='bg-white'>
+                <p className="text-gray-600 bg-white text-sm font-medium">Expert Teams (S5)</p>
+                <p className="text-3xl font-bold bg-white text-gray-900 mt-1">
+                  {SubTeams.filter((team) => team.team_semester === 5).length}
+                </p>
+              </div>
+              <div className="bg-purple-100 p-3 rounded-full">
+                <Users className="w-6 h-6 bg-purple-100 text-purple-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Expert Teams - Semester 7 */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+            <div className="flex bg-white items-center justify-between">
+              <div className='bg-white'>
+                <p className="text-gray-600 bg-white text-sm font-medium">Expert Teams (S7)</p>
+                <p className="text-3xl bg-white font-bold text-gray-900 mt-1">
+                  {SubTeams.filter((team) => team.team_semester === 7).length}
+                </p>
+              </div>
+              <div className="bg-purple-100 p-3 rounded-full">
+                <Users className="w-6 h-6 bg-purple-100 text-purple-600" />
+              </div>
+            </div>
+          </div>
         </div>
-      )}
 
-      {/* Teams Section */}
-      <div className="grid grid-cols-1 gap-8">
-        {/* Guide Teams */}
-        <section className="bg-white rounded shadow p-6 overflow-x-auto">
-          <h2 className="text-xl font-bold mb-4 text-gray-800 bg-white">Guide Teams</h2>
-          {GuideTeams.length > 0 ? (
-            <table className="min-w-full border-t bg-white text-left p-2 text-md text-gray-700">
-              <thead className="bg-white">
-                <tr className='bg-white'>
-                  <th className="px-4 py-2 border-b bg-white">Team ID</th>
-                  <th className="px-4 py-2 border-b bg-white">Project Name</th>
-                  <th className="px-4 py-2 border-b bg-white">Semester</th>
-                  <th className="px-4 py-2 border-b bg-white">Verified Weeks</th>
-                </tr>
-              </thead>
-              <tbody>
-                {GuideTeams.map((team) => (
-                  <tr
-                    key={team.from_team_id}
-                    className="bg-white hover:bg-gray-100 cursor-pointer"
-                    onClick={() => navigate(`team-details/${team.from_team_id}`)}
-                  >
 
-                    <td className="px-4 py-2 border-b bg-white">{team.from_team_id}</td>
-                    <td className="px-4 py-2 border-b bg-white">{team.project_name}</td>
-                    <td className="px-4 py-2 border-b bg-white">{team.team_semester}</td>
-                    <td className="px-4 py-2 border-b bg-white">
-                      <span className='bg-white'>
-                        {team.verifiedWeeks}/12
-                      </span>
-                      {(() => {
-                        const teamMembers = progressMap[team.from_team_id];
-                        const nextWeek = `week${team.verifiedWeeks + 1}_progress`;
+        {/* Notifications Panel */}
+        {showNotifications && (
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-start justify-end pt-20 pr-6">
+            <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-md max-h-[80vh] overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+                <button
+                  onClick={() => setShowNotifications(false)}
+                  className="p-2  rounded-full transition-colors duration-200"
+                >
+                  <X className="w-8 pl-2 pr-2 h-8 rounded-full hover:bg-white text-gray-500" />
+                </button>
+              </div>
 
-                        if (Array.isArray(teamMembers) && teamMembers.length > 0) {
-                          const allUpdated = teamMembers.every(member =>
-                            member[nextWeek] && member[nextWeek].trim() !== ''
-                          );
+              <div className="p-6 overflow-y-auto max-h-96">
+                {totalNotifications === 0 ? (
+                  <div className="text-center py-8">
+                    <Bell className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">No pending notifications</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {guideRequests.map((req) => renderRequestCard(req, "guide"))}
+                    {expertRequests.map((req) => renderRequestCard(req, "expert"))}
 
-                          if (allUpdated) {
-                            return (
-                              <span className="ml-4 bg-white text-green-600 text-sm">
-                                Weekly log Updated
+                    {upcomingGuideReviews.map((review) => (
+                      <div
+                        key={`guide_review_${review.request_id}`}
+                        onClick={() => navigate("/guide/review_progress")}
+                        className="bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-500 p-4 rounded-lg cursor-pointer hover:shadow-md transition-all duration-200"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <Calendar className="w-4 h-4 text-blue-600" />
+                          <span className="text-blue-800 font-semibold text-sm">Upcoming Guide Review</span>
+                        </div>
+                        <p className="text-gray-700 font-medium">{review.project_name}</p>
+                        <p className="text-gray-600 text-sm">Team: {review.team_id}</p>
+                        <p className="text-gray-500 text-xs mt-1">
+                          {new Date(review.review_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+
+                    {upcomingExpertReviews.map((review) => (
+                      <div
+                        key={`expert_review_${review.request_id}`}
+                        onClick={() => navigate("/guide/review_progress")}
+                        className="bg-gradient-to-r from-purple-50 to-purple-100 border-l-4 border-purple-500 p-4 rounded-lg cursor-pointer hover:shadow-md transition-all duration-200"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <Calendar className="w-4 h-4 text-purple-600" />
+                          <span className="text-purple-800 font-semibold text-sm">Upcoming Expert Review</span>
+                        </div>
+                        <p className="text-gray-700 font-medium">{review.project_name}</p>
+                        <p className="text-gray-600 text-sm">Team: {review.team_id}</p>
+                        <p className="text-gray-500 text-xs mt-1">
+                          {new Date(review.review_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Teams Section */}
+        <div className="space-y-8">
+          {/* Guide Teams */}
+          <section className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-5 border-b bg-white border-gray-200">
+              <div className="flex bg-white items-center gap-3">
+                <div className="bg-blue-100 p-2 rounded-full">
+                  <Users className="w-5 h-5 bg-blue-100 text-blue-600" />
+                </div>
+                <h2 className="text-xl font-bold bg-white text-gray-900">Guide Teams</h2>
+
+              </div>
+            </div>
+
+            {GuideTeams.length > 0 ? (
+              <div className="overflow-x-auto bg-white">
+                <table className="w-full bg-white">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="bg-white px-6 py-4 text-left text-sm font-semibold text-gray-900">Team</th>
+                      <th className="bg-white px-6 py-4 text-left text-sm font-semibold text-gray-900">Project</th>
+                      <th className="bg-white px-6 py-4 text-left text-sm font-semibold text-gray-900">Semester</th>
+                      <th className="bg-white px-6 py-4 text-left text-sm font-semibold text-gray-900">Progress</th>
+                      <th className="bg-white px-6 py-4 text-left text-sm font-semibold text-gray-900"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {GuideTeams.map((team, index) => {
+                      const teamMembers = progressMap[team.from_team_id];
+                      const nextWeek = `week${team.verifiedWeeks + 1}_progress`;
+                      const allUpdated = Array.isArray(teamMembers) && teamMembers.length > 0 &&
+                        teamMembers.every(member => member[nextWeek] && member[nextWeek].trim() !== '');
+
+                      return (
+                        <tr
+                          key={team.from_team_id}
+                          className="hover:bg-gray-50 cursor-pointer transition-colors duration-200"
+                          onClick={() => navigate(`team-details/${team.from_team_id}`)}
+                        >
+                          <td className="px-6 py-4 bg-white ">
+                            <div className="flex bg-white items-center gap-3">
+                              <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                                {team.from_team_id}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 bg-white ">
+                            <div className="font-medium bg-white  text-gray-900">{team.project_name}</div>
+                          </td>
+                          <td className="px-6 py-4 bg-white ">
+                            <span className=" bg-white text-gray-600">{team.team_semester}</span>
+                          </td>
+                          <td className="px-6 py-4 bg-white ">
+                            <div className="flex bg-white  items-center gap-3">
+                              <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-20">
+                                <div
+                                  className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(team.verifiedWeeks)}`}
+                                  style={{ width: `${(team.verifiedWeeks / 12) * 100}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-sm  bg-white font-medium text-gray-900">
+                                {team.verifiedWeeks}/12
                               </span>
-                            );
-                          }
-                        }
-                        return null;
-                      })()}
+                              {allUpdated && (
+                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                                  Updated
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 bg-white  py-4">
+                            <ChevronRight className="w-5 h-5 bg-white  text-gray-400" />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="px-6 py-12 text-center">
+                <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No guide teams found</p>
+              </div>
+            )}
+          </section>
 
-                    </td>
+          {/* Subexpert Teams */}
+          <section className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-5 border-b bg-white border-gray-200">
+              <div className="flex items-center bg-white gap-3">
+                <div className="bg-purple-100 p-2 rounded-full">
+                  <Users className="w-5 h-5 bg-purple-100 text-purple-600" />
+                </div>
+                <h2 className="text-xl font-bold bg-white  text-gray-900">Subexpert Teams</h2>
+              </div>
+            </div>
 
-
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="text-gray-500 bg-white">No Guide teams found.</p>
-          )}
-        </section>
-
-        {/* Subexpert Teams */}
-        <section className="bg-white rounded shadow p-6 overflow-x-auto">
-          <h2 className="text-xl font-bold mb-4 text-gray-800 bg-white">Subexpert Teams</h2>
-          {SubTeams.length > 0 ? (
-            <table className="min-w-full border-t text-left text-md text-gray-700">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-4 py-2 border-b bg-white">Team ID</th>
-                  <th className="px-4 py-2 border-b bg-white">Project Name</th>
-                  <th className="px-4 py-2 border-b bg-white">Semester</th>
-                  <th className="px-4 py-2 border-b bg-white">Completed Reviews</th>
-
-                </tr>
-              </thead>
-              <tbody>
-                {SubTeams.map((team) => (
-                  <tr key={team.from_team_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 border-b bg-white">{team.from_team_id}</td>
-                    <td className="px-4 py-2 border-b bg-white">{team.project_name}</td>
-                    <td className="px-4 py-2 border-b bg-white">{team.team_semester}</td>
-                    <td className="px-4 py-2 border-b bg-white">
-                      {completedReviewMap[team.from_team_id] || 0}/2
-                    </td>
-                  </tr>
-
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="text-gray-500 bg-white">No Subexpert teams found.</p>
-          )}
-        </section>
+            {SubTeams.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 bg-white py-4 text-left text-sm font-semibold text-gray-900">Team</th>
+                      <th className="px-6 bg-white py-4 text-left text-sm font-semibold text-gray-900">Project</th>
+                      <th className="px-6 bg-white py-4 text-left text-sm font-semibold text-gray-900">Semester</th>
+                      <th className="px-6 bg-white py-4 text-left text-sm font-semibold text-gray-900">Reviews</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {SubTeams.map((team) => (
+                      <tr key={team.from_team_id} className="hover:bg-gray-50 transition-colors duration-200">
+                        <td className="px-6 bg-white  py-4">
+                          <div className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium inline-block">
+                            {team.from_team_id}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 bg-white ">
+                          <div className="font-medium bg-white  text-gray-900">{team.project_name}</div>
+                        </td>
+                        <td className="px-6 py-4 bg-white ">
+                          <span className=" bg-white text-gray-600">{team.team_semester}</span>
+                        </td>
+                        <td className="px-6 py-4 bg-white ">
+                          <div className="flex items-center bg-white  gap-2">
+                            <span className="text-sm font-medium bg-white  text-gray-900">
+                              {completedReviewMap[team.from_team_id] || 0}/2
+                            </span>
+                            <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-16">
+                              <div
+                                className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${((completedReviewMap[team.from_team_id] || 0) / 2) * 100}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="px-6 py-12 text-center">
+                <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No subexpert teams found</p>
+              </div>
+            )}
+          </section>
+        </div>
       </div>
     </div>
   );
