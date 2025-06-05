@@ -269,7 +269,6 @@ useEffect(() => {
                 </div>
               ))}
             </div>
-
           </div>
 
           {/* Teams Section */}

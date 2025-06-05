@@ -17,6 +17,9 @@ const Progress_Update = () => {
   const [currentWeekStatus, setCurrentWeekStatus] = useState(null);
   const [isAlreadyUpdated, setIsAlreadyUpdated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [currentRemarks, setCurrentRemarks] = useState("");
+  const [currentReason, setCurrentReason] = useState("");
+
 
   const determineCurrentWeek = (deadlineData) => {
     const today = new Date().toISOString().split("T")[0];
@@ -64,7 +67,20 @@ const Progress_Update = () => {
       setReviewHistory(data);
 
       const currentReview = data.find((r) => r.week_number === currentWeekIndex);
+      
       const prevReview = data.find((r) => r.week_number === currentWeekIndex - 1);
+
+      if (currentReview) {
+        setCurrentWeekStatus(currentReview.status || null);
+        setCurrentRemarks(currentReview.remarks || "");
+        setCurrentReason(currentReview.reason || "");
+      
+        if (currentReview.status === "reject") {
+          setCanEdit(true);
+          setDescription(currentReview.progress);
+        }
+      }
+
 
       if (currentReview) {
         setCurrentWeekStatus(currentReview.status || null);
@@ -135,15 +151,20 @@ const Progress_Update = () => {
   }
 
   let statusMessage = null;
+  let details = null;
+  
   if (currentWeekStatus === "accept") {
     statusMessage = "✅ This week’s progress is accepted by the guide.";
+    details = currentRemarks;
   } else if (currentWeekStatus === "reject") {
     statusMessage = "❌ This week’s progress was rejected. Please update it.";
+    details = currentReason;
   } else if (isAlreadyUpdated && !canEdit) {
     statusMessage = canUpdate
       ? "⏳ Resubmission of your progress of this week is updated, wait for guide verification."
       : "⏳ Progress of this week is updated, wait for guide verification.";
   }
+
 
   return (
     <div className="p-6 max-w-3xl mx-auto font-sans">
@@ -154,6 +175,11 @@ const Progress_Update = () => {
 
       {statusMessage && (
         <p className="text-center mt-6 font-semibold text-gray-700">{statusMessage}</p>
+      )}
+       {details  && (
+        <div>
+        <h3 className="text-center mt-6 font-semibold text-gray-700">{details}</h3>
+        </div>
       )}
 
       {(canUpdate || canEdit) && (
