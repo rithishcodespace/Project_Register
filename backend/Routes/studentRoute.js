@@ -714,7 +714,7 @@ router.get('/student/get_review_history/:team_id',(req,res,next) => {
     let sql = "select * from weekly_logs_verification where team_id = ?";
     db.query(sql,[team_id],(error,result) => {
       if(error)return next(error);
-      if(result.length === 0)return res.send('weekly logs history for your team is not found!');
+      
       res.send(result);
     })
   }
