@@ -108,7 +108,9 @@ const Guide_queries = () => {
               </div>
             ))
         ) : (
-          <p className="text-center text-gray-500">No queries available at the moment.</p>
+          <p className="text-center text-gray-400 font-light tracking-wide">
+            — currently no active queries —
+          </p>
         )}
       </div>
     </div>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import ProjectFileUpload from "./ProjectFileUpload";
 import instance from "../../utils/axiosInstance";
 import { Link } from "react-router-dom";
 
@@ -11,49 +10,48 @@ const Progress_Update = () => {
   const [description, setDescription] = useState("");
   const [canUpdate, setCanUpdate] = useState(false);
   const [canEdit, setCanEdit] = useState(false);
-  const [currentWeek, setCurrentWeek] = useState("");
-  const [nextWeekToUpdate, setNextWeekToUpdate] = useState("");
-  const [deadlines, setDeadlines] = useState({});
-  const [loading, setLoading] = useState(true);
   const [currentWeekIndex, setCurrentWeekIndex] = useState(null);
+  const [currentWeekKey, setCurrentWeekKey] = useState("");
+  const [deadlines, setDeadlines] = useState({});
   const [reviewHistory, setReviewHistory] = useState([]);
-  const [previousWeekStatus, setPreviousWeekStatus] = useState(null);
+  const [currentWeekStatus, setCurrentWeekStatus] = useState(null);
+  const [isAlreadyUpdated, setIsAlreadyUpdated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const determineWeekFromDate = async (deadlineData) => {
-    const today = new Date();
-    const todayStr = today.toISOString().split("T")[0];
-    let i = 1;
-
-    for (; i <= 12; i++) {
-      const weekKey = `week${i}`;
-      const deadlineStr = deadlineData[weekKey];
-      if (!deadlineStr) continue;
-
-      if (deadlineStr >= todayStr) {
-        setCurrentWeek(`Week ${i}`);
-        setNextWeekToUpdate(weekKey);
+  const determineCurrentWeek = (deadlineData) => {
+    const today = new Date().toISOString().split("T")[0];
+    for (let i = 1; i <= 12; i++) {
+      const key = `week${i}`;
+      if (deadlineData[key] && today <= deadlineData[key]) {
         setCurrentWeekIndex(i);
+        setCurrentWeekKey(key);
         break;
       }
     }
-
-    if (i > 12) {
-      setCanUpdate(false);
-    }
   };
 
-  const fetchDeadlinesAndDetermineWeek = async () => {
+  const fetchDeadlines = async () => {
     try {
       const teamId = teamSelector[0]?.team_id;
       if (!teamId) return;
       const response = await instance.get(`/guide/fetchDeadlines/${teamId}`);
-      const deadlineData = response.data[0];
-      setDeadlines(deadlineData);
-      await determineWeekFromDate(deadlineData);
+      const data = response.data[0];
+      setDeadlines(data);
+      determineCurrentWeek(data);
     } catch (error) {
-      console.error("Failed to fetch deadlines:", error);
-    } finally {
-      setLoading(false);
+      console.error("Deadline fetch failed", error);
+    }
+  };
+
+  const checkIfAlreadyUpdated = async (teamId, week, reg_num) => {
+    try {
+      const res = await instance.get(
+        `/student/checks_whether_log_updated/${teamId}/${week}/${reg_num}`
+      );
+      return res.data === "Already Updated!";
+    } catch (err) {
+      console.error("Check update failed", err);
+      return false;
     }
   };
 
@@ -61,57 +59,47 @@ const Progress_Update = () => {
     try {
       const teamId = teamSelector[0].team_id;
       const response = await instance.get(`/student/get_review_history/${teamId}`);
+      const data = typeof response.data !== "string" ? response.data : [];
 
-      if (typeof response.data !== "string") {
-        const data = response.data;
-        setReviewHistory(data);
+      setReviewHistory(data);
 
-        const currentWeekNum = currentWeekIndex;
-        const previousWeekKey = currentWeekNum > 1 ? currentWeekNum - 1 : null;
+      const currentReview = data.find((r) => r.week_number === currentWeekIndex);
+      const prevReview = data.find((r) => r.week_number === currentWeekIndex - 1);
 
-        const previousReview = data.find((entry) => entry.week_number === previousWeekKey);
-        const currentReview = data.find((entry) => entry.week_number === currentWeekNum);
+      if (currentReview) {
+        setCurrentWeekStatus(currentReview.status || null);
+        if (currentReview.status === "reject") {
+          setCanEdit(true);
+          setDescription(currentReview.progress);
+        }
+      }
 
-        if (previousReview?.status) setPreviousWeekStatus(previousReview.status);
+      const updated = await checkIfAlreadyUpdated(teamId, currentWeekIndex, reg_num);
+      setIsAlreadyUpdated(updated);
 
-        if (currentReview) {
-          if (currentReview.status === "reject") {
-            setCanEdit(true);
-            setCanUpdate(false);
-            setDescription(currentReview.progress);
-          } else {
-            setCanEdit(false);
-            setCanUpdate(false);
-          }
-        } else {
-          if (currentWeekNum === 1 || previousReview?.status === "accept") {
-            setCanUpdate(true);
-            setCanEdit(false);
-          } else {
-            setCanUpdate(false);
-            setCanEdit(false);
-          }
+      if (!currentReview) {
+        if (!updated && (currentWeekIndex === 1 || prevReview?.status === "accept")) {
+          setCanUpdate(true);
         }
       }
     } catch (error) {
-      console.error("Failed to fetch review history:", error);
+      console.error("Review history fetch failed", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSubmit = async () => {
     const teamId = teamSelector[0].team_id;
     try {
-      await instance.post(
-        `/student/update_progress/${nextWeekToUpdate}/${reg_num}/${teamId}`,
-        { progress: description }
-      );
-      alert("Progress submitted successfully!");
+      await instance.post(`/student/update_progress/${currentWeekKey}/${reg_num}/${teamId}`, {
+        progress: description,
+      });
+      alert("Progress submitted!");
       setCanUpdate(false);
-      setCanEdit(false);
-      setDescription("");
-      fetchReviewHistory(); // Refresh status
+      fetchReviewHistory();
     } catch (error) {
-      alert("Failed to submit progress.");
+      alert("Submit failed");
       console.error(error);
     }
   };
@@ -120,22 +108,20 @@ const Progress_Update = () => {
     const teamId = teamSelector[0].team_id;
     try {
       await instance.patch(
-        `/student/edit_submitted_progress/${teamId}/${nextWeekToUpdate}_progress/${reg_num}`,
+        `/student/edit_submitted_progress/${teamId}/${currentWeekIndex}/${reg_num}`,
         { newProgress: description }
       );
-      alert("Progress updated successfully!");
+      alert("Progress updated!");
       setCanEdit(false);
-      setCanUpdate(false);
-      setDescription("");
-      fetchReviewHistory(); // Refresh status
+      fetchReviewHistory();
     } catch (error) {
-      alert("Failed to edit progress.");
+      alert("Edit failed");
       console.error(error);
     }
   };
 
   useEffect(() => {
-    fetchDeadlinesAndDetermineWeek();
+    fetchDeadlines();
   }, []);
 
   useEffect(() => {
@@ -145,7 +131,18 @@ const Progress_Update = () => {
   }, [currentWeekIndex]);
 
   if (loading) {
-    return <div className="text-center mt-10 text-blue-600 font-semibold">Fetching your progress status...</div>;
+    return <div className="text-center mt-10 text-blue-600 font-semibold">Loading progress status...</div>;
+  }
+
+  let statusMessage = null;
+  if (currentWeekStatus === "accept") {
+    statusMessage = "✅ This week’s progress is accepted by the guide.";
+  } else if (currentWeekStatus === "reject") {
+    statusMessage = "❌ This week’s progress was rejected. Please update it.";
+  } else if (isAlreadyUpdated && !canEdit) {
+    statusMessage = canUpdate
+      ? "⏳ Resubmission of your progress of this week is updated, wait for guide verification."
+      : "⏳ Progress of this week is updated, wait for guide verification.";
   }
 
   return (
@@ -155,29 +152,17 @@ const Progress_Update = () => {
         View Weekly Logs History
       </Link>
 
-      {(!canUpdate && !canEdit && !loading) && (
-        <div className="text-center mt-6 text-green-600 font-semibold">
-          You have already submitted your progress for this week.
-        </div>
+      {statusMessage && (
+        <p className="text-center mt-6 font-semibold text-gray-700">{statusMessage}</p>
       )}
 
-      {(canUpdate || canEdit) ? (
+      {(canUpdate || canEdit) && (
         <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-lg mt-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-3">{currentWeek}</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-3">Week {currentWeekIndex}</h2>
           <p className="text-sm text-gray-500 mb-2">
             Deadline:{" "}
-            <span className="font-medium text-gray-700">
-              {deadlines[nextWeekToUpdate] || "N/A"}
-            </span>
+            <span className="font-medium text-gray-700">{deadlines[currentWeekKey]}</span>
           </p>
-          {previousWeekStatus && currentWeekIndex !== 1 && (
-            <p className="text-sm text-gray-600 mb-4">
-              Previous Week Status:{" "}
-              <span className="font-semibold text-gray-800">
-                {previousWeekStatus}
-              </span>
-            </p>
-          )}
           <textarea
             className="w-full p-4 border border-gray-300 rounded-xl text-gray-800 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             rows={6}
@@ -202,10 +187,6 @@ const Progress_Update = () => {
               </button>
             )}
           </div>
-        </div>
-      ) : (
-        <div className="text-center mt-10 text-red-600 font-semibold">
-          Cannot update progress now. Either all weeks are completed, or previous week's review not accepted.
         </div>
       )}
     </div>

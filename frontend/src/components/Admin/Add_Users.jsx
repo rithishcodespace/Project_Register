@@ -6,14 +6,16 @@ function Add_Users() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('');
+  const [role, setRole] = useState('admin');
   const [RegisterNumber, setRegisterNumber] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [subject, setSubject] = useState('');
+  const [subject, setSubject] = useState('CSE');
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
-    if (!name || !password || !role || !RegisterNumber) {
+    console.log(name,password,email);
+    
+    if (!name || !password ||!email) {
       alert('Please fill in all fields');
       return;
     }
@@ -75,10 +77,7 @@ function Add_Users() {
               className="w-full px-4 py-2 border bg-white  border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option className='bg-white' value="admin">Admin</option>
-              <option className='bg-white' value="student">Student</option>
-              <option className='bg-white' value="teacher">Staff</option>
-              <option className='bg-white' value="guide">Guide</option>
-              <option className='bg-white' value="sub_expert">Subject Expert</option>
+              <option className='bg-white' value="staff">Staff</option>
             </select>
           </div>
 
@@ -122,7 +121,7 @@ function Add_Users() {
 
           
 
-          {(role === 'guide' || role === 'ext-guide' || role === 'sub_expert') && (
+          {(role === 'staff') && (
             <div className="mb-5 bg-white ">
               <label className="block text-sm bg-white  text-black mb-2">Phone Number</label>
               <input
@@ -135,7 +134,7 @@ function Add_Users() {
             </div>
           )}
 
-          {(role === 'sub_expert' || role === 'student') && (
+          {(role === 'staff') && (
             <div className="mb-5 bg-white ">
               <label className=" bg-white block text-sm text-black mb-2">Cluster</label>
               <select

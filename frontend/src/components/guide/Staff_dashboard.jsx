@@ -167,7 +167,7 @@ function Staff_dashboard() {
         : `/sub_expert/accept_reject/${status}/${team_id}/${semester}/${reg_num}`;
 
     try {
-      const res = await instance.patch(endpoint, { reason: reason || "Accepted" });
+      const res = await instance.patch(endpoint, { reason: reason || "accept" });
       alert(res.data);
       fetchRequests();
       setReasonMap((prev) => {
@@ -192,19 +192,19 @@ function Staff_dashboard() {
 
 
   const renderRequestCard = (req, type) => (
-    <div key={`${type}_${req.from_team_id}`} className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 mb-3 hover:shadow-md transition-all duration-200">
+    <div key={`${type}_${req.from_team_id}`} className="bg-gradient-to-r bg-white border-blue-200 rounded-xl p-4 mb-3 hover:shadow-md transition-all duration-200">
       <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
+        <div className="flex-1 bg-white">
+          <div className="flex items-center bg-white gap-2 mb-2">
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${type === 'guide' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
               }`}>
-              {type.charAt(0).toUpperCase() + type.slice(1)} Request
+              {type.charAt(0).toUpperCase() + type.slice(1)} Request  
             </span>
           </div>
-          <p className="font-semibold text-gray-900 mb-1">
-            Team <span className="text-blue-600">{req.from_team_id}</span>
+          <p className="font-semibold bg-white text-gray-900 mb-1">
+            Team <span className=" bg-white text-blue-600">{req.from_team_id}</span>
           </p>
-          <p className="text-gray-700 text-sm mb-3">{req.project_name || req.project_id}</p>
+          <p className="text-gray-700 text-sm mb-3 bg-white">{req.project_name || req.project_id}</p>
 
           <input
             type="text"
@@ -216,15 +216,15 @@ function Staff_dashboard() {
                 [`${type}_${req.from_team_id}`]: e.target.value,
               })
             }
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent mb-3"
+            className="w-full border bg-white border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent mb-3"
           />
 
-          <div className="flex gap-2">
+          <div className="flex bg-white gap-2">
             <button
               onClick={() => handleAction(type, "accept", req.from_team_id, req.team_semester)}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1"
+              className="bg-green-600 group hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1"
             >
-              <CheckCircle className="w-4 h-4" />
+              <CheckCircle className="w-4 group-hover:bg-green-700 bg-green-600 h-4 transition-colors duration-200 " />
               Accept
             </button>
             <button
