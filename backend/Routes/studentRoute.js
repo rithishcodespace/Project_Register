@@ -1153,6 +1153,24 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
   }
 });
 
+// fetches the history of review requests sent by my team -> tl
+router.get('/student/get_reivew_request_history/:team_id',(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest('Team id not found!'));
+    let sql = "select * from review_requests where team_id = ?";
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound('history of your team is not found!'));
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 // fetches the scheduled reviews for my team                            
 
 router.get("/student/schedule_review/:project_id", userAuth, (req, res, next) => {
@@ -1183,7 +1201,7 @@ router.get('/student/fetch_upcoming_reviews/:team_id',(req,res,next) => {
   try{
     const{team_id} = req.params;
     if(!team_id) return next(createError.BadRequest('team is undefined!'));
-    let sql = `SELECT * FROM scheduled_reviews WHERE team_id = ? AND attendance IS NULL AND TIMESTAMP(review_date, start_time) >= CURRENT_TIMESTAMP`
+    let sql = `SELECT * FROM scheduled_reviews WHERE expert_reg_num = ? AND (attendance IS NULL OR attendance = '')AND CONCAT(review_date, ' ', start_time) >= NOW() - INTERVAL 3 HOUR;`;
     db.query(sql,[team_id],(error,result) => {
       if(error)return next(error);
       if(result.length === 0)return next(createError.NotFound('meeting links not found!'));
