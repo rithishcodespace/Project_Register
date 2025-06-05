@@ -114,16 +114,29 @@ function sendReminderToTeam(team_id) {
 // Run every 10 minutes
 
 cron.schedule("*/10 * * * *", () => {
-  console.log("Running cron job to mark absent...");
+  console.log(" Running cron job to mark attendance...");
 
-  const sql = `UPDATE scheduled_reviews SET attendance = 'absent' WHERE attendance IS NULL AND (review_date < CURDATE() OR (review_date = CURDATE() AND start_time < CURTIME()))`;
+  // Mark as 'present' if end_time is filled but attendance is still null
+  const markPresentSQL = `UPDATE scheduled_reviews SET attendance = 'present' WHERE attendance IS NULL AND end_time IS NOT NULL`;
 
-  db.query(sql, (err, result) => {
-    if (err) {
-      console.error("Error running absentee cron job:", err);
+  db.query(markPresentSQL, (err1, result1) => {
+    if (err1) {
+      console.error(" Error marking present:", err1);
     } else {
-      console.log("Absent marking complete. Rows affected:", result.affectedRows);
+      console.log(" Marked present:", result1.affectedRows);
     }
+
+    //Mark as 'absent' if attendance is null and 3 hours have passed since start_time
+    const markAbsentSQL = `UPDATE scheduled_reviews SET attendance = 'absent' WHERE attendance IS NULL AND end_time IS NULL AND TIMESTAMP(review_date, start_time) <= NOW() - INTERVAL 3 HOUR`;
+
+    db.query(markAbsentSQL, (err2, result2) => {
+      if (err2) {
+        console.error(" Error marking absent:", err2);
+      } else {
+        console.log(" Marked absent:", result2.affectedRows);
+      }
+    });
   });
 });
+
 

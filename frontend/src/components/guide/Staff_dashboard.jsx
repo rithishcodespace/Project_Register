@@ -15,27 +15,47 @@ function Staff_dashboard() {
   const navigate = useNavigate();
   const [upcomingGuideReviews, setUpcomingGuideReviews] = useState([]);
   const [upcomingExpertReviews, setUpcomingExpertReviews] = useState([]);
+  const [completedReviewMap, setCompletedReviewMap] = useState({});
 
 
   const reg_num = useSelector((state) => state.userSlice.reg_num);
   const name = useSelector((state) => state.userSlice.name);
 
   // Fetch verified weeks for teams
-const fetchVerifiedWeeks = async (teams) => {
-  if (!Array.isArray(teams)) return []; // prevent .map crash
+  const fetchVerifiedWeeks = async (teams) => {
+    if (!Array.isArray(teams)) return []; // prevent .map crash
 
-  const updated = await Promise.all(
-    teams.map(async (team) => {
+    const updated = await Promise.all(
+      teams.map(async (team) => {
+        try {
+          const res = await instance.get(`/guide/no_of_weeks_verified/${team.from_team_id}`);
+          return { ...team, verifiedWeeks: res.data || 0 };
+        } catch {
+          return { ...team, verifiedWeeks: 0 };
+        }
+      })
+    );
+    return updated;
+  };
+
+  const fetchCompletedReviews = async (teams) => {
+    const reviewMap = {};
+    for (const team of teams) {
       try {
-        const res = await instance.get(`/guide/no_of_weeks_verified/${team.from_team_id}`);
-        return { ...team, verifiedWeeks: res.data || 0 };
-      } catch {
-        return { ...team, verifiedWeeks: 0 };
+        const res = await instance.get(`/sub_expert/fetch_completed_reviews/${team.from_team_id}`);
+        if (Array.isArray(res.data)) {
+          reviewMap[team.from_team_id] = res.data.length;
+        } else {
+          reviewMap[team.from_team_id] = 0;
+        }
+      } catch (err) {
+        console.error(`Error fetching completed reviews for ${team.from_team_id}:`, err.response?.data || err.message);
+        reviewMap[team.from_team_id] = 0;
       }
-    })
-  );
-  return updated;
-};
+    }
+    setCompletedReviewMap(reviewMap);
+  };
+
 
   // Fetch progress data ONLY for guide teams, store results in progressMap
   const fetchProgressForTeams = async (teams) => {
@@ -106,23 +126,25 @@ const fetchVerifiedWeeks = async (teams) => {
         setExpertRequests(typeof expertRes.value.data === 'string' ? [] : expertRes.value.data);
       }
       if (guideTeamsRes.status === "fulfilled") {
-  const rawGuideTeams = guideTeamsRes.value.data;
+        const rawGuideTeams = guideTeamsRes.value.data;
 
-  // Check if the response is an array
-  const validGuideTeams = Array.isArray(rawGuideTeams) ? rawGuideTeams : [];
+        // Check if the response is an array
+        const validGuideTeams = Array.isArray(rawGuideTeams) ? rawGuideTeams : [];
 
-  const updatedGuideTeams = await fetchVerifiedWeeks(validGuideTeams);
-  setGuideTeams(updatedGuideTeams);
+        const updatedGuideTeams = await fetchVerifiedWeeks(validGuideTeams);
+        setGuideTeams(updatedGuideTeams);
 
-  // Fetch progress ONLY for guide teams
-  fetchProgressForTeams(updatedGuideTeams);
-}
+        // Fetch progress ONLY for guide teams
+        fetchProgressForTeams(updatedGuideTeams);
+      }
 
       if (subTeamsRes.status === "fulfilled") {
-  const rawSubTeams = subTeamsRes.value.data;
-  const validSubTeams = Array.isArray(rawSubTeams) ? rawSubTeams : [];
-  setSubTeams(validSubTeams);
-}
+        const rawSubTeams = subTeamsRes.value.data;
+        const validSubTeams = Array.isArray(rawSubTeams) ? rawSubTeams : [];
+        setSubTeams(validSubTeams);
+
+        fetchCompletedReviews(validSubTeams);
+      }
 
     } catch (error) {
       console.error("Error fetching requests:", error);
@@ -304,17 +326,25 @@ const fetchVerifiedWeeks = async (teams) => {
                         {team.verifiedWeeks}/12
                       </span>
                       {(() => {
-                        const progress = progressMap[team.from_team_id]?.[0];
+                        const teamMembers = progressMap[team.from_team_id];
                         const nextWeek = `week${team.verifiedWeeks + 1}_progress`;
-                        if (progress && progress[nextWeek]) {
-                          return (
-                            <span className="ml-4 bg-white text-green-600 text-sm">
-                              Weekly log Updated
-                            </span>
+
+                        if (Array.isArray(teamMembers) && teamMembers.length > 0) {
+                          const allUpdated = teamMembers.every(member =>
+                            member[nextWeek] && member[nextWeek].trim() !== ''
                           );
+
+                          if (allUpdated) {
+                            return (
+                              <span className="ml-4 bg-white text-green-600 text-sm">
+                                Weekly log Updated
+                              </span>
+                            );
+                          }
                         }
                         return null;
                       })()}
+
                     </td>
 
 
@@ -337,6 +367,8 @@ const fetchVerifiedWeeks = async (teams) => {
                   <th className="px-4 py-2 border-b bg-white">Team ID</th>
                   <th className="px-4 py-2 border-b bg-white">Project Name</th>
                   <th className="px-4 py-2 border-b bg-white">Semester</th>
+                  <th className="px-4 py-2 border-b bg-white">Completed Reviews</th>
+
                 </tr>
               </thead>
               <tbody>
@@ -345,7 +377,11 @@ const fetchVerifiedWeeks = async (teams) => {
                     <td className="px-4 py-2 border-b bg-white">{team.from_team_id}</td>
                     <td className="px-4 py-2 border-b bg-white">{team.project_name}</td>
                     <td className="px-4 py-2 border-b bg-white">{team.team_semester}</td>
+                    <td className="px-4 py-2 border-b bg-white">
+                      {completedReviewMap[team.from_team_id] || 0}/2
+                    </td>
                   </tr>
+
                 ))}
               </tbody>
             </table>

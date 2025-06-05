@@ -611,6 +611,25 @@ router.post("/student/update_progress/:week/:reg_num/:team_id",userAuth, (req, r
     }
   });
 
+// brings whether weekly logs accepted or not
+// filter recent status through verified at date and time
+router.get("/student/get_accept_or_reject_status/:team_id/:week_number",(req,res,next) => {
+  try{
+    const{team_id,week_number} = req.params;
+    if(!team_id || !week_number)return next(createError.BadRequest('team_id or week number is not defined!'));
+    let sql = "select * from weekly_logs_verification where team_id = ? and week_number = ?";
+    db.query(sql,[team_id,week_number],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound('status not found!'));
+      res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 
 // brings the details of the project through project_id 
 router.get("/student/get_project_details/:project_id",userAuth,(req,res,next) => {
@@ -677,6 +696,24 @@ router.get("/student/get_project_type/:reg_num",(req,res,next) => {
       if(error)return next(error);
       if(result.length === 0)return res.send("user haven't set their register number!");
       res.send(result.project_type);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+// gets history of weekly_logs_verification
+router.get('/student/get_review_history/:team_id',(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest('team id not defined!'));
+    let sql = "select * from weekly_logs_verification where team_id = ?";
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound('weekly logs history for your team is not found!'));
+      res.send(result);
     })
   }
   catch(error)

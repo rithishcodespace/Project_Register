@@ -9,14 +9,13 @@ function ReviewProjects() {
   const [expertReviewRequests, setExpertReviewRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [guideTeams,setGuideTeams] = useState([])
-  const [ExpertTeams,setExpertTeams] = useState([])
+  const [guideTeams, setGuideTeams] = useState([]);
+  const [expertTeams, setExpertTeams] = useState([]);
   const [acceptingRequestId, setAcceptingRequestId] = useState(null);
   const [meetingLink, setMeetingLink] = useState('');
   const [rejectingRequestId, setRejectingRequestId] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [upcomingReviews, setUpcomingReviews] = useState({});
-
 
   const fetchReviewRequests = async () => {
     try {
@@ -39,69 +38,53 @@ function ReviewProjects() {
   };
 
   const fetchUpcomingReviews = async (teams) => {
-  const reviewMap = {};
-  for (const team of teams) {
-    try {
-      const teamId = team.from_team_id;
-      const res = await instance.get(`/guide/fetch_upcoming_reviews/${teamId}`);
-      reviewMap[teamId] = res.data;
-    } catch (error) {
-      console.log(`No upcoming reviews for team ${team.from_team_id}`);
+    const reviewMap = {};
+    for (const team of teams) {
+      try {
+        const teamId = team.from_team_id;
+        const res = await instance.get(`/guide/fetch_upcoming_reviews/${teamId}`);
+        reviewMap[teamId] = res.data;
+      } catch (error) {
+        console.log(`No upcoming reviews for team ${team.from_team_id}`);
+      }
     }
-  }
-  setUpcomingReviews(reviewMap);
-};
-
-
-useEffect(() => {
-  const fetchGuideRequests = async () => {
-    try {
-      const res = await instance.get(`/guide/fetch_guiding_teams/${guideRegNum}`);
-      setGuideTeams(res.data);
-      fetchUpcomingReviews(res.data); // Fetch reviews after teams are loaded
-    } catch (error) {
-      console.log(error);
-    }
+    setUpcomingReviews(reviewMap);
   };
 
-  if (guideRegNum) {
-    fetchGuideRequests();
-  }
-}, [guideRegNum]);
+  useEffect(() => {
+    const fetchGuideRequests = async () => {
+      try {
+        const res = await instance.get(`/guide/fetch_guiding_teams/${guideRegNum}`);
+        setGuideTeams(res.data);
+        fetchUpcomingReviews(res.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
-
-
-useEffect(() => {
-  const fetchExpertRequests = async () => {
-    try {
-      const res = await instance.get(`/sub_expert/fetch_teams/${guideRegNum}`);
-      setExpertTeams(res.data);
-    } catch (error) {
-      console.log(error);
+    if (guideRegNum) {
+      fetchGuideRequests();
     }
-  };
+  }, [guideRegNum]);
 
-  if (guideRegNum) {
-    fetchExpertRequests();
-  }
-}, [guideRegNum]);
+  useEffect(() => {
+    const fetchExpertRequests = async () => {
+      try {
+        const res = await instance.get(`/sub_expert/fetch_teams/${guideRegNum}`);
+        setExpertTeams(res.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
+    if (guideRegNum) {
+      fetchExpertRequests();
+    }
+  }, [guideRegNum]);
 
   useEffect(() => {
     if (guideRegNum) fetchReviewRequests();
   }, [guideRegNum]);
-
-  const handleMarkAttendance = async (reviewId) => {
-  try {
-    const res = await instance.patch(`/sub_expert/mark_attendance/${reviewId}`);
-    alert(res.data); // "attendance marked successfully!"
-    await fetchUpcomingReviews([...guideTeams]); // Refresh to re-check button visibility
-  } catch (err) {
-    console.error(err);
-    alert(err.response?.data || 'Failed to mark attendance');
-  }
-};
-
 
   const handleReviewAction = async (request, status, isGuide) => {
     try {
@@ -268,46 +251,18 @@ useEffect(() => {
 
       {renderReviewRequests(guideReviewRequests, 'Guide Review Requests', true)}
       {renderReviewRequests(expertReviewRequests, 'Subject Expert Review Requests', false)}
- {Object.entries(upcomingReviews).map(([teamId, reviews]) =>
-  reviews.map((rev, index) => {
-  
- const reviewDateTime = new Date(rev.review_date);
-const deadline = new Date(reviewDateTime);
-deadline.setDate(deadline.getDate() + 1);
-deadline.setHours(23, 59, 59, 999);
 
-const now = new Date();
-const isWithinAttendancePeriod = now >= reviewDateTime && now <= deadline;
-const isAbsent = now > deadline;
-
-
-
-    return (
-      <div key={`${teamId}-${index}`} className="p-3 border rounded bg-white mb-3">
-        <p><strong>Project:</strong> {rev.project_name}</p>
-        <p><strong>Review Title:</strong> {rev.review_title}</p>
-        <p><strong>Date:</strong> {new Date(rev.review_date).toISOString().slice(0, 10)}</p>
-        <p><strong>Time:</strong> {rev.start_time}</p>
-        <p><strong>Meeting Link:</strong> <a href={rev.meeting_link} target="_blank" rel="noreferrer" className="text-blue-600 underline">{rev.meeting_link}</a></p>
-
-       {isWithinAttendancePeriod && (
-  <button
-    onClick={() => handleMarkAttendance(rev.review_id)}
-    className="mt-3 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
-  >
-    Mark Attendance
-  </button>
-)}
-
-{isAbsent && (
-  <p className="mt-3 text-red-600 font-semibold">Attendance: Absent</p>
-)}
-
-      </div>
-    );
-  })
-)}
-
+      {Object.entries(upcomingReviews).map(([teamId, reviews]) =>
+        reviews.map((rev, index) => (
+          <div key={`${teamId}-${index}`} className="p-3 border rounded bg-white mb-3">
+            <p><strong>Project:</strong> {rev.project_name}</p>
+            <p><strong>Review Title:</strong> {rev.review_title}</p>
+            <p><strong>Date:</strong> {new Date(rev.review_date).toISOString().slice(0, 10)}</p>
+            <p><strong>Time:</strong> {rev.start_time}</p>
+            <p><strong>Meeting Link:</strong> <a href={rev.meeting_link} target="_blank" rel="noreferrer" className="text-blue-600 underline">{rev.meeting_link}</a></p>
+          </div>
+        ))
+      )}
     </div>
   );
 }

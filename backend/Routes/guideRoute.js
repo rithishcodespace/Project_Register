@@ -86,7 +86,7 @@ router.patch("/guide/accept_reject/:status/:team_id/:semester/:my_id",userAuth, 
           });
         } else if (status === "reject") {
           // Handle rejection: status already updated in sub_expert_requests
-          let rejectSql = "guide_requests set reason = ? where team_id = ?";
+          let rejectSql = "Update guide_requests set reason = ? where from_team_id = ?";
             db.query(rejectSql,[reason,team_id],(error,result) => {
               if(error)return next(error);
               if(result.affectedRows === 0)return next(createError.BadRequest('reason not updated in requests table!'));
@@ -268,7 +268,8 @@ router.get('/guide/fetch_upcoming_reviews/:team_id',(req,res,next) => {
   try{
     const{team_id} = req.params;
     if(!team_id) return next(createError.BadRequest('team is undefined!'));
-    let sql = `SELECT * FROM scheduled_reviews WHERE team_id = ? AND attendance IS NULL AND TIMESTAMP(review_date, start_time) >= CURRENT_TIMESTAMP`
+    let sql = `SELECT * FROM scheduled_reviews WHERE team_id = ? AND attendance is NULL AND CONCAT(review_date, ' ', start_time) >= NOW()`;
+
     db.query(sql,[team_id],(error,result) => {
       if(error)return next(error);
       if(result.length === 0)return next(createError.NotFound('meeting links not found!'));
@@ -283,9 +284,16 @@ router.get('/guide/fetch_upcoming_reviews/:team_id',(req,res,next) => {
 
 // fetch completed reviews
 
-router.get("/guide/fetch_completed_reviews/:guide_reg_num",(req,res,next) => {
+router.get("/guide/fetch_completed_reviews/:team_id",(req,res,next) => {
   try{
-    
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest('team_id number not found!'));
+    let sql = `SELECT * FROM scheduled_reviews WHERE team_id = ? AND attendance NOT IN ('present', 'absent') AND TIMESTAMP(review_date, start_time) <= NOW() AND TIMESTAMP(review_date, start_time) >= NOW() - INTERVAL 2 DAY`;
+    db.query(sql,[team_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return res.send('No completed reviews within a time internal of 2!');
+      res.send(result);
+    })
   }
   catch(error)
   {
@@ -671,7 +679,7 @@ router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:status/:team_id",u
     const { guide_reg_num, team_id, week,status } = req.params;
     const { remarks,reason } = req.body;
 
-    if (!guide_reg_num || !team_id || !remarks || !week)
+    if (!guide_reg_num || !team_id || !week)
       return next(createError.BadRequest("guide_reg_num, team_id, week, or remarks is missing!"));
 
     const safeStatus = status.toLowerCase();
@@ -699,8 +707,9 @@ router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:status/:team_id",u
         return res.status(403).json({ message: "Guide is not assigned to this team" });
 
       if(status === 'accept'){
+        if(!remarks)return next(createError.BadRequest('remarks is not found!'));
         // Check if already verified
-        const checkSql = `SELECT * FROM weekly_logs_verification WHERE team_id = ? AND week_number = ?`;
+        const checkSql = `SELECT * FROM weekly_logs_verification WHERE team_id = ? AND week_number = ? and is_verified = true`;
         db.query(checkSql, [team_id, weekNum], (error, found) => {
           if (error) return next(error);
           if (found.length > 0)
@@ -718,6 +727,7 @@ router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:status/:team_id",u
         });
       }
       else if(status === 'reject'){
+        if(!reason)return next(createError.BadRequest('reason not found!'));
       // update reject status
       let rejectSql = "update weekly_logs_verification set status = ?,reason = ? where team_id = ? and week_number = ?";
       db.query(rejectSql,[safeStatus,reason,team_id,weekNum],(error1,result1) => {
@@ -725,7 +735,7 @@ router.patch("/guide/verify_weekly_logs/:guide_reg_num/:week/:status/:team_id",u
         if(result1.affectedRows === 0)return next(createError.BadRequest('some rows not selected!'));
         
         // clear the progress in the teams -> for each person
-        const clearSql = `update teams set ${weekNum}_progress = null where team_id  = ?`;
+        const clearSql = `update teams set week${weekNum}_progress = null where team_id  = ?`;
         db.query(clearSql,[team_id],(error2,result2) => {
           if(error2)return next(error2);
           if(result2.affectedRows === 0)return next(createError.BadRequest('some rows not affected!'));
