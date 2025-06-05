@@ -77,9 +77,9 @@ const WeeklyLogsHistory = () => {
                 </td>
                 <td className="px-4 py-2 bg-white">
                   {entry.status === "accept" && entry.remarks
-                    ? "remarks : "+entry.remarks
+                    ? entry.remarks
                     : entry.status === "rejected" && entry.reason
-                    ? "reason : "+entry.reason
+                    ?entry.reason
                     : "—"}
                 </td>
               </tr>

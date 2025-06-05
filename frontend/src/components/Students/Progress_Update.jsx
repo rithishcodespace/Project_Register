@@ -169,11 +169,11 @@ const Progress_Update = () => {
   return (
     <div className="p-6  w-full mx-auto font-sans">
       <h1 className="text-4xl font-semibold text-center text-gray-900 mb-8">Progress Update</h1>
-     <div className="w-full p-2 text-right">
+     {/* <div className="w-full p-2 text-right"> */}
   <Link to="/student/week" className="px-4 py-2 bg-purple-500 rounded hover:bg-purple-700 text-white">
     View Weekly Logs History
   </Link>
-</div>
+{/* </div> */}
 
 
       {statusMessage && (
