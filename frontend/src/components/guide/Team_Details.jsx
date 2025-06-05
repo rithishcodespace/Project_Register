@@ -17,41 +17,54 @@ function Team_Details() {
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const verifiedWeeksRes = await instance.get(`/guide/no_of_weeks_verified/${teamId}`);
+      const verifiedWeekNum = parseInt(verifiedWeeksRes.data);
+      let nextWeek = isNaN(verifiedWeekNum) ? 1 : verifiedWeekNum + 1;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const verifiedWeeksRes = await instance.get(`/guide/no_of_weeks_verified/${teamId}`);
-        const verifiedWeekNum = parseInt(verifiedWeeksRes.data);
-        let nextWeek = isNaN(verifiedWeekNum) ? 1 : verifiedWeekNum + 1;
+      const teamRes = await instance.get(`/guide/gets_entire_team/${teamId}`);
+      const team = teamRes.data;
 
-        const teamRes = await instance.get(`/guide/gets_entire_team/${teamId}`);
-        const team = teamRes.data;
-        setTeamDetails(team);
+      // Fetch names for all team members by their reg_num
+      const updatedTeam = await Promise.all(
+        team.map(async (member) => {
+          try {
+            const nameRes = await instance.get(`/student/get_name_by_reg_number/${member.reg_num}`);
+            return { ...member, name: nameRes.data };
+          } catch (error) {
+            console.error(`Error fetching name for ${member.reg_num}:`, error);
+            return member; // fallback to existing member if name fetch fails
+          }
+        })
+      );
 
-        const progressField = `week${nextWeek}_progress`;
+      setTeamDetails(updatedTeam);
 
-        const allSubmitted = team.every(
-          (member) => member[progressField] && member[progressField].trim() !== ''
-        );
+      const progressField = `week${nextWeek}_progress`;
 
-        setIsWeekComplete(allSubmitted);
-        if (team.length > 0 && team[0][progressField]) {
-          setCurrentWeek(nextWeek);
-        } else {
-          setCurrentWeek(null);
-        }
-      } catch (error) {
-        console.error(error);
-        alert('Error fetching team data');
-      } finally {
-        setLoading(false);
+      const allSubmitted = updatedTeam.every(
+        (member) => member[progressField] && member[progressField].trim() !== ''
+      );
+
+      setIsWeekComplete(allSubmitted);
+      if (updatedTeam.length > 0 && updatedTeam[0][progressField]) {
+        setCurrentWeek(nextWeek);
+      } else {
+        setCurrentWeek(null);
       }
-    };
+    } catch (error) {
+      console.error(error);
+      alert('Error fetching team data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchData();
-  }, [teamId, guideRegNum]);
+  fetchData();
+}, [teamId, guideRegNum]);
 
   const handleSubmit = async () => {
     if (status === 'accept' && !remarks) {
@@ -106,15 +119,15 @@ function Team_Details() {
         <div className=" rounded-xl p-6 mb-1">
           <div className="flex items-center justify-between">
             <button
-              onClick={() => navigate('/guide')}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 shadow-md group"
-            >
-              <ArrowLeft
-                size={20}
-                className="text-white bg-blue-600 transition-colors duration-200 group-hover:bg-blue-700"
-              />
-              Back to Dashboard
-            </button>
+  onClick={() => navigate('/guide')}
+  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 shadow-md group"
+>
+  <ArrowLeft
+    size={20}
+    className="text-white bg-blue-600 transition-colors duration-200 group-hover:bg-blue-700"
+  />
+  Back to Dashboard
+</button>
 
             <div className="text-center">
               <h1 className="text-3xl font-bold text-gray-800 mb-2">Team Details</h1>
@@ -152,13 +165,14 @@ function Team_Details() {
           <div className=" p-4">
             <div className="flex items-center rounded-md p-4 bg-white justify-between mb-3">
               <h2 className="text-2xl bg-white rounded font-semibold text-gray-800 flex items-center gap-2">
-                <Calendar size={24} className='bg-white' />
+                <Calendar size={24}  className='bg-white'/>
                 Week {currentWeek} Progress
               </h2>
-              <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${isWeekComplete
-                  ? 'bg-green-100 text-green-800'
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
+                isWeekComplete 
+                  ? 'bg-green-100 text-green-800' 
                   : 'bg-yellow-100 text-yellow-800'
-                }`}>
+              }`}>
                 {isWeekComplete ? (
                   <>
                     <CheckCircle size={16} className='bg-green-100' />
@@ -207,23 +221,25 @@ function Team_Details() {
                 <button
                   onClick={() => setStatus('accept')}
                   disabled={!isWeekComplete}
-                  className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors duration-200 ${isWeekComplete
-                      ? 'bg-green-600 hover:bg-green-700 text-white shadow-md'
+                  className={`flex items-center group justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors duration-200 ${
+                    isWeekComplete 
+                      ? 'bg-green-600 hover:bg-green-700 text-white shadow-md' 
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
+                  }`}
                 >
-                  <CheckCircle size={20} className='bg-green-600' />
+                  <CheckCircle size={20} className='bg-green-600 group-hover:bg-green-700 transition-colors duration-200' />
                   Accept Week {currentWeek}
                 </button>
                 <button
                   onClick={() => setStatus('reject')}
                   disabled={!isWeekComplete}
-                  className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors duration-200 ${isWeekComplete
-                      ? 'bg-red-600 hover:bg-red-700 text-white shadow-md'
+                  className={`flex items-center group justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors duration-200 ${
+                    isWeekComplete 
+                      ? 'bg-red-600 hover:bg-red-700 text-white shadow-md' 
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
+                  }`}
                 >
-                  <XCircle size={20} className='bg-red-600' />
+                  <XCircle size={20}  className='bg-red-600 group-hover:bg-red-700 transition-colors duration-200'  />
                   Reject Week {currentWeek}
                 </button>
               </div>
@@ -232,23 +248,23 @@ function Team_Details() {
             {/* Accept Form */}
             {status === 'accept' && (
               <div className="mt-6 p-6 bg-green-50 border border-green-200 rounded-lg">
-                <h3 className="text-lg font-semibold text-green-800 mb-4 flex items-center gap-2">
-                  <CheckCircle size={20} />
+                <h3 className="text-lg font-semibold bg-green-50 text-green-800 mb-4 flex items-center gap-2">
+                  <CheckCircle size={20} className='bg-green-50'/>
                   Accept Week {currentWeek}
                 </h3>
                 <textarea
                   placeholder="Enter your remarks for this week's progress..."
-                  className="w-full p-4 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                  className="w-full bg-green-50 p-4 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
                   rows="4"
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
                 />
-                <div className="flex gap-3 mt-4">
+                <div className="flex gap-3 bg-green-50 mt-4">
                   <button
                     onClick={handleSubmit}
-                    className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors duration-200 shadow-md"
+                    className="flex items-center gap-2 group px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors duration-200 shadow-md"
                   >
-                    <CheckCircle size={20} />
+                    <CheckCircle size={20} className='bg-green-600 group-hover:bg-green-700 transition-colors duration-200'/>
                     Submit Acceptance
                   </button>
                   <button
@@ -264,23 +280,23 @@ function Team_Details() {
             {/* Reject Form */}
             {status === 'reject' && (
               <div className="mt-6 p-6 bg-red-50 border border-red-200 rounded-lg">
-                <h3 className="text-lg font-semibold text-red-800 mb-4 flex items-center gap-2">
-                  <XCircle size={20} />
+                <h3 className="text-lg bg-red-50 font-semibold text-red-800 mb-4 flex items-center gap-2">
+                  <XCircle size={20} className='bg-red-50' />
                   Reject Week {currentWeek}
                 </h3>
                 <textarea
                   placeholder="Enter the reason for rejection..."
-                  className="w-full p-4 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                  className="w-full bg-red-50 p-4 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
                   rows="4"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                 />
-                <div className="flex gap-3 mt-4">
+                <div className="flex gap-3 bg-red-50 mt-4">
                   <button
                     onClick={handleSubmit}
-                    className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors duration-200 shadow-md"
+                    className="flex items-center gap-2 px-6 py-3 group bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors duration-200 shadow-md"
                   >
-                    <XCircle size={20} />
+                    <XCircle size={20} className='bg-red-600 group-hover:bg-red-700  transition-colors duration-200 ' />
                     Submit Rejection
                   </button>
                   <button
@@ -295,11 +311,11 @@ function Team_Details() {
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            <div className="text-gray-400 mb-4">
-              <Clock size={48} className="mx-auto" />
+            <div className="text-gray-400 bg-white mb-4">
+              <Clock size={48} className="mx-auto bg-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Recent Updates</h3>
-            <p className="text-gray-500">This team hasn't submitted any progress reports yet.</p>
+            <h3 className="text-xl bg-white font-semibold text-gray-600 mb-2">No Recent Updates</h3>
+            <p className="text-gray-500 bg-white">This team hasn't submitted any progress reports yet.</p>
           </div>
         )}
       </div>

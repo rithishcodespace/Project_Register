@@ -482,9 +482,9 @@ function Staff_dashboard() {
                 </table>
               </div>
             ) : (
-              <div className="px-6 py-12 text-center">
-                <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No guide teams found</p>
+              <div className="px-6 bg-white py-12 text-center">
+                <Users className="w-12 h-12 bg-white text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 bg-white">No guide teams found</p>
               </div>
             )}
           </section>
@@ -544,9 +544,9 @@ function Staff_dashboard() {
                 </table>
               </div>
             ) : (
-              <div className="px-6 py-12 text-center">
-                <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No subexpert teams found</p>
+              <div className="px-6 py-12 bg-white text-center">
+                <Users className="w-12 h-12 text-gray-300 bg-white mx-auto mb-4" />
+                <p className="text-gray-500 bg-white">No subexpert teams found</p>
               </div>
             )}
           </section>
