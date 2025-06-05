@@ -252,7 +252,7 @@ router.get('/sub_expert/fetch_upcoming_reviews/:team_id',(req,res,next) => {
   try{
     const{team_id} = req.params;
     if(!team_id) return next(createError.BadRequest('team is undefined!'));
-    let sql = `SELECT * FROM scheduled_reviews WHERE team_id = ? AND attendance IS NULL AND TIMESTAMP(review_date, start_time) >= CURRENT_TIMESTAMP`
+   let sql = `SELECT * FROM scheduled_reviews WHERE team_id = ? AND (attendance IS NULL OR attendance = '')AND CONCAT(review_date, ' ', start_time) >= NOW() - INTERVAL 3 HOUR;`;
     db.query(sql,[team_id],(error,result) => {
       if(error)return next(error);
       if(result.length === 0)return next(createError.NotFound('meeting links not found!'));
@@ -453,7 +453,7 @@ router.post('/guide/review/add_marks_to_individual/:expert_reg_num/:reg_num',(re
 
 
 // sets end time
-router.patch("/sub_expert/mark_attendance/:review_id", userAuth, (req, res, next) => {
+router.patch("/sub_expert/mark_end_time/:review_id", userAuth, (req, res, next) => {
   try {
     const { review_id } = req.params;
     const { end_time } = req.body;
@@ -497,6 +497,41 @@ router.patch("/sub_expert/mark_attendance/:review_id", userAuth, (req, res, next
   }
 });
 
+// checks whether attendance marked already for that review_id
+router.get('/expert/reivew/check_attendance/marked/:review_id',(req,res,next) => {
+  try{
+    const{review_id} = req.params;
+    if(!review_id)return next(createError.BadRequest('review_id not found!'));
+    let sql = "select end_time from scheduled_reviews where review_id = ?";
+    db.query(sql,[review_id],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return res.send('end time not marked yet!');
+      res.send(result[0].end_time);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+// get name by register number
+router.get('/student/get_name_by_reg_number/:reg_num',(req,res,next) => {
+  try{
+    const{reg_num} = req.params;
+    if(!reg_num)return next(createError.BadRequest('registser number not found!'));
+    let sql = "select name from users where reg_num = ?";
+    db.query(sql,[reg_num],(error,result) => {
+      if(error)return next(error);
+      if(result.length === 0)return next(createError.NotFound('student name not found!'));
+      res.send(result[0].name);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 
 // adds detaied marks to rubix -> also inserts total mark for the review guide_mark and expert_mark to the scheduled_Review table
