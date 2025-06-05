@@ -1033,7 +1033,7 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
           // Main logic continues...
           const proceed = (review_title) => {
             const weekToCheck = pastReviews.length === 0 ? 3 : 6;
-            const sqlVerifyWeek = "SELECT * FROM weekly_logs_verifications WHERE week_number = ? AND is_verified = true AND team_id = ?";
+            const sqlVerifyWeek = "SELECT * FROM weekly_logs_verification WHERE week_number = ? AND is_verified = true AND team_id = ?";
             db.query(sqlVerifyWeek, [weekToCheck, team_id], (err3, verifyResult) => {
               if (err3) return next(err3);
               if (verifyResult.length === 0) {
