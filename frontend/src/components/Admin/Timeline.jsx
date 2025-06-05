@@ -9,6 +9,19 @@ const TimeLine = () => {
   const [editIndex, setEditIndex] = useState(null);
   const [editTimeline, setEditTimeline] = useState({ name: "", startTime: "", endTime: "" });
 
+  // Predefined name options for the dropdown
+  const nameOptions = [
+    "Team Formation",
+    "Submit Project Details",
+    "Assign Guides and Mentors",
+    "Start Project Development",
+    "Review 1",
+    "Review 2",
+    "Submit Report & PPT",
+    "Optional Review",
+    "Challenge Review"
+  ];
+
   useEffect(() => {
     fetchTimelines();
   }, []);
@@ -118,13 +131,19 @@ const TimeLine = () => {
         <form onSubmit={handleAdd} className="grid grid-cols-1 bg-white md:grid-cols-4 gap-4 items-end mb-6">
           <div className="bg-white">
             <label className="block font-medium bg-white mb-1">Name</label>
-            <input
-              type="text"
+            <select
               value={newTimeline.name}
               onChange={(e) => setNewTimeline({ ...newTimeline, name: e.target.value })}
               className="w-full px-3 py-2 bg-white border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
-            />
+            >
+              <option value="">Select a phase...</option>
+              {nameOptions.map((option, index) => (
+                <option key={index} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="bg-white">
             <label className="block bg-white font-medium mb-1">Start Date & Time</label>
@@ -177,13 +196,18 @@ const TimeLine = () => {
                   <td className="p-3 border text- bg-white">{index + 1}</td>
                   <td className="p-3 border bg-white">
                     {editIndex === index ? (
-                      <input
-                        type="text"
+                      <select
                         value={editTimeline.name}
                         onChange={(e) => setEditTimeline({ ...editTimeline, name: e.target.value })}
-                        className="bg-white rounded-md"
-                        style={{ boxSizing: "border-box" }}
-                      />
+                        className="w-full bg-white border rounded-md px-2 py-1"
+                      >
+                        <option value="">Select a phase...</option>
+                        {nameOptions.map((option, idx) => (
+                          <option key={idx} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
                     ) : (
                       item.name
                     )}
@@ -195,7 +219,7 @@ const TimeLine = () => {
                         value={editTimeline.startTime}
                         onChange={(e) => setEditTimeline({ ...editTimeline, startTime: e.target.value })}
                         className="bg-white rounded-md"
-                        style={{ boxSizing: "border-" }}
+                        style={{ boxSizing: "border-box" }}
                       />
                     ) : (
                       new Date(item.startTime).toLocaleString()
@@ -207,8 +231,8 @@ const TimeLine = () => {
                         type="datetime-local"
                         value={editTimeline.endTime}
                         onChange={(e) => setEditTimeline({ ...editTimeline, endTime: e.target.value })}
-                        className="w-a bg-white rounded-md"
-                        style={{ boxSizing: "-box" }}
+                        className="w-full bg-white rounded-md"
+                        style={{ boxSizing: "border-box" }}
                       />
                     ) : (
                       new Date(item.endTime).toLocaleString()
