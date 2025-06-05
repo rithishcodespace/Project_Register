@@ -127,7 +127,7 @@ cron.schedule("*/10 * * * *", () => {
     }
 
     //Mark as 'absent' if attendance is null and 3 hours have passed since start_time
-    const markAbsentSQL = `UPDATE scheduled_reviews SET attendance = 'absent' WHERE attendance IS NULL AND end_time IS NULL AND TIMESTAMP(review_date, start_time) <= NOW() - INTERVAL 3 HOUR`;
+    const markAbsentSQL = `UPDATE scheduled_reviews SET attendance = 'absent' WHERE attendance IS NULL AND end_time IS NULL AND TIMESTAMP(review_date, start_time) <= NOW() - INTERVAL 3 HOUR;`;
 
     db.query(markAbsentSQL, (err2, result2) => {
       if (err2) {

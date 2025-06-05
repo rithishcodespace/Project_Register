@@ -248,12 +248,12 @@ router.get("/sub_expert/fetch_review_requests/:expert_reg_num",userAuth,(req,res
 
 // fetch upcoming review
 
-router.get('/sub_expert/fetch_upcoming_reviews/:team_id',(req,res,next) => {
+router.get('/sub_expert/fetch_upcoming_reviews/:expert_reg_num',(req,res,next) => {
   try{
-    const{team_id} = req.params;
-    if(!team_id) return next(createError.BadRequest('team is undefined!'));
-   let sql = `SELECT * FROM scheduled_reviews WHERE team_id = ? AND (attendance IS NULL OR attendance = '')AND CONCAT(review_date, ' ', start_time) >= NOW() - INTERVAL 3 HOUR;`;
-    db.query(sql,[team_id],(error,result) => {
+    const{expert_reg_num} = req.params;
+    if(!expert_reg_num) return next(createError.BadRequest('expert register number is undefined!'));
+   let sql = `SELECT * FROM scheduled_reviews WHERE expert_reg_num = ? AND (attendance IS NULL OR attendance = '')AND CONCAT(review_date, ' ', start_time) >= NOW() - INTERVAL 3 HOUR;`;
+    db.query(sql,[expert_reg_num],(error,result) => {
       if(error)return next(error);
       if(result.length === 0)return next(createError.NotFound('meeting links not found!'));
       return res.send(result);

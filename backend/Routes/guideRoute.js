@@ -286,13 +286,13 @@ router.post("/guide/add_review_details/:request_id/:status/:guide_reg_num/:team_
 
 // fetching the upcoming reviews
 
-router.get('/guide/fetch_upcoming_reviews/:team_id',(req,res,next) => {
+router.get('/guide/fetch_upcoming_reviews/:guide_reg_num',(req,res,next) => {
   try{
-    const{team_id} = req.params;
-    if(!team_id) return next(createError.BadRequest('team is undefined!'));
-    let sql = `SELECT * FROM scheduled_reviews WHERE team_id = ? AND (attendance IS NULL OR attendance = '')AND CONCAT(review_date, ' ', start_time) >= NOW() - INTERVAL 3 HOUR;`;
+    const{guide_reg_num} = req.params;
+    if(!guide_reg_num) return next(createError.BadRequest('guide register number is undefined!'));
+    let sql = `SELECT * FROM scheduled_reviews WHERE guide_reg_num = ? AND (attendance IS NULL OR attendance = '')AND CONCAT(review_date, ' ', start_time) >= NOW() - INTERVAL 3 HOUR;`;
 
-    db.query(sql,[team_id],(error,result) => {
+    db.query(sql,[guide_reg_num],(error,result) => {
       if(error)return next(error);
       if(result.length === 0)return next(createError.NotFound('meeting links not found!'));
       return res.send(result);
