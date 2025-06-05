@@ -9,14 +9,18 @@ function ReviewProjects() {
   const [expertReviewRequests, setExpertReviewRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [guideTeams,setGuideTeams] = useState([])
-  const [ExpertTeams,setExpertTeams] = useState([])
+  const [guideTeams, setGuideTeams] = useState([]);
+  const [expertTeams, setExpertTeams] = useState([]);
   const [acceptingRequestId, setAcceptingRequestId] = useState(null);
   const [meetingLink, setMeetingLink] = useState('');
   const [rejectingRequestId, setRejectingRequestId] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [upcomingReviews, setUpcomingReviews] = useState({});
-
+  
+  // New states for meeting end time functionality
+  const [clickedMeetings, setClickedMeetings] = useState(new Set());
+  const [endTimes, setEndTimes] = useState({});
+  const [submittingEndTime, setSubmittingEndTime] = useState(null);
 
   const fetchReviewRequests = async () => {
     try {
@@ -39,69 +43,53 @@ function ReviewProjects() {
   };
 
   const fetchUpcomingReviews = async (teams) => {
-  const reviewMap = {};
-  for (const team of teams) {
-    try {
-      const teamId = team.from_team_id;
-      const res = await instance.get(`/guide/fetch_upcoming_reviews/${teamId}`);
-      reviewMap[teamId] = res.data;
-    } catch (error) {
-      console.log(`No upcoming reviews for team ${team.from_team_id}`);
+    const reviewMap = {};
+    for (const team of teams) {
+      try {
+        const teamId = team.from_team_id;
+        const res = await instance.get(`/guide/fetch_upcoming_reviews/${teamId}`);
+        reviewMap[teamId] = res.data;
+      } catch (error) {
+        console.log(`No upcoming reviews for team ${team.from_team_id}`);
+      }
     }
-  }
-  setUpcomingReviews(reviewMap);
-};
-
-
-useEffect(() => {
-  const fetchGuideRequests = async () => {
-    try {
-      const res = await instance.get(`/guide/fetch_guiding_teams/${guideRegNum}`);
-      setGuideTeams(res.data);
-      fetchUpcomingReviews(res.data); // Fetch reviews after teams are loaded
-    } catch (error) {
-      console.log(error);
-    }
+    setUpcomingReviews(reviewMap);
   };
 
-  if (guideRegNum) {
-    fetchGuideRequests();
-  }
-}, [guideRegNum]);
+  useEffect(() => {
+    const fetchGuideRequests = async () => {
+      try {
+        const res = await instance.get(`/guide/fetch_guiding_teams/${guideRegNum}`);
+        setGuideTeams(res.data);
+        fetchUpcomingReviews(res.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
-
-
-useEffect(() => {
-  const fetchExpertRequests = async () => {
-    try {
-      const res = await instance.get(`/sub_expert/fetch_teams/${guideRegNum}`);
-      setExpertTeams(res.data);
-    } catch (error) {
-      console.log(error);
+    if (guideRegNum) {
+      fetchGuideRequests();
     }
-  };
+  }, [guideRegNum]);
 
-  if (guideRegNum) {
-    fetchExpertRequests();
-  }
-}, [guideRegNum]);
+  useEffect(() => {
+    const fetchExpertRequests = async () => {
+      try {
+        const res = await instance.get(`/sub_expert/fetch_teams/${guideRegNum}`);
+        setExpertTeams(res.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
+    if (guideRegNum) {
+      fetchExpertRequests();
+    }
+  }, [guideRegNum]);
 
   useEffect(() => {
     if (guideRegNum) fetchReviewRequests();
   }, [guideRegNum]);
-
-  const handleMarkAttendance = async (reviewId) => {
-  try {
-    const res = await instance.patch(`/sub_expert/mark_attendance/${reviewId}`);
-    alert(res.data); // "attendance marked successfully!"
-    await fetchUpcomingReviews([...guideTeams]); // Refresh to re-check button visibility
-  } catch (err) {
-    console.error(err);
-    alert(err.response?.data || 'Failed to mark attendance');
-  }
-};
-
 
   const handleReviewAction = async (request, status, isGuide) => {
     try {
@@ -149,7 +137,53 @@ useEffect(() => {
     }
   };
 
-  
+  // Handle meeting link click
+  const handleMeetingLinkClick = (reviewKey) => {
+    setClickedMeetings(prev => new Set([...prev, reviewKey]));
+  };
+
+  // Handle end time submission
+  const handleEndTimeSubmit = async (review) => {
+    const reviewKey = review.key;
+    const endTime = endTimes[reviewKey];
+    
+    if (!endTime || !endTime.match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/)) {
+      alert('Please enter a valid end time in HH:MM:SS format');
+      return;
+    }
+
+    try {
+      setSubmittingEndTime(reviewKey);
+      
+      
+      const response = await instance.patch(`/sub_expert/mark_end_time/${review.review_id || review.id}`, {
+        project_id: review.project_id,
+        "end_time": endTime,
+        reviewer_reg_num: guideRegNum
+      });
+
+      alert('Mark end time updated!');
+      
+      // Clear the end time input and remove from clicked meetings
+      setEndTimes(prev => {
+        const newEndTimes = { ...prev };
+        delete newEndTimes[reviewKey];
+        return newEndTimes;
+      });
+      
+      setClickedMeetings(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(reviewKey);
+        return newSet;
+      });
+
+    } catch (error) {
+      alert('Failed to mark end time. Please try again.');
+      console.error('Error marking end time:', error);
+    } finally {
+      setSubmittingEndTime(null);
+    }
+  };
 
   const renderReviewRequests = (requests, title, isGuide) => (
     <div className="mb-10">
@@ -261,6 +295,55 @@ useEffect(() => {
     </div>
   );
 
+  // Helper function to get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    return new Date().toISOString().slice(0, 10);
+  };
+
+  // Helper function to check if review time has arrived
+  const isReviewTimeReached = (reviewDate, startTime) => {
+    const now = new Date();
+    
+    // Extract date from ISO string
+    const reviewDateOnly = reviewDate.split('T')[0];
+    
+    // Create a Date object for the review date and time
+    const reviewDateTime = new Date(`${reviewDateOnly}T${startTime}`);
+    
+    // Check if current time is >= review time
+    return now >= reviewDateTime;
+  };
+
+  // Helper function to sort reviews by date and time
+  const sortReviewsByDateTime = () => {
+    const allReviews = [];
+
+    Object.entries(upcomingReviews).forEach(([teamId, reviews]) => {
+      reviews.forEach((rev, index) => {
+        const reviewWithKey = { ...rev, key: `${teamId}-${index}` };
+        allReviews.push(reviewWithKey);
+      });
+    });
+
+    // Sort by date and time (ascending - closest first)
+    allReviews.sort((a, b) => {
+      const dateA = a.review_date.split('T')[0];
+      const dateB = b.review_date.split('T')[0];
+      
+      // First compare dates
+      if (dateA !== dateB) {
+        return dateA.localeCompare(dateB);
+      }
+      
+      // If dates are same, compare times
+      return a.start_time.localeCompare(b.start_time);
+    });
+
+    return allReviews;
+  };
+
+  const sortedReviews = sortReviewsByDateTime();
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Review Projects</h1>
@@ -270,44 +353,99 @@ useEffect(() => {
 
       {renderReviewRequests(guideReviewRequests, 'Guide Review Requests', true)}
       {renderReviewRequests(expertReviewRequests, 'Subject Expert Review Requests', false)}
- {Object.entries(upcomingReviews).map(([teamId, reviews]) =>
-  reviews.map((rev, index) => {
-const reviewDateTime = new Date(`${rev.review_date}T${rev.start_time}`);
-const deadline = new Date(reviewDateTime);
-deadline.setDate(deadline.getDate() + 1);
-deadline.setHours(23, 59, 59, 999);
 
+      {/* Upcoming Reviews Section - Sorted by Date & Time */}
+      {sortedReviews.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4 text-blue-700">Upcoming Reviews</h2>
+          {sortedReviews.map((rev) => {
+            const isClicked = clickedMeetings.has(rev.key);
+            const endTime = endTimes[rev.key] || '';
+            const isSubmitting = submittingEndTime === rev.key;
 
-const now = new Date();
-const isWithinAttendancePeriod = now >= reviewDateTime && now <= deadline;
-const isAbsent = now > deadline;
+            return (
+              <div key={rev.key} className="p-4 border-2 border-blue-200 rounded-lg bg-blue-50 mb-4 shadow-sm">
+                <p><strong>Project:</strong> {rev.project_name}</p>
+                <p><strong>Review Title:</strong> {rev.review_title || 'N/A'}</p>
+                <p><strong>Date:</strong> {rev.review_date.split('T')[0]}</p>
+                <p><strong>Time:</strong> {rev.start_time}</p>
+                <p><strong>Google Meet Link:</strong> 
+                  {rev.meeting_link ? (
+                    isReviewTimeReached(rev.review_date, rev.start_time) ? (
+                      <a 
+                        href={rev.meeting_link} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="text-blue-600 underline ml-2 hover:text-blue-800 font-medium"
+                        onClick={() => handleMeetingLinkClick(rev.key)}
+                      >
+                         Join Meeting
+                      </a>
+                    ) : (
+                      <span className="ml-2 text-gray-500 cursor-not-allowed">
+                        📅 Meeting starts at {rev.start_time} on {rev.review_date.split('T')[0]}
+                      </span>
+                    )
+                  ) : (
+                    <span className="ml-2 text-gray-500">Google Meet link not available</span>
+                  )}
+                </p>
+                
+                {/* Meeting End Time Section */}
+                {rev.meeting_link && isReviewTimeReached(rev.review_date, rev.start_time) && (
+                  <div className="mt-4 p-3 bg-white-50 border border-white-200 rounded">
+                    <p className="text-sm text-yellow-800 mb-2">
+                      📝 <strong>Important:</strong> Please mark the meeting end time after completing the review session.
+                    </p>
+                    
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="text"
+                        placeholder="HH:MM:SS (e.g., 14:30:00)"
+                        value={endTime}
+                        onChange={(e) => setEndTimes(prev => ({
+                          ...prev,
+                          [rev.key]: e.target.value
+                        }))}
+                        className="border border-gray-300 rounded px-3 py-2 text-sm w-40"
+                        disabled={isSubmitting}
+                      />
+                      
+                      <button
+                        onClick={() => handleEndTimeSubmit(rev)}
+                        disabled={!isClicked || isSubmitting || !endTime.trim()}
+                        className={`px-4 py-2 rounded text-sm font-medium ${
+                          !isClicked || !endTime.trim()
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                            : isSubmitting
+                            ? 'bg-white-400 text-white cursor-wait'
+                            : 'bg-orange-600 text-white hover:bg-orange-700'
+                        }`}
+                        title={!isClicked ? 'Please join the meeting first to enable this button' : ''}
+                      >
+                        {isSubmitting ? 'Submitting...' : 'Mark End Time'}
+                      </button>
+                    </div>
+                    
+                    {!isClicked && (
+                      <p className="text-xs text-gray-600 mt-1">
+                        * Button will be enabled after you join the meeting
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-
-    return (
-      <div key={`${teamId}-${index}`} className="p-3 border rounded bg-white mb-3">
-        <p><strong>Project:</strong> {rev.project_name}</p>
-        <p><strong>Review Title:</strong> {rev.review_title}</p>
-        <p><strong>Date:</strong> {new Date(rev.review_date).toISOString().slice(0, 10)}</p>
-        <p><strong>Time:</strong> {rev.start_time}</p>
-        <p><strong>Meeting Link:</strong> <a href={rev.meeting_link} target="_blank" rel="noreferrer" className="text-blue-600 underline">{rev.meeting_link}</a></p>
-
-       <button
-  onClick={() => handleMarkAttendance(rev.review_id)}
-  className="mt-3 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
->
-  Mark Attendance
-</button>
-
-
-{isAbsent && (
-  <p className="mt-3 text-red-600 font-semibold">Attendance: Absent</p>
-)}
-
-      </div>
-    );
-  })
-)}
-
+      {/* Show message if no upcoming reviews */}
+      {sortedReviews.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">No upcoming reviews scheduled.</p>
+        </div>
+      )}
     </div>
   );
 }
