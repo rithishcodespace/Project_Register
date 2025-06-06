@@ -1012,7 +1012,11 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
     const files = req.files;
     const file = files?.report?.[0] || files?.ppt?.[0] || files?.outcome?.[0];
 
+<<<<<<< HEAD
     if (!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time || !reg_num) {
+=======
+    if (!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time || !reg_num ) {
+>>>>>>> 7151c889a6c9f32a23c23df2a883942e938d98bf
       return next(createError.BadRequest("Some parameters are missing!"));
     }
 
@@ -1177,7 +1181,7 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
 
 
 // fetches the history of review requests sent by my team -> tl
-router.get('/student/get_reivew_request_history/:team_id',(req,res,next) => {
+router.get('/student/get_review_request_history/:team_id',(req,res,next) => {
   try{
     const{team_id} = req.params;
     if(!team_id)return next(createError.BadRequest('Team id not found!'));
