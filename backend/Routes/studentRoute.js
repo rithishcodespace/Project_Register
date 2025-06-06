@@ -1059,7 +1059,7 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
               if (res0.length > 0) return next(createError.BadRequest(`${review_title} already sent and the guide, expert yet to verify requests`));
 
               const weekToCheck = pastReviews.length === 0 ? 3 : 6;
-              const sqlVerifyWeek = "SELECT * FROM weekly_logs_verifications WHERE week_number = ? AND is_verified = true AND team_id = ?";
+              const sqlVerifyWeek = "SELECT * FROM weekly_logs_verification WHERE week_number = ? AND is_verified = true AND team_id = ?";
               db.query(sqlVerifyWeek, [weekToCheck, team_id], (err3, verifyResult) => {
                 if (err3) return next(err3);
                 if (verifyResult.length === 0) {
@@ -1161,7 +1161,6 @@ router.get('/student/get_reivew_request_history/:team_id',(req,res,next) => {
     let sql = "select * from review_requests where team_id = ?";
     db.query(sql,[team_id],(error,result) => {
       if(error)return next(error);
-      if(result.length === 0)return next(createError.NotFound('history of your team is not found!'));
       res.send(result);
     })
   }
