@@ -21,6 +21,7 @@ const ScheduleReview = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [reviewStatus, setReviewStatus] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [formSubmitted, setFormSubmitted] = useState(false);
 
   const team_id = teamSelector[0]?.team_id;
 
@@ -49,7 +50,7 @@ const ScheduleReview = () => {
       }
     };
     fetchReviewHistory();
-  }, [team_id]);
+  }, [team_id, formSubmitted]);
 
   const handleInput = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -101,31 +102,31 @@ const ScheduleReview = () => {
       alert(res.data);
       setSelectedFile(null);
       document.querySelector('input[type="file"]').value = '';
-      setForm({
-        project_id: statusSelector.projectId || "",
-        project_name: statusSelector.projectName || "",
-        team_lead: teamSelector[0]?.from_reg_num || "",
+      setForm((prev) => ({
+        ...prev,
         review_date: "",
         start_time: "",
         isOptional: "",
-        reason: "",
-        mentor_reg_num: mentor_reg_num || ""
-      });
+        reason: ""
+      }));
+      setFormSubmitted((prev) => !prev); // trigger history refresh
     } catch (error) {
       alert(error?.response?.data || "Error submitting request.");
       console.error(error);
     }
   };
 
-  // ✅ Updated condition to allow resubmission if rejected
-  const isRequestAlreadySent = reviewStatus && (
-    reviewStatus.guide_status === "interested" ||
-    reviewStatus.expert_status === "interested" ||
-    (
-      reviewStatus.guide_status === "accept" &&
-      reviewStatus.expert_status === "accept"
-    )
-  );
+  const shouldShowForm = () => {
+    if (!reviewStatus) return true;
+
+    const { guide_status, expert_status } = reviewStatus;
+
+    if (guide_status === "reject" || expert_status === "reject") return true;
+    return false;
+  };
+
+  const bothAccepted = reviewStatus?.guide_status === "accept" && reviewStatus?.expert_status === "accept";
+  const requestPending = reviewStatus?.guide_status === "interested" || reviewStatus?.expert_status === "interested";
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
@@ -136,15 +137,15 @@ const ScheduleReview = () => {
           <p><strong>Review Date:</strong> {reviewStatus.review_date}</p>
           <p><strong>Start Time:</strong> {reviewStatus.start_time}</p>
 
-          {reviewStatus.guide_status === "interested" && reviewStatus.expert_status === "interested" && (
+          {requestPending && (
             <p className="text-yellow-600">
-              You have already sent a review request. Please wait for the guide and expert response.
+              You have already sent a review request. Please wait for guide and expert to respond.
             </p>
           )}
 
-          {reviewStatus.guide_status === "accept" && reviewStatus.expert_status === "accept" && (
+          {bothAccepted && (
             <div className="text-green-600">
-              <p>Guide and Expert have accepted the review.</p>
+              <p>✅ Guide and Expert have accepted the review.</p>
               <p><strong>Meeting Link:</strong>{" "}
                 <a href={reviewStatus.temp_meeting_link} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
                   {reviewStatus.temp_meeting_link}
@@ -155,19 +156,20 @@ const ScheduleReview = () => {
 
           {(reviewStatus.guide_status === "reject" || reviewStatus.expert_status === "reject") && (
             <div className="text-red-600">
-              <p><strong>Review Rejected</strong></p>
+              <p><strong>❌ Review Rejected</strong></p>
               {reviewStatus.guide_status === "reject" && (
                 <p><strong>Guide Reason:</strong> {reviewStatus.guide_reason}</p>
               )}
               {reviewStatus.expert_status === "reject" && (
                 <p><strong>Expert Reason:</strong> {reviewStatus.expert_reason}</p>
               )}
+              <p className="mt-2 text-black">You can correct and resubmit the review request.</p>
             </div>
           )}
         </div>
       )}
 
-      {!loading && !isRequestAlreadySent && (
+      {!loading && shouldShowForm() && (
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="date"
