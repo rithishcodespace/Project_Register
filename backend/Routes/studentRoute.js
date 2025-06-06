@@ -1012,7 +1012,7 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
     const files = req.files;
     const file = files?.report?.[0] || files?.ppt?.[0] || files?.outcome?.[0];
 
-    if (!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time || !reg_num) {
+    if (!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time || !reg_num ) {
       return next(createError.BadRequest("Some parameters are missing!"));
     }
 
@@ -1050,74 +1050,31 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
         const sqlReviews = "SELECT * FROM scheduled_reviews WHERE team_id = ?";
         db.query(sqlReviews, [team_id], (err2, pastReviews) => {
           if (err2) return next(err2);
-
-          let review_title = "";
-
-          if (isOptional === "optional") {
-            if (pastReviews.length !== 1) {
-              return res.send("Optional review only allowed after completing any one review.");
-            }
-
-            const sqlDeadline = "SELECT week8 FROM weekly_logs_deadlines WHERE team_id = ?";
-            db.query(sqlDeadline, [team_id], (err8, weekRes) => {
-              if (err8) return next(err8);
-              if (!weekRes.length || !weekRes[0].week8) {
-                return next(createError.NotFound("Week 8 deadline not found."));
-              }
-
-              const week8 = new Date(weekRes[0].week8);
-              week8.setHours(0, 0, 0, 0);
-
-              if (today < week8) {
-                return next(createError.BadRequest("Cannot apply for optional review before Week 8 deadline."));
-              }
-
-              review_title = "optional";
-              proceed(review_title);
-            });
-          } else {
-            if (pastReviews.length === 0) {
-              review_title = "1st_review";
-            } else if (pastReviews.length === 1) {
-              review_title = "2nd_review";
-            } else {
-              return next(createError.BadRequest("Your team already completed 2 reviews."));
-            }
-
-            proceed(review_title);
+          if (pastReviews.length >= 2 && review_title !== 'optional') {
+            return next(createError.BadRequest("Your team already completed 2 reviews."));
           }
 
-          function proceed(title) {
-            if (title !== '1st_review' && title !== '2nd_review' && title !== 'optional') {
+          const proceed = (review_title) => {
+            if (review_title !== '1st_review' && review_title !== '2nd_review' && review_title !== 'optional') {
               return next(createError.BadRequest("Invalid review title."));
             }
 
             const checkDuplicate = `
               SELECT * FROM review_requests 
-              WHERE review_title = ? AND team_id = ?
-              ORDER BY request_id DESC LIMIT 1
+              WHERE review_title = ? AND team_id = ? AND guide_status = 'interested' AND expert_status = 'interested'
             `;
-            db.query(checkDuplicate, [title, team_id], (err0, res0) => {
+            db.query(checkDuplicate, [review_title, team_id], (err0, res0) => {
               if (err0) return next(err0);
-
               if (res0.length > 0) {
-                const last = res0[0];
-                if (
-                  last.guide_status !== 'rejected' &&
-                  last.expert_status !== 'rejected'
-                ) {
-                  return next(
-                    createError.BadRequest(`${title} already sent. Wait for rejection before resending.`)
-                  );
-                }
+                return next(createError.BadRequest(`${review_title} already sent and the guide, expert yet to verify requests`));
               }
 
               let weekToCheck = 0;
-              if (title === "1st_review") weekToCheck = 3;
-              else if (title === "2nd_review") weekToCheck = 6;
+              if (review_title === "1st_review") weekToCheck = 3;
+              else if (review_title === "2nd_review") weekToCheck = 6;
 
-              if (title === "1st_review" || title === "2nd_review") {
-                const sqlVerifyWeek = "SELECT * FROM weekly_logs_verification WHERE week_number = ? AND is_verified = true AND team_id = ?";
+              if (review_title === "1st_review" || review_title === "2nd_review") {
+                const sqlVerifyWeek = "SELECT * FROM weekly_logs_verifications WHERE week_number = ? AND is_verified = true AND team_id = ?";
                 db.query(sqlVerifyWeek, [weekToCheck, team_id], (err3, verifyResult) => {
                   if (err3) return next(err3);
                   if (verifyResult.length === 0) {
@@ -1142,10 +1099,10 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
                     db.query(sqlInsertReview, [
                       team_id, project_id, project_name, team_lead,
                       formattedDate, start_time, expert_reg_num, guide_reg_num,
-                      title, filePath
+                      review_title, filePath
                     ], (err5, insertRes) => {
                       if (err5) return next(err5);
-                      return res.send(`${formattedDate} - ${start_time}: ${title} submitted successfully.`);
+                      return res.send(`${formattedDate} - ${start_time}: ${review_title} submitted successfully.`);
                     });
                   });
                 });
@@ -1175,6 +1132,31 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
                 });
               }
             });
+          };
+
+          if (isOptional === "optional") {
+            if (pastReviews.length !== 1) {
+              return res.send("Optional review only allowed after completing any one review.");
+            }
+
+            const sqlDeadline = "SELECT week8 FROM weekly_logs_deadlines WHERE team_id = ?";
+            db.query(sqlDeadline, [team_id], (err8, weekRes) => {
+              if (err8) return next(err8);
+              if (!weekRes.length || !weekRes[0].week8) {
+                return next(createError.NotFound("Week 8 deadline not found."));
+              }
+
+              const week8 = new Date(weekRes[0].week8);
+              week8.setHours(0, 0, 0, 0);
+
+              if (today < week8) {
+                return next(createError.BadRequest("Cannot apply for optional review before Week 8 deadline."));
+              }
+
+              proceed("optional");
+            });
+          } else {
+            proceed(review_title);
           }
         });
       });
@@ -1183,7 +1165,6 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
     next(error);
   }
 });
-
 
 
 // fetches the history of review requests sent by my team -> tl
