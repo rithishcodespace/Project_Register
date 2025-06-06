@@ -55,7 +55,7 @@ function Student_Dashboard() {
         console.log(error)
       }
     }
-    if (teamSelector[0]?.team_id) {
+    if (teamSelector&&teamSelector[0]?.team_id) {
       fetchDeadline(); // ✅ Call the function inside useEffect
     }
 
@@ -278,7 +278,7 @@ function Student_Dashboard() {
               <div className="space-y-4 bg-white">
                 <div className="border-l-4 bg-white border-blue-500 pl-4 py-2">
                   <h3 className="font-medium bg-white text-gray-800">
-                    {deadline[0].current_week_name}
+                    {deadline && deadline[0].current_week_name}
                   </h3>
                   <p className="text-md text-gray-600 bg-white">
                     Deadline: {new Date(deadline[0].current_week_deadline).toLocaleDateString()}
