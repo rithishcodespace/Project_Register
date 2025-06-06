@@ -1155,7 +1155,15 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
 
               proceed("optional");
             });
-          } else {
+          }else {
+            let review_title = "";
+            if (pastReviews.length === 0) {
+              review_title = "1st_review";
+            } else if (pastReviews.length === 1) {
+              review_title = "2nd_review";
+            } else {
+              return next(createError.BadRequest("Your team already completed 2 reviews."));
+            }
             proceed(review_title);
           }
         });
