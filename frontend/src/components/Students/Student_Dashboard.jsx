@@ -55,7 +55,7 @@ function Student_Dashboard() {
         console.log(error)
       }
     }
-    if (teamSelector[0]?.team_id) {
+    if (teamSelector&&teamSelector[0]?.team_id) {
       fetchDeadline(); // ✅ Call the function inside useEffect
     }
 
