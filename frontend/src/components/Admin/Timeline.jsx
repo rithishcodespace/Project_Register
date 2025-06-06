@@ -109,7 +109,7 @@ const TimeLine = () => {
       <div className="w-full flex flex-end justify-between">
        <Link
         to="/admin/timeline/change-timeline"
-        className="px-4 py-2 bg-purple-500 rounded hover:bg-purple-700 text-white"
+        className="px-4 py-2 ml-[9%] bg-purple-500 rounded hover:bg-purple-700 text-white"
       >
         Change Deadline
       </Link>
@@ -120,11 +120,18 @@ const TimeLine = () => {
        Assign Guide or Expert
       </Link>
 
-       <Link
-        to="/admin/timeline/challenge-review"
+      <Link
+        to="/admin/timeline/assignguideexpert"
         className="px-4 py-2 bg-purple-500 rounded hover:bg-purple-700 text-white"
       >
-       change
+       Week log deadline 
+      </Link>
+
+       <Link
+        to="/admin/timeline/challenge-review"
+        className="px-4 py-2 mr-[9%] bg-purple-500 rounded hover:bg-purple-700 text-white"
+      >
+       Challenge Review Requests
       </Link>
       </div>
       <div className="max-w-5xl mx-auto mt-8 p-6 bg-white rounded-2xl shadow">

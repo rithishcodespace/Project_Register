@@ -8,7 +8,6 @@ import Project_Details from "./components/Students/Project_Details";
 import Student_Team from "./components/Students/Schedule_review";
 import Admin from "./components/Admin/Admin";
 import Add_Users from "./components/Admin/Add_Users";
-import Students_Progress from "./components/Admin/Students_Progress";
 import Posted_project from "./components/Admin/Posted_project";
 import Admin_Dashboard from "./components/Admin/Admin_Dashboard";
 import { Provider } from "react-redux";
@@ -41,6 +40,8 @@ import ChallengeReviewAdmin from "./components/Students/ChallengeReview";
 import Team_Details from "./components/guide/Team_Details";
 import Guide_queries from "./components/guide/Guide_queries";
 import WeeklyLogsHistory from "./components/Students/week";
+import AssignGuideExpert from "./components/Admin/AssignGuideExpert";
+import WeekLogUpdate from "./components/Admin/WeekLogUpdate";
 
 
 const Loader = () => {
@@ -97,7 +98,6 @@ function App() {
             <Route index element={<Admin_Dashboard />} />
             <Route path="add_users" element={<Add_Users />} />
             <Route path="posted_projects" element={<Posted_project />} />
-            <Route path="students_progress" element={<Students_Progress />} />
             <Route path="/admin/posted_projects/:project_id" element={<Admin_project_details />} />
             <Route path="student_progress/:cluster" element={<Admin_project_details />} />
             <Route path="TimeLine" element={<TimeLine />} />
@@ -105,6 +105,8 @@ function App() {
             <Route path="/admin/team_progress/:project_id" element={<Admin_project_details />} />
             <Route path="TimeLine/change-timeline" element={<ChangeTimeLine />} />
             <Route path="TimeLine/challenge-review" element={<ChallengeReviewAdmin />} />
+            <Route path="timeline/assignguideexpert" element={<AssignGuideExpert />} />
+            <Route path="timeline/weeklogupdate" element={<WeekLogUpdate />} />
           </Route>
 
           <Route path="/subject_expert" element={<Subject_expert />}>

@@ -1344,5 +1344,63 @@ router.patch('/student/edit_submitted_progress/:team_id/:week/:reg_num',(req,res
   }
 })
 
+// to show upcoming deadline for student page
+router.get('/student/show_upcoming_deadline_weekly_logs_and_timeline/:team_id',(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest('team id not found!'));
+    let sql = `SELECT 
+    wld.team_id,
+    CASE 
+        WHEN CURDATE() <= wld.week1 THEN wld.week1
+        WHEN CURDATE() <= wld.week2 THEN wld.week2
+        WHEN CURDATE() <= wld.week3 THEN wld.week3
+        WHEN CURDATE() <= wld.week4 THEN wld.week4
+        WHEN CURDATE() <= wld.week5 THEN wld.week5
+        WHEN CURDATE() <= wld.week6 THEN wld.week6
+        WHEN CURDATE() <= wld.week7 THEN wld.week7
+        WHEN CURDATE() <= wld.week8 THEN wld.week8
+        WHEN CURDATE() <= wld.week9 THEN wld.week9
+        WHEN CURDATE() <= wld.week10 THEN wld.week10
+        WHEN CURDATE() <= wld.week11 THEN wld.week11
+        WHEN CURDATE() <= wld.week12 THEN wld.week12
+        ELSE NULL
+    END AS current_week_deadline,
+    CASE 
+        WHEN CURDATE() <= wld.week1 THEN 'week1'
+        WHEN CURDATE() <= wld.week2 THEN 'week2'
+        WHEN CURDATE() <= wld.week3 THEN 'week3'
+        WHEN CURDATE() <= wld.week4 THEN 'week4'
+        WHEN CURDATE() <= wld.week5 THEN 'week5'
+        WHEN CURDATE() <= wld.week6 THEN 'week6'
+        WHEN CURDATE() <= wld.week7 THEN 'week7'
+        WHEN CURDATE() <= wld.week8 THEN 'week8'
+        WHEN CURDATE() <= wld.week9 THEN 'week9'
+        WHEN CURDATE() <= wld.week10 THEN 'week10'
+        WHEN CURDATE() <= wld.week11 THEN 'week11'
+        WHEN CURDATE() <= wld.week12 THEN 'week12'
+        ELSE NULL
+    END AS current_week_name,
+    t.name AS current_timeline,
+    t.start_date AS timeline_start_date,
+    t.end_date AS timeline_end_date
+    FROM weekly_logs_deadlines wld
+    LEFT JOIN timeline t ON (
+        CURDATE() BETWEEN t.start_date AND t.end_date 
+        AND (t.team_id = ? OR t.team_id IS NULL)
+    )
+    WHERE wld.team_id = ?;`
+        db.query(sql,[team_id,team_id],(error,result) => {
+          if(error)return next(error);
+          if(result.length === 0)return res.send('No active deadlines for your team!');
+          res.send(result);
+        })
+    }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 
 module.exports = router;

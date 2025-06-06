@@ -625,6 +625,20 @@ router.get("/admin/get_team_members/:team_id",(req,res,next) => {
   }
 })
 
+router.get("/admin/show_team_numbers/",(req,res,next) => {
+  try{
+    let sql = "select * from teams ";
+    db.query(sql,(error,result) => {
+      if(error) return next(error);
+      return res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
 router.get("/admin/get_name/:reg_num",(req,res,next) => {
   try{
     const{reg_num} = req.params;
