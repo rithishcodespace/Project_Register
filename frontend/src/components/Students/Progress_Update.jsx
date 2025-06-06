@@ -167,36 +167,41 @@ const Progress_Update = () => {
 
 
   return (
-    <div className="p-6 max-w-3xl mx-auto font-sans">
+    <div className="p-6  w-full mx-auto font-sans">
       <h1 className="text-4xl font-semibold text-center text-gray-900 mb-8">Progress Update</h1>
-      <Link to="/student/week" className="text-blue-600 hover:underline font-medium">
-        View Weekly Logs History
-      </Link>
+     {/* <div className="w-full p-2 text-right"> */}
+  <Link to="/student/week" className="px-4 py-2 bg-purple-500 rounded hover:bg-purple-700 text-white">
+    View Weekly Logs History
+  </Link>
+{/* </div> */}
+
 
       {statusMessage && (
         <p className="text-center mt-6 font-semibold text-gray-700">{statusMessage}</p>
       )}
        {details  && (
-        <div>
-        <h3 className="text-center mt-6 font-semibold text-gray-700">{details}</h3>
+        <div className="max-w-3xl mx-auto bg-white border border-gray-200 p-6 rounded-xl shadow-lg">
+
+          <h1 className="bg-white ">{currentWeekStatus=="accept"?"Remarks :":"Reason :"}</h1>
+        <h3 className="text-center bg-white mt-6 font-semibold text-gray-700">{details} </h3>
         </div>
       )}
 
       {(canUpdate || canEdit) && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-lg mt-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-3">Week {currentWeekIndex}</h2>
-          <p className="text-sm text-gray-500 mb-2">
+        <div className="bg-white max-w-2xl border border-gray-200 rounded-2xl p-8 shadow-lg mt-6 mx-auto">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-3 bg-white">Week {currentWeekIndex}</h2>
+          <p className="text-sm text-gray-500 mb-2  bg-white">
             Deadline:{" "}
-            <span className="font-medium text-gray-700">{deadlines[currentWeekKey]}</span>
+            <span className="font-medium text-gray-700  bg-white">{deadlines[currentWeekKey]}</span>
           </p>
           <textarea
-            className="w-full p-4 border border-gray-300 rounded-xl text-gray-800 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full p-4 border border-gray-300 rounded-xl text-gray-800 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purplegit -500"
             rows={6}
             placeholder="Describe your weekly progress here..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
-          <div className="mt-6 text-right">
+          <div className="mt-6 text-right  bg-white">
             {canEdit ? (
               <button
                 onClick={handleEdit}
@@ -207,7 +212,7 @@ const Progress_Update = () => {
             ) : (
               <button
                 onClick={handleSubmit}
-                className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white px-6 py-2 rounded-xl hover:from-indigo-700 hover:to-blue-600 transition font-semibold shadow-lg"
+                className="bg-gradient-to-r  from-indigo-600 to-blue-500 text-white px-6 py-2 rounded-xl hover:from-indigo-700 hover:to-blue-600 transition font-semibold shadow-lg"
               >
                 Submit Progress
               </button>
