@@ -364,15 +364,15 @@ function Staff_dashboard() {
                       <div
                         key={`guide_review_${review.request_id}`}
                         onClick={() => navigate("/guide/review_progress")}
-                        className="bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-500 p-4 rounded-lg cursor-pointer hover:shadow-md transition-all duration-200"
+                        className="bg-gradient-to-r bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg cursor-pointer hover:shadow-md transition-all duration-200"
                       >
-                        <div className="flex items-center gap-2 mb-2">
-                          <Calendar className="w-4 h-4 text-blue-600" />
-                          <span className="text-blue-800 font-semibold text-sm">Upcoming Guide Review</span>
+                        <div className="flex bg-blue-50  items-center gap-2 mb-2">
+                          <Calendar className="w-4 h-4 bg-blue-50 text-blue-600" />
+                          <span className="text-blue-800 font-semibold bg-blue-50  text-sm">Upcoming Guide Review</span>
                         </div>
-                        <p className="text-gray-700 font-medium">{review.project_name}</p>
-                        <p className="text-gray-600 text-sm">Team: {review.team_id}</p>
-                        <p className="text-gray-500 text-xs mt-1">
+                        <p className="text-gray-700 bg-blue-50 font-medium">{review.project_name}</p>
+                        <p className="text-gray-600 bg-blue-50 text-sm">Team: {review.team_id}</p>
+                        <p className="text-gray-500 bg-blue-50 text-xs mt-1">
                           {new Date(review.review_date).toLocaleDateString()}
                         </p>
                       </div>
@@ -382,15 +382,15 @@ function Staff_dashboard() {
                       <div
                         key={`expert_review_${review.request_id}`}
                         onClick={() => navigate("/guide/review_progress")}
-                        className="bg-gradient-to-r from-purple-50 to-purple-100 border-l-4 border-purple-500 p-4 rounded-lg cursor-pointer hover:shadow-md transition-all duration-200"
+                        className="bg-gradient-to-r bg-purple50 border-l-4 border-purple-500 p-4 rounded-lg cursor-pointer hover:shadow-md transition-all duration-200"
                       >
-                        <div className="flex items-center gap-2 mb-2">
-                          <Calendar className="w-4 h-4 text-purple-600" />
-                          <span className="text-purple-800 font-semibold text-sm">Upcoming Expert Review</span>
+                        <div className="flex items-center bg-purple-50 gap-2 mb-2">
+                          <Calendar className="w-4 h-4 bg-purple-50 text-purple-600" />
+                          <span className="text-purple-800  bg-purple-50 font-semibold text-sm">Upcoming Expert Review</span>
                         </div>
-                        <p className="text-gray-700 font-medium">{review.project_name}</p>
-                        <p className="text-gray-600 text-sm">Team: {review.team_id}</p>
-                        <p className="text-gray-500 text-xs mt-1">
+                        <p className="text-gray-700 bg-purple-50  font-medium">{review.project_name}</p>
+                        <p className="text-gray-600 bg-purple-50  text-sm">Team: {review.team_id}</p>
+                        <p className="text-gray-500 bg-purple-50  text-xs mt-1">
                           {new Date(review.review_date).toLocaleDateString()}
                         </p>
                       </div>
