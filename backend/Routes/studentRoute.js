@@ -1069,19 +1069,9 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
                 return next(createError.BadRequest(`${review_title} already sent and the guide, expert yet to verify requests`));
               }
 
-<<<<<<< HEAD
-              const weekToCheck = pastReviews.length === 0 ? 3 : 6;
-              const sqlVerifyWeek = "SELECT * FROM weekly_logs_verification WHERE week_number = ? AND is_verified = true AND team_id = ?";
-              db.query(sqlVerifyWeek, [weekToCheck, team_id], (err3, verifyResult) => {
-                if (err3) return next(err3);
-                if (verifyResult.length === 0) {
-                  return next(createError.BadRequest(`Week ${weekToCheck} log not verified.`));
-                }
-=======
               let weekToCheck = 0;
               if (review_title === "1st_review") weekToCheck = 3;
               else if (review_title === "2nd_review") weekToCheck = 6;
->>>>>>> ae4a10b5738f1c8138fa076ed40b1e253758be1d
 
               if (review_title === "1st_review" || review_title === "2nd_review") {
                 const sqlVerifyWeek = "SELECT * FROM weekly_logs_verifications WHERE week_number = ? AND is_verified = true AND team_id = ?";
