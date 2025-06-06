@@ -225,13 +225,13 @@ const [guideName, setGuideName] = useState('');
 const [expertName, setExpertName] = useState('');
 
 useEffect(() => {
-  if (!userSlice.guide_reg_num) return;
+  if (!userSlice.guide_reg_num || !userSlice.sub_expert_reg_num) return;
 
   const getNames = async () => {
     try {
       const res1 = await instance.get(`/admin/get_name/${userSlice.guide_reg_num}`);
-      const res2 = await instance.get(`/admin/get_name/${userSlice.sub_expert_reg_num}`);
       setGuideName(res1.data);
+      const res2 = await instance.get(`/admin/get_name/${userSlice.sub_expert_reg_num}`);
       setExpertName(res2.data);
     } catch (error) {
       console.log(error);
@@ -301,7 +301,7 @@ useEffect(() => {
               <div className="space-y-4 bg-white">
                 <div className="border-l-4 bg-white border-blue-500 pl-4 py-2">
                   <h3 className="font-medium bg-white text-gray-800">
-                    { deadline[0].current_week_name}
+                    {deadline && deadline[0].current_week_name}
                   </h3>
                   <p className="text-md text-gray-600 bg-white">
                     Deadline: {new Date(deadline[0].current_week_deadline).toLocaleDateString()}
