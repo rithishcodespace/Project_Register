@@ -100,6 +100,7 @@ const ScheduleReview = () => {
       );
       alert(res.data);
       setSelectedFile(null);
+      document.querySelector('input[type="file"]').value = '';
       setForm({
         project_id: statusSelector.projectId || "",
         project_name: statusSelector.projectName || "",
@@ -116,13 +117,14 @@ const ScheduleReview = () => {
     }
   };
 
+  // ✅ Updated condition to allow resubmission if rejected
   const isRequestAlreadySent = reviewStatus && (
     reviewStatus.guide_status === "interested" ||
-    reviewStatus.guide_status === "accept" ||
-    reviewStatus.guide_status === "reject" ||
     reviewStatus.expert_status === "interested" ||
-    reviewStatus.expert_status === "accept" ||
-    reviewStatus.expert_status === "reject"
+    (
+      reviewStatus.guide_status === "accept" &&
+      reviewStatus.expert_status === "accept"
+    )
   );
 
   return (
