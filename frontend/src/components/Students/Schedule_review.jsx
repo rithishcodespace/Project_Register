@@ -144,7 +144,7 @@ const ScheduleReview = () => {
           required
         >
           <option value="">Select Review Type</option>
-          <option value="regular">Regular Review</option>
+          <option value="regular">Monthly Review</option>
           <option value="optional">Optional Review</option>
         </select>
 
