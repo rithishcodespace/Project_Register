@@ -3,9 +3,7 @@ import { useSelector } from "react-redux";
 import instance from "../../utils/axiosInstance";
 
 const ScheduleReview = () => {
-  const userSelector = useSelector((state) => state.userSlice);
-  const reg_num = userSelector.reg_num;
-
+  const { reg_num, mentor_reg_num } = useSelector((state) => state.userSlice);
   const teamSelector = useSelector((state) => state.teamSlice);
   const statusSelector = useSelector((state) => state.teamStatusSlice);
 
@@ -21,17 +19,39 @@ const ScheduleReview = () => {
   });
 
   const [selectedFile, setSelectedFile] = useState(null);
+  const [reviewStatus, setReviewStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Populate the form fields from selectors
+  const team_id = teamSelector[0]?.team_id;
+
   useEffect(() => {
     setForm((prev) => ({
       ...prev,
       project_id: statusSelector.projectId || "",
       project_name: statusSelector.projectName || "",
       team_lead: teamSelector[0]?.from_reg_num || "",
-      mentor_reg_num: userSelector.mentor_reg_num || ""
+      mentor_reg_num: mentor_reg_num || ""
     }));
-  }, [statusSelector.projectId, statusSelector.projectName, teamSelector, userSelector.mentor_reg_num]);
+  }, [statusSelector, teamSelector, mentor_reg_num]);
+
+  useEffect(() => {
+    const fetchReviewHistory = async () => {
+      if (!team_id) return;
+
+      try {
+        const res = await instance.get(`/student/get_reivew_request_history/${team_id}`);
+        const sorted = res.data.sort((a, b) => new Date(b.review_date) - new Date(a.review_date));
+        const latestReview = sorted[0];
+        setReviewStatus(latestReview);
+      } catch (err) {
+        setReviewStatus(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReviewHistory();
+  }, [team_id]);
 
   const handleInput = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -39,26 +59,20 @@ const ScheduleReview = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-    }
+    if (file) setSelectedFile(file);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const team_id = teamSelector[0]?.team_id;
     const project_id = form.project_id;
-
     if (!team_id || !project_id || !reg_num) {
       alert("Missing required fields.");
       return;
     }
 
     const formData = new FormData();
-
-    // Required fields
-    formData.append("team_id", team_id);  // REQUIRED FOR BACKEND MULTER
+    formData.append("team_id", team_id);
     formData.append("project_id", project_id);
     formData.append("project_name", form.project_name);
     formData.append("team_lead", form.team_lead);
@@ -68,7 +82,6 @@ const ScheduleReview = () => {
     formData.append("isOptional", form.isOptional);
     formData.append("reason", form.reason);
 
-    // Attach file with the correct key
     if (selectedFile) {
       const fileExt = selectedFile.name.split(".").pop().toLowerCase();
       if (["pdf", "doc", "docx"].includes(fileExt)) {
@@ -90,8 +103,7 @@ const ScheduleReview = () => {
         { headers: { "Content-Type": "multipart/form-data" } }
       );
       alert(res.data);
-
-      // Reset form
+      setSelectedFile(null);
       setForm({
         project_id: statusSelector.projectId || "",
         project_name: statusSelector.projectName || "",
@@ -100,81 +112,129 @@ const ScheduleReview = () => {
         start_time: "",
         isOptional: "",
         reason: "",
-        mentor_reg_num: userSelector.mentor_reg_num || ""
+        mentor_reg_num: mentor_reg_num || ""
       });
-      setSelectedFile(null);
     } catch (error) {
       alert(error.response?.data || "Error submitting request");
       console.error(error);
     }
   };
 
+  const isRequestAlreadySent =
+    reviewStatus &&
+    (
+      reviewStatus.guide_status === "interested" ||
+      reviewStatus.expert_status === "interested" ||
+      reviewStatus.guide_status === "accept" ||
+      reviewStatus.expert_status === "accept" ||
+      reviewStatus.guide_status === "reject" ||
+      reviewStatus.expert_status === "reject"
+    );
+
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <h1 className="text-3xl font-semibold text-center mb-6">Schedule Review</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Hidden inputs */}
-        <input type="hidden" name="project_id" value={form.project_id} />
-        <input type="hidden" name="project_name" value={form.project_name} />
-        <input type="hidden" name="team_lead" value={form.team_lead} />
-        <input type="hidden" name="mentor_reg_num" value={form.mentor_reg_num} />
-        <input type="hidden" name="team_id" value={teamSelector[0]?.team_id} />
 
-        <input
-          type="date"
-          name="review_date"
-          onChange={handleInput}
-          value={form.review_date}
-          className="w-full p-2 border rounded"
-          required
-        />
-        <input
-          type="time"
-          name="start_time"
-          onChange={handleInput}
-          value={form.start_time}
-          className="w-full p-2 border rounded"
-          required
-        />
-        <select
-          name="isOptional"
-          onChange={handleInput}
-          value={form.isOptional}
-          className="w-full p-2 border rounded"
-          required
-        >
-          <option value="">Select Review Type</option>
-          <option value="regular">Monthly Review</option>
-          <option value="optional">Optional Review</option>
-        </select>
+      {!loading && reviewStatus && (
+        <div className="mb-6 p-4 border rounded-lg bg-gray-100">
+          <p><strong>Review Date:</strong> {reviewStatus.review_date}</p>
+          <p><strong>Start Time:</strong> {reviewStatus.start_time}</p>
 
-        {form.isOptional === "optional" && (
+          {reviewStatus.guide_status === "interested" && reviewStatus.expert_status === "interested" && (
+            <p className="text-yellow-600">
+              You have already sent a review request. Please wait for the guide and expert response.
+            </p>
+          )}
+
+          {reviewStatus.guide_status === "accept" && reviewStatus.expert_status === "accept" && (
+            <p className="text-green-600">
+              Review accepted by both guide and expert.<br />
+              <strong>Meeting Link:</strong>{" "}
+              <a
+                href={reviewStatus.temp_meeting_link}
+                className="text-blue-600 underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {reviewStatus.temp_meeting_link}
+              </a>
+            </p>
+          )}
+
+          {(reviewStatus.guide_status === "reject" || reviewStatus.expert_status === "reject") && (
+            <div className="text-red-600">
+              <p><strong>Review rejected.</strong></p>
+              {reviewStatus.guide_status === "reject" && (
+                <p><strong>Guide Reason:</strong> {reviewStatus.guide_reason}</p>
+              )}
+              {reviewStatus.expert_status === "reject" && (
+                <p><strong>Expert Reason:</strong> {reviewStatus.expert_reason}</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Conditionally render the form if not already sent */}
+      {!loading && !isRequestAlreadySent && (
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input
-            name="reason"
+            type="date"
+            name="review_date"
             onChange={handleInput}
-            value={form.reason}
-            placeholder="Reason for Optional Review"
+            value={form.review_date}
             className="w-full p-2 border rounded"
             required
           />
-        )}
-
-        <div className="flex flex-col gap-2">
-          <label>Upload a File (Report, PPT, or Outcome):</label>
           <input
-            type="file"
-            onChange={handleFileChange}
-            accept=".pdf,.doc,.docx,.ppt,.pptx,.zip,.rar"
+            type="time"
+            name="start_time"
+            onChange={handleInput}
+            value={form.start_time}
+            className="w-full p-2 border rounded"
+            required
           />
-        </div>
 
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Submit Review Request
-        </button>
-      </form>
+          <select
+            name="isOptional"
+            onChange={handleInput}
+            value={form.isOptional}
+            className="w-full p-2 border rounded"
+            required
+          >
+            <option value="">Select Review Type</option>
+            <option value="regular">Regular Review</option>
+            <option value="optional">Optional Review</option>
+          </select>
+
+          {form.isOptional === "optional" && (
+            <input
+              name="reason"
+              onChange={handleInput}
+              value={form.reason}
+              placeholder="Reason for Optional Review"
+              className="w-full p-2 border rounded"
+              required
+            />
+          )}
+
+          <div className="flex flex-col gap-2">
+            <label>Upload a File (Report, PPT, or Outcome):</label>
+            <input
+              type="file"
+              onChange={handleFileChange}
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.zip,.rar"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Submit Review Request
+          </button>
+        </form>
+      )}
     </div>
   );
 };
