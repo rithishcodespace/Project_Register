@@ -7,30 +7,86 @@ const Posted_project = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedProject, setSelectedProject] = useState(null);
+const getProjects = async () => {
+  try {
+    const res = await instance.get('/admin/get_all_projects');
+    const projects = res.data;
 
-  const getProjects = async () => {
-    try {
-      const res = await instance.get('/admin/get_all_projects');
-      const projects = res.data;
+    const enrichedProjects = await Promise.all(
+      projects.map(async (project) => {
+        try {
+          const teamMetaRes = await instance.get(`/admin/get_team_members/${project.team_id}`);
+          const teamMeta = teamMetaRes.data[0];
+          const guideReg = teamMeta?.guide_reg_num;
+          const subExpertReg = teamMeta?.sub_expert_reg_num;
 
-      const enrichedProjects = await Promise.all(
-        projects.map(async (project) => {
-          try {
-            const teamRes = await instance.get(`/guide/gets_entire_team/${project.team_id}`);
-            const team = teamRes.data;
-            return { ...project, team_members: team };
-          } catch (teamError) {
-            console.error(`Error fetching team for project ${project.project_id}:`, teamError.message);
-            return { ...project, team_members: [] };
+          let guideName = 'N/A';
+          let subExpertName = 'N/A';
+
+          if (guideReg) {
+            try {
+              const guideRes = await instance.get(`/admin/get_name/${guideReg}`);
+              guideName = `${guideRes.data[0]?.name || 'Unknown'} (${guideReg})`;
+            } catch (err) {
+              console.error(`Failed to fetch guide name for ${guideReg}`);
+            }
           }
-        })
-      );
 
-      setProjectData(enrichedProjects);
-    } catch (error) {
-      console.error("Error fetching projects:", error.message);
-    }
-  };
+          if (subExpertReg) {
+            try {
+              const subExpertRes = await instance.get(`/admin/get_name/${subExpertReg}`);
+              subExpertName = `${subExpertRes.data[0]?.name || 'Unknown'} (${subExpertReg})`;
+            } catch (err) {
+              console.error(`Failed to fetch sub expert name for ${subExpertReg}`);
+            }
+          }
+
+          const teamRes = await instance.get(`/admin/get_teams/${project.team_id}`);
+          const teamMembers = teamRes.data.map(member => {
+            const isLeader = member.from_reg_num === member.to_reg_num;
+            return {
+              ...member,
+              role: isLeader ? 'leader' : 'member'
+            };
+          });
+
+          // ✅ Fetch verified week count
+          let verifiedWeek = 0;
+          try {
+            const verifiedWeekRes = await instance.get(`/guide/no_of_weeks_verified/${project.team_id}`);
+            verifiedWeek = verifiedWeekRes.data || 0;
+          } catch (err) {
+            console.error(`Failed to fetch verified week for ${project.team_id}`);
+          }
+
+          return {
+            ...project,
+            guide_display: guideName,
+            sub_expert_display: subExpertName,
+            team_members: teamMembers,
+            verified_week: verifiedWeek,
+            completed_review: 0 // Optional placeholder if you fetch that later
+          };
+        } catch (error) {
+          console.error(`Error enriching project ${project.project_id}:`, error.message);
+          return {
+            ...project,
+            team_members: [],
+            guide_display: 'N/A',
+            sub_expert_display: 'N/A',
+            verified_week: 0,
+            completed_review: 0
+          };
+        }
+      })
+    );
+
+    setProjectData(enrichedProjects);
+  } catch (err) {
+    console.error("Error fetching projects:", err.message);
+  }
+};
+
 
   const handleViewProject = (project) => {
     setSelectedProject(project);
@@ -55,6 +111,8 @@ const Posted_project = () => {
   if (selectedProject) {
     const leader = selectedProject.team_members?.find(member => member.role === 'leader');
 
+    console.log();
+    
     return (
       <div className="min-h-screen p-6">
         <div className="max-w-6xl mx-auto">
@@ -109,26 +167,31 @@ const Posted_project = () => {
                   <h3 className="bg-white text-lg font-semibold text-gray-800">Team Members</h3>
                 </div>
                 <div className="bg-white space-y-3">
-                  {selectedProject.team_members?.map((member, index) => (
-                    <div key={index} className="bg-gray-50 flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div className="bg-gray-50 flex-1">
-                        <div className="bg-gray-50 flex items-center gap-2 mb-1">
-                          <span className="bg-gray-50 font-medium text-gray-800">{member.name}</span>
-                          {member.role === 'leader' && (
-                            <span className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs font-medium">
-                              Team Leader
-                            </span>
-                          )}
-                        </div>
-                        <p className="bg-gray-50 text-sm text-gray-600">{member.email}</p>
-                      </div>
-                      <div className="bg-gray-50 text-right">
-                        <span className="bg-gray-50 text-gray-700 px-3 py-1 rounded text-sm font-medium">
-                          {member.reg_no}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                  {selectedProject.team_members?.map((member, index) => {
+  console.log(member); // ✅ Correct place to log each member
+
+  return (
+    <div key={index} className="bg-gray-50 flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+      <div className="bg-gray-50 flex-1">
+        <div className="bg-gray-50 flex items-center gap-2 mb-1">
+          <span className="bg-gray-50 font-medium text-gray-800">{member.name}</span>
+          {member.role === 'leader' && (
+            <span className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs font-medium">
+              Team Leader
+            </span>
+          )}
+        </div>
+        <p className="bg-gray-50 text-sm text-gray-600">{member.emailId}</p>
+      </div>
+      <div className="bg-gray-50 text-right">
+        <span className="bg-gray-50 text-gray-700 px-3 py-1 rounded text-sm font-medium">
+          {member.reg_num}
+        </span>
+      </div>
+    </div>
+  );
+})}
+
                 </div>
               </div>
             </div>
@@ -143,13 +206,14 @@ const Posted_project = () => {
                   <div>
                     <div className="bg-white text-sm text-gray-600 font-medium ">Completed Review</div>
                     <div className="bg-white p-3 rounded border border-gray-200">
-                      <span className="bg-white text-gray-800 font-semibold">{selectedProject.completed_review}/2</span>
+                      <span className="bg-white text-gray-800 font-semibold">{selectedProject.verified_week?selectedProject.verified_week:0}/12</span>
+
                     </div>
                   </div>
                   <div>
                     <div className="bg-white text-sm text-gray-600 font-medium ">Verified Week</div>
                     <div className="bg-white  p-3 rounded border border-gray-200">
-                      <span className="bg-white text-gray-800 font-semibold">{selectedProject.verified_week}/12</span>
+                      <span className="bg-white text-gray-800 font-semibold">-/12</span>
                     </div>
                   </div>
                 </div>
@@ -164,13 +228,13 @@ const Posted_project = () => {
                   <div>
                     <div className="bg-white text-sm text-gray-600 font-medium ">Subject Expert</div>
                     <div className="bg-white  p-3 rounded border border-gray-200">
-                      <span className="bg-white text-gray-800 font-semibold">{selectedProject.team_members[0].sub_expert_reg_num}</span>
+                      <span className="bg-white text-gray-800 font-semibold"> {selectedProject.sub_expert_display || 'N/A'}</span>
                     </div>
                   </div>
                   <div>
                     <div className="bg-white text-sm text-gray-600 font-medium ">Project Guide</div>
                     <div className="bg-white  p-3 rounded border border-gray-200">
-                      <span className="bg-white text-gray-800 font-semibold">{selectedProject.team_members[0].guide_reg_num}</span>
+                      <span className="bg-white text-gray-800 font-semibold">{selectedProject.guide_display || 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -194,11 +258,11 @@ const Posted_project = () => {
 
           <thead className='bg-white m-5 border-b'>
             <tr className="bg-white m-5">
-              <th className="p-2 w-[15%] bg-white">Team ID</th>
-              <th className="p-2 w-[25%] bg-white">Project Name</th>
-              <th className="p-2 w-[12%] bg-white">Cluster</th>
+              <th className="p-2 w-[13%] bg-white">Team ID</th>
+              <th className="p-2 w-[20%] bg-white">Project Name</th>
+              <th className="p-2 w-[7%] bg-white">Cluster</th>
               <th className="p-2 w-[20%] bg-white">Subject Expert</th>
-              <th className="p-2 w-[18%] bg-white">Guide</th>
+              <th className="p-2 w-[20%] bg-white">Guide</th>
               <th className="p-2 w-[10%] bg-white">Action</th>
             </tr>
           </thead>
@@ -222,12 +286,12 @@ const Posted_project = () => {
                 </td>
                 <td className="p-2 bg-white h-[48px] align-middle">
                   <div className="flex justify-center bg-white items-center h-[36px]">
-                    {row.team_members[0]?.sub_expert_reg_num || 'N/A'}
+                    {row.sub_expert_display || 'N/A'}
                   </div>
                 </td>
                 <td className="p-2 bg-white h-[48px] align-middle">
                   <div className="flex justify-center bg-white items-center h-[36px]">
-                    {row.team_members[0]?.guide_reg_num || 'N/A'}
+                    {row.guide_display || 'N/A'}
                   </div>
                 </td>
                 <td className="p-2 bg-white h-[48px] align-middle">

@@ -605,6 +605,8 @@ router.get('/admin/fetch_current_reviews',(req,res,next) => {
   }
 }) 
 
+
+
 // fetch team_members by team id
 router.get("/admin/get_team_members/:team_id",(req,res,next) => {
   try{
@@ -623,5 +625,39 @@ router.get("/admin/get_team_members/:team_id",(req,res,next) => {
   }
 })
 
+router.get("/admin/get_name/:reg_num",(req,res,next) => {
+  try{
+    const{reg_num} = req.params;
+    if(!reg_num)return next(createError.BadRequest('reg_num not found!'));
+    let sql = "select name from users where reg_num = ?";
+    db.query(sql,[reg_num],(error,result) => {
+      if(error) return next(error);
+      if(result.length === 0)return next(createError.NotFound('name not found!'));
+      return res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
+
+
+router.get("/admin/get_teams/:team_id",(req,res,next) => {
+  try{
+    const{team_id} = req.params;
+    if(!team_id)return next(createError.BadRequest('team_id not found!'));
+    let sql = "select * from team_requests where team_id = ?";
+    db.query(sql,[team_id],(error,result) => {
+      if(error) return next(error);
+      if(result.length === 0)return next(createError.NotFound('name not found!'));
+      return res.send(result);
+    })
+  }
+  catch(error)
+  {
+    next(error);
+  }
+})
 
 module.exports = router;
