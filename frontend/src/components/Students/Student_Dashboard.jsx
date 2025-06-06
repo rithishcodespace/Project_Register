@@ -245,7 +245,7 @@ useEffect(() => {
                     <h3 className="text-lg bg-white font-medium text-gray-800">Project Id : {project && project.length > 0 && project[0].project_id?project[0].project_id:"Project is not create yet ..."}</h3>
                     <h3 className="text-lg bg-white font-medium text-gray-800">Cluster : {project && project.length > 0 && project[0]?.cluster?project[0].cluster:"Project is not create yet ..."}</h3>
                     <h3 className="text-lg bg-white font-medium text-gray-800">Outcome : {project && project.length > 0 && project[0].outcome?project[0].outcome:"Project is not create yet ..."}</h3>
-                    <h3 className="text-lg bg-white font-medium text-gray-800">Project Taking Date : {readableDate ? readableDate : "Project is not created yet ..."}</h3>
+                    <h3 className="text-lg bg-white font-medium text-gray-800">Project Picked Date : {readableDate ? readableDate : "Project is not created yet ..."}</h3>
                     </ul>
                   </div>
                   

@@ -694,8 +694,8 @@ router.get("/student/get_project_type/:reg_num",(req,res,next) => {
     let sql = "select project_type from users where reg_num = ?";
     db.query(sql,[reg_num],(error,result) => {
       if(error)return next(error);
-      if(result.length === 0)return res.send("user haven't set their register number!");
-      res.send(result.project_type);
+      if(!result[0].project_type)return res.send("user haven't set their register number!");
+      res.send(result[0].project_type);
     })
   }
   catch(error)
