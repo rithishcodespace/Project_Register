@@ -9,19 +9,14 @@ const InvitationPage = () => {
   const [rejectionReasons, setRejectionReasons] = useState({});
   const selector = useSelector((Store) => Store.userSlice);
 
-  // Fetch latest invitations
   useEffect(() => {
     const fetchInvitations = async () => {
       if (!selector.reg_num) return;
       try {
-        const resp = await instance.get(
-          `/student/request_recived/${selector.reg_num}`
-        );
+        const resp = await instance.get(`/student/request_recived/${selector.reg_num}`);
         if (resp.status === 200 && resp.data.length) {
           const inv = resp.data[0];
-          const userRes = await instance.get(
-            `/student/get_student_details_by_regnum/${inv.from_reg_num}`
-          );
+          const userRes = await instance.get(`/student/get_student_details_by_regnum/${inv.from_reg_num}`);
           if (userRes.status === 200) {
             const student = Array.isArray(userRes.data) ? userRes.data[0] : userRes.data;
             setInvitations([{
@@ -32,7 +27,7 @@ const InvitationPage = () => {
             }]);
           }
         }
-      }catch (err) {
+      } catch (err) {
         console.error(err);
       }
     };
@@ -44,7 +39,7 @@ const InvitationPage = () => {
     try {
       await instance.patch(
         `/student/team_request/${status}/${invite.to_reg_num}/${invite.from_reg_num}`,
-        { reason }  // send reason when rejecting
+        { reason }
       );
       setInvitations(invites =>
         invites.map(i =>
@@ -64,91 +59,104 @@ const InvitationPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl text-center font-bold mb-6">Invitations</h1>
-      <table className="min-w-full table-auto border-collapse">
-        <thead>
-          <tr>
-            {['Name','Email','Reg. No','Dept','Action'].map(h => (
-              <th key={h} className="p-3 border bg-white">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {invitations.map(invite => (
-            <tr key={invite.reg_num}>
-              <td className="px-4 py-2 border">{invite.name}</td>
-              <td className="px-4 py-2 border">{invite.emailId}</td>
-              <td className="px-4 py-2 border">{invite.reg_num}</td>
-              <td className="px-4 py-2 border">{invite.dept}</td>
+    <div className="min-h-screen bg-indigo-50 py-12 px-4">
+      <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8 border border-indigo-200">
+        <h1 className="text-4xl font-bold text-center bg-white text-indigo-700 mb-10">
+          Team Invitations
+        </h1>
 
-              <td className="px-4 py-2 border text-center">
-                {invite.status === 'interested' ? (
-                  rejectingId === invite.reg_num ? (
-                    <div className="space-y-2">
-
-                      <textarea
-                        className="w-full border px-2 py-1 rounded resize-none"
-                        rows={3}
-                        placeholder="Reason for rejection"
-                        value={rejectionReasons[invite.reg_num] || ''}
-                        onChange={e => onReasonChange(invite.reg_num, e.target.value)}
-                      />
-                      <div className="flex justify-end space-x-2">
-
-
-                        <button
-                          className="px-4 py-2 bg-gray-300 rounded"
-                          onClick={() => setRejectingId(null)}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          className="px-4 py-2 bg-red-500 text-white rounded disabled:opacity-50"
-                          disabled={loadingId === invite.reg_num}
-                          onClick={() =>
-                            handleAction(invite, 'reject',rejectionReasons[invite.reg_num] || '')
-                          }
-                        >
-                          {loadingId === invite.reg_num ? 'Rejecting…' : 'Submit'}
-                        </button>
-
-
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex justify-center items-center space-x-2">
-                      <button
-                        onClick={() => handleAction(invite, 'accept')}
-                        className="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50"
-                        disabled={loadingId === invite.reg_num}
-                      >
-                        {loadingId === invite.reg_num ? 'Accepting…' : 'Accept'}
-                      </button>
-
-                      <button
-                        onClick={() => setRejectingId(invite.reg_num)}
-                        className="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50"
-                        disabled={loadingId === invite.reg_num}
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  )
-                ) : (
-                  <span
-                    className={`px-3 py-1 rounded-full text-white ${
-                      invite.status === 'accept' ? 'bg-green-600' : 'bg-red-600'
-                    }`}
+        <div className="overflow-x-auto mx-4 my-6">
+          <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-sm">
+            <thead className="bg-indigo-100 text-indigo-800">
+              <tr>
+                {['Name', 'Email', 'Reg. No', 'Department', 'Action'].map((head) => (
+                  <th key={head} className="px-6 py-4 text-left bg-white font-semibold">{head}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="text-gray-800 bg-white">
+              {invitations.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center bg-white px-6 py-8 text-gray-500">
+                    No invitations received.
+                  </td>
+                </tr>
+              ) : (
+                invitations.map(invite => (
+                  <tr
+                    key={invite.reg_num}
+                    className="hover:bg-indigo-50 bg-white transition-colors border-t"
                   >
-                    {invite.status === 'accept' ? 'Accepted' : 'Rejected'}
-                  </span>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                    <td className="px-6 py-4">{invite.name}</td>
+                    <td className="px-6 py-4">{invite.emailId}</td>
+                    <td className="px-6 py-4">{invite.reg_num}</td>
+                    <td className="px-6 py-4">{invite.dept}</td>
+                    <td className="px-6 py-4 text-center">
+                      {invite.status === 'interested' ? (
+                        rejectingId === invite.reg_num ? (
+                          <div className="space-y-3">
+                            <textarea
+                              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                              rows={3}
+                              placeholder="Reason for rejection..."
+                              value={rejectionReasons[invite.reg_num] || ''}
+                              onChange={e => onReasonChange(invite.reg_num, e.target.value)}
+                            />
+                            <div className="flex justify-end gap-3">
+                              <button
+                                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded transition"
+                                onClick={() => setRejectingId(null)}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition disabled:opacity-50"
+                                disabled={loadingId === invite.reg_num}
+                                onClick={() =>
+                                  handleAction(invite, 'reject', rejectionReasons[invite.reg_num] || '')
+                                }
+                              >
+                                {loadingId === invite.reg_num ? 'Rejecting…' : 'Submit'}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex gap-3 justify-center">
+                            <button
+                              onClick={() => handleAction(invite, 'accept')}
+                              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition disabled:opacity-50"
+                              disabled={loadingId === invite.reg_num}
+                            >
+                              {loadingId === invite.reg_num ? 'Accepting…' : 'Accept'}
+                            </button>
+                            <button
+                              onClick={() => setRejectingId(invite.reg_num)}
+                              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition disabled:opacity-50"
+                              disabled={loadingId === invite.reg_num}
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )
+                      ) : (
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                            invite.status === 'accept'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}
+                        >
+                          {invite.status === 'accept' ? 'Accepted' : 'Rejected'}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };
