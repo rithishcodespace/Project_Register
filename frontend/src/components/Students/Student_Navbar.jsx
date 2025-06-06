@@ -55,7 +55,6 @@ function Student_navbar({ isOpen, toggleSidebar }) {
 
       if (response.status === 200) {
         setTeam(response.data || []);
-        console.log("team members array:", response.data);
       }
     } catch (error) {
       console.error("Error fetching team details:", error);

@@ -7,6 +7,7 @@ import { addUser } from '../../utils/userSlice';
 import { addTeamMembers } from '../../utils/teamSlice';
 import { useNavigate } from 'react-router-dom';
 import { addTeamStatus } from '../../utils/teamStatus';
+import axios from 'axios';
 
 function Student_Dashboard() {
   const userSlice = useSelector((State) => State.userSlice);
@@ -60,7 +61,6 @@ function Student_Dashboard() {
     }
 
   }, [])
-  console.log(deadline);
 
   const readableDate = project && project[0] && new Date(project[0].posted_date).toLocaleString();
 
@@ -221,6 +221,29 @@ function Student_Dashboard() {
     if (selector.reg_num) checkUserStatus(selector.reg_num);
   }, [selector.reg_num]);
 
+const [guideName, setGuideName] = useState('');
+const [expertName, setExpertName] = useState('');
+
+useEffect(() => {
+  if (!userSlice.guide_reg_num || !userSlice.sub_expert_reg_num) return;
+
+  const getNames = async () => {
+    try {
+      const res1 = await instance.get(`/admin/get_name/${userSlice.guide_reg_num}`);
+      setGuideName(res1.data);
+      const res2 = await instance.get(`/admin/get_name/${userSlice.sub_expert_reg_num}`);
+      setExpertName(res2.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  getNames();
+}, []);
+
+
+
+  
   if (teamStatus === null) {
 
     return <div className='flex flex-col justify-center items-center '><div className="animate-spin rounded-full  flex self-center h-12 w-12 border-t-4 border-blue-500 border-solid mb-4"></div></div>
@@ -244,8 +267,8 @@ function Student_Dashboard() {
                 <p className='bg-white'><span className="font-medium bg-white text-gray-700">Email :</span> {userSlice.emailId}</p>
                 <p className='bg-white'><span className="font-medium bg-white text-gray-700">Register Number :</span> {userSlice.reg_num}</p>
                 <p className='bg-white'><span className="font-medium bg-white text-gray-700">Department:</span> {userSlice.dept}</p>
-                <p className='bg-white'><span className="font-medium bg-white text-gray-700">Guide :</span> {teamSelector && userSlice?.guide_reg_num ? userSlice.guide_reg_num : "Not Assigned"}</p>
-                <p className='bg-white'><span className="font-medium bg-white text-gray-700">Subject Expert :</span> {teamSelector && userSlice?.sub_expert_reg_num ? userSlice.sub_expert_reg_num : "Not Assigned"}</p>
+                <p className='bg-white'><span className="font-medium bg-white text-gray-700">Guide :</span>{guideName} {teamSelector && userSlice?.guide_reg_num ? userSlice.guide_reg_num : "Not Assigned"}</p>
+                <p className='bg-white'><span className="font-medium bg-white text-gray-700">Subject Expert :</span>{expertName} {teamSelector && userSlice?.sub_expert_reg_num ? userSlice.sub_expert_reg_num : "Not Assigned"}</p>
               </div></div>
 
             <div className="mt-10 bg-white p-6 rounded-lg shadow ">
@@ -278,7 +301,7 @@ function Student_Dashboard() {
               <div className="space-y-4 bg-white">
                 <div className="border-l-4 bg-white border-blue-500 pl-4 py-2">
                   <h3 className="font-medium bg-white text-gray-800">
-                    {deadline&&deadline && deadline[0].current_week_name}
+                    {deadline && deadline[0].current_week_name}
                   </h3>
                   <p className="text-md text-gray-600 bg-white">
                     Deadline: {new Date(deadline[0].current_week_deadline).toLocaleDateString()}
