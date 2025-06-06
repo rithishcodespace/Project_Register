@@ -37,9 +37,8 @@ const ScheduleReview = () => {
   useEffect(() => {
     const fetchReviewHistory = async () => {
       if (!team_id) return;
-
       try {
-        const res = await instance.get(`/student/get_reivew_request_history/${team_id}`);
+        const res = await instance.get(`/student/get_review_request_history/${team_id}`);
         const sorted = res.data.sort((a, b) => new Date(b.review_date) - new Date(a.review_date));
         const latestReview = sorted[0];
         setReviewStatus(latestReview);
@@ -49,13 +48,10 @@ const ScheduleReview = () => {
         setLoading(false);
       }
     };
-
     fetchReviewHistory();
   }, [team_id]);
 
-  const handleInput = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleInput = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -65,7 +61,7 @@ const ScheduleReview = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const project_id = form.project_id;
+    const { project_id, project_name, team_lead, review_date, start_time, isOptional, reason } = form;
     if (!team_id || !project_id || !reg_num) {
       alert("Missing required fields.");
       return;
@@ -74,13 +70,13 @@ const ScheduleReview = () => {
     const formData = new FormData();
     formData.append("team_id", team_id);
     formData.append("project_id", project_id);
-    formData.append("project_name", form.project_name);
-    formData.append("team_lead", form.team_lead);
-    formData.append("mentor_reg_num", form.mentor_reg_num);
-    formData.append("review_date", form.review_date);
-    formData.append("start_time", form.start_time);
-    formData.append("isOptional", form.isOptional);
-    formData.append("reason", form.reason);
+    formData.append("project_name", project_name);
+    formData.append("team_lead", team_lead);
+    formData.append("mentor_reg_num", mentor_reg_num);
+    formData.append("review_date", review_date);
+    formData.append("start_time", start_time);
+    formData.append("isOptional", isOptional);
+    formData.append("reason", reason);
 
     if (selectedFile) {
       const fileExt = selectedFile.name.split(".").pop().toLowerCase();
@@ -115,21 +111,19 @@ const ScheduleReview = () => {
         mentor_reg_num: mentor_reg_num || ""
       });
     } catch (error) {
-      alert(error.response?.data || "Error submitting request");
+      alert(error?.response?.data || "Error submitting request.");
       console.error(error);
     }
   };
 
-  const isRequestAlreadySent =
-    reviewStatus &&
-    (
-      reviewStatus.guide_status === "interested" ||
-      reviewStatus.expert_status === "interested" ||
-      reviewStatus.guide_status === "accept" ||
-      reviewStatus.expert_status === "accept" ||
-      reviewStatus.guide_status === "reject" ||
-      reviewStatus.expert_status === "reject"
-    );
+  const isRequestAlreadySent = reviewStatus && (
+    reviewStatus.guide_status === "interested" ||
+    reviewStatus.guide_status === "accept" ||
+    reviewStatus.guide_status === "reject" ||
+    reviewStatus.expert_status === "interested" ||
+    reviewStatus.expert_status === "accept" ||
+    reviewStatus.expert_status === "reject"
+  );
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
@@ -147,23 +141,19 @@ const ScheduleReview = () => {
           )}
 
           {reviewStatus.guide_status === "accept" && reviewStatus.expert_status === "accept" && (
-            <p className="text-green-600">
-              Review accepted by both guide and expert.<br />
-              <strong>Meeting Link:</strong>{" "}
-              <a
-                href={reviewStatus.temp_meeting_link}
-                className="text-blue-600 underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {reviewStatus.temp_meeting_link}
-              </a>
-            </p>
+            <div className="text-green-600">
+              <p>Guide and Expert have accepted the review.</p>
+              <p><strong>Meeting Link:</strong>{" "}
+                <a href={reviewStatus.temp_meeting_link} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                  {reviewStatus.temp_meeting_link}
+                </a>
+              </p>
+            </div>
           )}
 
           {(reviewStatus.guide_status === "reject" || reviewStatus.expert_status === "reject") && (
             <div className="text-red-600">
-              <p><strong>Review rejected.</strong></p>
+              <p><strong>Review Rejected</strong></p>
               {reviewStatus.guide_status === "reject" && (
                 <p><strong>Guide Reason:</strong> {reviewStatus.guide_reason}</p>
               )}
@@ -175,7 +165,6 @@ const ScheduleReview = () => {
         </div>
       )}
 
-      {/* Conditionally render the form if not already sent */}
       {!loading && !isRequestAlreadySent && (
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
@@ -194,7 +183,6 @@ const ScheduleReview = () => {
             className="w-full p-2 border rounded"
             required
           />
-
           <select
             name="isOptional"
             onChange={handleInput}
@@ -219,7 +207,7 @@ const ScheduleReview = () => {
           )}
 
           <div className="flex flex-col gap-2">
-            <label>Upload a File (Report, PPT, or Outcome):</label>
+            <label>Upload File (PDF, DOC, PPT, ZIP):</label>
             <input
               type="file"
               onChange={handleFileChange}

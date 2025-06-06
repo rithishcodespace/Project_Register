@@ -182,8 +182,8 @@ const Progress_Update = () => {
        {details  && (
         <div className="max-w-3xl mx-auto bg-white border border-gray-200 p-6 rounded-xl shadow-lg">
 
-          <h1 className="bg-white ">{currentWeekStatus=="accept"?"Remarks :":"Reason :"}</h1>
-        <h3 className="text-center bg-white mt-6 font-semibold text-gray-700">{details} </h3>
+          <h1 className="bg-white font-bold ">{currentWeekStatus=="accept"?"Remarks :":"Reason :"}</h1>
+        <h3 className="text-center bg-white mt-6 font-semibold text-gray-600">{details} </h3>
         </div>
       )}
 
