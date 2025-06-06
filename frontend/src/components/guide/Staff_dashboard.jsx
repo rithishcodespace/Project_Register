@@ -375,6 +375,7 @@ function Staff_dashboard() {
                         <p className="text-gray-500 bg-blue-50 text-xs mt-1">
                           {new Date(review.review_date).toLocaleDateString()}
                         </p>
+                        <p className='text-sm text-red-600'>Click here to accept or reject</p>
                       </div>
                     ))}
 
@@ -393,6 +394,7 @@ function Staff_dashboard() {
                         <p className="text-gray-500 bg-purple-50  text-xs mt-1">
                           {new Date(review.review_date).toLocaleDateString()}
                         </p>
+                        <p className='text-sm bg-white text-red-600'>Click here to accept or reject</p>
                       </div>
                     ))}
                   </div>
