@@ -1066,7 +1066,11 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
             db.query(checkDuplicate, [review_title, team_id], (err0, res0) => {
               if (err0) return next(err0);
               if (res0.length > 0) {
+<<<<<<< HEAD
+                return next(createError.BadRequest(`${title} already sent and the guide, expert yet to verify requests`));
+=======
                 return next(createError.BadRequest(`${review_title} already sent and the guide, expert yet to verify requests`));
+>>>>>>> 38470b3b31dd1aeaca6bf149df2224ed4c8282ee
               }
 
               let weekToCheck = 0;
