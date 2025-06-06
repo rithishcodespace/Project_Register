@@ -1012,11 +1012,7 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
     const files = req.files;
     const file = files?.report?.[0] || files?.ppt?.[0] || files?.outcome?.[0];
 
-<<<<<<< HEAD
     if (!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time || !reg_num) {
-=======
-    if (!team_id || !project_id || !project_name || !team_lead || !review_date || !start_time || !reg_num ) {
->>>>>>> 7151c889a6c9f32a23c23df2a883942e938d98bf
       return next(createError.BadRequest("Some parameters are missing!"));
     }
 
