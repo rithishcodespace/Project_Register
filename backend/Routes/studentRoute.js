@@ -1094,22 +1094,12 @@ router.post("/student/send_review_request/:team_id/:project_id/:reg_num", userAu
 
             const checkDuplicate = `
               SELECT * FROM review_requests 
-              WHERE review_title = ? AND team_id = ?
-              ORDER BY request_id DESC LIMIT 1
+              WHERE review_title = ? AND team_id = ? AND guide_status = 'interested' AND expert_status = 'interested'
             `;
             db.query(checkDuplicate, [title, team_id], (err0, res0) => {
               if (err0) return next(err0);
-
               if (res0.length > 0) {
-                const last = res0[0];
-                if (
-                  last.guide_status !== 'rejected' &&
-                  last.expert_status !== 'rejected'
-                ) {
-                  return next(
-                    createError.BadRequest(`${title} already sent. Wait for rejection before resending.`)
-                  );
-                }
+                return next(createError.BadRequest(`${title} already sent and the guide, expert yet to verify requests`));
               }
 
               let weekToCheck = 0;
